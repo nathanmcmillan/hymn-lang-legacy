@@ -6,15 +6,20 @@ import (
 )
 
 type token struct {
-	t string
-	v string
+	is    string
+	value string
+}
+
+type tokenizer struct {
+	stream  *stream
+	current string
 }
 
 func (me *token) string() string {
-	if me.v == "" {
-		return fmt.Sprintf("{type:%s}", me.t)
+	if me.is == "" {
+		return fmt.Sprintf("{type:%s}", me.is)
 	}
-	return fmt.Sprintf("{type:%s, value:%s}", me.t, me.v)
+	return fmt.Sprintf("{type:%s, value:%s}", me.is, me.value)
 }
 
 const syntaxSpace = ' '
@@ -27,13 +32,13 @@ const syntaxAdd = '+'
 
 const tokenSet = "set"
 const tokenConst = "constant"
-const tokenFn = "function"
+const tokenFunc = "function"
 const tokenEnd = "end"
 const tokenParenStart = "parenStart"
 const tokenParenEnd = "parenEnd"
 const tokenID = "id"
 const tokenUnknown = "?"
-const tokenNewLine = "line"
+const tokenLine = "line"
 const tokenNumber = "number"
 const tokenString = "string"
 const tokenAdd = "add"
@@ -70,10 +75,10 @@ var keywords = map[string]bool{
 var syntaxToToken = map[string]string{
 	"set":   tokenSet,
 	"const": tokenConst,
-	"def":   tokenFn,
+	"def":   tokenFunc,
 	"(":     tokenParenStart,
 	")":     tokenParenEnd,
-	"\n":    tokenNewLine,
+	"\n":    tokenLine,
 	"+":     tokenAdd,
 	"-":     tokenSubtract,
 	"--":    tokenEnd,
@@ -81,14 +86,9 @@ var syntaxToToken = map[string]string{
 
 func newToken(typeOf, valueOf string) *token {
 	t := &token{}
-	t.t = typeOf
-	t.v = valueOf
+	t.is = typeOf
+	t.value = valueOf
 	return t
-}
-
-type tokenizer struct {
-	stream  *stream
-	current string
 }
 
 func tokenize(stream *stream) []*token {
@@ -110,15 +110,15 @@ func (me *tokenizer) next() *token {
 	stream := me.stream
 	me.skipSpace()
 	if stream.eof() {
-		return newToken(tokenNewLine, "")
+		return newToken(tokenLine, "")
 	}
 	c := stream.peek()
 	if c == syntaxComment {
 		me.skipComment()
-		return newToken(tokenNewLine, "")
+		return newToken(tokenLine, "")
 	} else if c == syntaxNewLine {
 		stream.next()
-		return newToken(tokenNewLine, "")
+		return newToken(tokenLine, "")
 	} else if c == syntaxParenStart {
 		stream.next()
 		return newToken(tokenParenStart, "")

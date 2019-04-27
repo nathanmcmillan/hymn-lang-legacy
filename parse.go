@@ -1,17 +1,64 @@
 package main
 
+import "fmt"
+
 type parser struct {
 	tokens []*token
 	pos    int
 }
 
-func parse(tokens []*token) {
+type instruction struct {
+	d string
+}
+
+func (me *instruction) string() string {
+	return me.d
+}
+
+func parse(tokens []*token) []*instruction {
 	parser := parser{}
 	parser.tokens = tokens
-	// for {
-	// 	panic("parser failed on " + parser.fail())
-	// }
-	parser.eot()
+	instructions := make([]*instruction, 0)
+	num := len(tokens)
+	for parser.pos < num {
+		instruction := parser.eval()
+		if instruction != nil {
+			fmt.Println("instructions:", instruction.string())
+			instructions = append(instructions, instruction)
+		}
+	}
+	return instructions
+}
+
+func (me *parser) eval() *instruction {
+	me.skipLines()
+	if me.eot() {
+		return nil
+	}
+	token := me.peek()
+	if token.is == tokenFunc {
+		return me.parseFunc()
+	}
+	panic("parser failed on " + me.fail())
+}
+
+func (me *parser) parseFunc() *instruction {
+	me.next()
+	i := &instruction{}
+	if me.eot() {
+		panic("failed to parse function")
+	}
+	return i
+}
+
+func (me *parser) skipLines() {
+	for !me.eot() {
+		token := me.peek()
+		if token.is != tokenLine {
+			break
+		}
+		me.next()
+	}
 }
 
 func (me *parser) next() *token {
@@ -29,5 +76,5 @@ func (me *parser) eot() bool {
 }
 
 func (me *parser) fail() string {
-	return "parser failed"
+	return fmt.Sprintf("token: %d %s\n", me.pos, me.tokens[me.pos].string())
 }

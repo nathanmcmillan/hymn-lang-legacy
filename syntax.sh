@@ -1,1 +1,1 @@
-cp -R coloring/sigil-script ~/.vscode/extensions/.
+cp -R syntax/sigil-script ~/.vscode/extensions/.

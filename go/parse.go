@@ -11,6 +11,10 @@ type instruction struct {
 	d string
 }
 
+type program struct {
+	multi []string
+}
+
 func (me *instruction) string() string {
 	return me.d
 }

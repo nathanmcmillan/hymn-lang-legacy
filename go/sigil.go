@@ -18,7 +18,8 @@ func compile(path string) {
 	fmt.Println("===")
 	tokens := tokenize(stream)
 	fmt.Println("===")
-	instructions := parse(tokens)
-	fmt.Println(instructions)
+	program := parse(tokens)
+	fmt.Println(program)
+	interpret()
 	fmt.Println("===")
 }

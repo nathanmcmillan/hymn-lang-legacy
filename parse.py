@@ -1,7 +1,9 @@
 functions = dict()
 variables = dict()
 
-functions["echo"] = True
+functions["echo"] = {
+    "args": ["s"]
+}
 
 
 class Parser():
@@ -36,16 +38,24 @@ def binary(left, op, right):
 
 def factor(parse):
     token = parse.token
+    print("(factor op)", token)
     op = token["type"]
-    if op == "number" or op == "id":
+    if op == "number":
         eat(parse, op)
         return token
+    if op == "id":
+        name = token["value"]
+        if name in functions:
+            return call(parse)
+        else:
+            eat(parse, op)
+            return token
     if op == "(":
         eat(parse, "(")
         tree = calc(parse)
         eat(parse, ")")
         return tree
-    raise AssertionError("syntax error in factor @ " + str(parse.pos))
+    raise AssertionError("factor error in factor @ " + str(parse.pos))
 
 
 def term(parse):
@@ -76,11 +86,17 @@ def calc(parse):
 
 def call(parse):
     token = parse.token
+    print("(call op)")
+    name = token["value"]
+    args = functions[name]["args"]
     eat(parse, "id")
     tree = dict()
     tree["type"] = "call"
-    tree["id"] = token["value"]
-    tree["value"] = calc(parse)
+    tree["func"] = name
+    parameters = []
+    for _ in args:
+        parameters.append(calc(parse))
+    tree["parameters"] = parameters
     return tree
 
 
@@ -95,8 +111,8 @@ def assign(parse):
     return tree
 
 
-def defineFunction(parse):
-    eat(parse, "func")
+def functionOp(parse):
+    eat(parse, "function")
     token = parse.token
     name = token["value"]
     if name in functions:
@@ -108,9 +124,29 @@ def defineFunction(parse):
         eat(parse, "id")
     eat(parse, "line")
     tree = dict()
-    tree["type"] = "func"
     tree["args"] = args
-    tree["id"] = name
+    branches = []
+    while True:
+        token = parse.token
+        if token["type"] == "line":
+            eat(parse, "line")
+            break
+        if token["type"] == "eof":
+            break
+        leaf = statement(parse)
+        branches.append(leaf)
+        if leaf["type"] == "return":
+            break
+    tree["value"] = branches
+    functions[name] = tree
+    return tree
+
+
+def returnOp(parse):
+    eat(parse, "return")
+    tree = dict()
+    tree["type"] = "return"
+    print("(return op)")
     tree["value"] = calc(parse)
     return tree
 
@@ -119,26 +155,40 @@ def statement(parse):
     token = parse.token
     op = token["type"]
     if op == "id":
-        val = token["value"]
-        if val in functions:
+        name = token["value"]
+        if name in functions:
             tree = call(parse)
         else:
             tree = assign(parse)
-    if op == "func":
-        tree = defineFunction(parse)
-    eat(parse, "line")
+        eat(parse, "line")
+    elif op == "function":
+        functionOp(parse)
+        tree = None
+    elif op == "return":
+        tree = returnOp(parse)
+        eat(parse, "line")
+    elif op == "line":
+        tree = None
+        eat(parse, "line")
+    elif op == "eof":
+        return None
+    else:
+        raise AssertionError("unknown statement op @ " + str(parse.pos))
     return tree
 
 
 def program(parse):
-    branches = [statement(parse)]
     while parse.token["type"] != "eof":
-        branches.append(statement(parse))
-    tree = dict()
-    tree["type"] = "program"
-    tree["value"] = branches
-    print(tree)
-    return tree
+        statement(parse)
+
+    prog = dict()
+    prog["imports"] = dict()
+    prog["globals"] = dict()
+    prog["locals"] = dict()
+    prog["functions"] = functions
+
+    print(prog)
+    return prog
 
 
 def read(tokens):

@@ -59,8 +59,8 @@ def read(source):
             continue
         (pos, word) = whileWord(pos, source)
         if word != "":
-            if word == "func":
-                tokens.append(simpleToken("func"))
+            if word == "function" or word == "return":
+                tokens.append(simpleToken(word))
             else:
                 tokens.append(valueToken("id", word))
             continue
@@ -75,8 +75,4 @@ def read(source):
             continue
         raise AssertionError("unknown token \"" + c + "\"")
     tokens.append(simpleToken("eof"))
-    i = 0
-    for t in tokens:
-        print(str(i) + ":", t)
-        i += 1
     return tokens

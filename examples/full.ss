@@ -32,7 +32,7 @@ def foo() bool
   return true
 --
 
-def foo.bar(int32, int32, int32) int64 maybe:error
+function foo.bar(int32, int32, int32) int64 maybe:error
   num = len(foo.b)
   loop i = 0, i < num, i += 1
     print("index =", i)

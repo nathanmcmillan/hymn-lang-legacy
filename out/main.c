@@ -1,9 +1,10 @@
 #include <stdio.h>
 
 int square(int x, int z) {
-  int x = x + 1;
-  int z = z + 1;
-  return x * z;
+  x = x + 1;
+  z = z + 1;
+  int w = 5 / 2;
+  return x * z * w;
 }
 
 int main() {

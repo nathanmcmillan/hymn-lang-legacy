@@ -111,15 +111,37 @@
           }
         },
         {
+          "id": "w",
+          "type": "assign",
+          "value": {
+            "left": {
+              "type": "number",
+              "value": "5"
+            },
+            "right": {
+              "type": "number",
+              "value": "2"
+            },
+            "type": "/"
+          }
+        },
+        {
           "type": "return",
           "value": {
             "left": {
-              "type": "id",
-              "value": "x"
+              "left": {
+                "type": "id",
+                "value": "x"
+              },
+              "right": {
+                "type": "id",
+                "value": "z"
+              },
+              "type": "*"
             },
             "right": {
               "type": "id",
-              "value": "z"
+              "value": "w"
             },
             "type": "*"
           }

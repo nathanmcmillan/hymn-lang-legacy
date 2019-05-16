@@ -1,4 +1,5 @@
 functions = dict()
+objects = dict()
 variables = dict()
 
 functions["echo"] = {
@@ -50,6 +51,8 @@ def factor(parse):
         else:
             eat(parse, op)
             return token
+    if op == "new":
+        return objectInitOp(parse)
     if op == "(":
         eat(parse, "(")
         tree = calc(parse)
@@ -111,6 +114,34 @@ def assign(parse):
     return tree
 
 
+def objectOp(parse):
+    eat(parse, "object")
+    token = parse.token
+    name = token["value"]
+    if name in objects:
+        raise AssertionError("object \"" + name + "\" already defined @ " + str(parse.pos))
+    eat(parse, "id")
+    eat(parse, "line")
+    tree = dict()
+    vars = []
+    tree["vars"] = vars
+    while True:
+        token = parse.token
+        if token["type"] == "line":
+            eat(parse, "line")
+            break
+        if token["type"] == "eof":
+            break
+        if token["type"] == "id":
+            varname = token["value"]
+            vars.append(varname)
+            eat(parse, "id")
+            eat(parse, "line")
+            break
+        raise AssertionError("object \"" + name + "\" unknown op @ " + str(parse.pos))
+    objects[name] = tree
+
+
 def functionOp(parse):
     eat(parse, "function")
     token = parse.token
@@ -139,7 +170,6 @@ def functionOp(parse):
             break
     tree["value"] = branches
     functions[name] = tree
-    return tree
 
 
 def returnOp(parse):
@@ -149,6 +179,30 @@ def returnOp(parse):
     print("(return op)")
     tree["value"] = calc(parse)
     return tree
+
+
+def deleteOp(parse):
+    eat(parse, "delete")
+    tree = dict()
+    tree["type"] = "delete"
+    print("(delete op)")
+    token = parse.token
+    eat(parse, "id")
+    tree["value"] = token["value"]
+    return tree
+
+
+def objectInitOp(parse):
+    eat(parse, "new")
+    tree = dict()
+    tree["type"] = "new"
+    print("(new op)")
+    token = parse.token
+    eat(parse, "id")
+    if token["value"] not in objects:
+        raise AssertionError("new object must be called for a defined object @ " + str(parse.pos))
+    tree["value"] = token["value"]
+    pass
 
 
 def statement(parse):
@@ -163,6 +217,15 @@ def statement(parse):
         eat(parse, "line")
     elif op == "function":
         functionOp(parse)
+        tree = None
+    elif op == "new":
+        objectInitOp(parse)
+        tree = None
+    elif op == "object":
+        objectOp(parse)
+        tree = None
+    elif op == "delete":
+        deleteOp(parse)
         tree = None
     elif op == "return":
         tree = returnOp(parse)

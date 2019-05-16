@@ -47,6 +47,13 @@ def valueToken(of, value):
     return token
 
 
+def peek(pos, source):
+    size = len(source)
+    if pos < size:
+        return source[pos]
+    return "eof"
+
+
 def read(source):
     tokens = []
     pos = 0
@@ -59,13 +66,13 @@ def read(source):
             continue
         (pos, word) = whileWord(pos, source)
         if word != "":
-            if word == "function" or word == "return":
+            if word in ("function", "return", "object", "new", "delete"):
                 tokens.append(simpleToken(word))
             else:
                 tokens.append(valueToken("id", word))
             continue
         c = source[pos]
-        if c in "+-*/()=":
+        if c in "+-*/()=.":
             tokens.append(simpleToken(c))
             pos += 1
             continue

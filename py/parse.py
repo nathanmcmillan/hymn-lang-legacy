@@ -1,10 +1,12 @@
 functions = dict()
+function_order = list()
 objects = dict()
 variables = dict()
 
 functions["echo"] = {
     "args": ["s"]
 }
+function_order.append("echo")
 
 
 class Parser():
@@ -39,9 +41,11 @@ def binary(left, op, right):
 
 def factor(parse):
     token = parse.token
-    print("(factor op)", token)
     op = token["type"]
     if op == "number":
+        eat(parse, op)
+        return token
+    if op == "string":
         eat(parse, op)
         return token
     if op == "id":
@@ -58,7 +62,7 @@ def factor(parse):
         tree = calc(parse)
         eat(parse, ")")
         return tree
-    raise AssertionError("factor error in factor @ " + str(parse.pos))
+    raise AssertionError("factor error @ " + str(parse.pos))
 
 
 def term(parse):
@@ -89,7 +93,6 @@ def calc(parse):
 
 def call(parse):
     token = parse.token
-    print("(call op)")
     name = token["value"]
     args = functions[name]["args"]
     eat(parse, "id")
@@ -170,6 +173,7 @@ def functionOp(parse):
             break
     tree["value"] = branches
     functions[name] = tree
+    function_order.append(name)
 
 
 def returnOp(parse):
@@ -249,8 +253,8 @@ def program(parse):
     prog["globals"] = dict()
     prog["locals"] = dict()
     prog["functions"] = functions
+    prog["function_order"] = function_order
 
-    print(prog)
     return prog
 
 

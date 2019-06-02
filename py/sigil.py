@@ -7,6 +7,7 @@ import os
 
 
 def main():
+    tokens = None
     try:
         a = sys.argv[1]
         with open(a) as f:

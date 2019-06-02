@@ -1,0 +1,2 @@
+syntax "s-code" ".ss"
+color red "\<(function|object)\>"

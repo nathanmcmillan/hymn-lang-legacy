@@ -34,6 +34,19 @@ def whileWord(pos, source):
     return pos, word
 
 
+def whileString(pos, source):
+    value = ""
+    size = len(source)
+    while pos < size:
+        c = source[pos]
+        pos += 1
+        if c != "\"":
+            value += c
+            continue
+        break
+    return pos, value
+
+
 def simpleToken(of):
     token = dict()
     token["type"] = of
@@ -72,6 +85,11 @@ def read(source):
                 tokens.append(valueToken("id", word))
             continue
         c = source[pos]
+        if c == "\"":
+            pos += 1
+            (pos, value) = whileString(pos, source)
+            tokens.append(valueToken("string", value))
+            continue
         if c in "+-*/()=.":
             tokens.append(simpleToken(c))
             pos += 1

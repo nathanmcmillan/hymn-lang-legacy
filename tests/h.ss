@@ -1,10 +1,14 @@
-object foo
-  a
+class foo
+  a int
+  b string
 
 function main
   x = new foo
   x.a = 2
+  x.b = "hi"
   z = x.a
   echo z
   echo x.a
-  delete x
+  w = x.b
+  echo w
+  echo x.b

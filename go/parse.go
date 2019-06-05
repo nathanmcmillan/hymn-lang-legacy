@@ -2,146 +2,47 @@ package main
 
 import "fmt"
 
-type node struct {
-	is    string
-	value string
-	has   []*node
-}
-
-type variable struct {
-	is   string
-	name string
-}
-
-type scope struct {
-	root      *scope
-	variables map[string]*variable
-}
-
-type function struct {
-	args        []*variable
-	expressions []*node
-}
-
-type program struct {
-	imports       map[string]bool
-	objects       map[string][]*variable
-	rootScope     *scope
-	scope         *scope
-	functions     map[string]*function
-	functionOrder []string
-}
-
-type parser struct {
-	tokens  []*token
-	token   *token
-	pos     int
-	program *program
-}
-
 func (me *variable) string() string {
 	return "{is:" + me.is + ", name:" + me.name + "}"
-}
-
-func fmc(level int, content string) string {
-	for i := 0; i < level; i++ {
-		content = "  " + content
-	}
-	return content
-}
-
-func (me *node) string(lv int) string {
-	s := ""
-	s += fmc(lv, "{is:"+me.is)
-	if me.value != "" {
-		s += ", value:" + me.value
-	}
-	if len(me.has) > 0 {
-		s += ", has[\n"
-		lv++
-		for ix, has := range me.has {
-			if ix > 0 {
-				s += ",\n"
-			}
-			s += has.string(lv)
-		}
-		lv--
-		s += "\n"
-		s += fmc(lv, "]")
-	}
-	s += "}"
-	return s
 }
 
 func (me *program) dump() string {
 	s := ""
 	lv := 0
-	s += fmc(lv, "functions:{\n")
+	s += fmc(lv) + "functions{\n"
 	for name, function := range me.functions {
 		lv++
-		s += fmc(lv, name+":{\n")
+		s += fmc(lv) + name + "{\n"
 		lv++
-		s += fmc(lv, "args:[\n")
-		lv++
-		for ix, arg := range function.args {
-			if ix > 0 {
-				s += ",\n"
+		if len(function.args) > 0 {
+			s += fmc(lv) + "args[\n"
+			lv++
+			for _, arg := range function.args {
+				s += fmc(lv) + arg.string() + "\n"
 			}
-			s += fmc(lv, arg.string())
+			lv--
+			s += fmc(lv) + "]\n"
+		}
+		if len(function.expressions) > 0 {
+			s += fmc(lv) + "expressions[\n"
+			lv++
+			for _, expr := range function.expressions {
+				s += expr.string(lv) + "\n"
+			}
+			lv--
+			s += fmc(lv) + "]\n"
 		}
 		lv--
-		s += "\n"
-		s += fmc(lv, "]\n")
-		s += fmc(lv, "expressions:[\n")
-		lv++
-		for ix, expr := range function.expressions {
-			if ix > 0 {
-				s += ",\n"
-			}
-			s += expr.string(lv)
-		}
-		lv--
-		s += "\n"
-		s += fmc(lv, "]\n")
-		lv--
-		s += fmc(lv, "}\n")
+		s += fmc(lv) + "}\n"
 		lv--
 	}
-	s += fmc(lv, "}\n")
+	s += fmc(lv) + "}\n"
 	return s
-}
-
-func nodeInit(is string) *node {
-	n := &node{}
-	n.is = is
-	n.has = make([]*node, 0)
-	return n
-}
-
-func (me *node) push(n *node) {
-	me.has = append(me.has, n)
-}
-
-func scopeInit(root *scope) *scope {
-	s := &scope{}
-	s.root = root
-	s.variables = make(map[string]*variable)
-	return s
-}
-
-func programInit() *program {
-	p := &program{}
-	p.imports = make(map[string]bool)
-	p.rootScope = scopeInit(nil)
-	p.scope = p.rootScope
-	p.functions = make(map[string]*function)
-	p.functionOrder = make([]string, 0)
-	p.libInit()
-	return p
 }
 
 func (me *program) libInit() {
 	e := funcInit()
+	e.typed = "void"
 	e.args = append(e.args, varInit("string", "s"))
 	me.functions["echo"] = e
 }
@@ -190,20 +91,21 @@ func parse(tokens []*token) *program {
 	me.program = programInit()
 	me.forLines()
 	for me.token.is != "eof" {
-		me.statement()
+		me.expression()
 	}
+	delete(me.program.functions, "echo")
 	return me.program
 }
 
 func (me *parser) eat(want string) {
 	token := me.token
 	if token.is != want {
-		panic(fmt.Sprintf("unexpected token was "+token.string()+" instead of {type:"+want+"} at position %d", me.pos))
+		panic(fmt.Sprintf("unexpected token was "+token.string()+" instead of {type:"+want+"} on line %d", (me.pos + 1)))
 	}
 	me.next()
 }
 
-func (me *parser) statement() *node {
+func (me *parser) expression() *node {
 	token := me.token
 	op := token.is
 	if op == "id" {
@@ -222,8 +124,8 @@ func (me *parser) statement() *node {
 	} else if op == "new" {
 		me.construct()
 		return nil
-	} else if op == "object" {
-		me.object()
+	} else if op == "class" {
+		me.class()
 		return nil
 	} else if op == "free" {
 		me.free()
@@ -238,7 +140,7 @@ func (me *parser) statement() *node {
 	} else if op == "eof" {
 		return nil
 	}
-	panic("unknown statement " + me.fail())
+	panic("unknown expression " + me.fail())
 }
 
 func (me *parser) function() {
@@ -251,11 +153,17 @@ func (me *parser) function() {
 	}
 	me.eat("id")
 	fn := funcInit()
+	fn.typed = "void"
 	for me.token.is != "line" {
-		fn.args = append(fn.args, varInit("int", me.token.value))
+		arg := me.token.value
+		fn.args = append(fn.args, varInit("int", arg))
 		me.eat("id")
 	}
 	me.eat("line")
+	me.program.pushScope()
+	for _, arg := range fn.args {
+		me.program.scope.variables[arg.name] = arg
+	}
 	for {
 		token = me.token
 		if token.is == "line" {
@@ -265,30 +173,36 @@ func (me *parser) function() {
 		if token.is == "eof" {
 			break
 		}
-		stat := me.statement()
-		fn.expressions = append(fn.expressions, stat)
-		if stat.is == "return" {
+		expr := me.expression()
+		fn.expressions = append(fn.expressions, expr)
+		if expr.is == "return" {
+			fn.typed = expr.typed
 			break
 		}
 	}
+	me.program.popScope()
 	program.functions[name] = fn
 	program.functionOrder = append(program.functionOrder, name)
 }
 
 func (me *parser) returning() *node {
 	me.eat("return")
+	calc := me.calc()
 	n := nodeInit("return")
-	n.push(me.calc())
+	n.typed = calc.typed
+	n.push(calc)
 	return n
 }
 
 func (me *parser) call() *node {
 	token := me.token
 	name := token.value
-	args := me.program.functions[name].args
+	fn := me.program.functions[name]
+	args := fn.args
 	me.eat("id")
 	n := nodeInit("call")
 	n.value = name
+	n.typed = fn.typed
 	for range args {
 		n.push(me.calc())
 	}
@@ -299,9 +213,12 @@ func (me *parser) assign() *node {
 	token := me.token
 	me.eat("id")
 	me.eat("=")
+	calc := me.calc()
 	n := nodeInit("assign")
 	n.value = token.value
-	n.push(me.calc())
+	n.typed = calc.typed
+	n.push(calc)
+	me.program.scope.variables[n.value] = varInit(n.typed, n.value)
 	return n
 }
 
@@ -310,8 +227,8 @@ func (me *parser) construct() *node {
 	token := me.token
 	me.eat("id")
 	name := token.value
-	if _, ok := me.program.objects[name]; !ok {
-		panic("object does not exist " + me.fail())
+	if _, ok := me.program.classes[name]; !ok {
+		panic("class does not exist " + me.fail())
 	}
 	n := nodeInit("new")
 	n.value = name
@@ -328,7 +245,11 @@ func (me *parser) free() *node {
 }
 
 func (me *parser) binary(left, right *node, op string) *node {
+	if left.typed != "int" || right.typed != "int" {
+		panic("binary operation must use integers")
+	}
 	n := nodeInit(op)
+	n.typed = "int"
 	n.push(left)
 	n.push(right)
 	return n
@@ -367,23 +288,32 @@ func (me *parser) term() *node {
 func (me *parser) factor() *node {
 	token := me.token
 	op := token.is
-	if op == "number" {
+	if op == "int" {
 		me.eat(op)
-		n := nodeInit("number")
+		n := nodeInit("int")
+		n.typed = "int"
 		n.value = token.value
 		return n
 	}
 	if op == "string" {
 		me.eat(op)
 		n := nodeInit("string")
+		n.typed = "string"
 		n.value = token.value
+		return n
 	}
 	if op == "id" {
-		if _, ok := me.program.functions[token.value]; ok {
+		name := token.value
+		if _, ok := me.program.functions[name]; ok {
 			return me.call()
+		}
+		sv, ok := me.program.scope.variables[name]
+		if !ok {
+			panic("variable out of scope")
 		}
 		me.eat(op)
 		n := nodeInit("id")
+		n.typed = sv.is
 		n.value = token.value
 		return n
 	}
@@ -399,12 +329,12 @@ func (me *parser) factor() *node {
 	panic("unknown factor " + me.fail())
 }
 
-func (me *parser) object() {
-	me.eat("object")
+func (me *parser) class() {
+	me.eat("class")
 	token := me.token
 	name := token.value
-	if _, ok := me.program.objects[name]; ok {
-		panic("object already defined " + me.fail())
+	if _, ok := me.program.classes[name]; ok {
+		panic("class already defined " + me.fail())
 	}
 	me.eat("id")
 	me.eat("line")
@@ -419,12 +349,14 @@ func (me *parser) object() {
 			break
 		}
 		if token.is == "id" {
-			vname := token.value
-			vs = append(vs, varInit("int", vname))
+			vn := token.value
 			me.eat("id")
+			token := me.token
+			me.eat("id")
+			vt := token.value
 			me.eat("line")
-			break
+			vs = append(vs, varInit(vt, vn))
 		}
 	}
-	me.program.objects[name] = vs
+	me.program.classes[name] = vs
 }

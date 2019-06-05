@@ -7,10 +7,19 @@ import (
 )
 
 const (
-	ftree = "out/tree"
-	fcode = "out/main.c"
-	fapp  = "out/main"
+	ftokens = "out/tokens"
+	ftree   = "out/tree"
+	fcode   = "out/main.c"
+	fapp    = "out/main"
 )
+
+func fmc(depth int) string {
+	space := ""
+	for i := 0; i < depth; i++ {
+		space += "  "
+	}
+	return space
+}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -28,34 +37,47 @@ func build(path string) {
 	fmt.Println(string(data))
 	fmt.Println("=== tokens ===")
 	tokens := tokenize(stream)
+	if exists(ftokens) {
+		os.Remove(ftokens)
+	}
+	dump := ""
+	for _, token := range tokens {
+		dump += token.string() + "\n"
+	}
+	create(ftokens, dump)
 	fmt.Println("=== parse ===")
 	if exists(ftree) {
 		os.Remove(ftree)
 	}
-	tree := parse(tokens)
-	dump := tree.dump()
-	fmt.Println(dump)
+	program := parse(tokens)
+	dump = program.dump()
 	if exists(ftree) {
 		os.Remove(ftree)
 	}
 	create(ftree, dump)
 	fmt.Println("=== code ===")
-	code := compile()
+	code := compile(program)
 	if exists(fcode) {
 		os.Remove(fcode)
 	}
 	fmt.Println(code)
-	fmt.Println("=== run ===")
+	create(fcode, code)
+	fmt.Println("=== gcc ===")
 	if exists(fapp) {
 		os.Remove(fapp)
 	}
-	if exists(fcode) {
-		out, _ := exec.Command("gcc " + fcode + " -o " + fapp).CombinedOutput()
+	out, err := exec.Command("gcc", fcode, "-o", fapp).CombinedOutput()
+	std := string(out)
+	if std != "" {
+		fmt.Println(std)
+	}
+	if err != nil {
+		panic(err)
+	}
+	if exists(fapp) {
+		fmt.Println("=== run ===")
+		out, _ = exec.Command(fapp).CombinedOutput()
 		fmt.Println(string(out))
-		if exists(fapp) {
-			out, _ = exec.Command(fapp).CombinedOutput()
-			fmt.Println(string(out))
-		}
 	}
 	fmt.Println("===")
 }

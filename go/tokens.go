@@ -8,19 +8,9 @@ import (
 var keywords = map[string]bool{
 	"function": true,
 	"return":   true,
-	"object":   true,
+	"class":    true,
 	"new":      true,
 	"free":     true,
-}
-
-type token struct {
-	is    string
-	value string
-}
-
-type tokenizer struct {
-	stream  *stream
-	current string
 }
 
 func (me *token) string() string {
@@ -111,10 +101,12 @@ func tokenize(stream *stream) []*token {
 	size := len(stream.data)
 	for stream.pos < size {
 		me.forSpace()
+		if stream.pos == size {
+			break
+		}
 		number := me.forNumber()
 		if number != "" {
-			token := valueToken("number", number)
-			fmt.Println(len(tokens), token.string())
+			token := valueToken("int", number)
 			tokens = append(tokens, token)
 			continue
 		}
@@ -126,7 +118,6 @@ func tokenize(stream *stream) []*token {
 			} else {
 				token = valueToken("id", word)
 			}
-			fmt.Println(len(tokens), token.string())
 			tokens = append(tokens, token)
 			continue
 		}
@@ -134,28 +125,24 @@ func tokenize(stream *stream) []*token {
 		if c == '"' {
 			value := me.forString()
 			token := valueToken("string", value)
-			fmt.Println(len(tokens), token.string())
 			tokens = append(tokens, token)
 			continue
 		}
 		if strings.IndexByte("+-*/()=.", c) >= 0 {
 			stream.next()
 			token := simpleToken(string(c))
-			fmt.Println(len(tokens), token.string())
 			tokens = append(tokens, token)
 			continue
 		}
 		if c == '\n' {
 			stream.next()
 			token := simpleToken("line")
-			fmt.Println(len(tokens), token.string())
 			tokens = append(tokens, token)
 			continue
 		}
 		panic("unknown token " + stream.fail())
 	}
 	token := simpleToken("eof")
-	fmt.Println(len(tokens), token.string())
 	tokens = append(tokens, token)
 	return tokens
 }

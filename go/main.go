@@ -37,18 +37,15 @@ func build(path string) {
 	fmt.Println(string(data))
 	fmt.Println("=== tokens ===")
 	tokens := tokenize(stream)
-	if exists(ftokens) {
-		os.Remove(ftokens)
-	}
 	dump := ""
 	for _, token := range tokens {
 		dump += token.string() + "\n"
 	}
+	if exists(ftokens) {
+		os.Remove(ftokens)
+	}
 	create(ftokens, dump)
 	fmt.Println("=== parse ===")
-	if exists(ftree) {
-		os.Remove(ftree)
-	}
 	program := parse(tokens)
 	dump = program.dump()
 	if exists(ftree) {

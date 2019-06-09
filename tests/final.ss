@@ -5,16 +5,16 @@ variables
   mutable nextId
   name = "foo"
 
-object foo
+class foo
   f float32[]
 
-function glob_foo: int x -> int
+function glob_foo int:x -> int
   return x + 2
 
-function appender: list<string> ls
+function appender list<string>:ls
    ls[1] = "foo"
 
-function setter: map<string int> mp
+function setter map<string int>:mp
   mp["foo"] = 99
 
 function main

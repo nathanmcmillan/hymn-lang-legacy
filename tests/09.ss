@@ -1,5 +1,5 @@
-function get
-  return 3 + 4 * 5 + 6
+function get : string
+  return "hello world"
 
 function main
   x = get

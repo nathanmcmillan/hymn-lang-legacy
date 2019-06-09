@@ -9,8 +9,23 @@ func (me *variable) string() string {
 func (me *program) dump() string {
 	s := ""
 	lv := 0
-	s += fmc(lv) + "functions{\n"
-	for name, function := range me.functions {
+	s += fmc(lv) + "classes[\n"
+	for _, name := range me.classOrder {
+		class := me.classes[name]
+		lv++
+		s += fmc(lv) + class.name + "[\n"
+		lv++
+		for _, classVar := range class.variables {
+			s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
+		}
+		lv--
+		s += fmc(lv) + "]\n"
+		lv--
+	}
+	s += fmc(lv) + "]\n"
+	s += fmc(lv) + "functions[\n"
+	for _, name := range me.functionOrder {
+		function := me.functions[name]
 		lv++
 		s += fmc(lv) + name + "{\n"
 		lv++
@@ -36,14 +51,14 @@ func (me *program) dump() string {
 		s += fmc(lv) + "}\n"
 		lv--
 	}
-	s += fmc(lv) + "}\n"
+	s += fmc(lv) + "]\n"
 	return s
 }
 
 func (me *program) libInit() {
 	e := funcInit()
 	e.typed = "void"
-	e.args = append(e.args, varInit("string", "s"))
+	e.args = append(e.args, varInit("?", "s"))
 	me.functions["echo"] = e
 }
 
@@ -154,12 +169,28 @@ func (me *parser) function() {
 	me.eat("id")
 	fn := funcInit()
 	fn.typed = "void"
-	for me.token.is != "line" {
-		arg := me.token.value
-		fn.args = append(fn.args, varInit("int", arg))
-		me.eat("id")
+	for true {
+		if me.token.is == "line" {
+			me.eat("line")
+			break
+		}
+		if me.token.is == ":" {
+			me.eat(":")
+			fn.typed = me.token.value
+			me.eat("id")
+			continue
+		}
+		if me.token.is == "id" {
+			arg := me.token.value
+			me.eat("id")
+			me.eat("=")
+			typed := me.token.value
+			me.eat("id")
+			fn.args = append(fn.args, varInit(typed, arg))
+			continue
+		}
+		panic("unexpected token in function definition " + me.fail())
 	}
-	me.eat("line")
 	me.program.pushScope()
 	for _, arg := range fn.args {
 		me.program.scope.variables[arg.name] = arg
@@ -176,13 +207,15 @@ func (me *parser) function() {
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)
 		if expr.is == "return" {
-			fn.typed = expr.typed
+			if fn.typed != expr.typed {
+				panic("function " + name + " returns " + fn.typed + " but found " + expr.typed)
+			}
 			break
 		}
 	}
 	me.program.popScope()
-	program.functions[name] = fn
 	program.functionOrder = append(program.functionOrder, name)
+	program.functions[name] = fn
 }
 
 func (me *parser) returning() *node {
@@ -203,22 +236,76 @@ func (me *parser) call() *node {
 	n := nodeInit("call")
 	n.value = name
 	n.typed = fn.typed
-	for range args {
-		n.push(me.calc())
+	for _, arg := range args {
+		ca := me.calc()
+		if ca.typed != arg.is && arg.is != "?" {
+			panic("argument " + arg.is + " does not match parameter " + ca.typed + " " + me.fail())
+		}
+		n.push(ca)
 	}
 	return n
 }
 
-func (me *parser) assign() *node {
-	token := me.token
+func (me *parser) eatvar() *node {
+	root := nodeInit("variable")
+	root.value = me.token.value
 	me.eat("id")
+	for me.token.is == "." {
+		fmt.Println("root.value =", root.value)
+		if root.is == "variable" {
+			scopeVar, ok := me.program.scope.variables[root.value]
+			if !ok {
+				panic("variable out of scope " + me.fail())
+			}
+			root.typed = scopeVar.is
+			root.is = "root-variable"
+
+		}
+		rootClass, ok := me.program.classes[root.typed]
+		if !ok {
+			panic("class " + root.typed + " does not exist " + me.fail())
+		}
+		me.eat(".")
+		member := nodeInit("member-variable")
+		memberName := me.token.value
+		member.value = memberName
+		classVar, ok := rootClass.variables[memberName]
+		if !ok {
+			panic("member variable " + memberName + " does not exist " + me.fail())
+		}
+		member.typed = classVar.is
+		member.push(root)
+		root = member
+		me.eat("id")
+	}
+	if root.is == "variable" {
+		scopeVar, ok := me.program.scope.variables[root.value]
+		if ok {
+			root.typed = scopeVar.is
+		} else {
+			root.typed = "?"
+		}
+	}
+	return root
+}
+
+func (me *parser) assign() *node {
+	assignVar := me.eatvar()
 	me.eat("=")
 	calc := me.calc()
+	if assignVar.is == "variable" {
+		assignVar.typed = calc.typed
+		me.program.scope.variables[assignVar.value] = varInit(calc.typed, assignVar.value)
+	} else if assignVar.is == "member-variable" {
+		if assignVar.typed != calc.typed {
+			panic("member variable type " + assignVar.typed + " does not match expression type " + calc.typed + " " + me.fail())
+		}
+	}
 	n := nodeInit("assign")
-	n.value = token.value
-	n.typed = calc.typed
+	n.typed = "void"
+	n.push(assignVar)
+	fmt.Println("assign set", assignVar.string(0))
 	n.push(calc)
-	me.program.scope.variables[n.value] = varInit(n.typed, n.value)
 	return n
 }
 
@@ -231,7 +318,7 @@ func (me *parser) construct() *node {
 		panic("class does not exist " + me.fail())
 	}
 	n := nodeInit("new")
-	n.value = name
+	n.typed = name
 	return n
 }
 
@@ -307,15 +394,11 @@ func (me *parser) factor() *node {
 		if _, ok := me.program.functions[name]; ok {
 			return me.call()
 		}
-		sv, ok := me.program.scope.variables[name]
+		_, ok := me.program.scope.variables[name]
 		if !ok {
-			panic("variable out of scope")
+			panic("variable out of scope " + me.fail())
 		}
-		me.eat(op)
-		n := nodeInit("id")
-		n.typed = sv.is
-		n.value = token.value
-		return n
+		return me.eatvar()
 	}
 	if op == "new" {
 		return me.construct()
@@ -338,7 +421,8 @@ func (me *parser) class() {
 	}
 	me.eat("id")
 	me.eat("line")
-	vs := make([]*variable, 0)
+	vorder := make([]string, 0)
+	vmap := make(map[string]*variable)
 	for true {
 		token := me.token
 		if token.is == "line" {
@@ -355,8 +439,10 @@ func (me *parser) class() {
 			me.eat("id")
 			vt := token.value
 			me.eat("line")
-			vs = append(vs, varInit(vt, vn))
+			vorder = append(vorder, vn)
+			vmap[vn] = varInit(vt, vn)
 		}
 	}
-	me.program.classes[name] = vs
+	me.program.classOrder = append(me.program.classOrder, name)
+	me.program.classes[name] = classInit(name, vorder, vmap)
 }

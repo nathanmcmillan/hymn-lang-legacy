@@ -1,4 +1,4 @@
-function square x z
+function square x=int z=int : int
   x = x + 1
   z = z + 1
   w = 5 / 2

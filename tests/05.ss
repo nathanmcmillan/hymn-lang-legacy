@@ -1,4 +1,4 @@
-function square x y
+function square x=int y=int : int
   z = x + y * 5 - 7
   return z * z
 

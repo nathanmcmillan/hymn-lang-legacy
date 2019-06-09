@@ -33,18 +33,25 @@ type function struct {
 	typed       string
 }
 
+type class struct {
+	name          string
+	variables     map[string]*variable
+	variableOrder []string
+}
+
 type program struct {
-	imports       map[string]bool
-	classes       map[string][]*variable
 	rootScope     *scope
 	scope         *scope
+	imports       map[string]bool
+	classes       map[string]*class
+	classOrder    []string
 	functions     map[string]*function
 	functionOrder []string
 }
 
 type cfile struct {
 	imports       map[string]bool
-	classes       map[string][]*variable
+	classes       map[string]*class
 	rootScope     *scope
 	scope         *scope
 	functions     map[string]*function
@@ -78,7 +85,7 @@ func (me *node) string(lv int) string {
 		lv++
 		for ix, has := range me.has {
 			if ix > 0 {
-				s += ",\n"
+				s += "\n"
 			}
 			s += has.string(lv)
 		}
@@ -115,6 +122,14 @@ func (me *cnode) string(lv int) string {
 	return s
 }
 
+func classInit(name string, variableOrder []string, variables map[string]*variable) *class {
+	c := &class{}
+	c.name = name
+	c.variableOrder = variableOrder
+	c.variables = variables
+	return c
+}
+
 func scopeInit(root *scope) *scope {
 	s := &scope{}
 	s.root = root
@@ -124,12 +139,13 @@ func scopeInit(root *scope) *scope {
 
 func programInit() *program {
 	p := &program{}
-	p.imports = make(map[string]bool)
 	p.rootScope = scopeInit(nil)
 	p.scope = p.rootScope
+	p.imports = make(map[string]bool)
+	p.classes = make(map[string]*class, 0)
+	p.classOrder = make([]string, 0)
 	p.functions = make(map[string]*function)
 	p.functionOrder = make([]string, 0)
-	p.classes = make(map[string][]*variable, 0)
 	p.libInit()
 	return p
 }
@@ -150,7 +166,7 @@ func cfileInit() *cfile {
 	c.scope = c.rootScope
 	c.functions = make(map[string]*function)
 	c.functionOrder = make([]string, 0)
-	c.classes = make(map[string][]*variable, 0)
+	c.classes = make(map[string]*class, 0)
 	return c
 }
 

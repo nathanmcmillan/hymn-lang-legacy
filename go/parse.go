@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func (me *variable) string() string {
 	return "{is:" + me.is + ", name:" + me.name + "}"
@@ -9,20 +12,22 @@ func (me *variable) string() string {
 func (me *program) dump() string {
 	s := ""
 	lv := 0
-	s += fmc(lv) + "classes[\n"
-	for _, name := range me.classOrder {
-		class := me.classes[name]
-		lv++
-		s += fmc(lv) + class.name + "[\n"
-		lv++
-		for _, classVar := range class.variables {
-			s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
+	if len(me.classOrder) > 0 {
+		s += fmc(lv) + "classes[\n"
+		for _, name := range me.classOrder {
+			class := me.classes[name]
+			lv++
+			s += fmc(lv) + class.name + "[\n"
+			lv++
+			for _, classVar := range class.variables {
+				s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
+			}
+			lv--
+			s += fmc(lv) + "]\n"
+			lv--
 		}
-		lv--
 		s += fmc(lv) + "]\n"
-		lv--
 	}
-	s += fmc(lv) + "]\n"
 	s += fmc(lv) + "functions[\n"
 	for _, name := range me.functionOrder {
 		function := me.functions[name]
@@ -82,7 +87,7 @@ func (me *parser) next() {
 }
 
 func (me *parser) peek() *token {
-	return me.tokens[me.pos]
+	return me.tokens[me.pos+1]
 }
 
 func (me *parser) fail() string {
@@ -91,7 +96,7 @@ func (me *parser) fail() string {
 
 func (me *parser) forLines() {
 	for me.pos != len(me.tokens) {
-		token := me.peek()
+		token := me.token
 		if token.is != "line" {
 			break
 		}
@@ -246,37 +251,69 @@ func (me *parser) call() *node {
 	return n
 }
 
+func parseArrayType(typed string) string {
+	return typed[0:strings.Index(typed, "[")]
+}
+
+func checkIsArray(typed string) bool {
+	return strings.HasSuffix(typed, "[]")
+}
+
 func (me *parser) eatvar() *node {
 	root := nodeInit("variable")
 	root.value = me.token.value
 	me.eat("id")
-	for me.token.is == "." {
-		fmt.Println("root.value =", root.value)
-		if root.is == "variable" {
-			scopeVar, ok := me.program.scope.variables[root.value]
-			if !ok {
-				panic("variable out of scope " + me.fail())
-			}
-			root.typed = scopeVar.is
-			root.is = "root-variable"
+	for {
+		if me.token.is == "." {
+			if root.is == "variable" {
+				scopeVar, ok := me.program.scope.variables[root.value]
+				if !ok {
+					panic("variable out of scope " + me.fail())
+				}
+				root.typed = scopeVar.is
+				root.is = "root-variable"
 
+			}
+			rootClass, ok := me.program.classes[root.typed]
+			if !ok {
+				panic("class " + root.typed + " does not exist " + me.fail())
+			}
+			me.eat(".")
+			member := nodeInit("member-variable")
+			memberName := me.token.value
+			member.value = memberName
+			classVar, ok := rootClass.variables[memberName]
+			if !ok {
+				panic("member variable " + memberName + " does not exist " + me.fail())
+			}
+			member.typed = classVar.is
+			member.push(root)
+			root = member
+			me.eat("id")
+		} else if me.token.is == "[" {
+			if root.is == "variable" {
+				scopeVar, ok := me.program.scope.variables[root.value]
+				if !ok {
+					panic("variable out of scope " + me.fail())
+				}
+				root.typed = scopeVar.is
+				root.is = "root-variable"
+			}
+			if !checkIsArray(root.typed) {
+				panic("root variable is not array " + me.fail())
+			}
+			atype := parseArrayType(root.typed)
+			me.eat("[")
+			member := nodeInit("array-member")
+			member.value = me.token.value
+			member.typed = atype
+			member.push(root)
+			root = member
+			me.eat("int")
+			me.eat("]")
+		} else {
+			break
 		}
-		rootClass, ok := me.program.classes[root.typed]
-		if !ok {
-			panic("class " + root.typed + " does not exist " + me.fail())
-		}
-		me.eat(".")
-		member := nodeInit("member-variable")
-		memberName := me.token.value
-		member.value = memberName
-		classVar, ok := rootClass.variables[memberName]
-		if !ok {
-			panic("member variable " + memberName + " does not exist " + me.fail())
-		}
-		member.typed = classVar.is
-		member.push(root)
-		root = member
-		me.eat("id")
 	}
 	if root.is == "variable" {
 		scopeVar, ok := me.program.scope.variables[root.value]
@@ -372,20 +409,35 @@ func (me *parser) term() *node {
 	return node
 }
 
+func (me *parser) array(is string) *node {
+	me.eat("[")
+	size := me.token.value
+	me.eat("int")
+	me.eat("]")
+	n := nodeInit("array")
+	n.typed = is + "[]"
+	ns := nodeInit("int")
+	ns.value = size
+	ns.typed = "int"
+	n.push(ns)
+	fmt.Println("array node =", n.string(0))
+	return n
+}
+
 func (me *parser) factor() *node {
 	token := me.token
 	op := token.is
 	if op == "int" {
 		me.eat(op)
-		n := nodeInit("int")
-		n.typed = "int"
+		n := nodeInit(op)
+		n.typed = op
 		n.value = token.value
 		return n
 	}
 	if op == "string" {
 		me.eat(op)
-		n := nodeInit("string")
-		n.typed = "string"
+		n := nodeInit(op)
+		n.typed = op
 		n.value = token.value
 		return n
 	}
@@ -393,6 +445,13 @@ func (me *parser) factor() *node {
 		name := token.value
 		if _, ok := me.program.functions[name]; ok {
 			return me.call()
+		}
+		if name == "int" {
+			if me.peek().is == "[" {
+				me.eat(op)
+				return me.array(name)
+			}
+			panic("undefined int " + me.fail())
 		}
 		_, ok := me.program.scope.variables[name]
 		if !ok {

@@ -33,15 +33,18 @@ func (me *cfile) construct(class string) string {
 }
 
 func (me *cfile) typesig(typed string) string {
-	var signature string
 	if _, ok := me.classes[typed]; ok {
-		signature = "struct " + typed + " *"
+		return "struct " + typed + " *"
 	} else if typed == "string" {
-		signature = "char *"
-	} else {
-		signature = typed + " "
+		return "char *"
 	}
-	return signature
+	if checkIsArray(typed) {
+		atype := parseArrayType(typed)
+		if atype == "int" {
+			return "int *"
+		}
+	}
+	return typed + " "
 }
 
 func (me *cfile) assignvar(name, typed string) string {
@@ -124,6 +127,21 @@ func (me *cfile) eval(n *node) *cnode {
 			panic("unknown variable " + name)
 		}
 		cn := codeNode(n.is, n.value, n.typed, n.value)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "array-member" {
+		root := n.has[0]
+		code := root.value + "[" + n.value + "]"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "array" {
+		size := n.has[0].value
+		typed := parseArrayType(n.typed)
+		code := "(" + typed + " *)malloc(" + size + " * sizeof(" + typed + "))"
+		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}

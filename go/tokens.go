@@ -10,6 +10,8 @@ var keywords = map[string]bool{
 	"return":   true,
 	"class":    true,
 	"new":      true,
+	"true":     true,
+	"false":    true,
 	"free":     true,
 }
 
@@ -52,18 +54,29 @@ func (me *tokenizer) forSpace() {
 	}
 }
 
-func (me *tokenizer) forNumber() string {
+func (me *tokenizer) forNumber() (string, string) {
 	stream := me.stream
+	typed := "int"
 	value := &strings.Builder{}
 	for !stream.eof() {
 		c := stream.peek()
-		if !digit(c) {
-			break
+		if c == '.' {
+			typed = "float"
+			value.WriteByte(c)
+			stream.next()
+			if !digit(stream.peek()) {
+				panic("digit must follow after dot. " + stream.fail())
+			}
+			continue
 		}
-		value.WriteByte(c)
-		stream.next()
+		if digit(c) {
+			value.WriteByte(c)
+			stream.next()
+			continue
+		}
+		break
 	}
-	return value.String()
+	return typed, value.String()
 }
 
 func (me *tokenizer) forWord() string {
@@ -104,9 +117,9 @@ func tokenize(stream *stream) []*token {
 		if stream.pos == size {
 			break
 		}
-		number := me.forNumber()
+		typed, number := me.forNumber()
 		if number != "" {
-			token := valueToken("int", number)
+			token := valueToken(typed, number)
 			tokens = append(tokens, token)
 			continue
 		}
@@ -114,7 +127,11 @@ func tokenize(stream *stream) []*token {
 		if word != "" {
 			var token *token
 			if _, ok := keywords[word]; ok {
-				token = simpleToken(word)
+				if word == "true" || word == "false" {
+					token = valueToken("bool", word)
+				} else {
+					token = simpleToken(word)
+				}
 			} else {
 				token = valueToken("id", word)
 			}

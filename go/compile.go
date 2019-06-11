@@ -5,10 +5,13 @@ import "fmt"
 func compile(p *program) string {
 	cf := cfileInit()
 	cf.classes = p.classes
+	cf.types = p.types
+	cf.primitives = p.primitives
 
 	code := ""
 	code += "#include <stdio.h>\n"
 	code += "#include <stdlib.h>\n"
+	code += "#include <stdbool.h>\n"
 	code += "\n"
 
 	for _, c := range p.classOrder {
@@ -94,16 +97,6 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if op == "int" {
-		cn := codeNode(n.is, n.value, n.typed, n.value)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "string" {
-		cn := codeNode(n.is, n.value, n.typed, "\""+n.value+"\"")
-		fmt.Println(cn.string(0))
-		return cn
-	}
 	if op == "member-variable" {
 		root := n.has[0]
 		code := n.value
@@ -139,7 +132,7 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "array" {
 		size := n.has[0].value
-		typed := parseArrayType(n.typed)
+		typed := me.typesig(parseArrayType(n.typed))
 		code := "(" + typed + " *)malloc(" + size + " * sizeof(" + typed + "))"
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
@@ -152,11 +145,17 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
+	if op == "string" {
+		cn := codeNode(n.is, n.value, n.typed, "\""+n.value+"\"")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if _, ok := me.primitives[op]; ok {
+		cn := codeNode(n.is, n.value, n.typed, n.value)
+		fmt.Println(cn.string(0))
+		return cn
+	}
 	panic("eval unknown operation " + n.string(0))
-}
-
-func (me *cfile) main() string {
-	return ""
 }
 
 func (me *cfile) free(name string) string {
@@ -254,6 +253,10 @@ func (me *cfile) call(name string, parameters []*node) string {
 			return "printf(\"%s\\n\", " + param.code + ");"
 		} else if param.typed == "int" {
 			return "printf(\"%d\\n\", " + param.code + ");"
+		} else if param.typed == "float" {
+			return "printf(\"%f\\n\", " + param.code + ");"
+		} else if param.typed == "bool" {
+			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\");"
 		}
 		panic("argument for echo was " + param.string(0))
 	}

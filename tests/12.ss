@@ -1,5 +1,4 @@
 function main
-  x = 2
-  if x = 0
-    echo "x is zero"
-  echo x
+  x = string[3]
+  x[1] = "hello 12"
+  echo x[1]

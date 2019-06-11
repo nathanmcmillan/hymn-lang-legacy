@@ -47,6 +47,8 @@ type program struct {
 	classOrder    []string
 	functions     map[string]*function
 	functionOrder []string
+	primitives    map[string]bool
+	types         map[string]bool
 }
 
 type cfile struct {
@@ -56,6 +58,8 @@ type cfile struct {
 	scope         *scope
 	functions     map[string]*function
 	functionOrder []string
+	primitives    map[string]bool
+	types         map[string]bool
 }
 
 type parser struct {
@@ -141,6 +145,8 @@ func programInit() *program {
 	p := &program{}
 	p.rootScope = scopeInit(nil)
 	p.scope = p.rootScope
+	p.primitives = make(map[string]bool)
+	p.types = make(map[string]bool)
 	p.imports = make(map[string]bool)
 	p.classes = make(map[string]*class, 0)
 	p.classOrder = make([]string, 0)
@@ -202,4 +208,34 @@ func codeNode(is, value, typed, code string) *cnode {
 
 func (me *cnode) push(n *cnode) {
 	me.has = append(me.has, n)
+}
+
+func (me *program) libInit() {
+	e := funcInit()
+	e.typed = "void"
+	e.args = append(e.args, varInit("?", "s"))
+	me.functions["echo"] = e
+
+	me.primitives["int"] = true
+	me.primitives["string"] = true
+	me.primitives["bool"] = true
+	me.primitives["float"] = true
+
+	for primitive := range me.primitives {
+		me.types[primitive] = true
+	}
+}
+
+func funcInit() *function {
+	f := &function{}
+	f.args = make([]*variable, 0)
+	f.expressions = make([]*node, 0)
+	return f
+}
+
+func varInit(is, name string) *variable {
+	v := &variable{}
+	v.is = is
+	v.name = name
+	return v
 }

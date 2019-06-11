@@ -60,27 +60,6 @@ func (me *program) dump() string {
 	return s
 }
 
-func (me *program) libInit() {
-	e := funcInit()
-	e.typed = "void"
-	e.args = append(e.args, varInit("?", "s"))
-	me.functions["echo"] = e
-}
-
-func funcInit() *function {
-	f := &function{}
-	f.args = make([]*variable, 0)
-	f.expressions = make([]*node, 0)
-	return f
-}
-
-func varInit(is, name string) *variable {
-	v := &variable{}
-	v.is = is
-	v.name = name
-	return v
-}
-
 func (me *parser) next() {
 	me.pos++
 	me.token = me.tokens[me.pos]
@@ -416,7 +395,7 @@ func (me *parser) array(is string) *node {
 	me.eat("]")
 	n := nodeInit("array")
 	n.typed = is + "[]"
-	ns := nodeInit("int")
+	ns := nodeInit(is)
 	ns.value = size
 	ns.typed = "int"
 	n.push(ns)
@@ -427,31 +406,25 @@ func (me *parser) array(is string) *node {
 func (me *parser) factor() *node {
 	token := me.token
 	op := token.is
-	if op == "int" {
+	if _, ok := me.program.primitives[op]; ok {
 		me.eat(op)
 		n := nodeInit(op)
 		n.typed = op
 		n.value = token.value
 		return n
-	}
-	if op == "string" {
-		me.eat(op)
-		n := nodeInit(op)
-		n.typed = op
-		n.value = token.value
-		return n
+
 	}
 	if op == "id" {
 		name := token.value
 		if _, ok := me.program.functions[name]; ok {
 			return me.call()
 		}
-		if name == "int" {
+		if _, ok := me.program.types[name]; ok {
 			if me.peek().is == "[" {
 				me.eat(op)
 				return me.array(name)
 			}
-			panic("undefined int " + me.fail())
+			panic("bad array definition " + me.fail())
 		}
 		_, ok := me.program.scope.variables[name]
 		if !ok {
@@ -504,4 +477,5 @@ func (me *parser) class() {
 	}
 	me.program.classOrder = append(me.program.classOrder, name)
 	me.program.classes[name] = classInit(name, vorder, vmap)
+	me.program.types[name] = true
 }

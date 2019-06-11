@@ -1,0 +1,11 @@
+function main
+  xtrue = true
+  xfalse = false
+  xstring = "hello"
+  xint = 3
+  xfloat = 35.79
+  echo xtrue
+  echo xfalse
+  echo xstring
+  echo xint
+  echo xfloat

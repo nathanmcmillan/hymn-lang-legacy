@@ -1,4 +1,4 @@
-function get : string
+function get -> string
   return "hello world"
 
 function main

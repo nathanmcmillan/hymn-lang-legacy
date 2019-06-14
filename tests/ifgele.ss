@@ -1,0 +1,12 @@
+function main
+  if 3 < 5
+    echo "3 < 5"
+  if 5 > 3
+    echo "5 > 3"
+  if 5 >= 3
+    echo "5 >= 3"
+  if 3 <= 5
+    echo "3 <= 5"
+  if 5 = 5
+    echo "5 = 5"
+  echo "bye"

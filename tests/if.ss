@@ -1,0 +1,13 @@
+function main
+  x = 3
+  y = 3
+  echo x
+  echo y
+  if x = y
+    echo "x equal to y"
+    x = 4
+    echo "x was changed!"
+  if x = 0
+    echo "x is zero"
+  echo x
+  echo y

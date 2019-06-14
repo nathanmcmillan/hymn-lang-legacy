@@ -13,24 +13,32 @@ var keywords = map[string]bool{
 	"true":     true,
 	"false":    true,
 	"free":     true,
+	"if":       true,
+	"elif":     true,
+	"else":     true,
+	"for":      true,
+	"continue": true,
+	"break":    true,
 }
 
 func (me *token) string() string {
 	if me.value == "" {
-		return fmt.Sprintf("{type:%s}", me.is)
+		return fmt.Sprintf("{depth:%d, type:%s}", me.depth, me.is)
 	}
-	return fmt.Sprintf("{type:%s, value:%s}", me.is, me.value)
+	return fmt.Sprintf("{depth:%d, type:%s, value:%s}", me.depth, me.is, me.value)
 }
 
-func simpleToken(is string) *token {
+func simpleToken(depth int, is string) *token {
 	t := &token{}
+	t.depth = depth
 	t.is = is
 	t.value = ""
 	return t
 }
 
-func valueToken(is, value string) *token {
+func valueToken(depth int, is, value string) *token {
 	t := &token{}
+	t.depth = depth
 	t.is = is
 	t.value = value
 	return t
@@ -43,15 +51,19 @@ func digit(c byte) bool {
 func letter(c byte) bool {
 	return strings.IndexByte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", c) >= 0
 }
-func (me *tokenizer) forSpace() {
+
+func (me *tokenizer) forSpace() int {
 	stream := me.stream
+	count := 0
 	for !stream.eof() {
 		c := stream.peek()
 		if c != ' ' || c == '\t' {
 			break
 		}
+		count++
 		stream.next()
 	}
+	return count
 }
 
 func (me *tokenizer) forNumber() (string, string) {
@@ -61,6 +73,9 @@ func (me *tokenizer) forNumber() (string, string) {
 	for !stream.eof() {
 		c := stream.peek()
 		if c == '.' {
+			if value.Len() == 0 {
+				break
+			}
 			typed = "float"
 			value.WriteByte(c)
 			stream.next()
@@ -112,14 +127,23 @@ func tokenize(stream *stream) []*token {
 	me.stream = stream
 	tokens := make([]*token, 0)
 	size := len(stream.data)
+	depth := 0
+	updateDepth := true
 	for stream.pos < size {
-		me.forSpace()
+		space := me.forSpace()
+		if updateDepth {
+			if space%2 != 0 {
+				panic("bad spacing" + stream.fail())
+			}
+			depth = space / 2
+			updateDepth = false
+		}
 		if stream.pos == size {
 			break
 		}
 		typed, number := me.forNumber()
 		if number != "" {
-			token := valueToken(typed, number)
+			token := valueToken(depth, typed, number)
 			tokens = append(tokens, token)
 			continue
 		}
@@ -128,12 +152,12 @@ func tokenize(stream *stream) []*token {
 			var token *token
 			if _, ok := keywords[word]; ok {
 				if word == "true" || word == "false" {
-					token = valueToken("bool", word)
+					token = valueToken(depth, "bool", word)
 				} else {
-					token = simpleToken(word)
+					token = simpleToken(depth, word)
 				}
 			} else {
-				token = valueToken("id", word)
+				token = valueToken(depth, "id", word)
 			}
 			tokens = append(tokens, token)
 			continue
@@ -141,25 +165,50 @@ func tokenize(stream *stream) []*token {
 		c := stream.peek()
 		if c == '"' {
 			value := me.forString()
-			token := valueToken("string", value)
+			token := valueToken(depth, "string", value)
 			tokens = append(tokens, token)
 			continue
 		}
-		if strings.IndexByte("+-*/()=.:[]", c) >= 0 {
+		if c == '-' {
 			stream.next()
-			token := simpleToken(string(c))
+			var token *token
+			if stream.peek() == '>' {
+				stream.next()
+				token = simpleToken(depth, "return-type")
+			} else {
+				token = simpleToken(depth, "-")
+			}
+			tokens = append(tokens, token)
+			continue
+		}
+		if c == '<' || c == '>' {
+			stream.next()
+			var token *token
+			if stream.peek() == '=' {
+				stream.next()
+				token = simpleToken(depth, string(c)+"=")
+			} else {
+				token = simpleToken(depth, string(c))
+			}
+			tokens = append(tokens, token)
+			continue
+		}
+		if strings.IndexByte("+*/()=.:[]", c) >= 0 {
+			stream.next()
+			token := simpleToken(depth, string(c))
 			tokens = append(tokens, token)
 			continue
 		}
 		if c == '\n' {
 			stream.next()
-			token := simpleToken("line")
+			token := simpleToken(0, "line")
 			tokens = append(tokens, token)
+			updateDepth = true
 			continue
 		}
 		panic("unknown token " + stream.fail())
 	}
-	token := simpleToken("eof")
+	token := simpleToken(0, "eof")
 	tokens = append(tokens, token)
 	return tokens
 }

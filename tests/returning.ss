@@ -1,4 +1,4 @@
-function get : int
+function get -> int
   return 3 + 4 * 5 + 6
 
 function main

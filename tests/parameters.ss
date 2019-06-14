@@ -1,4 +1,4 @@
-function square x=int : int
+function square int:x -> int
   z = x + 1
   return z * z
 

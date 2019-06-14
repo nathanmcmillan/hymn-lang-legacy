@@ -1,0 +1,16 @@
+function main
+  x = 2
+  y = 3
+  if x = y
+    echo "a!"
+  else
+    echo "b!"
+    if x = 2
+      echo "c!"
+    elif x = 0
+      echo "d!"
+    if y = 4
+      echo "e!"
+    elif y = 3
+      echo "f!"
+  echo "z!"

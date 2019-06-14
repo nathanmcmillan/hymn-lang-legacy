@@ -73,7 +73,7 @@ func (me *parser) fail() string {
 	return fmt.Sprintf("token %s at position %d\n", me.tokens[me.pos].string(), me.pos)
 }
 
-func (me *parser) forLines() {
+func (me *parser) skipLines() {
 	for me.pos != len(me.tokens) {
 		token := me.token
 		if token.is != "line" {
@@ -88,19 +88,26 @@ func parse(tokens []*token) *program {
 	me.tokens = tokens
 	me.token = tokens[0]
 	me.program = programInit()
-	me.forLines()
+	me.skipLines()
 	for me.token.is != "eof" {
 		me.expression()
+		if me.token.is == "line" {
+			me.eat("line")
+		}
 	}
 	delete(me.program.functions, "echo")
 	return me.program
 }
 
-func (me *parser) eat(want string) {
+func (me *parser) verify(want string) {
 	token := me.token
 	if token.is != want {
 		panic(fmt.Sprintf("unexpected token was "+token.string()+" instead of {type:"+want+"} on line %d", (me.pos + 1)))
 	}
+}
+
+func (me *parser) eat(want string) {
+	me.verify(want)
 	me.next()
 }
 
@@ -114,8 +121,8 @@ func (me *parser) expression() *node {
 			n = me.call()
 		} else {
 			n = me.assign()
+			me.verify("line")
 		}
-		me.eat("line")
 		return n
 	} else if op == "function" {
 		me.function()
@@ -129,17 +136,35 @@ func (me *parser) expression() *node {
 	} else if op == "free" {
 		me.free()
 		return nil
+	} else if op == "if" {
+		n := me.ifexpr()
+		return n
 	} else if op == "return" {
 		n := me.returning()
-		me.eat("line")
+		me.verify("line")
 		return n
 	} else if op == "line" {
-		me.eat("line")
 		return nil
 	} else if op == "eof" {
 		return nil
 	}
 	panic("unknown expression " + me.fail())
+}
+
+func (me *parser) maybeIgnore(depth int) {
+	for {
+		if me.token.is == "line" {
+			me.eat("line")
+			break
+		}
+	}
+	for me.pos != len(me.tokens) {
+		token := me.token
+		if token.is != "line" {
+			break
+		}
+		me.next()
+	}
 }
 
 func (me *parser) function() {
@@ -152,23 +177,24 @@ func (me *parser) function() {
 	}
 	me.eat("id")
 	fn := funcInit()
+	fn.name = name
 	fn.typed = "void"
-	for true {
+	for {
 		if me.token.is == "line" {
-			me.eat("line")
+			me.next()
 			break
 		}
-		if me.token.is == ":" {
-			me.eat(":")
+		if me.token.is == "return-type" {
+			me.next()
 			fn.typed = me.token.value
 			me.eat("id")
 			continue
 		}
 		if me.token.is == "id" {
-			arg := me.token.value
-			me.eat("id")
-			me.eat("=")
 			typed := me.token.value
+			me.eat("id")
+			me.eat(":")
+			arg := me.token.value
 			me.eat("id")
 			fn.args = append(fn.args, varInit(typed, arg))
 			continue
@@ -176,13 +202,24 @@ func (me *parser) function() {
 		panic("unexpected token in function definition " + me.fail())
 	}
 	me.program.pushScope()
+	me.program.scope.fn = fn
 	for _, arg := range fn.args {
 		me.program.scope.variables[arg.name] = arg
 	}
 	for {
 		token = me.token
-		if token.is == "line" {
+		done := false
+		for token.is == "line" {
 			me.eat("line")
+			token = me.token
+			if token.is != "line" {
+				if token.depth != 1 {
+					done = true
+				}
+				break
+			}
+		}
+		if done {
 			break
 		}
 		if token.is == "eof" {
@@ -221,7 +258,7 @@ func (me *parser) call() *node {
 	n.value = name
 	n.typed = fn.typed
 	for _, arg := range args {
-		ca := me.calc()
+		ca := me.factor()
 		if ca.typed != arg.is && arg.is != "?" {
 			panic("argument " + arg.is + " does not match parameter " + ca.typed + " " + me.fail())
 		}
@@ -245,11 +282,11 @@ func (me *parser) eatvar() *node {
 	for {
 		if me.token.is == "." {
 			if root.is == "variable" {
-				scopeVar, ok := me.program.scope.variables[root.value]
-				if !ok {
+				sv := me.program.scope.getVar(root.value)
+				if sv == nil {
 					panic("variable out of scope " + me.fail())
 				}
-				root.typed = scopeVar.is
+				root.typed = sv.is
 				root.is = "root-variable"
 
 			}
@@ -271,11 +308,11 @@ func (me *parser) eatvar() *node {
 			me.eat("id")
 		} else if me.token.is == "[" {
 			if root.is == "variable" {
-				scopeVar, ok := me.program.scope.variables[root.value]
-				if !ok {
+				sv := me.program.scope.getVar(root.value)
+				if sv == nil {
 					panic("variable out of scope " + me.fail())
 				}
-				root.typed = scopeVar.is
+				root.typed = sv.is
 				root.is = "root-variable"
 			}
 			if !checkIsArray(root.typed) {
@@ -295,11 +332,11 @@ func (me *parser) eatvar() *node {
 		}
 	}
 	if root.is == "variable" {
-		scopeVar, ok := me.program.scope.variables[root.value]
-		if ok {
-			root.typed = scopeVar.is
-		} else {
+		sv := me.program.scope.getVar(root.value)
+		if sv == nil {
 			root.typed = "?"
+		} else {
+			root.typed = sv.is
 		}
 	}
 	return root
@@ -347,6 +384,91 @@ func (me *parser) free() *node {
 	return n
 }
 
+func (me *parser) enclosing() *node {
+	depth := me.token.depth
+	fmt.Println("> enclose depth", depth)
+	enclose := nodeInit("scope")
+	me.program.pushScope()
+	for {
+		done := false
+		for me.token.is == "line" {
+			me.eat("line")
+			if me.token.is != "line" {
+				if me.token.depth < depth {
+					done = true
+				}
+				break
+			}
+		}
+		if done {
+			break
+		}
+		if me.token.is == "eof" {
+			break
+		}
+		expr := me.expression()
+		enclose.push(expr)
+		if expr.is == "return" {
+			fn := me.program.scope.fn
+			if fn.typed != expr.typed {
+				panic("function " + fn.name + " returns " + fn.typed + " but found " + expr.typed)
+			}
+			break
+		}
+	}
+	me.program.popScope()
+	fmt.Println("> enclose", enclose.string(0))
+	return enclose
+}
+
+func (me *parser) ifexpr() *node {
+	fmt.Println("> if")
+	me.eat("if")
+	n := nodeInit("if")
+	n.typed = "void"
+	n.push(me.boolexpr())
+	me.eat("line")
+	n.push(me.enclosing())
+	for me.token.is == "elif" {
+		me.eat("elif")
+		other := nodeInit("elif")
+		other.push(me.boolexpr())
+		me.eat("line")
+		other.push(me.enclosing())
+		n.push(other)
+	}
+	if me.token.is == "else" {
+		me.eat("else")
+		me.eat("line")
+		n.push(me.enclosing())
+	}
+	return n
+}
+
+func (me *parser) boolexpr() *node {
+	fmt.Println("> boolexpr")
+	left := me.calc()
+	var typed string
+	if me.token.is == "=" {
+		typed = "equal"
+		me.eat("=")
+	} else if me.token.is == ">" || me.token.is == ">=" || me.token.is == "<" || me.token.is == "<=" {
+		typed = me.token.is
+		me.eat(me.token.is)
+	} else {
+		panic("unknown token for boolean expression " + me.fail())
+	}
+	right := me.calc()
+	n := nodeInit(typed)
+	n.typed = "bool"
+	n.push(left)
+	n.push(right)
+	fmt.Println("> bool using", typed)
+	fmt.Println("> left", left.string(0))
+	fmt.Println("> right", right.string(0))
+	return n
+}
+
 func (me *parser) binary(left, right *node, op string) *node {
 	if left.typed != "int" || right.typed != "int" {
 		panic("binary operation must use integers")
@@ -355,6 +477,21 @@ func (me *parser) binary(left, right *node, op string) *node {
 	n.typed = "int"
 	n.push(left)
 	n.push(right)
+	return n
+}
+
+func (me *parser) array(is string) *node {
+	me.eat("[")
+	size := me.token.value
+	me.eat("int")
+	me.eat("]")
+	n := nodeInit("array")
+	n.typed = is + "[]"
+	ns := nodeInit(is)
+	ns.value = size
+	ns.typed = "int"
+	n.push(ns)
+	fmt.Println("array node =", n.string(0))
 	return n
 }
 
@@ -388,21 +525,6 @@ func (me *parser) term() *node {
 	return node
 }
 
-func (me *parser) array(is string) *node {
-	me.eat("[")
-	size := me.token.value
-	me.eat("int")
-	me.eat("]")
-	n := nodeInit("array")
-	n.typed = is + "[]"
-	ns := nodeInit(is)
-	ns.value = size
-	ns.typed = "int"
-	n.push(ns)
-	fmt.Println("array node =", n.string(0))
-	return n
-}
-
 func (me *parser) factor() *node {
 	token := me.token
 	op := token.is
@@ -412,7 +534,6 @@ func (me *parser) factor() *node {
 		n.typed = op
 		n.value = token.value
 		return n
-
 	}
 	if op == "id" {
 		name := token.value
@@ -426,8 +547,7 @@ func (me *parser) factor() *node {
 			}
 			panic("bad array definition " + me.fail())
 		}
-		_, ok := me.program.scope.variables[name]
-		if !ok {
+		if me.program.scope.getVar(name) == nil {
 			panic("variable out of scope " + me.fail())
 		}
 		return me.eatvar()

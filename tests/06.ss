@@ -1,4 +1,4 @@
-function square x=int z=int : int
+function square int:x int:z -> int
   x = x + 1
   z = z + 1
   w = 5 / 2
@@ -8,6 +8,7 @@ function main
   x = 1
   z = 2
   w = square 3 5
+  
   echo x
   echo z
   echo w

@@ -1,6 +1,7 @@
 package main
 
 type token struct {
+	depth int
 	is    string
 	value string
 }
@@ -24,10 +25,12 @@ type variable struct {
 
 type scope struct {
 	root      *scope
+	fn        *function
 	variables map[string]*variable
 }
 
 type function struct {
+	name        string
 	args        []*variable
 	expressions []*node
 	typed       string
@@ -60,6 +63,7 @@ type cfile struct {
 	functionOrder []string
 	primitives    map[string]bool
 	types         map[string]bool
+	depth         int
 }
 
 type parser struct {
@@ -83,7 +87,9 @@ func (me *node) string(lv int) string {
 	if me.value != "" {
 		s += ", value:" + me.value
 	}
-	s += ", typed:" + me.typed
+	if me.typed != "" {
+		s += ", typed:" + me.typed
+	}
 	if len(me.has) > 0 {
 		s += ", has[\n"
 		lv++
@@ -183,6 +189,16 @@ func (me *cfile) pushScope() {
 
 func (me *cfile) popScope() {
 	me.scope = me.scope.root
+}
+
+func (me *scope) getVar(name string) *variable {
+	if v, ok := me.variables[name]; ok {
+		return v
+	}
+	if me.root != nil {
+		return me.root.getVar(name)
+	}
+	return nil
 }
 
 func nodeInit(is string) *node {

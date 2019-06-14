@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func compile(p *program) string {
 	cf := cfileInit()
@@ -32,28 +35,48 @@ func compile(p *program) string {
 }
 
 func (me *cfile) construct(class string) string {
-	return fmt.Sprintf("(struct %s *)malloc(sizeof(struct %s))", class, class)
+	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", class, class)
+}
+
+func fmtptr(ptr string) string {
+	if strings.HasSuffix(ptr, "*") {
+		return ptr + "*"
+	}
+	return ptr + " *"
+}
+
+func fmtassignspace(s string) string {
+	if strings.HasSuffix(s, "*") {
+		return s
+	}
+	return s + " "
+}
+
+func (me *cfile) allocarray(n *node) string {
+	size := n.has[0].value
+	atype := parseArrayType(n.typed)
+	typed := me.typesig(atype)
+	code := "(" + fmtptr(typed) + ")malloc(" + size + " * sizeof(" + typed + "))"
+	return code
 }
 
 func (me *cfile) typesig(typed string) string {
 	if _, ok := me.classes[typed]; ok {
-		return "struct " + typed + " *"
+		return typed + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
 	if checkIsArray(typed) {
 		atype := parseArrayType(typed)
-		if atype == "int" {
-			return "int *"
-		}
+		return fmtptr(me.typesig(atype))
 	}
-	return typed + " "
+	return typed
 }
 
 func (me *cfile) assignvar(name, typed string) string {
 	if _, ok := me.scope.variables[name]; !ok {
 		me.scope.variables[name] = varInit(typed, name)
-		return me.typesig(typed)
+		return fmtassignspace(me.typesig(typed))
 	}
 	return ""
 }
@@ -101,13 +124,22 @@ func (me *cfile) eval(n *node) *cnode {
 		root := n.has[0]
 		code := n.value
 		for {
-			code = root.value + "->" + code
 			if root.is == "root-variable" {
+				if checkIsArray(root.typed) {
+					code = root.value + code
+				} else {
+					code = root.value + "->" + code
+				}
 				break
-			} else if root.is != "member-variable" {
+			} else if root.is == "array-member" {
+				code = "[" + root.value + "]" + "->" + code
+				root = root.has[0]
+			} else if root.is == "member-variable" {
+				code = root.value + "->" + code
+				root = root.has[0]
+			} else {
 				panic("missing member variable")
 			}
-			root = root.has[0]
 		}
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
@@ -131,9 +163,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "array" {
-		size := n.has[0].value
-		typed := me.typesig(parseArrayType(n.typed))
-		code := "(" + typed + " *)malloc(" + size + " * sizeof(" + typed + "))"
+		code := me.allocarray(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -142,6 +172,53 @@ func (me *cfile) eval(n *node) *cnode {
 		in := me.eval(n.has[0])
 		cn := codeNode(n.is, n.value, n.typed, "return "+in.code+";")
 		cn.push(in)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "equal" {
+		code := me.eval(n.has[0]).code
+		code += " == "
+		code += me.eval(n.has[1]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == ">" || op == ">=" || op == "<" || op == "<=" {
+		code := me.eval(n.has[0]).code
+		code += " " + op + " "
+		code += me.eval(n.has[1]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "scope" {
+		return me.enclose(n)
+	}
+	if op == "if" {
+		hsize := len(n.has)
+		code := "if (" + me.eval(n.has[0]).code + ")\n"
+		code += fmc(me.depth) + "{\n"
+		me.depth++
+		code += me.eval(n.has[1]).code
+		me.depth--
+		code += fmc(me.depth) + "}"
+		ix := 2
+		for ix < hsize && n.has[ix].is == "elif" {
+			code += "\n" + fmc(me.depth) + "else if (" + me.eval(n.has[ix].has[0]).code + ")\n" + fmc(me.depth) + "{\n"
+			me.depth++
+			code += me.eval(n.has[ix].has[1]).code
+			me.depth--
+			code += fmc(me.depth) + "}"
+			ix++
+		}
+		if ix >= 2 && ix < hsize && n.has[ix].is == "scope" {
+			code += "\n" + fmc(me.depth) + "else\n" + fmc(me.depth) + "{\n"
+			me.depth++
+			code += me.eval(n.has[ix]).code
+			me.depth--
+			code += fmc(me.depth) + "}"
+		}
+		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -166,10 +243,22 @@ func (me *cfile) object(class *class) string {
 	code := "struct " + class.name + "\n{\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
-		code += fmc(1) + me.typesig(field.is) + field.name + ";\n"
+		code += fmc(1) + fmtassignspace(me.typesig(field.is)) + field.name + ";\n"
 	}
-	code += "};\n\n"
+	code += "};\ntypedef struct " + class.name + " " + class.name + ";\n\n"
 	return code
+}
+
+func (me *cfile) enclose(n *node) *cnode {
+	expressions := n.has
+	block := ""
+	for _, expr := range expressions {
+		c := me.eval(expr)
+		block += fmc(me.depth) + c.code + "\n"
+	}
+	cn := codeNode(n.is, n.value, n.typed, block)
+	fmt.Println(cn.string(0))
+	return cn
 }
 
 func (me *cfile) mainc(fn *function) string {
@@ -181,6 +270,7 @@ func (me *cfile) mainc(fn *function) string {
 	for _, arg := range args {
 		me.scope.variables[arg.name] = arg
 	}
+	me.depth = 1
 	for _, expr := range expressions {
 		c := me.eval(expr)
 		if c.is == "return" {
@@ -190,10 +280,10 @@ func (me *cfile) mainc(fn *function) string {
 				returns = true
 			}
 		}
-		block += fmc(1) + c.code + "\n"
+		block += fmc(me.depth) + c.code + "\n"
 	}
 	if !returns {
-		block += fmc(1) + "return 0;\n"
+		block += fmc(me.depth) + "return 0;\n"
 	}
 	me.popScope()
 	code := ""
@@ -206,7 +296,7 @@ func (me *cfile) mainc(fn *function) string {
 	}
 	code += ")\n{\n"
 	code += block
-	code += "}\n\n"
+	code += "}\n"
 	return code
 }
 
@@ -214,26 +304,18 @@ func (me *cfile) function(name string, fn *function) string {
 	args := fn.args
 	expressions := fn.expressions
 	block := ""
-	returns := "void"
 	me.pushScope()
+	me.depth = 1
 	for _, arg := range args {
 		me.scope.variables[arg.name] = arg
 	}
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		if c.is == "return" {
-			returns = c.typed
-		}
-		block += fmc(1) + c.code + "\n"
+		block += fmc(me.depth) + c.code + "\n"
 	}
 	me.popScope()
 	code := ""
-	if returns == "string" {
-		returns = "char *"
-	} else {
-		returns += " "
-	}
-	code += returns + name + "("
+	code += fmtassignspace(me.typesig(fn.typed)) + name + "("
 	for ix, arg := range args {
 		if ix > 0 {
 			code += ", "

@@ -83,7 +83,7 @@ func (me *cfile) assignvar(name, typed string) string {
 
 func (me *cfile) eval(n *node) *cnode {
 	op := n.is
-	if op == "assign" {
+	if op == "=" {
 		right := me.eval(n.has[1])
 		var code string
 		nodeLeft := n.has[0]
@@ -96,6 +96,23 @@ func (me *cfile) eval(n *node) *cnode {
 			code = ""
 		}
 		code += left.code + " = " + right.code + ";"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
+		right := me.eval(n.has[1])
+		var code string
+		nodeLeft := n.has[0]
+		var left *cnode
+		if nodeLeft.is == "variable" {
+			code = me.assignvar(nodeLeft.value, right.typed)
+			left = me.eval(nodeLeft)
+		} else {
+			left = me.eval(nodeLeft)
+			code = ""
+		}
+		code += left.code + " " + op + " " + right.code + ";"
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn

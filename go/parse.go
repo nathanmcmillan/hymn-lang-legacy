@@ -348,17 +348,30 @@ func (me *parser) eatvar() *node {
 
 func (me *parser) assign() *node {
 	assignVar := me.eatvar()
-	me.eat("=")
+	op := me.token.is
+	mustBeNumber := false
+	if op == "=" {
+	} else if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
+		mustBeNumber = true
+	} else {
+		panic("unknown assign operation " + me.fail())
+	}
+	me.eat(op)
 	calc := me.calc()
+	if mustBeNumber && !isNumber(calc.typed) {
+		panic("assign operation " + op + " requires number type")
+	}
 	if assignVar.is == "variable" {
 		assignVar.typed = calc.typed
 		me.program.scope.variables[assignVar.value] = varInit(calc.typed, assignVar.value)
+		// TODO mutable vs immutable
+		// TODO if mustBeNumber than also must exist already and not be set any more
 	} else if assignVar.is == "member-variable" {
 		if assignVar.typed != calc.typed {
 			panic("member variable type " + assignVar.typed + " does not match expression type " + calc.typed + " " + me.fail())
 		}
 	}
-	n := nodeInit("assign")
+	n := nodeInit(op)
 	n.typed = "void"
 	n.push(assignVar)
 	fmt.Println("assign set", assignVar.string(0))
@@ -478,13 +491,12 @@ func (me *parser) ifexpr() *node {
 func (me *parser) boolexpr() *node {
 	fmt.Println("> boolexpr")
 	left := me.calc()
-
 	var typed string
 	if me.token.is == "=" {
 		typed = "equal"
 		me.eat("=")
 	} else if me.token.is == ">" || me.token.is == ">=" || me.token.is == "<" || me.token.is == "<=" {
-		if left.typed != "int" && left.typed != "float" {
+		if !isNumber(left.typed) {
 			panic("left side of comparison must be a number " + me.fail())
 		}
 		typed = me.token.is
@@ -516,11 +528,14 @@ func (me *parser) boolexpr() *node {
 }
 
 func (me *parser) binary(left, right *node, op string) *node {
-	if left.typed != "int" || right.typed != "int" {
+	if !isNumber(left.typed) || !isNumber(right.typed) {
 		panic("binary operation must use integers")
 	}
+	if left.typed != right.typed {
+		panic("number types do not match")
+	}
 	n := nodeInit(op)
-	n.typed = "int"
+	n.typed = left.typed
 	n.push(left)
 	n.push(right)
 	return n

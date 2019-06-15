@@ -255,3 +255,7 @@ func varInit(is, name string) *variable {
 	v.name = name
 	return v
 }
+
+func isNumber(t string) bool {
+	return t == "int" || t == "float"
+}

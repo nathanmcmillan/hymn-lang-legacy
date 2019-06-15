@@ -171,13 +171,29 @@ func tokenize(stream *stream) []*token {
 		}
 		if c == '-' {
 			stream.next()
+			peek := stream.peek()
 			var token *token
-			if stream.peek() == '>' {
+			if peek == '>' {
 				stream.next()
 				token = simpleToken(depth, "return-type")
+			} else if peek == '=' {
+				stream.next()
+				token = simpleToken(depth, "-=")
 			} else {
 				token = simpleToken(depth, "-")
 			}
+			tokens = append(tokens, token)
+			continue
+		}
+		if strings.IndexByte("+*/", c) >= 0 {
+			stream.next()
+			op := string(c)
+			peek := stream.peek()
+			if peek == '=' {
+				stream.next()
+				op += "="
+			}
+			token := simpleToken(depth, op)
 			tokens = append(tokens, token)
 			continue
 		}
@@ -193,7 +209,7 @@ func tokenize(stream *stream) []*token {
 			tokens = append(tokens, token)
 			continue
 		}
-		if strings.IndexByte("+*/()=.:[]", c) >= 0 {
+		if strings.IndexByte("()=.:[]", c) >= 0 {
 			stream.next()
 			token := simpleToken(depth, string(c))
 			tokens = append(tokens, token)

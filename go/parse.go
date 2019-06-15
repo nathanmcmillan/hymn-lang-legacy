@@ -137,12 +137,15 @@ func (me *parser) expression() *node {
 		me.free()
 		return nil
 	} else if op == "if" {
-		n := me.ifexpr()
-		return n
+		return me.ifexpr()
+	} else if op == "break" {
+		return me.breaking()
+	} else if op == "continue" {
+		return me.continuing()
+	} else if op == "for" {
+		return me.forexpr()
 	} else if op == "return" {
-		n := me.returning()
-		me.verify("line")
-		return n
+		return me.returning()
 	} else if op == "line" {
 		return nil
 	} else if op == "eof" {
@@ -245,6 +248,7 @@ func (me *parser) returning() *node {
 	n := nodeInit("return")
 	n.typed = calc.typed
 	n.push(calc)
+	me.verify("line")
 	return n
 }
 
@@ -321,11 +325,11 @@ func (me *parser) eatvar() *node {
 			atype := parseArrayType(root.typed)
 			me.eat("[")
 			member := nodeInit("array-member")
-			member.value = me.token.value
+			index := me.calc()
 			member.typed = atype
+			member.push(index)
 			member.push(root)
 			root = member
-			me.eat("int")
 			me.eat("]")
 		} else {
 			break
@@ -421,6 +425,32 @@ func (me *parser) enclosing() *node {
 	return enclose
 }
 
+func (me *parser) continuing() *node {
+	me.eat("continue")
+	me.verify("line")
+	n := nodeInit("continue")
+	n.typed = "void"
+	return n
+}
+
+func (me *parser) breaking() *node {
+	me.eat("break")
+	me.verify("line")
+	n := nodeInit("break")
+	n.typed = "void"
+	return n
+}
+
+func (me *parser) forexpr() *node {
+	fmt.Println("> for")
+	me.eat("for")
+	n := nodeInit("for")
+	n.typed = "void"
+	me.eat("line")
+	n.push(me.enclosing())
+	return n
+}
+
 func (me *parser) ifexpr() *node {
 	fmt.Println("> if")
 	me.eat("if")
@@ -448,17 +478,33 @@ func (me *parser) ifexpr() *node {
 func (me *parser) boolexpr() *node {
 	fmt.Println("> boolexpr")
 	left := me.calc()
+
 	var typed string
 	if me.token.is == "=" {
 		typed = "equal"
 		me.eat("=")
 	} else if me.token.is == ">" || me.token.is == ">=" || me.token.is == "<" || me.token.is == "<=" {
+		if left.typed != "int" && left.typed != "float" {
+			panic("left side of comparison must be a number " + me.fail())
+		}
 		typed = me.token.is
 		me.eat(me.token.is)
 	} else {
+		if left.typed == "bool" {
+			typed = "boolexpr"
+			n := nodeInit(typed)
+			n.typed = "bool"
+			n.push(left)
+			fmt.Println("> bool using", typed)
+			fmt.Println("> just", left.string(0))
+			return n
+		}
 		panic("unknown token for boolean expression " + me.fail())
 	}
 	right := me.calc()
+	if left.typed != right.typed {
+		panic("left and right side of comparison must match " + me.fail())
+	}
 	n := nodeInit(typed)
 	n.typed = "bool"
 	n.push(left)
@@ -482,15 +528,14 @@ func (me *parser) binary(left, right *node, op string) *node {
 
 func (me *parser) array(is string) *node {
 	me.eat("[")
-	size := me.token.value
-	me.eat("int")
+	size := me.calc()
+	if size.typed != "int" {
+		panic("array size must be integer")
+	}
 	me.eat("]")
 	n := nodeInit("array")
 	n.typed = is + "[]"
-	ns := nodeInit(is)
-	ns.value = size
-	ns.typed = "int"
-	n.push(ns)
+	n.push(size)
 	fmt.Println("array node =", n.string(0))
 	return n
 }

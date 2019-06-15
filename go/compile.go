@@ -53,10 +53,10 @@ func fmtassignspace(s string) string {
 }
 
 func (me *cfile) allocarray(n *node) string {
-	size := n.has[0].value
+	size := me.eval(n.has[0])
 	atype := parseArrayType(n.typed)
 	typed := me.typesig(atype)
-	code := "(" + fmtptr(typed) + ")malloc(" + size + " * sizeof(" + typed + "))"
+	code := "(" + fmtptr(typed) + ")malloc((" + size.code + ") * sizeof(" + typed + "))"
 	return code
 }
 
@@ -132,8 +132,9 @@ func (me *cfile) eval(n *node) *cnode {
 				}
 				break
 			} else if root.is == "array-member" {
-				code = "[" + root.value + "]" + "->" + code
-				root = root.has[0]
+				index := me.eval(root.has[0])
+				code = "[" + index.code + "]" + "->" + code
+				root = root.has[1]
 			} else if root.is == "member-variable" {
 				code = root.value + "->" + code
 				root = root.has[0]
@@ -156,8 +157,9 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "array-member" {
-		root := n.has[0]
-		code := root.value + "[" + n.value + "]"
+		index := me.eval(n.has[0])
+		root := n.has[1]
+		code := root.value + "[" + index.code + "]"
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -172,6 +174,12 @@ func (me *cfile) eval(n *node) *cnode {
 		in := me.eval(n.has[0])
 		cn := codeNode(n.is, n.value, n.typed, "return "+in.code+";")
 		cn.push(in)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "boolexpr" {
+		code := me.eval(n.has[0]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -193,6 +201,27 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "scope" {
 		return me.enclose(n)
+	}
+	if op == "break" {
+		cn := codeNode(n.is, n.value, n.typed, "break;")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "continue" {
+		cn := codeNode(n.is, n.value, n.typed, "continue;")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "for" {
+		code := "while (true)\n"
+		code += fmc(me.depth) + "{\n"
+		me.depth++
+		code += me.eval(n.has[0]).code
+		me.depth--
+		code += fmc(me.depth) + "}"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
 	}
 	if op == "if" {
 		hsize := len(n.has)

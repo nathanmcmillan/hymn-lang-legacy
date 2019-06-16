@@ -459,7 +459,12 @@ func (me *parser) forexpr() *node {
 	me.eat("for")
 	n := nodeInit("for")
 	n.typed = "void"
-	me.eat("line")
+	if me.token.is == "line" {
+		me.eat("line")
+	} else {
+		n.push(me.boolexpr())
+		me.eat("line")
+	}
 	n.push(me.enclosing())
 	return n
 }

@@ -230,10 +230,18 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "for" {
-		code := "while (true)\n"
+		size := len(n.has)
+		ix := 0
+		code := "while ("
+		if size > 1 {
+			ix++
+			code += me.eval(n.has[0]).code + ")\n"
+		} else {
+			code += "true)\n"
+		}
 		code += fmc(me.depth) + "{\n"
 		me.depth++
-		code += me.eval(n.has[0]).code
+		code += me.eval(n.has[ix]).code
 		me.depth--
 		code += fmc(me.depth) + "}"
 		cn := codeNode(n.is, n.value, n.typed, code)

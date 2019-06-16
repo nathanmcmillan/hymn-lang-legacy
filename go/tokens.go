@@ -209,7 +209,7 @@ func tokenize(stream *stream) []*token {
 			tokens = append(tokens, token)
 			continue
 		}
-		if strings.IndexByte("()=.:[]", c) >= 0 {
+		if strings.IndexByte(";()=.:[]", c) >= 0 {
 			stream.next()
 			token := simpleToken(depth, string(c))
 			tokens = append(tokens, token)

@@ -114,16 +114,16 @@ func (me *parser) eat(want string) {
 func (me *parser) expression() *node {
 	token := me.token
 	op := token.is
+	if op == "mutable" {
+		me.eat(op)
+		return me.assign(true)
+	}
 	if op == "id" {
 		name := token.value
-		var n *node
 		if _, ok := me.program.functions[name]; ok {
-			n = me.call()
-		} else {
-			n = me.assign()
-			me.verify("line")
+			return me.call()
 		}
-		return n
+		return me.assign(false)
 	} else if op == "function" {
 		me.function()
 		return nil
@@ -199,7 +199,7 @@ func (me *parser) function() {
 			me.eat(":")
 			arg := me.token.value
 			me.eat("id")
-			fn.args = append(fn.args, varInit(typed, arg))
+			fn.args = append(fn.args, varInit(typed, arg, false))
 			continue
 		}
 		panic("unexpected token in function definition " + me.fail())
@@ -346,8 +346,8 @@ func (me *parser) eatvar() *node {
 	return root
 }
 
-func (me *parser) assign() *node {
-	assignVar := me.eatvar()
+func (me *parser) assign(mutable bool) *node {
+	assigning := me.eatvar()
 	op := me.token.is
 	mustBeNumber := false
 	if op == "=" {
@@ -361,21 +361,34 @@ func (me *parser) assign() *node {
 	if mustBeNumber && !isNumber(calc.typed) {
 		panic("assign operation " + op + " requires number type")
 	}
-	if assignVar.is == "variable" {
-		assignVar.typed = calc.typed
-		me.program.scope.variables[assignVar.value] = varInit(calc.typed, assignVar.value)
-		// TODO mutable vs immutable
-		// TODO if mustBeNumber than also must exist already and not be set any more
-	} else if assignVar.is == "member-variable" {
-		if assignVar.typed != calc.typed {
-			panic("member variable type " + assignVar.typed + " does not match expression type " + calc.typed + " " + me.fail())
+	if assigning.is == "variable" {
+		sv, exists := me.program.scope.variables[assigning.value]
+		if exists {
+			if !sv.mutable {
+				panic("variable " + sv.name + " is not mutable")
+			}
+		} else {
+			if mustBeNumber {
+				panic("assign operation " + op + " for variable that does not exist")
+			} else {
+				assigning.typed = calc.typed
+				if mutable {
+					assigning.attribute = "mutable"
+				}
+				me.program.scope.variables[assigning.value] = varInit(calc.typed, assigning.value, mutable)
+			}
+		}
+	} else if assigning.is == "member-variable" {
+		if assigning.typed != calc.typed {
+			panic("member variable type " + assigning.typed + " does not match expression type " + calc.typed + " " + me.fail())
 		}
 	}
 	n := nodeInit(op)
 	n.typed = "void"
-	n.push(assignVar)
-	fmt.Println("assign set", assignVar.string(0))
+	n.push(assigning)
+	fmt.Println("assign set", assigning.string(0))
 	n.push(calc)
+	me.verify("line")
 	return n
 }
 
@@ -657,7 +670,7 @@ func (me *parser) class() {
 			vt := token.value
 			me.eat("line")
 			vorder = append(vorder, vn)
-			vmap[vn] = varInit(vt, vn)
+			vmap[vn] = varInit(vt, vn, true)
 		}
 	}
 	me.program.classOrder = append(me.program.classOrder, name)

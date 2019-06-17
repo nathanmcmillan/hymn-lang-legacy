@@ -12,15 +12,17 @@ type tokenizer struct {
 }
 
 type node struct {
-	is    string
-	value string
-	typed string
-	has   []*node
+	is        string
+	value     string
+	typed     string
+	attribute string
+	has       []*node
 }
 
 type variable struct {
-	is   string
-	name string
+	is      string
+	name    string
+	mutable bool
 }
 
 type scope struct {
@@ -89,6 +91,9 @@ func (me *node) string(lv int) string {
 	}
 	if me.typed != "" {
 		s += ", typed:" + me.typed
+	}
+	if me.attribute != "" {
+		s += ", attribute:" + me.attribute
 	}
 	if len(me.has) > 0 {
 		s += ", has[\n"
@@ -229,7 +234,7 @@ func (me *cnode) push(n *cnode) {
 func (me *program) libInit() {
 	e := funcInit()
 	e.typed = "void"
-	e.args = append(e.args, varInit("?", "s"))
+	e.args = append(e.args, varInit("?", "s", false))
 	me.functions["echo"] = e
 
 	me.primitives["int"] = true
@@ -249,10 +254,11 @@ func funcInit() *function {
 	return f
 }
 
-func varInit(is, name string) *variable {
+func varInit(is, name string, mutable bool) *variable {
 	v := &variable{}
 	v.is = is
 	v.name = name
+	v.mutable = mutable
 	return v
 }
 

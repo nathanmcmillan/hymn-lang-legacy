@@ -1,0 +1,6 @@
+function main
+  mutable x = 3
+  x += 2
+  echo x
+  imx = 99
+  echo imx

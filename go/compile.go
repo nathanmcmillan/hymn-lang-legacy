@@ -73,46 +73,37 @@ func (me *cfile) typesig(typed string) string {
 	return typed
 }
 
-func (me *cfile) assignvar(name, typed string) string {
-	if _, ok := me.scope.variables[name]; !ok {
-		me.scope.variables[name] = varInit(typed, name)
-		return fmtassignspace(me.typesig(typed))
-	}
-	return ""
-}
-
 func (me *cfile) eval(n *node) *cnode {
 	op := n.is
 	if op == "=" {
 		right := me.eval(n.has[1])
-		var code string
+		code := ""
 		nodeLeft := n.has[0]
 		var left *cnode
 		if nodeLeft.is == "variable" {
-			code = me.assignvar(nodeLeft.value, right.typed)
-			left = me.eval(nodeLeft)
-		} else {
-			left = me.eval(nodeLeft)
-			code = ""
+			name := nodeLeft.value
+			typed := right.typed
+			if _, ok := me.scope.variables[name]; !ok {
+				mutable := false
+				if nodeLeft.attribute == "mutable" {
+					mutable = true
+				} else {
+					code += "const "
+				}
+				me.scope.variables[name] = varInit(typed, name, mutable)
+				code += fmtassignspace(me.typesig(typed))
+			}
 		}
+		left = me.eval(nodeLeft)
 		code += left.code + " = " + right.code + ";"
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
+		left := me.eval(n.has[0])
 		right := me.eval(n.has[1])
-		var code string
-		nodeLeft := n.has[0]
-		var left *cnode
-		if nodeLeft.is == "variable" {
-			code = me.assignvar(nodeLeft.value, right.typed)
-			left = me.eval(nodeLeft)
-		} else {
-			left = me.eval(nodeLeft)
-			code = ""
-		}
-		code += left.code + " " + op + " " + right.code + ";"
+		code := left.code + " " + op + " " + right.code + ";"
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn

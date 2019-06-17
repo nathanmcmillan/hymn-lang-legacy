@@ -6,19 +6,23 @@ import (
 )
 
 var keywords = map[string]bool{
-	"function": true,
-	"return":   true,
-	"class":    true,
-	"new":      true,
-	"true":     true,
-	"false":    true,
-	"free":     true,
-	"if":       true,
-	"elif":     true,
-	"else":     true,
-	"for":      true,
-	"continue": true,
-	"break":    true,
+	"function":  true,
+	"return":    true,
+	"class":     true,
+	"new":       true,
+	"true":      true,
+	"false":     true,
+	"free":      true,
+	"if":        true,
+	"elif":      true,
+	"else":      true,
+	"for":       true,
+	"continue":  true,
+	"break":     true,
+	"mutable":   true,
+	"immutable": true,
+	"and":       true,
+	"or":        true,
 }
 
 func (me *token) string() string {
@@ -209,7 +213,7 @@ func tokenize(stream *stream) []*token {
 			tokens = append(tokens, token)
 			continue
 		}
-		if strings.IndexByte(";()=.:[]", c) >= 0 {
+		if strings.IndexByte(",()=.:[]", c) >= 0 {
 			stream.next()
 			token := simpleToken(depth, string(c))
 			tokens = append(tokens, token)

@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	ftokens = "out/tokens"
-	ftree   = "out/tree"
-	fcode   = "out/main.c"
-	fapp    = "out/main"
+	ftokens = "tokens"
+	ftree   = "tree"
+	fcode   = "main.c"
+	fapp    = "main"
 )
 
 func fmc(depth int) string {
@@ -27,11 +27,11 @@ func main() {
 		return
 	}
 	path := os.Args[1]
-	build(path)
+	data := read(path)
+	compiler("out", data)
 }
 
-func build(path string) {
-	data := read(path)
+func compiler(out string, data []byte) string {
 	stream := newStream(data)
 	fmt.Println("=== content ===")
 	fmt.Println(string(data))
@@ -41,40 +41,47 @@ func build(path string) {
 	for _, token := range tokens {
 		dump += token.string() + "\n"
 	}
-	if exists(ftokens) {
-		os.Remove(ftokens)
+	ptokens := out + "/" + ftokens
+	if exists(ptokens) {
+		os.Remove(ptokens)
 	}
-	create(ftokens, dump)
+	create(ptokens, dump)
 	fmt.Println("=== parse ===")
 	program := parse(tokens)
 	dump = program.dump()
 	if exists(ftree) {
 		os.Remove(ftree)
 	}
-	create(ftree, dump)
+	ptree := out + "/" + ftree
+	create(ptree, dump)
 	fmt.Println("=== code ===")
 	code := compile(program)
 	if exists(fcode) {
 		os.Remove(fcode)
 	}
 	fmt.Println(code)
-	create(fcode, code)
+	pcode := out + "/" + fcode
+	papp := out + "/" + fapp
+	create(pcode, code)
 	fmt.Println("=== gcc ===")
-	if exists(fapp) {
-		os.Remove(fapp)
+	if exists(papp) {
+		os.Remove(papp)
 	}
-	out, err := exec.Command("gcc", fcode, "-o", fapp).CombinedOutput()
-	std := string(out)
+	stdout, err := exec.Command("gcc", pcode, "-o", papp).CombinedOutput()
+	std := string(stdout)
 	if std != "" {
 		fmt.Println(std)
 	}
 	if err != nil {
 		panic(err)
 	}
-	if exists(fapp) {
+	if exists(papp) {
 		fmt.Println("=== run ===")
-		out, _ = exec.Command(fapp).CombinedOutput()
-		fmt.Println(string(out))
+		stdout, _ = exec.Command(papp).CombinedOutput()
+		finalout := string(stdout)
+		fmt.Println(finalout)
+		return finalout
 	}
 	fmt.Println("===")
+	return ""
 }

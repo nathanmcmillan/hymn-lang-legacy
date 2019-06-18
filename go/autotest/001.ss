@@ -1,5 +1,0 @@
-function main
-  x = 1 + 2 * 3 + 4
-  z = x
-  echo z
-  echo "hello world"

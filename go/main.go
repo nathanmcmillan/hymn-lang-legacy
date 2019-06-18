@@ -28,41 +28,43 @@ func main() {
 	}
 	path := os.Args[1]
 	data := read(path)
-	compiler("out", data)
+	compile(true, "out", data)
 }
 
-func compiler(out string, data []byte) string {
+func compile(debug bool, out string, data []byte) string {
 	stream := newStream(data)
-	fmt.Println("=== content ===")
-	fmt.Println(string(data))
-	fmt.Println("=== tokens ===")
+	if debug {
+		fmt.Println("=== content ===")
+		fmt.Println(string(data))
+		fmt.Println("=== tokens ===")
+	}
 	tokens := tokenize(stream)
-	dump := ""
-	for _, token := range tokens {
-		dump += token.string() + "\n"
+	if debug {
+		dump := ""
+		for _, token := range tokens {
+			dump += token.string() + "\n"
+		}
+		ptokens := out + "/" + ftokens
+		if exists(ptokens) {
+			os.Remove(ptokens)
+		}
+		create(ptokens, dump)
+
+		fmt.Println("=== parse ===")
 	}
-	ptokens := out + "/" + ftokens
-	if exists(ptokens) {
-		os.Remove(ptokens)
-	}
-	create(ptokens, dump)
-	fmt.Println("=== parse ===")
 	program := parse(tokens)
-	dump = program.dump()
-	if exists(ftree) {
-		os.Remove(ftree)
+	if debug {
+		dump := program.dump()
+		if exists(ftree) {
+			os.Remove(ftree)
+		}
+		ptree := out + "/" + ftree
+		create(ptree, dump)
+		fmt.Println("=== code ===")
 	}
-	ptree := out + "/" + ftree
-	create(ptree, dump)
-	fmt.Println("=== code ===")
-	code := compile(program)
-	if exists(fcode) {
-		os.Remove(fcode)
-	}
-	fmt.Println(code)
+	makecode(out, program)
 	pcode := out + "/" + fcode
 	papp := out + "/" + fapp
-	create(pcode, code)
 	fmt.Println("=== gcc ===")
 	if exists(papp) {
 		os.Remove(papp)

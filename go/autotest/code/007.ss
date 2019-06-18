@@ -1,6 +1,6 @@
 function main
-  x = 3
-  y = 3
+  mutable x = 3
+  mutable y = 3
   echo x
   echo y
   if x = y

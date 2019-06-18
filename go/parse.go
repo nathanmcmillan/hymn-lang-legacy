@@ -414,11 +414,9 @@ func (me *parser) free() *node {
 	return n
 }
 
-func (me *parser) enclosing() *node {
+func (me *parser) block() *node {
 	depth := me.token.depth
-	fmt.Println("> enclose depth", depth)
-	enclose := nodeInit("scope")
-	me.program.pushScope()
+	block := nodeInit("block")
 	for {
 		done := false
 		for me.token.is == "line" {
@@ -437,7 +435,7 @@ func (me *parser) enclosing() *node {
 			break
 		}
 		expr := me.expression()
-		enclose.push(expr)
+		block.push(expr)
 		if expr.is == "return" {
 			fn := me.program.scope.fn
 			if fn.typed != expr.typed {
@@ -446,9 +444,8 @@ func (me *parser) enclosing() *node {
 			break
 		}
 	}
-	me.program.popScope()
-	fmt.Println("> enclose", enclose.string(0))
-	return enclose
+	fmt.Println("> block", block.string(0))
+	return block
 }
 
 func (me *parser) continuing() *node {
@@ -478,7 +475,7 @@ func (me *parser) forexpr() *node {
 		n.push(me.boolexpr())
 		me.eat("line")
 	}
-	n.push(me.enclosing())
+	n.push(me.block())
 	return n
 }
 
@@ -489,19 +486,19 @@ func (me *parser) ifexpr() *node {
 	n.typed = "void"
 	n.push(me.boolexpr())
 	me.eat("line")
-	n.push(me.enclosing())
+	n.push(me.block())
 	for me.token.is == "elif" {
 		me.eat("elif")
 		other := nodeInit("elif")
 		other.push(me.boolexpr())
 		me.eat("line")
-		other.push(me.enclosing())
+		other.push(me.block())
 		n.push(other)
 	}
 	if me.token.is == "else" {
 		me.eat("else")
 		me.eat("line")
-		n.push(me.enclosing())
+		n.push(me.block())
 	}
 	return n
 }

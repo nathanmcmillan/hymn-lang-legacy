@@ -1,18 +1,26 @@
 package main
 
 import (
-	"testing"
 	"fmt"
+	"os"
+	"strings"
+	"testing"
 )
 
 func TestCompile(t *testing.T) {
-	path := "autotest"
-	dir := scan(path)
-	for _, info := range dir {
+	folder := "autotest"
+	tests := folder + "/code"
+	source := scan(tests)
+	for _, info := range source {
 		fmt.Println(info.Name())
-		data := read(path + "/" + info.Name())
-		out := compiler("out", data)
-		fmt.Println(out)
-		t.Errorf("failed to compile %s", "bad argument")
+		data := read(tests + "/" + info.Name())
+		name := strings.TrimSuffix(info.Name(), ".ss")
+		files := folder + "/out/" + name
+		os.MkdirAll(files, os.ModePerm)
+		out := compile(false, files, data)
+		expected := string(read(folder + "/assert/" + name + ".out"))
+		if out != expected {
+			t.Errorf("assert failed for " + info.Name())
+		}
 	}
 }

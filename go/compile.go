@@ -5,16 +5,20 @@ import (
 	"strings"
 )
 
-func compile(p *program) string {
+func makecode(out string, p *program) {
 	cf := cfileInit()
 	cf.classes = p.classes
 	cf.types = p.types
 	cf.primitives = p.primitives
 
+	head := ""
+	head += "#include <stdio.h>\n"
+	head += "#include <stdlib.h>\n"
+	head += "#include <stdbool.h>\n"
+	head += "\nint main();\n"
+
 	code := ""
-	code += "#include <stdio.h>\n"
-	code += "#include <stdlib.h>\n"
-	code += "#include <stdbool.h>\n"
+	code += "#include \"main.h\"\n"
 	code += "\n"
 
 	for _, c := range p.classOrder {
@@ -31,7 +35,9 @@ func compile(p *program) string {
 		code += s
 	}
 	fmt.Println("===")
-	return code
+
+	create(out+"/main.h", head)
+	create(out+"/main.c", code)
 }
 
 func (me *cfile) construct(class string) string {
@@ -60,8 +66,13 @@ func (me *cfile) allocarray(n *node) string {
 	return code
 }
 
+func (me *cfile) checkIsClass(typed string) bool {
+	_, ok := me.classes[typed]
+	return ok
+}
+
 func (me *cfile) typesig(typed string) string {
-	if _, ok := me.classes[typed]; ok {
+	if me.checkIsClass(typed) {
 		return typed + " *"
 	} else if typed == "string" {
 		return "char *"
@@ -83,15 +94,21 @@ func (me *cfile) eval(n *node) *cnode {
 		if nodeLeft.is == "variable" {
 			name := nodeLeft.value
 			typed := right.typed
+			isptr := me.checkIsClass(typed) || checkIsArray(typed)
 			if _, ok := me.scope.variables[name]; !ok {
 				mutable := false
 				if nodeLeft.attribute == "mutable" {
 					mutable = true
-				} else {
-					code += "const "
 				}
 				me.scope.variables[name] = varInit(typed, name, mutable)
-				code += fmtassignspace(me.typesig(typed))
+				codesig := fmtassignspace(me.typesig(typed))
+				if mutable {
+					code = codesig
+				} else if isptr {
+					code += codesig + "const "
+				} else {
+					code += "const " + codesig
+				}
 			}
 		}
 		left = me.eval(nodeLeft)
@@ -207,8 +224,8 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if op == "scope" {
-		return me.enclose(n)
+	if op == "block" {
+		return me.block(n)
 	}
 	if op == "break" {
 		cn := codeNode(n.is, n.value, n.typed, "break;")
@@ -256,7 +273,7 @@ func (me *cfile) eval(n *node) *cnode {
 			code += fmc(me.depth) + "}"
 			ix++
 		}
-		if ix >= 2 && ix < hsize && n.has[ix].is == "scope" {
+		if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
 			code += "\n" + fmc(me.depth) + "else\n" + fmc(me.depth) + "{\n"
 			me.depth++
 			code += me.eval(n.has[ix]).code
@@ -294,14 +311,14 @@ func (me *cfile) object(class *class) string {
 	return code
 }
 
-func (me *cfile) enclose(n *node) *cnode {
+func (me *cfile) block(n *node) *cnode {
 	expressions := n.has
-	block := ""
+	code := ""
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		block += fmc(me.depth) + c.code + "\n"
+		code += fmc(me.depth) + c.code + "\n"
 	}
-	cn := codeNode(n.is, n.value, n.typed, block)
+	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -309,7 +326,7 @@ func (me *cfile) enclose(n *node) *cnode {
 func (me *cfile) mainc(fn *function) string {
 	args := fn.args
 	expressions := fn.expressions
-	block := ""
+	codeblock := ""
 	returns := false
 	me.pushScope()
 	for _, arg := range args {
@@ -325,10 +342,10 @@ func (me *cfile) mainc(fn *function) string {
 				returns = true
 			}
 		}
-		block += fmc(me.depth) + c.code + "\n"
+		codeblock += fmc(me.depth) + c.code + "\n"
 	}
 	if !returns {
-		block += fmc(me.depth) + "return 0;\n"
+		codeblock += fmc(me.depth) + "return 0;\n"
 	}
 	me.popScope()
 	code := ""
@@ -340,7 +357,7 @@ func (me *cfile) mainc(fn *function) string {
 		code += arg.is + " " + arg.name
 	}
 	code += ")\n{\n"
-	code += block
+	code += codeblock
 	code += "}\n"
 	return code
 }
@@ -365,7 +382,7 @@ func (me *cfile) function(name string, fn *function) string {
 		if ix > 0 {
 			code += ", "
 		}
-		code += arg.is + " " + arg.name
+		code += "const " + arg.is + " " + arg.name
 	}
 	code += ")\n{\n"
 	code += block

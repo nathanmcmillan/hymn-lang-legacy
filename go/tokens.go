@@ -101,13 +101,19 @@ func (me *tokenizer) forNumber() (string, string) {
 func (me *tokenizer) forWord() string {
 	stream := me.stream
 	value := &strings.Builder{}
+	first := true
 	for !stream.eof() {
 		c := stream.peek()
 		if !letter(c) {
-			break
+			if first {
+				break
+			} else if !digit(c) {
+				break
+			}
 		}
 		value.WriteByte(c)
 		stream.next()
+		first = false
 	}
 	return value.String()
 }

@@ -1,10 +1,4 @@
 function main
-  i = 0
-  for
-    echo "loop!"
-    if i > 4
-      echo "break!"
-      break
-    i += 1
+  for i = 0, i < 3, i += 1
+    echo "loop 3!"
   echo "bye!"
-    

@@ -10,5 +10,5 @@ function main
   x = new foo
   z = new bar
   z.c = x
-  x.b = "hello test J"
+  x.b = "hello test foo & bar"
   echo z.c.b

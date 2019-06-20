@@ -360,10 +360,9 @@ func (me *parser) assign(mutable bool) *node {
 	assigning := me.eatvar()
 	op := me.token.is
 	mustBeNumber := false
-	if op == "=" {
-	} else if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
+	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
 		mustBeNumber = true
-	} else {
+	} else if op != "=" {
 		panic("unknown assign operation " + me.fail())
 	}
 	me.eat(op)
@@ -606,6 +605,11 @@ func (me *parser) calc() *node {
 	for true {
 		token := me.token
 		op := token.is
+		if op == "=" || op == ">" || op == "<" || op == ">=" || op == "<=" {
+			me.eat(op)
+			node = me.boolexpr(node, me.calc(), op)
+			continue	
+		}
 		if op == "+" || op == "-" {
 			me.eat(op)
 			node = me.binary(node, me.term(), op)

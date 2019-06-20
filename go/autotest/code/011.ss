@@ -3,6 +3,6 @@ class foo
 
 function main
   arr = foo[3]
-  arr[1] = new foo
+  arr[1] = foo
   arr[1].val = "foo!"
   echo arr[1].val

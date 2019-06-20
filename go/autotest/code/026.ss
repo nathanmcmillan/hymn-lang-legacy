@@ -1,7 +1,14 @@
-function get -> int
-  return 3 + 4 * 5 + 6
-
 function main
-  x = get
-  echo x
-  echo get
+  mutable x = 2
+  for x > 0
+    echo "loop a"
+    echo x
+    x -= 1
+  for i = 0, i < 3, i += 1
+    echo "loop b"
+    echo i
+  k = 0
+  for i = 0, i = k, i += 1
+    echo "loop c"
+    echo i
+  echo "bye!"

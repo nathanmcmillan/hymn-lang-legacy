@@ -3,7 +3,7 @@ class foo
   b string
 
 function main
-  x = new foo
+  x = foo
   x.a = 2
   x.b = "hi"
   z = x.a

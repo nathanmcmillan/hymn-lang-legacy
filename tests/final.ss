@@ -18,7 +18,7 @@ function setter map<string int>:mp
   mp["foo"] = 99
 
 function main
-  x = new foo
+  x = foo
   x.a = 2
   z = x.a
   echo z

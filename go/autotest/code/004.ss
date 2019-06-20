@@ -7,8 +7,8 @@ class bar
   d string
 
 function main
-  x = new foo
-  z = new bar
+  x = foo
+  z = bar
   z.c = x
   x.b = "hello test foo & bar"
   echo z.c.b

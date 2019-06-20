@@ -9,7 +9,6 @@ var keywords = map[string]bool{
 	"function":  true,
 	"return":    true,
 	"class":     true,
-	"new":       true,
 	"true":      true,
 	"false":     true,
 	"free":      true,
@@ -219,7 +218,13 @@ func tokenize(stream *stream) []*token {
 			tokens = append(tokens, token)
 			continue
 		}
-		if strings.IndexByte(",()=.:[]", c) >= 0 {
+		if c == ',' {
+			stream.next()
+			token := simpleToken(depth, "delim")
+			tokens = append(tokens, token)
+			continue
+		}
+		if strings.IndexByte("()=.:[]", c) >= 0 {
 			stream.next()
 			token := simpleToken(depth, string(c))
 			tokens = append(tokens, token)

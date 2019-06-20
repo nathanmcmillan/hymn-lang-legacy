@@ -116,19 +116,20 @@ func (me *parser) expression() *node {
 	op := token.is
 	if op == "mutable" {
 		me.eat(op)
-		return me.assign(true)
+		n := me.assign(true)
+		me.verify("line")
+		return n
 	}
 	if op == "id" {
 		name := token.value
 		if _, ok := me.program.functions[name]; ok {
 			return me.call()
 		}
-		return me.assign(false)
+		n := me.assign(false)
+		me.verify("line")
+		return n
 	} else if op == "function" {
 		me.function()
-		return nil
-	} else if op == "new" {
-		me.construct()
 		return nil
 	} else if op == "class" {
 		me.class()
@@ -170,6 +171,17 @@ func (me *parser) maybeIgnore(depth int) {
 	}
 }
 
+func (me *parser) typedecl() string {
+	typed := me.token.value
+	me.eat("id")
+	if me.token.is == "[" {
+		me.eat("[")
+		me.eat("]")
+		typed += "[]"
+	}
+	return typed
+}
+
 func (me *parser) function() {
 	program := me.program
 	me.eat("function")
@@ -189,13 +201,11 @@ func (me *parser) function() {
 		}
 		if me.token.is == "return-type" {
 			me.next()
-			fn.typed = me.token.value
-			me.eat("id")
+			fn.typed = me.typedecl()
 			continue
 		}
 		if me.token.is == "id" {
-			typed := me.token.value
-			me.eat("id")
+			typed := me.typedecl()
 			me.eat(":")
 			arg := me.token.value
 			me.eat("id")
@@ -388,12 +398,10 @@ func (me *parser) assign(mutable bool) *node {
 	n.push(assigning)
 	fmt.Println("assign set", assigning.string(0))
 	n.push(calc)
-	me.verify("line")
 	return n
 }
 
 func (me *parser) construct() *node {
-	me.eat("new")
 	token := me.token
 	me.eat("id")
 	name := token.value
@@ -464,15 +472,38 @@ func (me *parser) breaking() *node {
 	return n
 }
 
+func (me *parser) iswhile() bool {
+	pos := me.pos
+	token := me.tokens[pos]
+	for token.is != "line" && token.is != "eof" {
+		if token.is == "delim" {
+			return false
+		}
+		pos++
+		token = me.tokens[pos]
+	}
+	return true
+}
+
 func (me *parser) forexpr() *node {
-	fmt.Println("> for")
+	fmt.Println("> for expression")
 	me.eat("for")
 	n := nodeInit("for")
 	n.typed = "void"
 	if me.token.is == "line" {
 		me.eat("line")
 	} else {
-		n.push(me.boolexpr())
+		if me.iswhile() {
+			fmt.Println("> regular while")
+			n.push(me.boolexpr())
+		} else {
+			fmt.Println("> multi for")
+			n.push(me.assign(true))
+			me.eat("delim")
+			n.push(me.boolexpr())
+			me.eat("delim")
+			n.push(me.assign(true))
+		}
 		me.eat("line")
 	}
 	n.push(me.block())
@@ -620,19 +651,20 @@ func (me *parser) factor() *node {
 				me.eat(op)
 				return me.array(name)
 			}
-			panic("bad array definition " + me.fail())
+			if _, ok := me.program.classes[name]; ok {
+				return me.construct()
+			}
+			panic("bad class or array definition " + me.fail())
 		}
 		if me.program.scope.getVar(name) == nil {
 			panic("variable out of scope " + me.fail())
 		}
 		return me.eatvar()
 	}
-	if op == "new" {
-		return me.construct()
-	}
 	if op == "(" {
 		me.eat("(")
 		n := me.calc()
+		n.attribute = "parenthesis"
 		me.eat(")")
 		return n
 	}
@@ -662,9 +694,7 @@ func (me *parser) class() {
 		if token.is == "id" {
 			vn := token.value
 			me.eat("id")
-			token := me.token
-			me.eat("id")
-			vt := token.value
+			vt := me.typedecl()
 			me.eat("line")
 			vorder = append(vorder, vn)
 			vmap[vn] = varInit(vt, vn, true)

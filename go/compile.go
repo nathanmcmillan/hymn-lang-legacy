@@ -84,43 +84,55 @@ func (me *cfile) typesig(typed string) string {
 	return typed
 }
 
+func (me *cfile) declare(n *node) string {
+	code := ""
+	name := n.value
+	if _, ok := me.scope.variables[name]; !ok {
+		mutable := false
+		if n.attribute == "mutable" {
+			mutable = true
+		}
+		typed := n.typed
+		me.scope.variables[name] = varInit(typed, name, mutable)
+		codesig := fmtassignspace(me.typesig(typed))
+		if mutable {
+			code = codesig
+		} else if me.checkIsClass(typed) || checkIsArray(typed) {
+			code += codesig + "const "
+		} else {
+			code += "const " + codesig
+		}
+	}
+	return code
+}
+
+func (me *cfile) assingment(n *node) string {
+	code := ""
+	left := n.has[0]
+	right := me.eval(n.has[1])
+	if left.is == "variable" {
+		code = me.declare(left)
+	}
+	code += me.eval(left).code + " = " + right.code
+	return code
+}
+
+func (me *cfile) assignmentUpdate(n *node) string {
+	left := me.eval(n.has[0])
+	right := me.eval(n.has[1])
+	return left.code + " " + n.is + " " + right.code
+}
+
 func (me *cfile) eval(n *node) *cnode {
 	op := n.is
 	if op == "=" {
-		right := me.eval(n.has[1])
-		code := ""
-		nodeLeft := n.has[0]
-		var left *cnode
-		if nodeLeft.is == "variable" {
-			name := nodeLeft.value
-			typed := right.typed
-			isptr := me.checkIsClass(typed) || checkIsArray(typed)
-			if _, ok := me.scope.variables[name]; !ok {
-				mutable := false
-				if nodeLeft.attribute == "mutable" {
-					mutable = true
-				}
-				me.scope.variables[name] = varInit(typed, name, mutable)
-				codesig := fmtassignspace(me.typesig(typed))
-				if mutable {
-					code = codesig
-				} else if isptr {
-					code += codesig + "const "
-				} else {
-					code += "const " + codesig
-				}
-			}
-		}
-		left = me.eval(nodeLeft)
-		code += left.code + " = " + right.code + ";"
+		code := me.assingment(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
-		left := me.eval(n.has[0])
-		right := me.eval(n.has[1])
-		code := left.code + " " + op + " " + right.code + ";"
+		code := me.assignmentUpdate(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -138,9 +150,17 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "+" || op == "-" || op == "*" || op == "/" {
-		code := me.eval(n.has[0]).code
-		code += op
+		paren := n.attribute == "parenthesis"
+		code := ""
+		if paren {
+			code += "("
+		}
+		code += me.eval(n.has[0]).code
+		code += " " + op + " "
 		code += me.eval(n.has[1]).code
+		if paren {
+			code += ")"
+		}
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -181,10 +201,15 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
+	if op == "root-variable" {
+		cn := codeNode(n.is, n.value, n.typed, n.value)
+		fmt.Println(cn.string(0))
+		return cn
+	}
 	if op == "array-member" {
 		index := me.eval(n.has[0])
-		root := n.has[1]
-		code := root.value + "[" + index.code + "]"
+		root := me.eval(n.has[1])
+		code := root.code + "[" + index.code + "]"
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -197,7 +222,7 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "return" {
 		in := me.eval(n.has[0])
-		cn := codeNode(n.is, n.value, n.typed, "return "+in.code+";")
+		cn := codeNode(n.is, n.value, n.typed, "return "+in.code)
 		cn.push(in)
 		fmt.Println(cn.string(0))
 		return cn
@@ -240,12 +265,31 @@ func (me *cfile) eval(n *node) *cnode {
 	if op == "for" {
 		size := len(n.has)
 		ix := 0
-		code := "while ("
-		if size > 1 {
+		code := ""
+		if size > 2 {
+			ix += 3
+			vset := n.has[0]
+			if vset.is != "=" {
+				panic("for loop must start with assign")
+			}
+			vobj := vset.has[0]
+			if vobj.is != "variable" {
+				panic("for loop must assign a regular variable")
+			}
+			vname := vobj.value
+			_, vexist := me.scope.variables[vname]
+			if !vexist {
+				code += me.declare(vobj) + vname + ";\n" + fmc(me.depth)
+			}
+			vinit := me.assingment(vset)
+			condition := me.eval(n.has[1]).code
+			inc := me.assignmentUpdate(n.has[2])
+			code += "for (" + vinit + "; " + condition + "; " + inc + ")\n"
+		} else if size > 1 {
 			ix++
-			code += me.eval(n.has[0]).code + ")\n"
+			code += "while (" + me.eval(n.has[0]).code + ")\n"
 		} else {
-			code += "true)\n"
+			code += "while (true)\n"
 		}
 		code += fmc(me.depth) + "{\n"
 		me.depth++
@@ -311,12 +355,20 @@ func (me *cfile) object(class *class) string {
 	return code
 }
 
+func (me *cfile) maybecolon(code string) string {
+	if strings.HasSuffix(code, "}") {
+		return ""
+	}
+	return ";"
+}
+
 func (me *cfile) block(n *node) *cnode {
 	expressions := n.has
 	code := ""
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		code += fmc(me.depth) + c.code + "\n"
+		code += fmc(me.depth) + c.code
+		code += me.maybecolon(code) + "\n"
 	}
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
@@ -324,14 +376,13 @@ func (me *cfile) block(n *node) *cnode {
 }
 
 func (me *cfile) mainc(fn *function) string {
-	args := fn.args
+	if len(fn.args) > 0 {
+		panic("main can not have arguments")
+	}
 	expressions := fn.expressions
 	codeblock := ""
 	returns := false
 	me.pushScope()
-	for _, arg := range args {
-		me.scope.variables[arg.name] = arg
-	}
 	me.depth = 1
 	for _, expr := range expressions {
 		c := me.eval(expr)
@@ -342,21 +393,15 @@ func (me *cfile) mainc(fn *function) string {
 				returns = true
 			}
 		}
-		codeblock += fmc(me.depth) + c.code + "\n"
+		codeblock += fmc(me.depth) + c.code
+		codeblock += me.maybecolon(codeblock) + "\n"
 	}
 	if !returns {
 		codeblock += fmc(me.depth) + "return 0;\n"
 	}
 	me.popScope()
 	code := ""
-	code += "int main("
-	for ix, arg := range args {
-		if ix > 0 {
-			code += ", "
-		}
-		code += arg.is + " " + arg.name
-	}
-	code += ")\n{\n"
+	code += "int main()\n{\n"
 	code += codeblock
 	code += "}\n"
 	return code
@@ -373,7 +418,8 @@ func (me *cfile) function(name string, fn *function) string {
 	}
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		block += fmc(me.depth) + c.code + "\n"
+		block += fmc(me.depth) + c.code
+		block += me.maybecolon(block) + "\n"
 	}
 	me.popScope()
 	code := ""
@@ -382,7 +428,14 @@ func (me *cfile) function(name string, fn *function) string {
 		if ix > 0 {
 			code += ", "
 		}
-		code += "const " + arg.is + " " + arg.name
+		typed := arg.is
+		codesig := fmtassignspace(me.typesig(typed))
+		if me.checkIsClass(typed) || checkIsArray(typed) {
+			code += codesig + "const "
+		} else {
+			code += "const " + codesig
+		}
+		code += arg.name
 	}
 	code += ")\n{\n"
 	code += block
@@ -394,13 +447,13 @@ func (me *cfile) call(name string, parameters []*node) string {
 	if name == "echo" {
 		param := me.eval(parameters[0])
 		if param.typed == "string" {
-			return "printf(\"%s\\n\", " + param.code + ");"
+			return "printf(\"%s\\n\", " + param.code + ")"
 		} else if param.typed == "int" {
-			return "printf(\"%d\\n\", " + param.code + ");"
+			return "printf(\"%d\\n\", " + param.code + ")"
 		} else if param.typed == "float" {
-			return "printf(\"%f\\n\", " + param.code + ");"
+			return "printf(\"%f\\n\", " + param.code + ")"
 		} else if param.typed == "bool" {
-			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\");"
+			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\")"
 		}
 		panic("argument for echo was " + param.string(0))
 	}

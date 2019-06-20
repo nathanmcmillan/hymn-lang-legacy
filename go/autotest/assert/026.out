@@ -1,1 +1,13 @@
-5
+loop a
+2
+loop a
+1
+loop b
+0
+loop b
+1
+loop b
+2
+loop c
+0
+bye!

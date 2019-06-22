@@ -8,6 +8,6 @@ foo get(int z) string
 main
   f = foo
   f.x = 3
-  s = f.dostuff 2
+  s = f.get 2
   echo f.x
   echo s

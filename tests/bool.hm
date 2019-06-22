@@ -1,32 +1,32 @@
-function less int:a int:b -> bool
+less(int a, int b) bool
   return a < b
 
-function ls int:a int:b -> bool
+ls(int a, int b) bool
   if a < b
     return true
   return false
 
-function gr int:a int:b -> bool
+gr(int a, int b) bool
   if a > b
     return true
   return false
 
-function le int:a int:b -> bool
+le(int a, int b) bool
   if a <= b
     return true
   return false
 
-function ge int:a int:b -> bool
+ge(int a, int b) bool
   if a >= b
     return true
   return false
 
-function eq int:a int:b -> bool
+eq(int a, int b) bool
   if a = b
     return true
   return false
 
-function main
+main
   # this is a comment
   x = 2
   y = 2

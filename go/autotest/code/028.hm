@@ -1,7 +1,7 @@
 class foo
   x int[]
 
-function main
+main
   f = foo
   f.x = int[3]
   f.x[0] = 88

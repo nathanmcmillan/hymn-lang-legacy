@@ -1,4 +1,4 @@
-function main
+main
   i = int[3]
   i[1] = 5
   echo i[1]

@@ -42,6 +42,8 @@ type class struct {
 	name          string
 	variables     map[string]*variable
 	variableOrder []string
+	functions     map[string]*function
+	functionOrder []string
 }
 
 type program struct {
@@ -143,6 +145,8 @@ func classInit(name string, variableOrder []string, variables map[string]*variab
 	c.name = name
 	c.variableOrder = variableOrder
 	c.variables = variables
+	c.functions = make(map[string]*function)
+	c.functionOrder = make([]string, 0)
 	return c
 }
 

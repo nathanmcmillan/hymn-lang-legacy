@@ -1,4 +1,4 @@
-function main
+main
   x = 3
   y = 2
   i = int[x]

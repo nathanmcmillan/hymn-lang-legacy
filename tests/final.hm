@@ -1,23 +1,23 @@
 import
   math
 
-variables
+define
   mutable nextId
   name = "foo"
 
 class foo
   f float32[]
 
-function glob_foo int:x -> int
+glob_foo(int x) int
   return x + 2
 
-function appender list<string>:ls
+appender(list<string> ls)
    ls[1] = "foo"
 
-function setter map<string int>:mp
+setter(map<string, int> mp)
   mp["foo"] = 99
 
-function main
+main
   x = foo
   x.a = 2
   z = x.a

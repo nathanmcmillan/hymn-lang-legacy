@@ -6,7 +6,7 @@ import (
 )
 
 var keywords = map[string]bool{
-	"function":  true,
+	"macro":     true,
 	"return":    true,
 	"class":     true,
 	"true":      true,
@@ -183,7 +183,7 @@ func tokenize(stream *stream) []*token {
 			continue
 		}
 		c := stream.peek()
-		if strings.IndexByte("()=.:[]", c) >= 0 {
+		if strings.IndexByte("()=.[]", c) >= 0 {
 			stream.next()
 			token := simpleToken(depth, string(c))
 			tokens = append(tokens, token)
@@ -199,10 +199,7 @@ func tokenize(stream *stream) []*token {
 			stream.next()
 			peek := stream.peek()
 			var token *token
-			if peek == '>' {
-				stream.next()
-				token = simpleToken(depth, "return-type")
-			} else if peek == '=' {
+			if peek == '=' {
 				stream.next()
 				token = simpleToken(depth, "-=")
 			} else {

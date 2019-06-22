@@ -1,4 +1,4 @@
-function main
+main
   mutable i = 0
   for
     echo "loop!"

@@ -2,7 +2,7 @@ class foo
   a int
   b string
 
-function main
+main
   x = foo
   x.a = 2
   x.b = "hi"

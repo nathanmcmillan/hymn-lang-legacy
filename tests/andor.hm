@@ -1,4 +1,4 @@
-function main
+main
   x = 2
   y = 2
   z = 3

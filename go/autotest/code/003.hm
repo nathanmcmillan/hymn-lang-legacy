@@ -1,7 +1,7 @@
-function get -> string
+get string
   return "hello world"
 
-function main
+main
   x = get
   echo x
   echo get

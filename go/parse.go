@@ -22,6 +22,37 @@ func (me *program) dump() string {
 			for _, classVar := range class.variables {
 				s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
 			}
+			if len(class.functionOrder) > 0 {
+				s += fmc(lv) + "functions[\n"
+				for _, classfuncname := range class.functionOrder {
+					function := class.functions[classfuncname]
+					lv++
+					s += fmc(lv) + classfuncname + "{\n"
+					lv++
+					if len(function.args) > 0 {
+						s += fmc(lv) + "args[\n"
+						lv++
+						for _, arg := range function.args {
+							s += fmc(lv) + arg.string() + "\n"
+						}
+						lv--
+						s += fmc(lv) + "]\n"
+					}
+					if len(function.expressions) > 0 {
+						s += fmc(lv) + "expressions[\n"
+						lv++
+						for _, expr := range function.expressions {
+							s += expr.string(lv) + "\n"
+						}
+						lv--
+						s += fmc(lv) + "]\n"
+					}
+					lv--
+					s += fmc(lv) + "}\n"
+					lv--
+				}
+				s += fmc(lv) + "]\n"
+			}
 			lv--
 			s += fmc(lv) + "]\n"
 			lv--
@@ -128,13 +159,16 @@ func (me *parser) expression() *node {
 		name := token.value
 		if _, ok := me.program.functions[name]; ok {
 			return me.call()
+		} else if _, ok := me.program.classes[name]; ok {
+			me.classfunction()
+			return nil
+		} else if token.depth == 0 {
+			me.filefunction()
+			return nil
 		}
 		n := me.assign(false)
 		me.verify("line")
 		return n
-	} else if op == "function" {
-		me.function()
-		return nil
 	} else if op == "class" {
 		me.class()
 		return nil
@@ -186,37 +220,66 @@ func (me *parser) typedecl() string {
 	return typed
 }
 
-func (me *parser) function() {
+func (me *parser) classfunction() {
+	classname := me.token.value
+	me.eat("id")
+	funcname := me.token.value
+	me.eat("id")
+	class := me.program.classes[classname]
+	if _, ok := class.functions[funcname]; ok {
+		panic(me.fail() + "class \"" + classname + "\" with function \"" + funcname + "\" is already defined")
+	}
+	if _, ok := class.variables[funcname]; ok {
+		panic(me.fail() + "class \"" + classname + "\" with variable \"" + funcname + "\" is already defined")
+	}
+	fn := me.function(funcname, class)
+	class.functionOrder = append(class.functionOrder, funcname)
+	class.functions[funcname] = fn
+}
+
+func (me *parser) filefunction() {
 	program := me.program
-	me.eat("function")
 	token := me.token
 	name := token.value
 	if _, ok := program.functions[name]; ok {
-		panic(me.fail() + "function already defined")
+		panic(me.fail() + "function \"" + name + "\" is already defined")
 	}
 	me.eat("id")
+	fn := me.function(name, nil)
+	program.functionOrder = append(program.functionOrder, name)
+	program.functions[name] = fn
+}
+
+func (me *parser) function(name string, self *class) *function {
 	fn := funcInit()
 	fn.name = name
 	fn.typed = "void"
-	for {
-		if me.token.is == "line" {
-			me.next()
-			break
+	if self != nil {
+		ref := varInit(self.name, "self", false)
+		fn.args = append(fn.args, ref)
+	}
+	if me.token.is == "(" {
+		me.eat("(")
+		for {
+			if me.token.is == ")" {
+				break
+			}
+			if me.token.is == "id" {
+				typed := me.typedecl()
+				arg := me.token.value
+				me.eat("id")
+				fn.args = append(fn.args, varInit(typed, arg, false))
+				continue
+			}
+			panic(me.fail() + "unexpected token in function definition")
 		}
-		if me.token.is == "return-type" {
-			me.next()
+		me.eat(")")
+		if me.token.is != "line" {
 			fn.typed = me.typedecl()
-			continue
 		}
-		if me.token.is == "id" {
-			typed := me.typedecl()
-			me.eat(":")
-			arg := me.token.value
-			me.eat("id")
-			fn.args = append(fn.args, varInit(typed, arg, false))
-			continue
-		}
-		panic(me.fail() + "unexpected token in function definition")
+		me.eat("line")
+	} else {
+		me.eat("line")
 	}
 	me.program.pushScope()
 	me.program.scope.fn = fn
@@ -224,7 +287,7 @@ func (me *parser) function() {
 		me.program.scope.variables[arg.name] = arg
 	}
 	for {
-		token = me.token
+		token := me.token
 		done := false
 		for token.is == "line" {
 			me.eat("line")
@@ -252,8 +315,7 @@ func (me *parser) function() {
 		}
 	}
 	me.program.popScope()
-	program.functionOrder = append(program.functionOrder, name)
-	program.functions[name] = fn
+	return fn
 }
 
 func (me *parser) returning() *node {
@@ -313,14 +375,22 @@ func (me *parser) eatvar() *node {
 				panic(me.fail() + "class " + root.typed + " does not exist")
 			}
 			me.eat(".")
-			member := nodeInit("member-variable")
-			memberName := me.token.value
-			member.value = memberName
-			classVar, ok := rootClass.variables[memberName]
-			if !ok {
-				panic(me.fail() + "member variable " + memberName + " does not exist")
+			dotName := me.token.value
+			var member *node
+			classVar, ok := rootClass.variables[dotName]
+			if ok {
+				member = nodeInit("member-variable")
+				member.typed = classVar.is
+			} else {
+				funcVar, ok := rootClass.functions[dotName]
+				if ok {
+					member = nodeInit("class-function")
+					member.typed = funcVar.typed
+				} else {
+					panic(me.fail() + "class variable or function " + dotName + " does not exist")
+				}
 			}
-			member.typed = classVar.is
+			member.value = dotName
 			member.push(root)
 			root = member
 			me.eat("id")

@@ -1,7 +1,7 @@
 class foo
   val string
 
-function main
+main
   x = 3
   y = 2
   arr = foo[x + 1]

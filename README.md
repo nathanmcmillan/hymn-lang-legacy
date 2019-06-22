@@ -1,2 +1,2 @@
-# sigil-script
-transpiler for golang and javascript
+# hymn-lang
+compiles to readable C code

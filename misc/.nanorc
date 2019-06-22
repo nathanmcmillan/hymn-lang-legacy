@@ -1,2 +1,2 @@
-syntax "s-code" ".ss"
+syntax "hymn" ".hm"
 color red "\<(function|object)\>"

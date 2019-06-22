@@ -3,7 +3,9 @@ function main
   y = 5
   z = false
   if x != y
-    echo "not equal"
+    echo "good"
   if !z
-    echo "is true"
+    echo "good"
+  if !(x = y)
+    echo "good"
   echo "bye"

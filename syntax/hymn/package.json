@@ -1,5 +1,5 @@
 {
-    "name": "sigil-script",
+    "name": "hymn",
     "version": "0.0.1",
     "engines": {
         "vscode": ">=0.9.0-pre.1"
@@ -7,13 +7,13 @@
     "publisher": "me",
     "contributes": {
         "languages": [{
-            "id": "sigil-script",
-            "aliases": ["sigil-script"],
-            "extensions": [".ss"]
+            "id": "hymn",
+            "aliases": ["hymn"],
+            "extensions": [".hm"]
         }],
         "grammars": [{
-            "language": "sigil-script",
-            "scopeName": "source.ss",
+            "language": "hymn",
+            "scopeName": "source.hm",
             "path": "./syntaxes/ss.tmLanguage"
         }]
     }

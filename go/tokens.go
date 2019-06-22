@@ -223,7 +223,7 @@ func tokenize(stream *stream) []*token {
 			tokens = append(tokens, token)
 			continue
 		}
-		if c == '<' || c == '>' {
+		if c == '<' || c == '>' || c == '!' {
 			stream.next()
 			var token *token
 			if stream.peek() == '=' {

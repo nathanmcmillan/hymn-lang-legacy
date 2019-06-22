@@ -551,6 +551,9 @@ func (me *parser) comparison(left *node, op string) *node {
 	} else if op == "=" {
 		typed = "equal"
 		me.eat(op)
+	} else if op == "!=" {
+		typed = "not-equal"
+		me.eat(op)
 	} else if op == ">" || op == ">=" || op == "<" || op == "<=" {
 		if !isNumber(left.typed) {
 			err := me.fail() + "left side of comparison must be a number, was \"" + left.typed + "\""
@@ -581,6 +584,15 @@ func (me *parser) getbool() *node {
 	if n.typed != "bool" {
 		panic(me.fail() + "must be boolean expression")
 	}
+	return n
+}
+
+func (me *parser) notbool() *node {
+	me.eat("!")
+	n := nodeInit("not")
+	n.typed = "bool"
+	n.push(me.getbool())
+	fmt.Println("> not bool", n.string(0))
 	return n
 }
 
@@ -661,7 +673,7 @@ func (me *parser) calc() *node {
 			node = me.comparison(node, op)
 			continue
 		}
-		if op == "=" || op == ">" || op == "<" || op == ">=" || op == "<=" {
+		if op == "=" || op == ">" || op == "<" || op == ">=" || op == "<=" || op == "!=" {
 			node = me.comparison(node, op)
 			continue
 		}
@@ -726,6 +738,9 @@ func (me *parser) factor() *node {
 		n.attribute = "parenthesis"
 		me.eat(")")
 		return n
+	}
+	if op == "!" {
+		return me.notbool()
 	}
 	panic(me.fail() + "unknown factor")
 }

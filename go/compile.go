@@ -234,8 +234,30 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "equal" {
-		code := me.eval(n.has[0]).code
+		paren := n.attribute == "parenthesis"
+		code := ""
+		if paren {
+			code += "("
+		}
+		code += me.eval(n.has[0]).code
 		code += " == "
+		code += me.eval(n.has[1]).code
+		if paren {
+			code += ")"
+		}
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "not" {
+		code := "!" + me.eval(n.has[0]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "not-equal" {
+		code := me.eval(n.has[0]).code
+		code += " != "
 		code += me.eval(n.has[1]).code
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))

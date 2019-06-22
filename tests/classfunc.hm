@@ -1,0 +1,13 @@
+class foo
+  x int
+
+foo get(int z) string
+  self.x += z
+  return "stuff did"
+
+main
+  f = foo
+  f.x = 3
+  s = f.dostuff 2
+  echo f.x
+  echo s

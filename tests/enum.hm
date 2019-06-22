@@ -1,0 +1,11 @@
+enum snake
+  python
+  viper
+  cobra
+
+main
+  a = cobra
+  b = viper
+  if a = b
+    echo "no not really"
+  echo "end"

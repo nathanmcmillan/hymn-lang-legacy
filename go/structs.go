@@ -72,6 +72,7 @@ type parser struct {
 	tokens  []*token
 	token   *token
 	pos     int
+	line    int
 	program *program
 }
 

@@ -1,0 +1,19 @@
+function main
+  x = 2
+  y = 2
+  z = 3
+  
+  if x = y and x = z
+    echo "wow"
+  else
+    echo "nope"
+
+  if x = y or x = z
+    echo "double wow"
+  else
+    echo "double nope"
+
+  if x = y and y = z or z = x
+    echo "triple wow"
+  else
+    echo "triple nope"

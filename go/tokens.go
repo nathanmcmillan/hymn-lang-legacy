@@ -131,6 +131,17 @@ func (me *tokenizer) forString() string {
 	return value.String()
 }
 
+func (me *tokenizer) forComment() {
+	stream := me.stream
+	stream.next()
+	for !stream.eof() {
+		c := stream.next()
+		if c == '\n' {
+			break
+		}
+	}
+}
+
 func tokenize(stream *stream) []*token {
 	me := tokenizer{}
 	me.stream = stream
@@ -172,6 +183,12 @@ func tokenize(stream *stream) []*token {
 			continue
 		}
 		c := stream.peek()
+		if strings.IndexByte("()=.:[]", c) >= 0 {
+			stream.next()
+			token := simpleToken(depth, string(c))
+			tokens = append(tokens, token)
+			continue
+		}
 		if c == '"' {
 			value := me.forString()
 			token := valueToken(depth, "string", value)
@@ -224,10 +241,8 @@ func tokenize(stream *stream) []*token {
 			tokens = append(tokens, token)
 			continue
 		}
-		if strings.IndexByte("()=.:[]", c) >= 0 {
-			stream.next()
-			token := simpleToken(depth, string(c))
-			tokens = append(tokens, token)
+		if c == '#' {
+			me.forComment()
 			continue
 		}
 		if c == '\n' {

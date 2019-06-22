@@ -1,0 +1,8 @@
+function main
+  x = b1011
+  y = 0xD16
+  a = x & y
+  b = x | y
+  c = x ^ y
+  d = x << y
+  e = x >> y

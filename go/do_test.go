@@ -12,7 +12,7 @@ func TestCompile(t *testing.T) {
 	tests := folder + "/code"
 	source := scan(tests)
 	for _, info := range source {
-		fmt.Println(info.Name())
+		fmt.Println("test =========", info.Name())
 		data := read(tests + "/" + info.Name())
 		name := strings.TrimSuffix(info.Name(), ".ss")
 		files := folder + "/out/" + name

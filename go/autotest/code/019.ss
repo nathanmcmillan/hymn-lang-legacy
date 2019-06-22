@@ -7,16 +7,26 @@ function bar int:x int:y -> int
 function main
   x = 3
   y = 4
+  # 9 == 10
   if x * x = bar x y + 3
-    echo "true"
-  if x * x = foo y + 3
-    echo "true"
+    echo "a"
+  # 9 == 9
+  if x * x = foo y + 3 
+    echo "b"
+  # 0 == 9
   if x - x = (foo y) + 3
-    echo "true"
+    echo "c"
+  # 1 == 8
   if x / x = foo (y + 3)
-    echo "true"
+    echo "d"
+  # 6 == 6
   if x + x = y + 2
-    echo "true"
+    echo "e"
   else
-    echo "false"
+    echo "f"
+  # 1 == 8
+  if foo 8 * 5 = 50
+    echo "yes!"
+  if foo (8 * 5) = 42
+    echo "yes!!"
   echo "bye!"

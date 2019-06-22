@@ -17,11 +17,15 @@ func (me *program) dump() string {
 		for _, name := range me.classOrder {
 			class := me.classes[name]
 			lv++
-			s += fmc(lv) + class.name + "[\n"
+			s += fmc(lv) + class.name + "{\n"
+			lv++
+			s += fmc(lv) + "members[\n"
 			lv++
 			for _, classVar := range class.variables {
 				s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
 			}
+			lv--
+			s += fmc(lv) + "]\n"
 			if len(class.functionOrder) > 0 {
 				s += fmc(lv) + "functions[\n"
 				for _, classfuncname := range class.functionOrder {
@@ -54,7 +58,7 @@ func (me *program) dump() string {
 				s += fmc(lv) + "]\n"
 			}
 			lv--
-			s += fmc(lv) + "]\n"
+			s += fmc(lv) + "}\n"
 			lv--
 		}
 		s += fmc(lv) + "]\n"
@@ -151,7 +155,7 @@ func (me *parser) expression() *node {
 	op := token.is
 	if op == "mutable" {
 		me.eat(op)
-		n := me.assign(true)
+		n := me.forceassign(true)
 		me.verify("line")
 		return n
 	}
@@ -166,7 +170,15 @@ func (me *parser) expression() *node {
 			me.filefunction()
 			return nil
 		}
-		n := me.assign(false)
+		n := me.eatvar()
+		fmt.Println("EAT VAR = " + n.string(0))
+		if me.assignable(n) {
+			n = me.assign(n, false)
+		} else if n.is == "call-class-fn" {
+
+		} else {
+			panic(me.fail() + "unknown expression for id \"" + name + "\"")
+		}
 		me.verify("line")
 		return n
 	} else if op == "class" {
@@ -260,18 +272,22 @@ func (me *parser) function(name string, self *class) *function {
 	}
 	if me.token.is == "(" {
 		me.eat("(")
-		for {
-			if me.token.is == ")" {
-				break
+		if me.token.is != ")" {
+			for {
+				if me.token.is == "id" {
+					typed := me.typedecl()
+					arg := me.token.value
+					me.eat("id")
+					fn.args = append(fn.args, varInit(typed, arg, false))
+					if me.token.is == ")" {
+						break
+					} else if me.token.is == "delim" {
+						me.eat("delim")
+						continue
+					}
+				}
+				panic(me.fail() + "unexpected token in function definition")
 			}
-			if me.token.is == "id" {
-				typed := me.typedecl()
-				arg := me.token.value
-				me.eat("id")
-				fn.args = append(fn.args, varInit(typed, arg, false))
-				continue
-			}
-			panic(me.fail() + "unexpected token in function definition")
 		}
 		me.eat(")")
 		if me.token.is != "line" {
@@ -328,6 +344,26 @@ func (me *parser) returning() *node {
 	return n
 }
 
+func (me *parser) callclassfunction(root *node, c *class, fn *function) *node {
+	n := nodeInit("call-class-fn")
+	n.value = fn.name
+	n.typed = fn.typed
+	n.push(root)
+	for ix, arg := range fn.args {
+		var ca *node
+		if ix == 0 {
+			continue
+		} else {
+			ca = me.factor()
+			if ca.typed != arg.is && arg.is != "?" {
+				panic(me.fail() + "argument " + arg.is + " does not match parameter " + ca.typed)
+			}
+		}
+		n.push(ca)
+	}
+	return n
+}
+
 func (me *parser) call() *node {
 	token := me.token
 	name := token.value
@@ -364,7 +400,7 @@ func (me *parser) eatvar() *node {
 			if root.is == "variable" {
 				sv := me.program.scope.getVar(root.value)
 				if sv == nil {
-					panic(me.fail() + "variable out of scope")
+					panic(me.fail() + "variable \"" + root.value + "\" out of scope")
 				}
 				root.typed = sv.is
 				root.is = "root-variable"
@@ -376,24 +412,25 @@ func (me *parser) eatvar() *node {
 			}
 			me.eat(".")
 			dotName := me.token.value
+			me.eat("id")
 			var member *node
 			classVar, ok := rootClass.variables[dotName]
 			if ok {
+				fmt.Println("member variable " + dotName + " is " + classVar.is)
 				member = nodeInit("member-variable")
 				member.typed = classVar.is
+				member.push(root)
 			} else {
 				funcVar, ok := rootClass.functions[dotName]
 				if ok {
-					member = nodeInit("class-function")
-					member.typed = funcVar.typed
+					fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed + "\"")
+					member = me.callclassfunction(root, rootClass, funcVar)
 				} else {
-					panic(me.fail() + "class variable or function " + dotName + " does not exist")
+					panic(me.fail() + "class variable or function \"" + dotName + "\" does not exist")
 				}
 			}
 			member.value = dotName
-			member.push(root)
 			root = member
-			me.eat("id")
 		} else if me.token.is == "[" {
 			if root.is == "variable" {
 				sv := me.program.scope.getVar(root.value)
@@ -430,8 +467,19 @@ func (me *parser) eatvar() *node {
 	return root
 }
 
-func (me *parser) assign(mutable bool) *node {
+func (me *parser) assignable(n *node) bool {
+	return n.is == "variable" || n.is == "member-variable"
+}
+
+func (me *parser) forceassign(mutable bool) *node {
 	assigning := me.eatvar()
+	if !me.assignable(assigning) {
+		panic(me.fail() + "expected variable for assignment")
+	}
+	return me.assign(assigning, true)
+}
+
+func (me *parser) assign(assigning *node, mutable bool) *node {
 	op := me.token.is
 	mustBeNumber := false
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
@@ -465,6 +513,8 @@ func (me *parser) assign(mutable bool) *node {
 		if assigning.typed != calc.typed {
 			panic(me.fail() + "member variable type " + assigning.typed + " does not match expression type " + calc.typed)
 		}
+	} else {
+		panic(me.fail() + "bad assignment " + assigning.is)
 	}
 	n := nodeInit(op)
 	n.typed = "void"
@@ -571,11 +621,11 @@ func (me *parser) forexpr() *node {
 			n.push(me.getbool())
 		} else {
 			fmt.Println("> multi for")
-			n.push(me.assign(true))
+			n.push(me.forceassign(true))
 			me.eat("delim")
 			n.push(me.getbool())
 			me.eat("delim")
-			n.push(me.assign(true))
+			n.push(me.forceassign(true))
 		}
 		me.eat("line")
 	}

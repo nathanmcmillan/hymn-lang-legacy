@@ -22,17 +22,19 @@ func makecode(out string, p *program) {
 	code += "\n"
 
 	for _, c := range p.classOrder {
-		code += cf.object(p.classes[c])
+		class := p.classes[c]
+		code += cf.object(class)
+		for _, f := range class.functionOrder {
+			code += cf.classfunction(class, class.functions[f])
+		}
 	}
 
 	for _, f := range p.functionOrder {
-		var s string
 		if f == "main" {
-			s = cf.mainc(p.functions[f])
+			code += cf.mainc(p.functions[f])
 		} else {
-			s = cf.function(f, p.functions[f])
+			code += cf.function(f, p.functions[f])
 		}
-		code += s
 	}
 	fmt.Println("===")
 
@@ -145,6 +147,12 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "call" {
 		code := me.call(n.value, n.has)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "call-class-fn" {
+		code := me.callclassfn(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -429,6 +437,42 @@ func (me *cfile) mainc(fn *function) string {
 	return code
 }
 
+func (me *cfile) classfunction(c *class, fn *function) string {
+	args := fn.args
+	expressions := fn.expressions
+	block := ""
+	me.pushScope()
+	me.depth = 1
+	for _, arg := range args {
+		me.scope.variables[arg.name] = arg
+	}
+	for _, expr := range expressions {
+		c := me.eval(expr)
+		block += fmc(me.depth) + c.code
+		block += me.maybecolon(block) + "\n"
+	}
+	me.popScope()
+	code := ""
+	code += fmtassignspace(me.typesig(fn.typed)) + c.name + "_" + fn.name + "("
+	for ix, arg := range args {
+		if ix > 0 {
+			code += ", "
+		}
+		typed := arg.is
+		codesig := fmtassignspace(me.typesig(typed))
+		if me.checkIsClass(typed) || checkIsArray(typed) {
+			code += codesig + "const "
+		} else {
+			code += "const " + codesig
+		}
+		code += arg.name
+	}
+	code += ")\n{\n"
+	code += block
+	code += "}\n\n"
+	return code
+}
+
 func (me *cfile) function(name string, fn *function) string {
 	args := fn.args
 	expressions := fn.expressions
@@ -462,6 +506,21 @@ func (me *cfile) function(name string, fn *function) string {
 	code += ")\n{\n"
 	code += block
 	code += "}\n\n"
+	return code
+}
+
+func (me *cfile) callclassfn(n *node) string {
+	size := len(n.has)
+	name := n.value
+	root := n.has[0]
+	code := root.typed + "_" + name + "("
+	code += root.value
+	for ix := 1; ix < size; ix++ {
+		code += ", "
+		parameter := n.has[ix]
+		code += me.eval(parameter).code
+	}
+	code += ")"
 	return code
 }
 

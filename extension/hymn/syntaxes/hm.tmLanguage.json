@@ -1,0 +1,44 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "hymn",
+	"scopeName": "source.hymn",
+	"patterns": [{
+		"explanation": "self",
+		"match": "\\b(self)\\b",
+		"name": "variable.language.this.hymn"
+	}, {
+		"explanation": "comments",
+		"begin": "#",
+		"end": "\\n",
+		"name": "comment.line.double-slash.hymn"
+	}, {
+		"explanation": "booleans",
+		"match": "\\b(true|false|null)\\b",
+		"name": "constant.language.hymn"
+	}, {
+		"explanation": "primitives",
+		"match": "(int32|int64|int|float32|float64|float|string|bool)",
+		"name": "constant.language.hymn"
+	}, {
+		"explanation": "modifiers",
+		"match": "\\b(mutable|immutable)\\b",
+		"name": "storage.modifier.hymn"
+	}, {
+		"explanation": "comparison",
+		"match": "(>=|<=|!=|<|>|=)",
+		"name": "keyword.operator.comparison.hymn"
+	}, {
+		"explanation": "flow",
+		"name": "keyword.control.hymn",
+		"match": "\\b(if|elif|else|for|return|break|continue|and|or)\\b"
+	}, {
+		"explanation": "strings",
+		"name": "string.quoted.double.hymn",
+		"begin": "\"",
+		"end": "\"",
+		"patterns": [{
+			"name": "constant.character.escape.hymn",
+			"match": "\\\\."
+		}]
+	}]
+}

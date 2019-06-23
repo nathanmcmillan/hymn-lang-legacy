@@ -1,0 +1,6 @@
+import
+  math
+
+main
+  x = math.pow 3
+  echo x

@@ -5,96 +5,6 @@ import (
 	"strings"
 )
 
-func (me *variable) string() string {
-	return "{is:" + me.is + ", name:" + me.name + "}"
-}
-
-func (me *program) dump() string {
-	s := ""
-	lv := 0
-	if len(me.classOrder) > 0 {
-		s += fmc(lv) + "classes[\n"
-		for _, name := range me.classOrder {
-			class := me.classes[name]
-			lv++
-			s += fmc(lv) + class.name + "{\n"
-			lv++
-			s += fmc(lv) + "members[\n"
-			lv++
-			for _, classVar := range class.variables {
-				s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
-			}
-			lv--
-			s += fmc(lv) + "]\n"
-			if len(class.functionOrder) > 0 {
-				s += fmc(lv) + "functions[\n"
-				for _, classfuncname := range class.functionOrder {
-					function := class.functions[classfuncname]
-					lv++
-					s += fmc(lv) + classfuncname + "{\n"
-					lv++
-					if len(function.args) > 0 {
-						s += fmc(lv) + "args[\n"
-						lv++
-						for _, arg := range function.args {
-							s += fmc(lv) + arg.string() + "\n"
-						}
-						lv--
-						s += fmc(lv) + "]\n"
-					}
-					if len(function.expressions) > 0 {
-						s += fmc(lv) + "expressions[\n"
-						lv++
-						for _, expr := range function.expressions {
-							s += expr.string(lv) + "\n"
-						}
-						lv--
-						s += fmc(lv) + "]\n"
-					}
-					lv--
-					s += fmc(lv) + "}\n"
-					lv--
-				}
-				s += fmc(lv) + "]\n"
-			}
-			lv--
-			s += fmc(lv) + "}\n"
-			lv--
-		}
-		s += fmc(lv) + "]\n"
-	}
-	s += fmc(lv) + "functions[\n"
-	for _, name := range me.functionOrder {
-		function := me.functions[name]
-		lv++
-		s += fmc(lv) + name + "{\n"
-		lv++
-		if len(function.args) > 0 {
-			s += fmc(lv) + "args[\n"
-			lv++
-			for _, arg := range function.args {
-				s += fmc(lv) + arg.string() + "\n"
-			}
-			lv--
-			s += fmc(lv) + "]\n"
-		}
-		if len(function.expressions) > 0 {
-			s += fmc(lv) + "expressions[\n"
-			lv++
-			for _, expr := range function.expressions {
-				s += expr.string(lv) + "\n"
-			}
-			lv--
-			s += fmc(lv) + "]\n"
-		}
-		lv--
-		s += fmc(lv) + "}\n"
-		lv--
-	}
-	s += fmc(lv) + "]\n"
-	return s
-}
-
 func (me *parser) next() {
 	me.pos++
 	me.token = me.tokens[me.pos]
@@ -129,7 +39,7 @@ func parse(tokens []*token) *program {
 	me.program = programInit()
 	me.skipLines()
 	for me.token.is != "eof" {
-		me.expression()
+		me.fileexpression()
 		if me.token.is == "line" {
 			me.eat("line")
 		}
@@ -150,6 +60,33 @@ func (me *parser) eat(want string) {
 	me.next()
 }
 
+func (me *parser) fileexpression() {
+	token := me.token
+	op := token.is
+	if op == "immutable" {
+		me.eat(op)
+		me.immutablelist()
+	} else if op == "mutable" {
+		me.eat(op)
+		me.mutablelist()
+	} else if op == "id" {
+		name := token.value
+		if _, ok := me.program.classes[name]; ok {
+			me.classfunction()
+		} else {
+			me.filefunction()
+		}
+	} else if op == "import" {
+		return
+	} else if op == "class" {
+		me.class()
+	} else if op == "line" || op == "eof" {
+		return
+	} else {
+		panic(me.fail() + "unknown top level expression \"" + op + "\"")
+	}
+}
+
 func (me *parser) expression() *node {
 	token := me.token
 	op := token.is
@@ -163,27 +100,15 @@ func (me *parser) expression() *node {
 		name := token.value
 		if _, ok := me.program.functions[name]; ok {
 			return me.call()
-		} else if _, ok := me.program.classes[name]; ok {
-			me.classfunction()
-			return nil
-		} else if token.depth == 0 {
-			me.filefunction()
-			return nil
 		}
 		n := me.eatvar()
-		fmt.Println("EAT VAR = " + n.string(0))
 		if me.assignable(n) {
 			n = me.assign(n, false)
-		} else if n.is == "call-class-fn" {
-
-		} else {
-			panic(me.fail() + "unknown expression for id \"" + name + "\"")
+		} else if n.is != "call" {
+			panic(me.fail() + "expected assign or call expression for \"" + name + "\"")
 		}
 		me.verify("line")
 		return n
-	} else if op == "class" {
-		me.class()
-		return nil
 	} else if op == "free" {
 		me.free()
 		return nil
@@ -197,12 +122,10 @@ func (me *parser) expression() *node {
 		return me.forexpr()
 	} else if op == "return" {
 		return me.returning()
-	} else if op == "line" {
-		return nil
-	} else if op == "eof" {
+	} else if op == "line" || op == "eof" {
 		return nil
 	}
-	panic(me.fail() + "unknown expression")
+	panic(me.fail() + "unknown expression \"" + op + "\"")
 }
 
 func (me *parser) maybeIgnore(depth int) {
@@ -232,21 +155,27 @@ func (me *parser) typedecl() string {
 	return typed
 }
 
+func (me *parser) nameclassfn(classname, funcname string) string {
+	return classname + "_" + funcname
+}
+
 func (me *parser) classfunction() {
+	program := me.program
 	classname := me.token.value
 	me.eat("id")
 	funcname := me.token.value
+	globalfuncname := me.nameclassfn(classname, funcname)
 	me.eat("id")
-	class := me.program.classes[classname]
-	if _, ok := class.functions[funcname]; ok {
+	class := program.classes[classname]
+	if _, ok := program.functions[globalfuncname]; ok {
 		panic(me.fail() + "class \"" + classname + "\" with function \"" + funcname + "\" is already defined")
 	}
 	if _, ok := class.variables[funcname]; ok {
 		panic(me.fail() + "class \"" + classname + "\" with variable \"" + funcname + "\" is already defined")
 	}
 	fn := me.function(funcname, class)
-	class.functionOrder = append(class.functionOrder, funcname)
-	class.functions[funcname] = fn
+	program.functionOrder = append(program.functionOrder, globalfuncname)
+	program.functions[globalfuncname] = fn
 }
 
 func (me *parser) filefunction() {
@@ -344,22 +273,24 @@ func (me *parser) returning() *node {
 	return n
 }
 
+func (me *parser) pushparam(call *node, arg *variable) {
+	param := me.factor()
+	if param.typed != arg.is && arg.is != "?" {
+		panic(me.fail() + "argument " + arg.is + " does not match parameter " + param.typed)
+	}
+	call.push(param)
+}
+
 func (me *parser) callclassfunction(root *node, c *class, fn *function) *node {
-	n := nodeInit("call-class-fn")
-	n.value = fn.name
+	n := nodeInit("call")
+	n.value = me.nameclassfn(c.name, fn.name)
 	n.typed = fn.typed
 	n.push(root)
 	for ix, arg := range fn.args {
-		var ca *node
 		if ix == 0 {
 			continue
-		} else {
-			ca = me.factor()
-			if ca.typed != arg.is && arg.is != "?" {
-				panic(me.fail() + "argument " + arg.is + " does not match parameter " + ca.typed)
-			}
 		}
-		n.push(ca)
+		me.pushparam(n, arg)
 	}
 	return n
 }
@@ -374,11 +305,7 @@ func (me *parser) call() *node {
 	n.value = name
 	n.typed = fn.typed
 	for _, arg := range args {
-		ca := me.factor()
-		if ca.typed != arg.is && arg.is != "?" {
-			panic(me.fail() + "argument " + arg.is + " does not match parameter " + ca.typed)
-		}
-		n.push(ca)
+		me.pushparam(n, arg)
 	}
 	return n
 }
@@ -398,7 +325,7 @@ func (me *parser) eatvar() *node {
 	for {
 		if me.token.is == "." {
 			if root.is == "variable" {
-				sv := me.program.scope.getVar(root.value)
+				sv := me.program.scope.findVariable(root.value)
 				if sv == nil {
 					panic(me.fail() + "variable \"" + root.value + "\" out of scope")
 				}
@@ -419,9 +346,11 @@ func (me *parser) eatvar() *node {
 				fmt.Println("member variable " + dotName + " is " + classVar.is)
 				member = nodeInit("member-variable")
 				member.typed = classVar.is
+				member.value = dotName
 				member.push(root)
 			} else {
-				funcVar, ok := rootClass.functions[dotName]
+				globalfuncname := me.nameclassfn(rootClass.name, dotName)
+				funcVar, ok := me.program.functions[globalfuncname]
 				if ok {
 					fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed + "\"")
 					member = me.callclassfunction(root, rootClass, funcVar)
@@ -429,11 +358,10 @@ func (me *parser) eatvar() *node {
 					panic(me.fail() + "class variable or function \"" + dotName + "\" does not exist")
 				}
 			}
-			member.value = dotName
 			root = member
 		} else if me.token.is == "[" {
 			if root.is == "variable" {
-				sv := me.program.scope.getVar(root.value)
+				sv := me.program.scope.findVariable(root.value)
 				if sv == nil {
 					panic(me.fail() + "variable out of scope")
 				}
@@ -457,7 +385,7 @@ func (me *parser) eatvar() *node {
 		}
 	}
 	if root.is == "variable" {
-		sv := me.program.scope.getVar(root.value)
+		sv := me.program.scope.findVariable(root.value)
 		if sv == nil {
 			root.typed = "?"
 		} else {
@@ -468,58 +396,58 @@ func (me *parser) eatvar() *node {
 }
 
 func (me *parser) assignable(n *node) bool {
-	return n.is == "variable" || n.is == "member-variable"
+	return n.is == "variable" || n.is == "member-variable" || n.is == "array-member"
 }
 
 func (me *parser) forceassign(mutable bool) *node {
-	assigning := me.eatvar()
-	if !me.assignable(assigning) {
-		panic(me.fail() + "expected variable for assignment")
+	v := me.eatvar()
+	if !me.assignable(v) {
+		panic(me.fail() + "expected variable for assignment but was \"" + v.typed + "\"")
 	}
-	return me.assign(assigning, true)
+	return me.assign(v, mutable)
 }
 
-func (me *parser) assign(assigning *node, mutable bool) *node {
+func (me *parser) assign(av *node, mutable bool) *node {
 	op := me.token.is
 	mustBeNumber := false
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
 		mustBeNumber = true
 	} else if op != "=" {
-		panic(me.fail() + "unknown assign operation")
+		panic(me.fail() + "unknown assign operation \"" + op + "\"")
 	}
 	me.eat(op)
 	calc := me.calc()
 	if mustBeNumber && !isNumber(calc.typed) {
-		panic(me.fail() + "assign operation " + op + " requires number type")
+		panic(me.fail() + "assign operation \"" + op + "\" requires number type")
 	}
-	if assigning.is == "variable" {
-		sv, exists := me.program.scope.variables[assigning.value]
-		if exists {
+	if av.is == "variable" {
+		sv := me.program.scope.findVariable(av.value)
+		if sv != nil {
 			if !sv.mutable {
-				panic(me.fail() + "variable " + sv.name + " is not mutable")
+				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
 		} else {
 			if mustBeNumber {
-				panic(me.fail() + "assign operation " + op + " for variable that does not exist")
+				panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + av.value + "\" does not exist")
 			} else {
-				assigning.typed = calc.typed
+				av.typed = calc.typed
 				if mutable {
-					assigning.attribute = "mutable"
+					av.attribute = "mutable"
 				}
-				me.program.scope.variables[assigning.value] = varInit(calc.typed, assigning.value, mutable)
+				me.program.scope.variables[av.value] = varInit(calc.typed, av.value, mutable)
 			}
 		}
-	} else if assigning.is == "member-variable" {
-		if assigning.typed != calc.typed {
-			panic(me.fail() + "member variable type " + assigning.typed + " does not match expression type " + calc.typed)
+	} else if av.is == "member-variable" || av.is == "array-member" {
+		if av.typed != calc.typed {
+			panic(me.fail() + "member variable type " + av.typed + " does not match expression type " + calc.typed)
 		}
 	} else {
-		panic(me.fail() + "bad assignment " + assigning.is)
+		panic(me.fail() + "bad assignment \"" + av.is + "\"")
 	}
 	n := nodeInit(op)
 	n.typed = "void"
-	n.push(assigning)
-	fmt.Println("assign set", assigning.string(0))
+	n.push(av)
+	fmt.Println("assign set", av.string(0))
 	n.push(calc)
 	return n
 }
@@ -749,6 +677,23 @@ func (me *parser) array(is string) *node {
 	return n
 }
 
+func (me *parser) immutablelist() {
+	me.eat("line")
+	me.forceassign(false)
+	me.eat("line")
+}
+
+func (me *parser) mutablelist() {
+	me.eat("line")
+	a := me.forceassign(true)
+	fmt.Println("static mutable", a.string(0))
+	if a.is != "=" || a.has[0].is != "variable" {
+		panic(me.fail() + "invalid static variable")
+	}
+	// todo add a to special expression list
+	me.eat("line")
+}
+
 func (me *parser) class() {
 	me.eat("class")
 	token := me.token
@@ -847,7 +792,7 @@ func (me *parser) factor() *node {
 			}
 			panic(me.fail() + "bad class or array definition")
 		}
-		if me.program.scope.getVar(name) == nil {
+		if me.program.scope.findVariable(name) == nil {
 			panic(me.fail() + "variable out of scope")
 		}
 		return me.eatvar()

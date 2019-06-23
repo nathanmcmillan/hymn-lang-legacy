@@ -1,20 +1,22 @@
 import
   math
 
-define
-  mutable nextId
+immutable
   name = "foo"
+  
+mutable
+  nextId = 0
 
 class foo
   f float32[]
 
-glob_foo(int x) int
+globFoo(int x) int
   return x + 2
 
-appender(list<string> ls)
+appender(list[string] ls)
    ls[1] = "foo"
 
-setter(map<string, int> mp)
+setter(map[string, int] mp)
   mp["foo"] = 99
 
 main

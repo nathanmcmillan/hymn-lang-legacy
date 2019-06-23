@@ -1,0 +1,25 @@
+{
+    "name": "hymn",
+    "displayName": "Hymn",
+    "description": "Hymn programming language.",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.35.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "hymn",
+            "aliases": ["hymn", "hm"],
+            "extensions": ["hm"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "hymn",
+            "scopeName": "source.hymn",
+            "path": "./syntaxes/hm.tmLanguage.json"
+        }]
+    }
+}

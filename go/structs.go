@@ -42,8 +42,6 @@ type class struct {
 	name          string
 	variables     map[string]*variable
 	variableOrder []string
-	functions     map[string]*function
-	functionOrder []string
 }
 
 type program struct {
@@ -86,67 +84,11 @@ type cnode struct {
 	code  string
 }
 
-func (me *node) string(lv int) string {
-	s := ""
-	s += fmc(lv) + "{is:" + me.is
-	if me.value != "" {
-		s += ", value:" + me.value
-	}
-	if me.typed != "" {
-		s += ", typed:" + me.typed
-	}
-	if me.attribute != "" {
-		s += ", attribute:" + me.attribute
-	}
-	if len(me.has) > 0 {
-		s += ", has[\n"
-		lv++
-		for ix, has := range me.has {
-			if ix > 0 {
-				s += "\n"
-			}
-			s += has.string(lv)
-		}
-		lv--
-		s += "\n"
-		s += fmc(lv) + "]"
-	}
-	s += "}"
-	return s
-}
-
-func (me *cnode) string(lv int) string {
-	s := ""
-	s += fmc(lv) + "{is:" + me.is
-	if me.value != "" {
-		s += ", value:" + me.value
-	}
-	s += ", typed:" + me.typed
-	s += ", code:" + me.code
-	if len(me.has) > 0 {
-		s += ", has[\n"
-		lv++
-		for ix, has := range me.has {
-			if ix > 0 {
-				s += ",\n"
-			}
-			s += has.string(lv)
-		}
-		lv--
-		s += "\n"
-		s += fmc(lv) + "]"
-	}
-	s += "}"
-	return s
-}
-
 func classInit(name string, variableOrder []string, variables map[string]*variable) *class {
 	c := &class{}
 	c.name = name
 	c.variableOrder = variableOrder
 	c.variables = variables
-	c.functions = make(map[string]*function)
-	c.functionOrder = make([]string, 0)
 	return c
 }
 
@@ -201,12 +143,12 @@ func (me *cfile) popScope() {
 	me.scope = me.scope.root
 }
 
-func (me *scope) getVar(name string) *variable {
+func (me *scope) findVariable(name string) *variable {
 	if v, ok := me.variables[name]; ok {
 		return v
 	}
 	if me.root != nil {
-		return me.root.getVar(name)
+		return me.root.findVariable(name)
 	}
 	return nil
 }

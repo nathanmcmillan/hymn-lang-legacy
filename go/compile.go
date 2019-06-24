@@ -25,6 +25,13 @@ func makecode(out string, p *program) {
 		code += cf.object(p.classes[c])
 	}
 
+	if len(p.statics) > 0 {
+		for _, s := range p.statics {
+			code += cf.assingment(s) + ";\n"
+		}
+		code += "\n"
+	}
+
 	for _, f := range p.functionOrder {
 		if f == "main" {
 			code += cf.mainc(p.functions[f])
@@ -38,8 +45,12 @@ func makecode(out string, p *program) {
 	create(out+"/main.c", code)
 }
 
-func (me *cfile) construct(class string) string {
-	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", class, class)
+func (me *cfile) allocstruct(n *node) string {
+	if n.attribute("no-malloc") {
+		return ""
+	}
+	typed := n.typed
+	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", typed, typed)
 }
 
 func fmtptr(ptr string) string {
@@ -58,10 +69,12 @@ func fmtassignspace(s string) string {
 
 func (me *cfile) allocarray(n *node) string {
 	size := me.eval(n.has[0])
+	if n.attribute("no-malloc") {
+		return "[" + size.code + "]"
+	}
 	atype := parseArrayType(n.typed)
-	typed := me.typesig(atype)
-	code := "(" + fmtptr(typed) + ")malloc((" + size.code + ") * sizeof(" + typed + "))"
-	return code
+	mtype := me.typesig(atype)
+	return "(" + fmtptr(mtype) + ")malloc((" + size.code + ") * sizeof(" + mtype + "))"
 }
 
 func (me *cfile) checkIsClass(typed string) bool {
@@ -82,36 +95,69 @@ func (me *cfile) typesig(typed string) string {
 	return typed
 }
 
+func (me *cfile) nomalloctypesig(typed string) string {
+	if typed == "string" {
+		return "char *"
+	}
+	if checkIsArray(typed) {
+		atype := parseArrayType(typed)
+		return fmtptr(me.nomalloctypesig(atype))
+	}
+	return typed
+}
+
 func (me *cfile) declare(n *node) string {
 	code := ""
 	name := n.value
 	if _, ok := me.scope.variables[name]; !ok {
+		malloc := true
+		if n.attribute("no-malloc") {
+			malloc = false
+		}
 		mutable := false
-		if n.attribute == "mutable" {
+		if n.attribute("mutable") {
 			mutable = true
 		}
-		typed := n.typed
-		me.scope.variables[name] = varInit(typed, name, mutable)
-		codesig := fmtassignspace(me.typesig(typed))
-		if mutable {
-			code = codesig
-		} else if me.checkIsClass(typed) || checkIsArray(typed) {
-			code += codesig + "const "
+		if malloc {
+			typed := n.typed
+			me.scope.variables[name] = varInit(typed, name, mutable, malloc)
+			codesig := fmtassignspace(me.typesig(typed))
+			if mutable {
+				code = codesig
+			} else if me.checkIsClass(typed) || checkIsArray(typed) {
+				code += codesig + "const "
+			} else {
+				code += "const " + codesig
+			}
 		} else {
-			code += "const " + codesig
+			typed := n.typed
+			me.scope.variables[name] = varInit(typed, name, mutable, malloc)
+			codesig := fmtassignspace(me.nomalloctypesig(typed))
+			code += codesig
 		}
 	}
 	return code
 }
 
+func (me *cfile) maybeLet(code string) string {
+	if code == "" || strings.HasPrefix(code, "[") {
+		return ""
+	}
+	return " = "
+}
+
 func (me *cfile) assingment(n *node) string {
 	code := ""
 	left := n.has[0]
-	right := me.eval(n.has[1])
+	right := n.has[1]
+	if left.attribute("no-malloc") {
+		right.pushAttribute("no-malloc")
+	}
 	if left.is == "variable" {
 		code = me.declare(left)
 	}
-	code += me.eval(left).code + " = " + right.code
+	rightcode := me.eval(right).code
+	code += me.eval(left).code + me.maybeLet(rightcode) + rightcode
 	return code
 }
 
@@ -136,7 +182,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "new" {
-		code := me.construct(n.typed)
+		code := me.allocstruct(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -148,7 +194,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "+" || op == "-" || op == "*" || op == "/" {
-		paren := n.attribute == "parenthesis"
+		paren := n.attribute("parenthesis")
 		code := ""
 		if paren {
 			code += "("
@@ -171,7 +217,8 @@ func (me *cfile) eval(n *node) *cnode {
 				if checkIsArray(root.typed) {
 					code = root.value + code
 				} else {
-					code = root.value + "->" + code
+					vr := me.scope.findVariable(root.value)
+					code = root.value + vr.memget() + code
 				}
 				break
 			} else if root.is == "array-member" {
@@ -191,8 +238,8 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "variable" {
 		name := n.value
-		_, ok := me.scope.variables[name]
-		if !ok {
+		v := me.scope.findVariable(name)
+		if v == nil {
 			panic("unknown variable " + name)
 		}
 		cn := codeNode(n.is, n.value, n.typed, n.value)
@@ -232,7 +279,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "equal" {
-		paren := n.attribute == "parenthesis"
+		paren := n.attribute("parenthesis")
 		code := ""
 		if paren {
 			code += "("
@@ -297,8 +344,8 @@ func (me *cfile) eval(n *node) *cnode {
 				panic("for loop must assign a regular variable")
 			}
 			vname := vobj.value
-			_, vexist := me.scope.variables[vname]
-			if !vexist {
+			vexist := me.scope.findVariable(vname)
+			if vexist == nil {
 				code += me.declare(vobj) + vname + ";\n" + fmc(me.depth)
 			}
 			vinit := me.assingment(vset)

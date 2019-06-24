@@ -1,7 +1,9 @@
 package main
 
+import "strconv"
+
 func (me *variable) string() string {
-	return "{is:" + me.is + ", name:" + me.name + "}"
+	return "{is:" + me.is + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
 }
 
 func (me *node) string(lv int) string {
@@ -13,8 +15,15 @@ func (me *node) string(lv int) string {
 	if me.typed != "" {
 		s += ", typed:" + me.typed
 	}
-	if me.attribute != "" {
-		s += ", attribute:" + me.attribute
+	if len(me.attributes) > 0 {
+		s += ", attributes["
+		for ix, has := range me.attributes {
+			if ix > 0 {
+				s += ", "
+			}
+			s += has
+		}
+		s += "]"
 	}
 	if len(me.has) > 0 {
 		s += ", has[\n"
@@ -58,53 +67,72 @@ func (me *cnode) string(lv int) string {
 	return s
 }
 
+func (me *class) dump(lv int) string {
+	s := fmc(lv) + me.name + "[\n"
+	lv++
+	for _, classVar := range me.variables {
+		s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
+	}
+	lv--
+	s += fmc(lv) + "]\n"
+	return s
+}
+
+func (me *function) dump(lv int) string {
+	s := fmc(lv) + me.name + "{\n"
+	lv++
+	if len(me.args) > 0 {
+		s += fmc(lv) + "args[\n"
+		lv++
+		for _, arg := range me.args {
+			s += fmc(lv) + arg.string() + "\n"
+		}
+		lv--
+		s += fmc(lv) + "]\n"
+	}
+	if len(me.expressions) > 0 {
+		s += fmc(lv) + "expressions[\n"
+		lv++
+		for _, expr := range me.expressions {
+			s += expr.string(lv) + "\n"
+		}
+		lv--
+		s += fmc(lv) + "]\n"
+	}
+	lv--
+	s += fmc(lv) + "}\n"
+	return s
+}
+
 func (me *program) dump() string {
 	s := ""
 	lv := 0
 	if len(me.classOrder) > 0 {
 		s += fmc(lv) + "classes[\n"
+		lv++
 		for _, name := range me.classOrder {
-			class := me.classes[name]
-			lv++
-			s += fmc(lv) + class.name + "[\n"
-			lv++
-			for _, classVar := range class.variables {
-				s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
-			}
-			lv--
-			s += fmc(lv) + "]\n"
-			lv--
+			cl := me.classes[name]
+			s += cl.dump(lv)
 		}
+		lv--
+		s += fmc(lv) + "]\n"
+	}
+	if len(me.statics) > 0 {
+		s += fmc(lv) + "static[\n"
+		lv++
+		for _, st := range me.statics {
+			s += st.string(lv) + "\n"
+		}
+		lv--
 		s += fmc(lv) + "]\n"
 	}
 	s += fmc(lv) + "functions[\n"
+	lv++
 	for _, name := range me.functionOrder {
-		function := me.functions[name]
-		lv++
-		s += fmc(lv) + name + "{\n"
-		lv++
-		if len(function.args) > 0 {
-			s += fmc(lv) + "args[\n"
-			lv++
-			for _, arg := range function.args {
-				s += fmc(lv) + arg.string() + "\n"
-			}
-			lv--
-			s += fmc(lv) + "]\n"
-		}
-		if len(function.expressions) > 0 {
-			s += fmc(lv) + "expressions[\n"
-			lv++
-			for _, expr := range function.expressions {
-				s += expr.string(lv) + "\n"
-			}
-			lv--
-			s += fmc(lv) + "]\n"
-		}
-		lv--
-		s += fmc(lv) + "}\n"
-		lv--
+		fn := me.functions[name]
+		s += fn.dump(lv)
 	}
+	lv--
 	s += fmc(lv) + "]\n"
 	return s
 }

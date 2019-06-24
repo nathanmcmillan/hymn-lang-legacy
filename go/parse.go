@@ -65,10 +65,10 @@ func (me *parser) fileexpression() {
 	op := token.is
 	if op == "immutable" {
 		me.eat(op)
-		me.immutablelist()
+		me.immutables()
 	} else if op == "mutable" {
 		me.eat(op)
-		me.mutablelist()
+		me.mutables()
 	} else if op == "id" {
 		name := token.value
 		if _, ok := me.program.classes[name]; ok {
@@ -92,7 +92,7 @@ func (me *parser) expression() *node {
 	op := token.is
 	if op == "mutable" {
 		me.eat(op)
-		n := me.forceassign(true)
+		n := me.forceassign(true, true)
 		me.verify("line")
 		return n
 	}
@@ -103,7 +103,7 @@ func (me *parser) expression() *node {
 		}
 		n := me.eatvar()
 		if me.assignable(n) {
-			n = me.assign(n, false)
+			n = me.assign(n, true, false)
 		} else if n.is != "call" {
 			panic(me.fail() + "expected assign or call expression for \"" + name + "\"")
 		}
@@ -196,7 +196,7 @@ func (me *parser) function(name string, self *class) *function {
 	fn.name = name
 	fn.typed = "void"
 	if self != nil {
-		ref := varInit(self.name, "self", false)
+		ref := varInit(self.name, "self", false, true)
 		fn.args = append(fn.args, ref)
 	}
 	if me.token.is == "(" {
@@ -207,7 +207,7 @@ func (me *parser) function(name string, self *class) *function {
 					typed := me.typedecl()
 					arg := me.token.value
 					me.eat("id")
-					fn.args = append(fn.args, varInit(typed, arg, false))
+					fn.args = append(fn.args, varInit(typed, arg, false, true))
 					if me.token.is == ")" {
 						break
 					} else if me.token.is == "delim" {
@@ -399,15 +399,15 @@ func (me *parser) assignable(n *node) bool {
 	return n.is == "variable" || n.is == "member-variable" || n.is == "array-member"
 }
 
-func (me *parser) forceassign(mutable bool) *node {
+func (me *parser) forceassign(malloc, mutable bool) *node {
 	v := me.eatvar()
 	if !me.assignable(v) {
 		panic(me.fail() + "expected variable for assignment but was \"" + v.typed + "\"")
 	}
-	return me.assign(v, mutable)
+	return me.assign(v, malloc, mutable)
 }
 
-func (me *parser) assign(av *node, mutable bool) *node {
+func (me *parser) assign(av *node, malloc, mutable bool) *node {
 	op := me.token.is
 	mustBeNumber := false
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
@@ -416,8 +416,8 @@ func (me *parser) assign(av *node, mutable bool) *node {
 		panic(me.fail() + "unknown assign operation \"" + op + "\"")
 	}
 	me.eat(op)
-	calc := me.calc()
-	if mustBeNumber && !isNumber(calc.typed) {
+	right := me.calc()
+	if mustBeNumber && !isNumber(right.typed) {
 		panic(me.fail() + "assign operation \"" + op + "\" requires number type")
 	}
 	if av.is == "variable" {
@@ -430,16 +430,19 @@ func (me *parser) assign(av *node, mutable bool) *node {
 			if mustBeNumber {
 				panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + av.value + "\" does not exist")
 			} else {
-				av.typed = calc.typed
+				av.typed = right.typed
 				if mutable {
-					av.attribute = "mutable"
+					av.pushAttribute("mutable")
 				}
-				me.program.scope.variables[av.value] = varInit(calc.typed, av.value, mutable)
+				if !malloc {
+					av.pushAttribute("no-malloc")
+				}
+				me.program.scope.variables[av.value] = varInit(right.typed, av.value, mutable, malloc)
 			}
 		}
 	} else if av.is == "member-variable" || av.is == "array-member" {
-		if av.typed != calc.typed {
-			panic(me.fail() + "member variable type " + av.typed + " does not match expression type " + calc.typed)
+		if av.typed != right.typed {
+			panic(me.fail() + "member variable type " + av.typed + " does not match expression type " + right.typed)
 		}
 	} else {
 		panic(me.fail() + "bad assignment \"" + av.is + "\"")
@@ -448,7 +451,7 @@ func (me *parser) assign(av *node, mutable bool) *node {
 	n.typed = "void"
 	n.push(av)
 	fmt.Println("assign set", av.string(0))
-	n.push(calc)
+	n.push(right)
 	return n
 }
 
@@ -549,11 +552,11 @@ func (me *parser) forexpr() *node {
 			n.push(me.getbool())
 		} else {
 			fmt.Println("> multi for")
-			n.push(me.forceassign(true))
+			n.push(me.forceassign(true, true))
 			me.eat("delim")
 			n.push(me.getbool())
 			me.eat("delim")
-			n.push(me.forceassign(true))
+			n.push(me.forceassign(true, true))
 		}
 		me.eat("line")
 	}
@@ -677,21 +680,38 @@ func (me *parser) array(is string) *node {
 	return n
 }
 
-func (me *parser) immutablelist() {
+func (me *parser) immutables() {
 	me.eat("line")
-	me.forceassign(false)
-	me.eat("line")
+	for {
+		n := me.forceassign(false, false)
+		av := n.has[0]
+		fmt.Println("static immutable", n.string(0))
+		if n.is != "=" || av.is != "variable" {
+			panic(me.fail() + "invalid static variable")
+		}
+		me.program.statics = append(me.program.statics, n)
+		me.eat("line")
+		if me.token.is == "line" || me.token.is == "eof" {
+			break
+		}
+	}
 }
 
-func (me *parser) mutablelist() {
+func (me *parser) mutables() {
 	me.eat("line")
-	a := me.forceassign(true)
-	fmt.Println("static mutable", a.string(0))
-	if a.is != "=" || a.has[0].is != "variable" {
-		panic(me.fail() + "invalid static variable")
+	for {
+		n := me.forceassign(false, true)
+		av := n.has[0]
+		fmt.Println("static mutable", n.string(0))
+		if n.is != "=" || av.is != "variable" {
+			panic(me.fail() + "invalid static variable")
+		}
+		me.program.statics = append(me.program.statics, n)
+		me.eat("line")
+		if me.token.is == "line" || me.token.is == "eof" {
+			break
+		}
 	}
-	// todo add a to special expression list
-	me.eat("line")
 }
 
 func (me *parser) class() {
@@ -720,7 +740,7 @@ func (me *parser) class() {
 			vt := me.typedecl()
 			me.eat("line")
 			vorder = append(vorder, vn)
-			vmap[vn] = varInit(vt, vn, true)
+			vmap[vn] = varInit(vt, vn, true, true)
 		}
 	}
 	me.program.classOrder = append(me.program.classOrder, name)
@@ -800,7 +820,7 @@ func (me *parser) factor() *node {
 	if op == "(" {
 		me.eat("(")
 		n := me.calc()
-		n.attribute = "parenthesis"
+		n.pushAttribute("parenthesis")
 		me.eat(")")
 		return n
 	}

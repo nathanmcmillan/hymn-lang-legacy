@@ -12,17 +12,18 @@ type tokenizer struct {
 }
 
 type node struct {
-	is        string
-	value     string
-	typed     string
-	attribute string
-	has       []*node
+	is         string
+	value      string
+	typed      string
+	attributes []string
+	has        []*node
 }
 
 type variable struct {
 	is      string
 	name    string
 	mutable bool
+	pointer bool
 }
 
 type scope struct {
@@ -49,6 +50,7 @@ type program struct {
 	scope         *scope
 	imports       map[string]bool
 	classes       map[string]*class
+	statics       []*node
 	classOrder    []string
 	functions     map[string]*function
 	functionOrder []string
@@ -107,6 +109,7 @@ func programInit() *program {
 	p.types = make(map[string]bool)
 	p.imports = make(map[string]bool)
 	p.classes = make(map[string]*class, 0)
+	p.statics = make([]*node, 0)
 	p.classOrder = make([]string, 0)
 	p.functions = make(map[string]*function)
 	p.functionOrder = make([]string, 0)
@@ -157,11 +160,25 @@ func nodeInit(is string) *node {
 	n := &node{}
 	n.is = is
 	n.has = make([]*node, 0)
+	n.attributes = make([]string, 0)
 	return n
 }
 
 func (me *node) push(n *node) {
 	me.has = append(me.has, n)
+}
+
+func (me *node) attribute(find string) bool {
+	for _, a := range me.attributes {
+		if a == find {
+			return true
+		}
+	}
+	return false
+}
+
+func (me *node) pushAttribute(a string) {
+	me.attributes = append(me.attributes, a)
 }
 
 func codeNode(is, value, typed, code string) *cnode {
@@ -181,7 +198,7 @@ func (me *cnode) push(n *cnode) {
 func (me *program) libInit() {
 	e := funcInit()
 	e.typed = "void"
-	e.args = append(e.args, varInit("?", "s", false))
+	e.args = append(e.args, varInit("?", "s", false, false))
 	me.functions["echo"] = e
 
 	me.primitives["int"] = true
@@ -201,12 +218,20 @@ func funcInit() *function {
 	return f
 }
 
-func varInit(is, name string, mutable bool) *variable {
+func varInit(is, name string, mutable, pointer bool) *variable {
 	v := &variable{}
 	v.is = is
 	v.name = name
 	v.mutable = mutable
+	v.pointer = pointer
 	return v
+}
+
+func (me *variable) memget() string {
+	if me.pointer {
+		return "->"
+	}
+	return "."
 }
 
 func isNumber(t string) bool {

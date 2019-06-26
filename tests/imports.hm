@@ -1,6 +1,6 @@
 import
-  math
+  "math"
 
 main
-  x = math.pow 3
+  x = math.power 3
   echo x

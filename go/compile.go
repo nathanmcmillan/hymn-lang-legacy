@@ -5,51 +5,71 @@ import (
 	"strings"
 )
 
-func makecode(out string, p *program) {
+var (
+	prefix       = "hm_"
+	definePrefix = "HM_"
+)
+
+func makecode(folder, name string, p *program) string {
 	cf := cfileInit()
 	cf.classes = p.classes
 	cf.types = p.types
 	cf.primitives = p.primitives
+	cf.filePrefix = name + "_"
 
 	head := ""
+	guard := definePrefix + strings.ToUpper(name) + "_H"
+	head += "#ifndef " + guard + "\n"
+	head += "#define " + guard + "\n\n"
 	head += "#include <stdio.h>\n"
 	head += "#include <stdlib.h>\n"
-	head += "#include <stdbool.h>\n"
-	head += "\nint main();\n"
+	head += "#include <stdbool.h>\n\n"
 
 	code := ""
-	code += "#include \"main.h\"\n"
+	code += "#include \"" + name + ".h\"\n"
 	code += "\n"
 
 	for _, c := range p.classOrder {
-		code += cf.object(p.classes[c])
+		head += cf.defineClass(p.classes[c])
 	}
 
 	if len(p.statics) > 0 {
 		for _, s := range p.statics {
-			code += cf.assingment(s) + ";\n"
+			decl, impl := cf.assignStatic(s)
+			head += decl
+			code += impl
 		}
+		head += "\n"
 		code += "\n"
 	}
 
 	for _, f := range p.functionOrder {
 		if f == "main" {
-			code += cf.mainc(p.functions[f])
+			decl, impl := cf.mainc(p.functions[f])
+			head += decl
+			code += impl
 		} else {
-			code += cf.function(f, p.functions[f])
+			decl, impl := cf.function(f, p.functions[f])
+			head += decl
+			code += impl
 		}
 	}
 	fmt.Println("===")
 
-	create(out+"/main.h", head)
-	create(out+"/main.c", code)
+	fileCode := folder + "/" + name + ".c"
+	create(fileCode, code)
+
+	head += "\n#endif\n"
+	create(folder+"/"+name+".h", head)
+
+	return fileCode
 }
 
 func (me *cfile) allocstruct(n *node) string {
 	if n.attribute("no-malloc") {
 		return ""
 	}
-	typed := n.typed
+	typed := me.nameSpace(n.typed)
 	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", typed, typed)
 }
 
@@ -77,6 +97,10 @@ func (me *cfile) allocarray(n *node) string {
 	return "(" + fmtptr(mtype) + ")malloc((" + size.code + ") * sizeof(" + mtype + "))"
 }
 
+func (me *cfile) nameSpace(class string) string {
+	return prefix + me.filePrefix + class
+}
+
 func (me *cfile) checkIsClass(typed string) bool {
 	_, ok := me.classes[typed]
 	return ok
@@ -84,7 +108,7 @@ func (me *cfile) checkIsClass(typed string) bool {
 
 func (me *cfile) typesig(typed string) string {
 	if me.checkIsClass(typed) {
-		return typed + " *"
+		return me.nameSpace(typed) + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
@@ -95,13 +119,16 @@ func (me *cfile) typesig(typed string) string {
 	return typed
 }
 
-func (me *cfile) nomalloctypesig(typed string) string {
+func (me *cfile) noMallocTypeSig(typed string) string {
 	if typed == "string" {
 		return "char *"
 	}
 	if checkIsArray(typed) {
 		atype := parseArrayType(typed)
-		return fmtptr(me.nomalloctypesig(atype))
+		return fmtptr(me.noMallocTypeSig(atype))
+	}
+	if me.checkIsClass(typed) {
+		return me.nameSpace(typed)
 	}
 	return typed
 }
@@ -132,7 +159,7 @@ func (me *cfile) declare(n *node) string {
 		} else {
 			typed := n.typed
 			me.scope.variables[name] = varInit(typed, name, mutable, malloc)
-			codesig := fmtassignspace(me.nomalloctypesig(typed))
+			codesig := fmtassignspace(me.noMallocTypeSig(typed))
 			code += codesig
 		}
 	}
@@ -144,6 +171,24 @@ func (me *cfile) maybeLet(code string) string {
 		return ""
 	}
 	return " = "
+}
+
+func (me *cfile) assignStatic(n *node) (string, string) {
+	left := n.has[0]
+	right := n.has[1]
+	right.pushAttribute("no-malloc")
+	decl := me.declare(left)
+	rightcode := me.eval(right).code
+	leftcode := me.eval(left).code
+	setsign := me.maybeLet(rightcode)
+	code := decl + leftcode + setsign + rightcode + ";\n"
+	decl = "extern " + decl + leftcode
+	if setsign == "" {
+		decl += rightcode
+	}
+	// TODO names of static variables need to be prefixed and looked up each time
+	decl += ";\n"
+	return decl, code
 }
 
 func (me *cfile) assingment(n *node) string {
@@ -412,13 +457,14 @@ func (me *cfile) free(name string) string {
 	return "free(" + name + ");"
 }
 
-func (me *cfile) object(class *class) string {
-	code := "struct " + class.name + "\n{\n"
+func (me *cfile) defineClass(class *class) string {
+	hmName := me.nameSpace(class.name)
+	code := "struct " + hmName + "\n{\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
 		code += fmc(1) + fmtassignspace(me.typesig(field.is)) + field.name + ";\n"
 	}
-	code += "};\ntypedef struct " + class.name + " " + class.name + ";\n\n"
+	code += "};\ntypedef struct " + hmName + " " + hmName + ";\n\n"
 	return code
 }
 
@@ -442,7 +488,7 @@ func (me *cfile) block(n *node) *cnode {
 	return cn
 }
 
-func (me *cfile) mainc(fn *function) string {
+func (me *cfile) mainc(fn *function) (string, string) {
 	if len(fn.args) > 0 {
 		panic("main can not have arguments")
 	}
@@ -471,10 +517,10 @@ func (me *cfile) mainc(fn *function) string {
 	code += "int main()\n{\n"
 	code += codeblock
 	code += "}\n"
-	return code
+	return "int main();\n", code
 }
 
-func (me *cfile) function(name string, fn *function) string {
+func (me *cfile) function(name string, fn *function) (string, string) {
 	args := fn.args
 	expressions := fn.expressions
 	block := ""
@@ -490,7 +536,7 @@ func (me *cfile) function(name string, fn *function) string {
 	}
 	me.popScope()
 	code := ""
-	code += fmtassignspace(me.typesig(fn.typed)) + name + "("
+	code += fmtassignspace(me.typesig(fn.typed)) + me.nameSpace(name) + "("
 	for ix, arg := range args {
 		if ix > 0 {
 			code += ", "
@@ -504,10 +550,11 @@ func (me *cfile) function(name string, fn *function) string {
 		}
 		code += arg.name
 	}
+	head := code + ");\n"
 	code += ")\n{\n"
 	code += block
 	code += "}\n\n"
-	return code
+	return head, code
 }
 
 func (me *cfile) call(name string, parameters []*node) string {
@@ -524,7 +571,7 @@ func (me *cfile) call(name string, parameters []*node) string {
 		}
 		panic("argument for echo was " + param.string(0))
 	}
-	code := name + "("
+	code := me.nameSpace(name) + "("
 	for ix, parameter := range parameters {
 		if ix > 0 {
 			code += ", "

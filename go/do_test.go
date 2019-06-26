@@ -17,7 +17,7 @@ func TestCompile(t *testing.T) {
 		name := strings.TrimSuffix(info.Name(), ".hm")
 		files := folder + "/out/" + name
 		os.MkdirAll(files, os.ModePerm)
-		out := compile(false, files, data)
+		out := compile(false, files, name, data)
 		expected := string(read(folder + "/assert/" + name + ".out"))
 		if out != expected {
 			t.Errorf("assert failed for " + info.Name())

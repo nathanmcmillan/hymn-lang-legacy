@@ -18,7 +18,7 @@ func (me *parser) peek() *token {
 }
 
 func (me *parser) fail() string {
-	return fmt.Sprintf("line %d, %s\n", me.line, me.tokens[me.pos].string())
+	return fmt.Sprintf("line %d, token %s\n", me.line, me.tokens[me.pos].string())
 }
 
 func (me *parser) skipLines() {
@@ -39,7 +39,7 @@ func parse(tokens []*token) *program {
 	me.program = programInit()
 	me.skipLines()
 	for me.token.is != "eof" {
-		me.fileexpression()
+		me.fileExpression()
 		if me.token.is == "line" {
 			me.eat("line")
 		}
@@ -60,10 +60,13 @@ func (me *parser) eat(want string) {
 	me.next()
 }
 
-func (me *parser) fileexpression() {
+func (me *parser) fileExpression() {
 	token := me.token
 	op := token.is
-	if op == "immutable" {
+	if op == "import" {
+		me.eat(op)
+		me.imports()
+	} else if op == "immutable" {
 		me.eat(op)
 		me.immutables()
 	} else if op == "mutable" {
@@ -145,13 +148,14 @@ func (me *parser) maybeIgnore(depth int) {
 }
 
 func (me *parser) typedecl() string {
-	typed := me.token.value
-	me.eat("id")
+	typed := ""
 	if me.token.is == "[" {
 		me.eat("[")
 		me.eat("]")
 		typed += "[]"
 	}
+	typed += me.token.value
+	me.eat("id")
 	return typed
 }
 
@@ -204,9 +208,9 @@ func (me *parser) function(name string, self *class) *function {
 		if me.token.is != ")" {
 			for {
 				if me.token.is == "id" {
-					typed := me.typedecl()
 					arg := me.token.value
 					me.eat("id")
+					typed := me.typedecl()
 					fn.args = append(fn.args, varInit(typed, arg, false, true))
 					if me.token.is == ")" {
 						break
@@ -311,11 +315,11 @@ func (me *parser) call() *node {
 }
 
 func parseArrayType(typed string) string {
-	return typed[0:strings.Index(typed, "[")]
+	return typed[2:]
 }
 
 func checkIsArray(typed string) bool {
-	return strings.HasSuffix(typed, "[]")
+	return strings.HasPrefix(typed, "[]")
 }
 
 func (me *parser) eatvar() *node {
@@ -472,6 +476,14 @@ func (me *parser) free() *node {
 	token := me.token
 	me.eat("id")
 	n := nodeInit("free")
+	n.value = token.value
+	return n
+}
+
+func (me *parser) extern() *node {
+	token := me.token
+	me.eat("id")
+	n := nodeInit("extern")
 	n.value = token.value
 	return n
 }
@@ -666,7 +678,7 @@ func (me *parser) binary(left *node, op string) *node {
 	return n
 }
 
-func (me *parser) array(is string) *node {
+func (me *parser) initarray() *node {
 	me.eat("[")
 	size := me.calc()
 	if size.typed != "int" {
@@ -674,10 +686,28 @@ func (me *parser) array(is string) *node {
 	}
 	me.eat("]")
 	n := nodeInit("array")
-	n.typed = is + "[]"
+	is := me.token.value
+	me.eat("id")
+	if _, ok := me.program.types[is]; !ok {
+		panic(me.fail() + "array type \"" + is + "\" not found")
+	}
+	n.typed = "[]" + is
 	n.push(size)
 	fmt.Println("array node =", n.string(0))
 	return n
+}
+
+func (me *parser) imports() {
+	me.eat("line")
+	for {
+		name := me.token.value
+		fmt.Println("importing " + name)
+		me.eat("string")
+		me.eat("line")
+		if me.token.is == "line" || me.token.is == "eof" {
+			break
+		}
+	}
 }
 
 func (me *parser) immutables() {
@@ -803,19 +833,21 @@ func (me *parser) factor() *node {
 			return me.call()
 		}
 		if _, ok := me.program.types[name]; ok {
-			if me.peek().is == "[" {
-				me.eat(op)
-				return me.array(name)
-			}
 			if _, ok := me.program.classes[name]; ok {
 				return me.construct()
 			}
-			panic(me.fail() + "bad class or array definition")
+			panic(me.fail() + "bad type \"" + name + "\" definition")
+		}
+		if _, ok := me.program.imports[name]; ok {
+			return me.extern()
 		}
 		if me.program.scope.findVariable(name) == nil {
 			panic(me.fail() + "variable out of scope")
 		}
 		return me.eatvar()
+	}
+	if op == "[" {
+		return me.initarray()
 	}
 	if op == "(" {
 		me.eat("(")

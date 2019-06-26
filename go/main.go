@@ -4,13 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-)
-
-const (
-	ftokens = "tokens"
-	ftree   = "tree"
-	fcode   = "main.c"
-	fapp    = "main"
+	"strings"
 )
 
 func fmc(depth int) string {
@@ -28,10 +22,12 @@ func main() {
 	}
 	path := os.Args[1]
 	data := read(path)
-	compile(true, "out", data)
+	name := path[strings.LastIndex(path, "/")+1 : strings.LastIndex(path, ".")]
+	fmt.Println("file name:", name)
+	compile(true, "out", name, data)
 }
 
-func compile(debug bool, out string, data []byte) string {
+func compile(debug bool, out, name string, data []byte) string {
 	stream := newStream(data)
 	if debug {
 		fmt.Println("=== content ===")
@@ -44,32 +40,33 @@ func compile(debug bool, out string, data []byte) string {
 		for _, token := range tokens {
 			dump += token.string() + "\n"
 		}
-		ptokens := out + "/" + ftokens
-		if exists(ptokens) {
-			os.Remove(ptokens)
+		fileTokens := out + "/" + name + ".tokens"
+		if exists(fileTokens) {
+			os.Remove(fileTokens)
 		}
-		create(ptokens, dump)
+		create(fileTokens, dump)
 
 		fmt.Println("=== parse ===")
 	}
+
 	program := parse(tokens)
 	if debug {
+		fileTree := out + "/" + name + ".tree"
 		dump := program.dump()
-		if exists(ftree) {
-			os.Remove(ftree)
+		if exists(fileTree) {
+			os.Remove(fileTree)
 		}
-		ptree := out + "/" + ftree
-		create(ptree, dump)
+		create(fileTree, dump)
 		fmt.Println("=== code ===")
 	}
-	makecode(out, program)
-	pcode := out + "/" + fcode
-	papp := out + "/" + fapp
+
 	fmt.Println("=== gcc ===")
-	if exists(papp) {
-		os.Remove(papp)
+	fileCode := makecode(out, name, program)
+	fileOut := out + "/" + name
+	if exists(fileOut) {
+		os.Remove(fileOut)
 	}
-	stdout, err := exec.Command("gcc", pcode, "-o", papp).CombinedOutput()
+	stdout, err := exec.Command("gcc", fileCode, "-o", fileOut).CombinedOutput()
 	std := string(stdout)
 	if std != "" {
 		fmt.Println(std)
@@ -77,9 +74,9 @@ func compile(debug bool, out string, data []byte) string {
 	if err != nil {
 		panic(err)
 	}
-	if exists(papp) {
+	if exists(fileOut) {
 		fmt.Println("=== run ===")
-		stdout, _ = exec.Command(papp).CombinedOutput()
+		stdout, _ = exec.Command(fileOut).CombinedOutput()
 		finalout := string(stdout)
 		fmt.Println(finalout)
 		return finalout

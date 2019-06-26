@@ -1,6 +1,6 @@
 main
   x = 3
   y = 2
-  i = int[x]
+  i = [x]int
   i[y] = 5
   echo i[y]

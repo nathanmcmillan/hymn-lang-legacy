@@ -1,4 +1,4 @@
-square(int x, int z) int
+square(x int, z int) int
   x2 = x + 1
   z2 = z + 1
   w2 = 5 / 2

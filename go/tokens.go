@@ -6,6 +6,7 @@ import (
 )
 
 var keywords = map[string]bool{
+	"import":    true,
 	"macro":     true,
 	"return":    true,
 	"class":     true,

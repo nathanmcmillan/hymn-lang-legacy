@@ -3,7 +3,7 @@ class foo
 
 immutable
   name = "foo"
-  fooPool = foo[3]
+  fooPool = [3]foo
   fooSingle = foo
   
 mutable

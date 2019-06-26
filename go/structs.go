@@ -59,6 +59,7 @@ type program struct {
 }
 
 type cfile struct {
+	filePrefix    string
 	imports       map[string]bool
 	classes       map[string]*class
 	rootScope     *scope

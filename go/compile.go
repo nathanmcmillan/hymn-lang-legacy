@@ -10,7 +10,7 @@ var (
 	definePrefix = "HM_"
 )
 
-func makecode(folder, name string, p *program) string {
+func generateC(folder, name string, p *program) string {
 	cf := cfileInit()
 	cf.classes = p.classes
 	cf.types = p.types

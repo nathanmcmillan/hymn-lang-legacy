@@ -7,8 +7,13 @@ type token struct {
 }
 
 type tokenizer struct {
-	stream  *stream
-	current string
+	stream      *stream
+	current     string
+	tokens      []*token
+	eof         *token
+	size        int
+	depth       int
+	updateDepth bool
 }
 
 type node struct {
@@ -72,7 +77,7 @@ type cfile struct {
 }
 
 type parser struct {
-	tokens  []*token
+	tokens  *tokenizer
 	token   *token
 	pos     int
 	line    int

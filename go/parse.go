@@ -2,27 +2,28 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
 func (me *parser) next() {
 	me.pos++
-	me.token = me.tokens[me.pos]
+	me.token = me.tokens.get(me.pos)
 	if me.token.is == "line" {
 		me.line++
 	}
 }
 
 func (me *parser) peek() *token {
-	return me.tokens[me.pos+1]
+	return me.tokens.get(me.pos + 1)
 }
 
 func (me *parser) fail() string {
-	return fmt.Sprintf("line %d, token %s\n", me.line, me.tokens[me.pos].string())
+	return fmt.Sprintf("line %d, token %s\n", me.line, me.tokens.get(me.pos).string())
 }
 
 func (me *parser) skipLines() {
-	for me.pos != len(me.tokens) {
+	for me.token.is != "eof" {
 		token := me.token
 		if token.is != "line" {
 			break
@@ -31,11 +32,17 @@ func (me *parser) skipLines() {
 	}
 }
 
-func parse(tokens []*token) *program {
+func parse(out, path string) *program {
+	name := fileName(path)
+	data := read(path)
+	if debug {
+		fmt.Println("=== parse ===")
+	}
+	stream := newStream(data)
 	me := parser{}
 	me.line = 1
-	me.tokens = tokens
-	me.token = tokens[0]
+	me.tokens = tokenize(stream)
+	me.token = me.tokens.get(0)
 	me.program = programInit()
 	me.skipLines()
 	for me.token.is != "eof" {
@@ -44,6 +51,19 @@ func parse(tokens []*token) *program {
 			me.eat("line")
 		}
 	}
+
+	if debug {
+		dump := ""
+		for _, token := range me.tokens.tokens {
+			dump += token.string() + "\n"
+		}
+		fileTokens := out + "/" + name + ".tokens"
+		if exists(fileTokens) {
+			os.Remove(fileTokens)
+		}
+		create(fileTokens, dump)
+	}
+
 	delete(me.program.functions, "echo")
 	return me.program
 }
@@ -138,7 +158,7 @@ func (me *parser) maybeIgnore(depth int) {
 			break
 		}
 	}
-	for me.pos != len(me.tokens) {
+	for me.token.is != "eof" {
 		token := me.token
 		if token.is != "line" {
 			break
@@ -540,13 +560,13 @@ func (me *parser) breaking() *node {
 
 func (me *parser) iswhile() bool {
 	pos := me.pos
-	token := me.tokens[pos]
+	token := me.tokens.get(pos)
 	for token.is != "line" && token.is != "eof" {
 		if token.is == "delim" {
 			return false
 		}
 		pos++
-		token = me.tokens[pos]
+		token = me.tokens.get(pos)
 	}
 	return true
 }
@@ -699,10 +719,18 @@ func (me *parser) initarray() *node {
 
 func (me *parser) imports() {
 	me.eat("line")
+	imports := make(map[string]bool)
 	for {
 		name := me.token.value
 		fmt.Println("importing " + name)
 		me.eat("string")
+		_, ok := imports[name]
+		if !ok {
+			imports[name] = true
+			out := ""
+			path := "./" + name + ".hm"
+			compile(out, path)
+		}
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" {
 			break

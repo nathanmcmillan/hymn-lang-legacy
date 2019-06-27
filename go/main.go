@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+)
+
+var (
+	debug = true
 )
 
 func fmc(depth int) string {
@@ -16,40 +19,42 @@ func fmc(depth int) string {
 }
 
 func main() {
-	if len(os.Args) != 2 {
+	args := os.Args
+	size := len(args)
+	if size < 2 {
 		fmt.Println("path?")
 		return
 	}
-	path := os.Args[1]
-	data := read(path)
-	name := path[strings.LastIndex(path, "/")+1 : strings.LastIndex(path, ".")]
-	fmt.Println("file name:", name)
-	compile(true, "out", name, data)
+	path := args[1]
+	isLib := false
+	if size >= 3 {
+		if args[2] == "--lib" {
+			isLib = true
+		}
+	}
+	linker("out", path, isLib)
 }
 
-func compile(debug bool, out, name string, data []byte) string {
-	stream := newStream(data)
-	if debug {
-		fmt.Println("=== content ===")
-		fmt.Println(string(data))
-		fmt.Println("=== tokens ===")
-	}
-	tokens := tokenize(stream)
-	if debug {
-		dump := ""
-		for _, token := range tokens {
-			dump += token.string() + "\n"
-		}
-		fileTokens := out + "/" + name + ".tokens"
-		if exists(fileTokens) {
-			os.Remove(fileTokens)
-		}
-		create(fileTokens, dump)
+func linker(out, path string, isLib bool) string {
+	name := fileName(path)
+	sources := make(map[string]string)
 
-		fmt.Println("=== parse ===")
-	}
+	program := compile(out, path)
+	pathSource := generateC(out, name, program)
 
-	program := parse(tokens)
+	sources[name] = pathSource
+
+	fileOut := out + "/" + name
+	if exists(fileOut) {
+		os.Remove(fileOut)
+	}
+	gcc(sources, fileOut, isLib)
+	return app(fileOut)
+}
+
+func compile(out, path string) *program {
+	name := fileName(path)
+	program := parse(out, path)
 	if debug {
 		fileTree := out + "/" + name + ".tree"
 		dump := program.dump()
@@ -59,14 +64,24 @@ func compile(debug bool, out, name string, data []byte) string {
 		create(fileTree, dump)
 		fmt.Println("=== code ===")
 	}
+	return program
+}
 
+func gcc(sources map[string]string, fileOut string, isLib bool) {
 	fmt.Println("=== gcc ===")
-	fileCode := makecode(out, name, program)
-	fileOut := out + "/" + name
-	if exists(fileOut) {
-		os.Remove(fileOut)
+	paramGcc := make([]string, 0)
+	for _, src := range sources {
+		paramGcc = append(paramGcc, src)
 	}
-	stdout, err := exec.Command("gcc", fileCode, "-o", fileOut).CombinedOutput()
+	paramGcc = append(paramGcc, "-o")
+	if isLib {
+		fileOut += ".o"
+		paramGcc = append(paramGcc, fileOut)
+		paramGcc = append(paramGcc, "-c")
+	} else {
+		paramGcc = append(paramGcc, fileOut)
+	}
+	stdout, err := exec.Command("gcc", paramGcc...).CombinedOutput()
 	std := string(stdout)
 	if std != "" {
 		fmt.Println(std)
@@ -74,9 +89,12 @@ func compile(debug bool, out, name string, data []byte) string {
 	if err != nil {
 		panic(err)
 	}
-	if exists(fileOut) {
+}
+
+func app(path string) string {
+	if exists(path) {
 		fmt.Println("=== run ===")
-		stdout, _ = exec.Command(fileOut).CombinedOutput()
+		stdout, _ := exec.Command(path).CombinedOutput()
 		finalout := string(stdout)
 		fmt.Println(finalout)
 		return finalout

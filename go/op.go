@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func create(path, content string) {
@@ -44,4 +45,8 @@ func exists(path string) bool {
 		return false
 	}
 	return true
+}
+
+func fileName(path string) string {
+	return path[strings.LastIndex(path, "/")+1 : strings.LastIndex(path, ".")]
 }

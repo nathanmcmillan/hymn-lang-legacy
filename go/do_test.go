@@ -8,18 +8,19 @@ import (
 )
 
 func TestCompile(t *testing.T) {
+	debug = false
 	folder := "autotest"
 	tests := folder + "/code"
 	source := scan(tests)
 	for _, info := range source {
 		fmt.Println("====================================================================== test", info.Name())
-		data := read(tests + "/" + info.Name())
+		path := tests + "/" + info.Name()
 		name := strings.TrimSuffix(info.Name(), ".hm")
-		files := folder + "/out/" + name
-		os.MkdirAll(files, os.ModePerm)
-		out := compile(false, files, name, data)
+		out := folder + "/out/" + name
+		os.MkdirAll(out, os.ModePerm)
+		stdout := linker(out, path, false)
 		expected := string(read(folder + "/assert/" + name + ".out"))
-		if out != expected {
+		if stdout != expected {
 			t.Errorf("assert failed for " + info.Name())
 		}
 	}

@@ -29,6 +29,7 @@ type variable struct {
 	name    string
 	mutable bool
 	pointer bool
+	cName   string
 }
 
 type scope struct {
@@ -51,6 +52,15 @@ type class struct {
 }
 
 type program struct {
+	out       string
+	directory string
+	hmfiles   map[string]*hmfile
+	sources   map[string]string
+}
+
+type hmfile struct {
+	program       *program
+	name          string
 	rootScope     *scope
 	scope         *scope
 	imports       map[string]bool
@@ -59,29 +69,29 @@ type program struct {
 	classOrder    []string
 	functions     map[string]*function
 	functionOrder []string
-	primitives    map[string]bool
 	types         map[string]bool
 }
 
+type parser struct {
+	hmfile *hmfile
+	tokens *tokenizer
+	token  *token
+	pos    int
+	line   int
+}
+
 type cfile struct {
-	filePrefix    string
+	funcPrefix    string
+	classPrefix   string
+	varPrefix     string
 	imports       map[string]bool
 	classes       map[string]*class
 	rootScope     *scope
 	scope         *scope
 	functions     map[string]*function
 	functionOrder []string
-	primitives    map[string]bool
 	types         map[string]bool
 	depth         int
-}
-
-type parser struct {
-	tokens  *tokenizer
-	token   *token
-	pos     int
-	line    int
-	program *program
 }
 
 type cnode struct {
@@ -91,6 +101,15 @@ type cnode struct {
 	typed string
 	code  string
 }
+
+var (
+	primitives = map[string]bool{
+		"int":    true,
+		"string": true,
+		"bool":   true,
+		"float":  true,
+	}
+)
 
 func classInit(name string, variableOrder []string, variables map[string]*variable) *class {
 	c := &class{}
@@ -108,31 +127,38 @@ func scopeInit(root *scope) *scope {
 }
 
 func programInit() *program {
-	p := &program{}
-	p.rootScope = scopeInit(nil)
-	p.scope = p.rootScope
-	p.primitives = make(map[string]bool)
-	p.types = make(map[string]bool)
-	p.imports = make(map[string]bool)
-	p.classes = make(map[string]*class, 0)
-	p.statics = make([]*node, 0)
-	p.classOrder = make([]string, 0)
-	p.functions = make(map[string]*function)
-	p.functionOrder = make([]string, 0)
-	p.libInit()
-	return p
+	prog := &program{}
+	prog.hmfiles = make(map[string]*hmfile)
+	prog.sources = make(map[string]string)
+	return prog
 }
 
-func (me *program) pushScope() {
+func hymnFileInit(prog *program) *hmfile {
+	hm := &hmfile{}
+	hm.program = prog
+	hm.rootScope = scopeInit(nil)
+	hm.scope = hm.rootScope
+	hm.types = make(map[string]bool)
+	hm.imports = make(map[string]bool)
+	hm.classes = make(map[string]*class, 0)
+	hm.statics = make([]*node, 0)
+	hm.classOrder = make([]string, 0)
+	hm.functions = make(map[string]*function)
+	hm.functionOrder = make([]string, 0)
+	hm.libInit()
+	return hm
+}
+
+func (me *hmfile) pushScope() {
 	sc := scopeInit(me.scope)
 	me.scope = sc
 }
 
-func (me *program) popScope() {
+func (me *hmfile) popScope() {
 	me.scope = me.scope.root
 }
 
-func cfileInit() *cfile {
+func cFileInit() *cfile {
 	c := &cfile{}
 	c.imports = make(map[string]bool)
 	c.rootScope = scopeInit(nil)
@@ -152,14 +178,30 @@ func (me *cfile) popScope() {
 	me.scope = me.scope.root
 }
 
-func (me *scope) findVariable(name string) *variable {
-	if v, ok := me.variables[name]; ok {
-		return v
+func (me *hmfile) getvar(name string) *variable {
+	scope := me.scope
+	for {
+		if v, ok := scope.variables[name]; ok {
+			return v
+		}
+		if scope.root == nil {
+			return nil
+		}
+		scope = scope.root
 	}
-	if me.root != nil {
-		return me.root.findVariable(name)
+}
+
+func (me *cfile) getvar(name string) *variable {
+	scope := me.scope
+	for {
+		if v, ok := scope.variables[name]; ok {
+			return v
+		}
+		if scope.root == nil {
+			return nil
+		}
+		scope = scope.root
 	}
-	return nil
 }
 
 func nodeInit(is string) *node {
@@ -201,18 +243,13 @@ func (me *cnode) push(n *cnode) {
 	me.has = append(me.has, n)
 }
 
-func (me *program) libInit() {
+func (me *hmfile) libInit() {
 	e := funcInit()
 	e.typed = "void"
 	e.args = append(e.args, varInit("?", "s", false, false))
 	me.functions["echo"] = e
 
-	me.primitives["int"] = true
-	me.primitives["string"] = true
-	me.primitives["bool"] = true
-	me.primitives["float"] = true
-
-	for primitive := range me.primitives {
+	for primitive := range primitives {
 		me.types[primitive] = true
 	}
 }
@@ -228,6 +265,7 @@ func varInit(is, name string, mutable, pointer bool) *variable {
 	v := &variable{}
 	v.is = is
 	v.name = name
+	v.cName = name
 	v.mutable = mutable
 	v.pointer = pointer
 	return v

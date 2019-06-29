@@ -63,6 +63,14 @@
 			}
 		}
 	}, {
+		"explanation": "todo call type 2",
+		"match": "([a-zA-Z]+)(?:(?: |\\.)([a-zA-Z]+))+",
+		"captures": {
+			"1": {
+				"name": "support.function.hymn"
+			}
+		}
+	}, {
 		"explanation": "assignment",
 		"match": "([a-zA-Z]+) (=|\\+=|-=|\\/=|\\*=)",
 		"captures": {

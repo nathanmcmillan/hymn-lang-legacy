@@ -32,29 +32,29 @@ func (me *parser) skipLines() {
 	}
 }
 
-func parse(out, path string) *program {
+func (me *hmfile) parse(out, path string) {
 	name := fileName(path)
 	data := read(path)
 	if debug {
-		fmt.Println("=== parse ===")
+		fmt.Println("=== " + name + " parse ===")
 	}
 	stream := newStream(data)
-	me := parser{}
-	me.line = 1
-	me.tokens = tokenize(stream)
-	me.token = me.tokens.get(0)
-	me.program = programInit()
-	me.skipLines()
-	for me.token.is != "eof" {
-		me.fileExpression()
-		if me.token.is == "line" {
-			me.eat("line")
+	parsing := parser{}
+	parsing.hmfile = me
+	parsing.line = 1
+	parsing.tokens = tokenize(stream)
+	parsing.token = parsing.tokens.get(0)
+	parsing.skipLines()
+	for parsing.token.is != "eof" {
+		parsing.fileExpression()
+		if parsing.token.is == "line" {
+			parsing.eat("line")
 		}
 	}
 
 	if debug {
 		dump := ""
-		for _, token := range me.tokens.tokens {
+		for _, token := range parsing.tokens.tokens {
 			dump += token.string() + "\n"
 		}
 		fileTokens := out + "/" + name + ".tokens"
@@ -64,8 +64,7 @@ func parse(out, path string) *program {
 		create(fileTokens, dump)
 	}
 
-	delete(me.program.functions, "echo")
-	return me.program
+	delete(me.functions, "echo")
 }
 
 func (me *parser) verify(want string) {
@@ -94,7 +93,7 @@ func (me *parser) fileExpression() {
 		me.mutables()
 	} else if op == "id" {
 		name := token.value
-		if _, ok := me.program.classes[name]; ok {
+		if _, ok := me.hmfile.classes[name]; ok {
 			me.classfunction()
 		} else {
 			me.filefunction()
@@ -121,7 +120,7 @@ func (me *parser) expression() *node {
 	}
 	if op == "id" {
 		name := token.value
-		if _, ok := me.program.functions[name]; ok {
+		if _, ok := me.hmfile.functions[name]; ok {
 			return me.call()
 		}
 		n := me.eatvar()
@@ -184,7 +183,7 @@ func (me *parser) nameclassfn(classname, funcname string) string {
 }
 
 func (me *parser) classfunction() {
-	program := me.program
+	program := me.hmfile
 	classname := me.token.value
 	me.eat("id")
 	funcname := me.token.value
@@ -203,7 +202,7 @@ func (me *parser) classfunction() {
 }
 
 func (me *parser) filefunction() {
-	program := me.program
+	program := me.hmfile
 	token := me.token
 	name := token.value
 	if _, ok := program.functions[name]; ok {
@@ -250,10 +249,10 @@ func (me *parser) function(name string, self *class) *function {
 	} else {
 		me.eat("line")
 	}
-	me.program.pushScope()
-	me.program.scope.fn = fn
+	me.hmfile.pushScope()
+	me.hmfile.scope.fn = fn
 	for _, arg := range fn.args {
-		me.program.scope.variables[arg.name] = arg
+		me.hmfile.scope.variables[arg.name] = arg
 	}
 	for {
 		token := me.token
@@ -283,7 +282,7 @@ func (me *parser) function(name string, self *class) *function {
 			break
 		}
 	}
-	me.program.popScope()
+	me.hmfile.popScope()
 	return fn
 }
 
@@ -322,7 +321,7 @@ func (me *parser) callclassfunction(root *node, c *class, fn *function) *node {
 func (me *parser) call() *node {
 	token := me.token
 	name := token.value
-	fn := me.program.functions[name]
+	fn := me.hmfile.functions[name]
 	args := fn.args
 	me.eat("id")
 	n := nodeInit("call")
@@ -349,7 +348,7 @@ func (me *parser) eatvar() *node {
 	for {
 		if me.token.is == "." {
 			if root.is == "variable" {
-				sv := me.program.scope.findVariable(root.value)
+				sv := me.hmfile.getvar(root.value)
 				if sv == nil {
 					panic(me.fail() + "variable \"" + root.value + "\" out of scope")
 				}
@@ -357,7 +356,7 @@ func (me *parser) eatvar() *node {
 				root.is = "root-variable"
 
 			}
-			rootClass, ok := me.program.classes[root.typed]
+			rootClass, ok := me.hmfile.classes[root.typed]
 			if !ok {
 				panic(me.fail() + "class " + root.typed + " does not exist")
 			}
@@ -374,7 +373,7 @@ func (me *parser) eatvar() *node {
 				member.push(root)
 			} else {
 				globalfuncname := me.nameclassfn(rootClass.name, dotName)
-				funcVar, ok := me.program.functions[globalfuncname]
+				funcVar, ok := me.hmfile.functions[globalfuncname]
 				if ok {
 					fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed + "\"")
 					member = me.callclassfunction(root, rootClass, funcVar)
@@ -385,7 +384,7 @@ func (me *parser) eatvar() *node {
 			root = member
 		} else if me.token.is == "[" {
 			if root.is == "variable" {
-				sv := me.program.scope.findVariable(root.value)
+				sv := me.hmfile.getvar(root.value)
 				if sv == nil {
 					panic(me.fail() + "variable out of scope")
 				}
@@ -409,7 +408,7 @@ func (me *parser) eatvar() *node {
 		}
 	}
 	if root.is == "variable" {
-		sv := me.program.scope.findVariable(root.value)
+		sv := me.hmfile.getvar(root.value)
 		if sv == nil {
 			root.typed = "?"
 		} else {
@@ -445,7 +444,7 @@ func (me *parser) assign(av *node, malloc, mutable bool) *node {
 		panic(me.fail() + "assign operation \"" + op + "\" requires number type")
 	}
 	if av.is == "variable" {
-		sv := me.program.scope.findVariable(av.value)
+		sv := me.hmfile.getvar(av.value)
 		if sv != nil {
 			if !sv.mutable {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
@@ -461,7 +460,7 @@ func (me *parser) assign(av *node, malloc, mutable bool) *node {
 				if !malloc {
 					av.pushAttribute("no-malloc")
 				}
-				me.program.scope.variables[av.value] = varInit(right.typed, av.value, mutable, malloc)
+				me.hmfile.scope.variables[av.value] = varInit(right.typed, av.value, mutable, malloc)
 			}
 		}
 	} else if av.is == "member-variable" || av.is == "array-member" {
@@ -483,7 +482,7 @@ func (me *parser) construct() *node {
 	token := me.token
 	me.eat("id")
 	name := token.value
-	if _, ok := me.program.classes[name]; !ok {
+	if _, ok := me.hmfile.classes[name]; !ok {
 		panic(me.fail() + "class does not exist")
 	}
 	n := nodeInit("new")
@@ -531,7 +530,7 @@ func (me *parser) block() *node {
 		expr := me.expression()
 		block.push(expr)
 		if expr.is == "return" {
-			fn := me.program.scope.fn
+			fn := me.hmfile.scope.fn
 			if fn.typed != expr.typed {
 				panic(me.fail() + "function " + fn.name + " returns " + fn.typed + " but found " + expr.typed)
 			}
@@ -708,7 +707,7 @@ func (me *parser) initarray() *node {
 	n := nodeInit("array")
 	is := me.token.value
 	me.eat("id")
-	if _, ok := me.program.types[is]; !ok {
+	if _, ok := me.hmfile.types[is]; !ok {
 		panic(me.fail() + "array type \"" + is + "\" not found")
 	}
 	n.typed = "[]" + is
@@ -727,9 +726,9 @@ func (me *parser) imports() {
 		_, ok := imports[name]
 		if !ok {
 			imports[name] = true
-			out := ""
-			path := "./" + name + ".hm"
-			compile(out, path)
+			path := me.hmfile.program.directory + "/" + name + ".hm"
+			me.hmfile.program.compile(me.hmfile.program.out, path)
+			fmt.Println("finished compiling " + name)
 		}
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" {
@@ -747,7 +746,7 @@ func (me *parser) immutables() {
 		if n.is != "=" || av.is != "variable" {
 			panic(me.fail() + "invalid static variable")
 		}
-		me.program.statics = append(me.program.statics, n)
+		me.hmfile.statics = append(me.hmfile.statics, n)
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" {
 			break
@@ -764,7 +763,7 @@ func (me *parser) mutables() {
 		if n.is != "=" || av.is != "variable" {
 			panic(me.fail() + "invalid static variable")
 		}
-		me.program.statics = append(me.program.statics, n)
+		me.hmfile.statics = append(me.hmfile.statics, n)
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" {
 			break
@@ -776,7 +775,7 @@ func (me *parser) class() {
 	me.eat("class")
 	token := me.token
 	name := token.value
-	if _, ok := me.program.classes[name]; ok {
+	if _, ok := me.hmfile.classes[name]; ok {
 		panic(me.fail() + "class already defined")
 	}
 	me.eat("id")
@@ -801,9 +800,9 @@ func (me *parser) class() {
 			vmap[vn] = varInit(vt, vn, true, true)
 		}
 	}
-	me.program.classOrder = append(me.program.classOrder, name)
-	me.program.classes[name] = classInit(name, vorder, vmap)
-	me.program.types[name] = true
+	me.hmfile.classOrder = append(me.hmfile.classOrder, name)
+	me.hmfile.classes[name] = classInit(name, vorder, vmap)
+	me.hmfile.types[name] = true
 }
 
 func (me *parser) calc() *node {
@@ -848,7 +847,7 @@ func (me *parser) factor() *node {
 	token := me.token
 	op := token.is
 	fmt.Println("factor [" + op + "]")
-	if _, ok := me.program.primitives[op]; ok {
+	if _, ok := primitives[op]; ok {
 		me.eat(op)
 		n := nodeInit(op)
 		n.typed = op
@@ -857,19 +856,19 @@ func (me *parser) factor() *node {
 	}
 	if op == "id" {
 		name := token.value
-		if _, ok := me.program.functions[name]; ok {
+		if _, ok := me.hmfile.functions[name]; ok {
 			return me.call()
 		}
-		if _, ok := me.program.types[name]; ok {
-			if _, ok := me.program.classes[name]; ok {
+		if _, ok := me.hmfile.types[name]; ok {
+			if _, ok := me.hmfile.classes[name]; ok {
 				return me.construct()
 			}
 			panic(me.fail() + "bad type \"" + name + "\" definition")
 		}
-		if _, ok := me.program.imports[name]; ok {
+		if _, ok := me.hmfile.imports[name]; ok {
 			return me.extern()
 		}
-		if me.program.scope.findVariable(name) == nil {
+		if me.hmfile.getvar(name) == nil {
 			panic(me.fail() + "variable out of scope")
 		}
 		return me.eatvar()

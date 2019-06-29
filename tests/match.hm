@@ -1,0 +1,11 @@
+enum maybe(x)
+  some(x)
+  none
+
+main
+  x = foo
+  match x
+    foo(x) =>
+      echo "found!"
+    none => _
+  x is foo(m) => echo "found 2!

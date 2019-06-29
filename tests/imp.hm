@@ -1,0 +1,36 @@
+import
+  "math"
+
+power() string
+  return "this is a file scope function"
+
+main
+  echo math.pi
+  # s = power
+  # echo s
+  # x = math.power 3
+  # echo x
+  # v = math.vec
+  # v.x = 3
+  # v.y = 5
+  # v.z = 7
+  # d = v.dot
+  # echo d
+
+# x = math.power 3
+# {is:=, typed:void, has[
+#   {is:variable, value:x, typed:int}
+#   {is:call, value:math.power, typed:int}
+# ]}
+
+# need a file-scope name-space for all local and imports
+# functions["power"] <= returns string
+# functions["math.power"] <= returns int
+
+# but for compiling they must be translated to correct usage
+# functions["power"] => string hm_imp_power()
+# functions["math.power"] => int hm_math_power(int x)
+
+# could translate to correct usage from the start
+# "power" => functions["imp_power"]
+# "math.power" => functions["math_power"]

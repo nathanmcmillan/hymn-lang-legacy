@@ -23,6 +23,7 @@ var keywords = map[string]bool{
 	"immutable": true,
 	"and":       true,
 	"or":        true,
+	"as":        true,
 }
 
 func (me *token) string() string {

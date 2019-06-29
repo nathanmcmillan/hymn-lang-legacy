@@ -36,35 +36,40 @@ func main() {
 }
 
 func linker(out, path string, isLib bool) string {
+	prog := programInit()
+	prog.out = out
+	prog.directory = fileDir(path)
+
+	prog.compile(out, path)
+
 	name := fileName(path)
-	sources := make(map[string]string)
-
-	program := compile(out, path)
-	pathSource := generateC(out, name, program)
-
-	sources[name] = pathSource
-
 	fileOut := out + "/" + name
 	if exists(fileOut) {
 		os.Remove(fileOut)
 	}
-	gcc(sources, fileOut, isLib)
+	gcc(prog.sources, fileOut, isLib)
 	return app(fileOut)
 }
 
-func compile(out, path string) *program {
+func (me *program) compile(out, path string) {
 	name := fileName(path)
-	program := parse(out, path)
+
+	hymn := hymnFileInit(me)
+	me.hmfiles[name] = hymn
+
+	hymn.parse(out, path)
 	if debug {
 		fileTree := out + "/" + name + ".tree"
-		dump := program.dump()
+		dump := hymn.dump()
 		if exists(fileTree) {
 			os.Remove(fileTree)
 		}
 		create(fileTree, dump)
-		fmt.Println("=== code ===")
+		fmt.Println("=== generate C ===")
 	}
-	return program
+
+	source := hymn.generateC(out, name)
+	me.sources[name] = source
 }
 
 func gcc(sources map[string]string, fileOut string, isLib bool) {

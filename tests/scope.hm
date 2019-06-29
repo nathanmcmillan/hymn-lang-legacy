@@ -1,5 +1,21 @@
+zim(a int) int
+  return a+a
+
+zam(f int) int
+  b = 2
+  return zim f
+
+pong(x int) int
+  return x+2
+
+ping(x int) int
+  return pong x
+
 main
-  for i = 0, i < 5, i += 1
-    x = 2
-    echo i
+  x = 1
+  echo x
+  ping x
+  pong x
+  zim x
+  zam x
   echo x

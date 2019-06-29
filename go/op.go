@@ -50,3 +50,7 @@ func exists(path string) bool {
 func fileName(path string) string {
 	return path[strings.LastIndex(path, "/")+1 : strings.LastIndex(path, ".")]
 }
+
+func fileDir(path string) string {
+	return path[0:strings.LastIndex(path, "/")]
+}

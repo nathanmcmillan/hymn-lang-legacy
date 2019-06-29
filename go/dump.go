@@ -104,7 +104,7 @@ func (me *function) dump(lv int) string {
 	return s
 }
 
-func (me *program) dump() string {
+func (me *hmfile) dump() string {
 	s := ""
 	lv := 0
 	if len(me.classOrder) > 0 {

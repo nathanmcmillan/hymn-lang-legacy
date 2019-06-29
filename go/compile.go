@@ -6,16 +6,19 @@ import (
 )
 
 var (
-	prefix       = "hm_"
-	definePrefix = "HM_"
+	globalClassPrefix = "Hm"
+	globalFuncPrefix  = "hm_"
+	globalVarPrefix   = "hm"
+	definePrefix      = "HM_"
 )
 
-func generateC(folder, name string, p *program) string {
-	cf := cfileInit()
+func (p *hmfile) generateC(folder, name string) string {
+	cf := cFileInit()
 	cf.classes = p.classes
 	cf.types = p.types
-	cf.primitives = p.primitives
-	cf.filePrefix = name + "_"
+	cf.funcPrefix = name + "_"
+	cf.classPrefix = capital(name)
+	cf.varPrefix = capital(name)
 
 	head := ""
 	guard := definePrefix + strings.ToUpper(name) + "_H"
@@ -69,7 +72,7 @@ func (me *cfile) allocstruct(n *node) string {
 	if n.attribute("no-malloc") {
 		return ""
 	}
-	typed := me.nameSpace(n.typed)
+	typed := me.classNameSpace(n.typed)
 	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", typed, typed)
 }
 
@@ -97,8 +100,24 @@ func (me *cfile) allocarray(n *node) string {
 	return "(" + fmtptr(mtype) + ")malloc((" + size.code + ") * sizeof(" + mtype + "))"
 }
 
-func (me *cfile) nameSpace(class string) string {
-	return prefix + me.filePrefix + class
+func capital(id string) string {
+	head := strings.ToUpper(id[0:1])
+	body := id[1:]
+	return head + body
+}
+
+func (me *cfile) varNameSpace(id string) string {
+	return globalVarPrefix + me.varPrefix + capital(id)
+}
+
+func (me *cfile) funcNameSpace(id string) string {
+	return globalFuncPrefix + me.funcPrefix + id
+}
+
+func (me *cfile) classNameSpace(id string) string {
+	head := strings.ToUpper(id[0:1])
+	body := strings.ToLower(id[1:])
+	return globalClassPrefix + me.classPrefix + head + body
 }
 
 func (me *cfile) checkIsClass(typed string) bool {
@@ -108,7 +127,7 @@ func (me *cfile) checkIsClass(typed string) bool {
 
 func (me *cfile) typesig(typed string) string {
 	if me.checkIsClass(typed) {
-		return me.nameSpace(typed) + " *"
+		return me.classNameSpace(typed) + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
@@ -128,7 +147,7 @@ func (me *cfile) noMallocTypeSig(typed string) string {
 		return fmtptr(me.noMallocTypeSig(atype))
 	}
 	if me.checkIsClass(typed) {
-		return me.nameSpace(typed)
+		return me.classNameSpace(typed)
 	}
 	return typed
 }
@@ -136,7 +155,7 @@ func (me *cfile) noMallocTypeSig(typed string) string {
 func (me *cfile) declare(n *node) string {
 	code := ""
 	name := n.value
-	if _, ok := me.scope.variables[name]; !ok {
+	if me.getvar(name) == nil {
 		malloc := true
 		if n.attribute("no-malloc") {
 			malloc = false
@@ -158,7 +177,9 @@ func (me *cfile) declare(n *node) string {
 			}
 		} else {
 			typed := n.typed
-			me.scope.variables[name] = varInit(typed, name, mutable, malloc)
+			newVar := varInit(typed, name, mutable, malloc)
+			newVar.cName = me.varNameSpace(name)
+			me.scope.variables[name] = newVar
 			codesig := fmtassignspace(me.noMallocTypeSig(typed))
 			code += codesig
 		}
@@ -186,7 +207,6 @@ func (me *cfile) assignStatic(n *node) (string, string) {
 	if setsign == "" {
 		decl += rightcode
 	}
-	// TODO names of static variables need to be prefixed and looked up each time
 	decl += ";\n"
 	return decl, code
 }
@@ -259,11 +279,11 @@ func (me *cfile) eval(n *node) *cnode {
 		code := n.value
 		for {
 			if root.is == "root-variable" {
+				vr := me.getvar(root.value)
 				if checkIsArray(root.typed) {
-					code = root.value + code
+					code = vr.cName + code
 				} else {
-					vr := me.scope.findVariable(root.value)
-					code = root.value + vr.memget() + code
+					code = vr.cName + vr.memget() + code
 				}
 				break
 			} else if root.is == "array-member" {
@@ -283,16 +303,17 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "variable" {
 		name := n.value
-		v := me.scope.findVariable(name)
+		v := me.getvar(name)
 		if v == nil {
 			panic("unknown variable " + name)
 		}
-		cn := codeNode(n.is, n.value, n.typed, n.value)
+		cn := codeNode(n.is, n.value, n.typed, v.cName)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "root-variable" {
-		cn := codeNode(n.is, n.value, n.typed, n.value)
+		v := me.getvar(n.value)
+		cn := codeNode(n.is, n.value, n.typed, v.cName)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -389,7 +410,7 @@ func (me *cfile) eval(n *node) *cnode {
 				panic("for loop must assign a regular variable")
 			}
 			vname := vobj.value
-			vexist := me.scope.findVariable(vname)
+			vexist := me.getvar(vname)
 			if vexist == nil {
 				code += me.declare(vobj) + vname + ";\n" + fmc(me.depth)
 			}
@@ -445,7 +466,7 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if _, ok := me.primitives[op]; ok {
+	if _, ok := primitives[op]; ok {
 		cn := codeNode(n.is, n.value, n.typed, n.value)
 		fmt.Println(cn.string(0))
 		return cn
@@ -458,7 +479,7 @@ func (me *cfile) free(name string) string {
 }
 
 func (me *cfile) defineClass(class *class) string {
-	hmName := me.nameSpace(class.name)
+	hmName := me.classNameSpace(class.name)
 	code := "struct " + hmName + "\n{\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
@@ -536,7 +557,7 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 	}
 	me.popScope()
 	code := ""
-	code += fmtassignspace(me.typesig(fn.typed)) + me.nameSpace(name) + "("
+	code += fmtassignspace(me.typesig(fn.typed)) + me.funcNameSpace(name) + "("
 	for ix, arg := range args {
 		if ix > 0 {
 			code += ", "
@@ -571,7 +592,7 @@ func (me *cfile) call(name string, parameters []*node) string {
 		}
 		panic("argument for echo was " + param.string(0))
 	}
-	code := me.nameSpace(name) + "("
+	code := me.funcNameSpace(name) + "("
 	for ix, parameter := range parameters {
 		if ix > 0 {
 			code += ", "

@@ -1,6 +1,0 @@
-import
-  "math"
-
-main
-  x = math.power 3
-  echo x

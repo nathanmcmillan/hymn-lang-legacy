@@ -1,2 +1,13 @@
+class vec
+  x float
+  y float
+  z float
+
+immutable
+  pi = 3.1415
+
 power(x int) int
   return x * x
+
+vec dot() float
+  return self.x * self.y * self.z

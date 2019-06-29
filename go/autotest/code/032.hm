@@ -9,8 +9,13 @@ immutable
 mutable
   nextId = 0
 
+doUpdate(z int)
+  nextId += z
+
 main
   nextId += 1
+  echo nextId
+  doUpdate(2)
   echo nextId
   echo name
   fooPool[0] = foo

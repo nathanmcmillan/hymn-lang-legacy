@@ -3,7 +3,7 @@ package main
 import "strconv"
 
 func (me *variable) string() string {
-	return "{is:" + me.is + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
+	return "{typed:" + me.typed + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
 }
 
 func (me *node) string(lv int) string {
@@ -71,7 +71,7 @@ func (me *class) dump(lv int) string {
 	s := fmc(lv) + me.name + "[\n"
 	lv++
 	for _, classVar := range me.variables {
-		s += fmc(lv) + "{name:" + classVar.name + ", is:" + classVar.is + "}\n"
+		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.typed + "}\n"
 	}
 	lv--
 	s += fmc(lv) + "]\n"

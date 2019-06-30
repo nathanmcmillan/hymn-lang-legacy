@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type token struct {
 	depth int
 	is    string
@@ -25,7 +27,7 @@ type node struct {
 }
 
 type variable struct {
-	is      string
+	typed   string
 	name    string
 	mutable bool
 	pointer bool
@@ -63,6 +65,7 @@ type hmfile struct {
 	name          string
 	rootScope     *scope
 	scope         *scope
+	staticScope   map[string]*variable
 	imports       map[string]bool
 	classes       map[string]*class
 	statics       []*node
@@ -70,6 +73,9 @@ type hmfile struct {
 	functions     map[string]*function
 	functionOrder []string
 	types         map[string]bool
+	funcPrefix    string
+	classPrefix   string
+	varPrefix     string
 }
 
 type parser struct {
@@ -81,17 +87,10 @@ type parser struct {
 }
 
 type cfile struct {
-	funcPrefix    string
-	classPrefix   string
-	varPrefix     string
-	imports       map[string]bool
-	classes       map[string]*class
-	rootScope     *scope
-	scope         *scope
-	functions     map[string]*function
-	functionOrder []string
-	types         map[string]bool
-	depth         int
+	hmfile    *hmfile
+	rootScope *scope
+	scope     *scope
+	depth     int
 }
 
 type cnode struct {
@@ -133,11 +132,12 @@ func programInit() *program {
 	return prog
 }
 
-func hymnFileInit(prog *program) *hmfile {
+func (prog *program) hymnFileInit() *hmfile {
 	hm := &hmfile{}
 	hm.program = prog
 	hm.rootScope = scopeInit(nil)
 	hm.scope = hm.rootScope
+	hm.staticScope = make(map[string]*variable)
 	hm.types = make(map[string]bool)
 	hm.imports = make(map[string]bool)
 	hm.classes = make(map[string]*class, 0)
@@ -158,14 +158,11 @@ func (me *hmfile) popScope() {
 	me.scope = me.scope.root
 }
 
-func cFileInit() *cfile {
+func (me *hmfile) cFileInit() *cfile {
 	c := &cfile{}
-	c.imports = make(map[string]bool)
+	c.hmfile = me
 	c.rootScope = scopeInit(nil)
 	c.scope = c.rootScope
-	c.functions = make(map[string]*function)
-	c.functionOrder = make([]string, 0)
-	c.classes = make(map[string]*class, 0)
 	return c
 }
 
@@ -176,6 +173,13 @@ func (me *cfile) pushScope() {
 
 func (me *cfile) popScope() {
 	me.scope = me.scope.root
+}
+
+func (me *hmfile) getstatic(name string) *variable {
+	if s, ok := me.staticScope[name]; ok {
+		return s
+	}
+	return nil
 }
 
 func (me *hmfile) getvar(name string) *variable {
@@ -261,9 +265,9 @@ func funcInit() *function {
 	return f
 }
 
-func varInit(is, name string, mutable, pointer bool) *variable {
+func varInit(typed, name string, mutable, pointer bool) *variable {
 	v := &variable{}
-	v.is = is
+	v.typed = typed
 	v.name = name
 	v.cName = name
 	v.mutable = mutable
@@ -280,4 +284,18 @@ func (me *variable) memget() string {
 
 func isNumber(t string) bool {
 	return t == "int" || t == "float"
+}
+
+func (me *hmfile) varNameSpace(id string) string {
+	return globalVarPrefix + me.varPrefix + capital(id)
+}
+
+func (me *hmfile) funcNameSpace(id string) string {
+	return globalFuncPrefix + me.funcPrefix + id
+}
+
+func (me *hmfile) classNameSpace(id string) string {
+	head := strings.ToUpper(id[0:1])
+	body := strings.ToLower(id[1:])
+	return globalClassPrefix + me.classPrefix + head + body
 }

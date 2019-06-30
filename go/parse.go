@@ -121,7 +121,7 @@ func (me *parser) expression() *node {
 	if op == "id" {
 		name := token.value
 		if _, ok := me.hmfile.functions[name]; ok {
-			return me.call()
+			return me.call(me.hmfile)
 		}
 		n := me.eatvar()
 		if me.assignable(n) {
@@ -298,8 +298,8 @@ func (me *parser) returning() *node {
 
 func (me *parser) pushparam(call *node, arg *variable) {
 	param := me.factor()
-	if param.typed != arg.is && arg.is != "?" {
-		panic(me.fail() + "argument " + arg.is + " does not match parameter " + param.typed)
+	if param.typed != arg.typed && arg.typed != "?" {
+		panic(me.fail() + "argument " + arg.typed + " does not match parameter " + param.typed)
 	}
 	call.push(param)
 }
@@ -318,10 +318,10 @@ func (me *parser) callclassfunction(root *node, c *class, fn *function) *node {
 	return n
 }
 
-func (me *parser) call() *node {
+func (me *parser) call(hmfile *hmfile) *node {
 	token := me.token
 	name := token.value
-	fn := me.hmfile.functions[name]
+	fn := hmfile.functions[name]
 	args := fn.args
 	me.eat("id")
 	n := nodeInit("call")
@@ -352,7 +352,7 @@ func (me *parser) eatvar() *node {
 				if sv == nil {
 					panic(me.fail() + "variable \"" + root.value + "\" out of scope")
 				}
-				root.typed = sv.is
+				root.typed = sv.typed
 				root.is = "root-variable"
 
 			}
@@ -366,9 +366,9 @@ func (me *parser) eatvar() *node {
 			var member *node
 			classVar, ok := rootClass.variables[dotName]
 			if ok {
-				fmt.Println("member variable " + dotName + " is " + classVar.is)
+				fmt.Println("member variable " + dotName + " is " + classVar.typed)
 				member = nodeInit("member-variable")
-				member.typed = classVar.is
+				member.typed = classVar.typed
 				member.value = dotName
 				member.push(root)
 			} else {
@@ -388,7 +388,7 @@ func (me *parser) eatvar() *node {
 				if sv == nil {
 					panic(me.fail() + "variable out of scope")
 				}
-				root.typed = sv.is
+				root.typed = sv.typed
 				root.is = "root-variable"
 			}
 			if !checkIsArray(root.typed) {
@@ -412,7 +412,7 @@ func (me *parser) eatvar() *node {
 		if sv == nil {
 			root.typed = "?"
 		} else {
-			root.typed = sv.is
+			root.typed = sv.typed
 		}
 	}
 	return root
@@ -500,10 +500,35 @@ func (me *parser) free() *node {
 }
 
 func (me *parser) extern() *node {
-	token := me.token
+	ext := me.token
 	me.eat("id")
+	me.eat(".")
+	extname := ext.value
+	id := me.token
+	if id.is != "id" {
+		panic(me.fail() + "expecting id token after extern " + extname)
+	}
+	idname := id.value
+	module := me.hmfile.program.hmfiles[extname]
 	n := nodeInit("extern")
-	n.value = token.value
+	n.value = extname
+
+	var nest *node
+	if _, ok := module.functions[idname]; ok {
+		fmt.Println("extern call")
+		nest = me.call(module)
+	} else if _, ok := module.classes[idname]; ok {
+		fmt.Println("extern class")
+		nest = me.construct()
+	} else if module.getstatic(idname) != nil {
+		fmt.Println("extern var")
+		nest = me.eatvar()
+	} else {
+		panic(me.fail() + "extern " + extname + "." + idname + " does not exist")
+	}
+
+	n.typed = nest.typed
+	n.push(nest)
 	return n
 }
 
@@ -718,14 +743,13 @@ func (me *parser) initarray() *node {
 
 func (me *parser) imports() {
 	me.eat("line")
-	imports := make(map[string]bool)
 	for {
 		name := me.token.value
 		fmt.Println("importing " + name)
 		me.eat("string")
-		_, ok := imports[name]
+		_, ok := me.hmfile.imports[name]
 		if !ok {
-			imports[name] = true
+			me.hmfile.imports[name] = true
 			path := me.hmfile.program.directory + "/" + name + ".hm"
 			me.hmfile.program.compile(me.hmfile.program.out, path)
 			fmt.Println("finished compiling " + name)
@@ -747,6 +771,7 @@ func (me *parser) immutables() {
 			panic(me.fail() + "invalid static variable")
 		}
 		me.hmfile.statics = append(me.hmfile.statics, n)
+		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" {
 			break
@@ -764,6 +789,7 @@ func (me *parser) mutables() {
 			panic(me.fail() + "invalid static variable")
 		}
 		me.hmfile.statics = append(me.hmfile.statics, n)
+		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" {
 			break
@@ -810,7 +836,6 @@ func (me *parser) calc() *node {
 	for true {
 		token := me.token
 		op := token.is
-		fmt.Println("calc [" + op + "]")
 		if op == "and" || op == "or" {
 			node = me.comparison(node, op)
 			continue
@@ -833,7 +858,6 @@ func (me *parser) term() *node {
 	for true {
 		token := me.token
 		op := token.is
-		fmt.Println("term [" + op + "]")
 		if op == "*" || op == "/" {
 			node = me.binary(node, op)
 			continue
@@ -846,7 +870,6 @@ func (me *parser) term() *node {
 func (me *parser) factor() *node {
 	token := me.token
 	op := token.is
-	fmt.Println("factor [" + op + "]")
 	if _, ok := primitives[op]; ok {
 		me.eat(op)
 		n := nodeInit(op)
@@ -857,7 +880,7 @@ func (me *parser) factor() *node {
 	if op == "id" {
 		name := token.value
 		if _, ok := me.hmfile.functions[name]; ok {
-			return me.call()
+			return me.call(me.hmfile)
 		}
 		if _, ok := me.hmfile.types[name]; ok {
 			if _, ok := me.hmfile.classes[name]; ok {

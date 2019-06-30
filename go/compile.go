@@ -12,13 +12,8 @@ var (
 	definePrefix      = "HM_"
 )
 
-func (p *hmfile) generateC(folder, name string) string {
-	cf := cFileInit()
-	cf.classes = p.classes
-	cf.types = p.types
-	cf.funcPrefix = name + "_"
-	cf.classPrefix = capital(name)
-	cf.varPrefix = capital(name)
+func (me *hmfile) generateC(folder, name string) string {
+	cfile := me.cFileInit()
 
 	head := ""
 	guard := definePrefix + strings.ToUpper(name) + "_H"
@@ -26,19 +21,23 @@ func (p *hmfile) generateC(folder, name string) string {
 	head += "#define " + guard + "\n\n"
 	head += "#include <stdio.h>\n"
 	head += "#include <stdlib.h>\n"
-	head += "#include <stdbool.h>\n\n"
+	head += "#include <stdbool.h>\n"
+	for importName := range me.imports {
+		head += "#include \"" + importName + ".h\"\n"
+	}
+	head += "\n"
 
 	code := ""
 	code += "#include \"" + name + ".h\"\n"
 	code += "\n"
 
-	for _, c := range p.classOrder {
-		head += cf.defineClass(p.classes[c])
+	for _, c := range me.classOrder {
+		head += cfile.defineClass(me.classes[c])
 	}
 
-	if len(p.statics) > 0 {
-		for _, s := range p.statics {
-			decl, impl := cf.assignStatic(s)
+	if len(me.statics) > 0 {
+		for _, s := range me.statics {
+			decl, impl := cfile.assignStatic(s)
 			head += decl
 			code += impl
 		}
@@ -46,18 +45,18 @@ func (p *hmfile) generateC(folder, name string) string {
 		code += "\n"
 	}
 
-	for _, f := range p.functionOrder {
+	for _, f := range me.functionOrder {
 		if f == "main" {
-			decl, impl := cf.mainc(p.functions[f])
+			decl, impl := cfile.mainc(me.functions[f])
 			head += decl
 			code += impl
 		} else {
-			decl, impl := cf.function(f, p.functions[f])
+			decl, impl := cfile.function(f, me.functions[f])
 			head += decl
 			code += impl
 		}
 	}
-	fmt.Println("===")
+	fmt.Println("=== end C ===")
 
 	fileCode := folder + "/" + name + ".c"
 	create(fileCode, code)
@@ -72,7 +71,7 @@ func (me *cfile) allocstruct(n *node) string {
 	if n.attribute("no-malloc") {
 		return ""
 	}
-	typed := me.classNameSpace(n.typed)
+	typed := me.hmfile.classNameSpace(n.typed)
 	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", typed, typed)
 }
 
@@ -106,28 +105,14 @@ func capital(id string) string {
 	return head + body
 }
 
-func (me *cfile) varNameSpace(id string) string {
-	return globalVarPrefix + me.varPrefix + capital(id)
-}
-
-func (me *cfile) funcNameSpace(id string) string {
-	return globalFuncPrefix + me.funcPrefix + id
-}
-
-func (me *cfile) classNameSpace(id string) string {
-	head := strings.ToUpper(id[0:1])
-	body := strings.ToLower(id[1:])
-	return globalClassPrefix + me.classPrefix + head + body
-}
-
 func (me *cfile) checkIsClass(typed string) bool {
-	_, ok := me.classes[typed]
+	_, ok := me.hmfile.classes[typed]
 	return ok
 }
 
 func (me *cfile) typesig(typed string) string {
 	if me.checkIsClass(typed) {
-		return me.classNameSpace(typed) + " *"
+		return me.hmfile.classNameSpace(typed) + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
@@ -147,7 +132,7 @@ func (me *cfile) noMallocTypeSig(typed string) string {
 		return fmtptr(me.noMallocTypeSig(atype))
 	}
 	if me.checkIsClass(typed) {
-		return me.classNameSpace(typed)
+		return me.hmfile.classNameSpace(typed)
 	}
 	return typed
 }
@@ -178,7 +163,7 @@ func (me *cfile) declare(n *node) string {
 		} else {
 			typed := n.typed
 			newVar := varInit(typed, name, mutable, malloc)
-			newVar.cName = me.varNameSpace(name)
+			newVar.cName = me.hmfile.varNameSpace(name)
 			me.scope.variables[name] = newVar
 			codesig := fmtassignspace(me.noMallocTypeSig(typed))
 			code += codesig
@@ -253,7 +238,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "call" {
-		code := me.call(n.value, n.has)
+		code := me.call(me.hmfile, n.value, n.has)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -300,6 +285,25 @@ func (me *cfile) eval(n *node) *cnode {
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
+	}
+	if op == "extern" {
+		extname := n.value
+		nest := n.has[0]
+		idname := nest.value
+		module := me.hmfile.program.hmfiles[extname]
+		if nest.is == "variable" {
+			gv := module.getstatic(idname)
+			cname := module.varNameSpace(idname)
+			cn := codeNode(nest.is, nest.value, gv.typed, cname)
+			fmt.Println("extern:", cn.string(0))
+			return cn
+		} else if nest.is == "call" {
+			code := me.call(module, nest.value, nest.has)
+			cn := codeNode(nest.is, nest.value, nest.typed, code)
+			fmt.Println("extern:", cn.string(0))
+			return cn
+		}
+		panic("extern todo")
 	}
 	if op == "variable" {
 		name := n.value
@@ -479,11 +483,11 @@ func (me *cfile) free(name string) string {
 }
 
 func (me *cfile) defineClass(class *class) string {
-	hmName := me.classNameSpace(class.name)
+	hmName := me.hmfile.classNameSpace(class.name)
 	code := "struct " + hmName + "\n{\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
-		code += fmc(1) + fmtassignspace(me.typesig(field.is)) + field.name + ";\n"
+		code += fmc(1) + fmtassignspace(me.typesig(field.typed)) + field.name + ";\n"
 	}
 	code += "};\ntypedef struct " + hmName + " " + hmName + ";\n\n"
 	return code
@@ -557,12 +561,12 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 	}
 	me.popScope()
 	code := ""
-	code += fmtassignspace(me.typesig(fn.typed)) + me.funcNameSpace(name) + "("
+	code += fmtassignspace(me.typesig(fn.typed)) + me.hmfile.funcNameSpace(name) + "("
 	for ix, arg := range args {
 		if ix > 0 {
 			code += ", "
 		}
-		typed := arg.is
+		typed := arg.typed
 		codesig := fmtassignspace(me.typesig(typed))
 		if me.checkIsClass(typed) || checkIsArray(typed) {
 			code += codesig + "const "
@@ -578,7 +582,7 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 	return head, code
 }
 
-func (me *cfile) call(name string, parameters []*node) string {
+func (me *cfile) call(hmfile *hmfile, name string, parameters []*node) string {
 	if name == "echo" {
 		param := me.eval(parameters[0])
 		if param.typed == "string" {
@@ -592,7 +596,7 @@ func (me *cfile) call(name string, parameters []*node) string {
 		}
 		panic("argument for echo was " + param.string(0))
 	}
-	code := me.funcNameSpace(name) + "("
+	code := hmfile.funcNameSpace(name) + "("
 	for ix, parameter := range parameters {
 		if ix > 0 {
 			code += ", "

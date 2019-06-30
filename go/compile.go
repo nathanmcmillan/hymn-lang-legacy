@@ -67,11 +67,11 @@ func (me *hmfile) generateC(folder, name string) string {
 	return fileCode
 }
 
-func (me *cfile) allocstruct(n *node) string {
+func (me *hmfile) allocstruct(typed string, n *node) string {
 	if n.attribute("no-malloc") {
 		return ""
 	}
-	typed := me.hmfile.classNameSpace(n.typed)
+	typed = me.classNameSpace(typed)
 	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", typed, typed)
 }
 
@@ -105,20 +105,21 @@ func capital(id string) string {
 	return head + body
 }
 
-func (me *cfile) checkIsClass(typed string) bool {
-	_, ok := me.hmfile.classes[typed]
+func (me *hmfile) checkIsClass(typed string) bool {
+	_, ok := me.classes[typed]
 	return ok
 }
 
 func (me *cfile) typesig(typed string) string {
-	if me.checkIsClass(typed) {
-		return me.hmfile.classNameSpace(typed) + " *"
+	module, truetype := me.hmfile.moduleAndName(typed)
+	if module.checkIsClass(truetype) {
+		return module.classNameSpace(truetype) + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
 	if checkIsArray(typed) {
-		atype := parseArrayType(typed)
-		return fmtptr(me.typesig(atype))
+		arraytype := parseArrayType(typed)
+		return fmtptr(me.typesig(arraytype))
 	}
 	return typed
 }
@@ -128,11 +129,12 @@ func (me *cfile) noMallocTypeSig(typed string) string {
 		return "char *"
 	}
 	if checkIsArray(typed) {
-		atype := parseArrayType(typed)
-		return fmtptr(me.noMallocTypeSig(atype))
+		arraytype := parseArrayType(typed)
+		return fmtptr(me.noMallocTypeSig(arraytype))
 	}
-	if me.checkIsClass(typed) {
-		return me.hmfile.classNameSpace(typed)
+	module, truetype := me.hmfile.moduleAndName(typed)
+	if module.checkIsClass(truetype) {
+		return module.classNameSpace(typed)
 	}
 	return typed
 }
@@ -153,17 +155,19 @@ func (me *cfile) declare(n *node) string {
 			typed := n.typed
 			me.scope.variables[name] = varInit(typed, name, mutable, malloc)
 			codesig := fmtassignspace(me.typesig(typed))
+			module, truetype := me.hmfile.moduleAndName(typed)
 			if mutable {
 				code = codesig
-			} else if me.checkIsClass(typed) || checkIsArray(typed) {
+			} else if module.checkIsClass(truetype) || checkIsArray(typed) {
 				code += codesig + "const "
 			} else {
 				code += "const " + codesig
 			}
 		} else {
 			typed := n.typed
+			module, _ := me.hmfile.moduleAndName(typed)
 			newVar := varInit(typed, name, mutable, malloc)
-			newVar.cName = me.hmfile.varNameSpace(name)
+			newVar.cName = module.varNameSpace(name)
 			me.scope.variables[name] = newVar
 			codesig := fmtassignspace(me.noMallocTypeSig(typed))
 			code += codesig
@@ -232,13 +236,15 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "new" {
-		code := me.allocstruct(n)
+		module, className := me.hmfile.moduleAndName(n.typed)
+		code := module.allocstruct(className, n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "call" {
-		code := me.call(me.hmfile, n.value, n.has)
+		module, callName := me.hmfile.moduleAndName(n.value)
+		code := me.call(module, callName, n.has)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -264,11 +270,20 @@ func (me *cfile) eval(n *node) *cnode {
 		code := n.value
 		for {
 			if root.is == "root-variable" {
-				vr := me.getvar(root.value)
-				if checkIsArray(root.typed) {
-					code = vr.cName + code
+				module, varName := me.hmfile.moduleAndName(root.value)
+				var vr *variable
+				var cname string
+				if module == me.hmfile {
+					vr = me.getvar(varName)
+					cname = vr.cName
 				} else {
-					code = vr.cName + vr.memget() + code
+					vr = module.getstatic(varName)
+					cname = module.varNameSpace(varName)
+				}
+				if checkIsArray(root.typed) {
+					code = cname + code
+				} else {
+					code = cname + vr.memget() + code
 				}
 				break
 			} else if root.is == "array-member" {
@@ -286,32 +301,21 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if op == "extern" {
-		extname := n.value
-		nest := n.has[0]
-		idname := nest.value
-		module := me.hmfile.program.hmfiles[extname]
-		if nest.is == "variable" {
-			gv := module.getstatic(idname)
-			cname := module.varNameSpace(idname)
-			cn := codeNode(nest.is, nest.value, gv.typed, cname)
-			fmt.Println("extern:", cn.string(0))
-			return cn
-		} else if nest.is == "call" {
-			code := me.call(module, nest.value, nest.has)
-			cn := codeNode(nest.is, nest.value, nest.typed, code)
-			fmt.Println("extern:", cn.string(0))
-			return cn
-		}
-		panic("extern todo")
-	}
 	if op == "variable" {
-		name := n.value
-		v := me.getvar(name)
-		if v == nil {
-			panic("unknown variable " + name)
+		module, varName := me.hmfile.moduleAndName(n.value)
+		var v *variable
+		var cname string
+		if module == me.hmfile {
+			v = me.getvar(varName)
+			cname = v.cName
+		} else {
+			v = module.getstatic(varName)
+			cname = module.varNameSpace(varName)
 		}
-		cn := codeNode(n.is, n.value, n.typed, v.cName)
+		if v == nil {
+			panic("unknown variable " + varName)
+		}
+		cn := codeNode(n.is, n.value, n.typed, cname)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -568,7 +572,7 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 		}
 		typed := arg.typed
 		codesig := fmtassignspace(me.typesig(typed))
-		if me.checkIsClass(typed) || checkIsArray(typed) {
+		if me.hmfile.checkIsClass(typed) || checkIsArray(typed) {
 			code += codesig + "const "
 		} else {
 			code += "const " + codesig
@@ -582,7 +586,7 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 	return head, code
 }
 
-func (me *cfile) call(hmfile *hmfile, name string, parameters []*node) string {
+func (me *cfile) call(module *hmfile, name string, parameters []*node) string {
 	if name == "echo" {
 		param := me.eval(parameters[0])
 		if param.typed == "string" {
@@ -596,7 +600,7 @@ func (me *cfile) call(hmfile *hmfile, name string, parameters []*node) string {
 		}
 		panic("argument for echo was " + param.string(0))
 	}
-	code := hmfile.funcNameSpace(name) + "("
+	code := module.funcNameSpace(name) + "("
 	for ix, parameter := range parameters {
 		if ix > 0 {
 			code += ", "

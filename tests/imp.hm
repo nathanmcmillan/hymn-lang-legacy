@@ -7,16 +7,29 @@ immutable
 power() string
   return "pow"
 
+# extra(val float, zap math.vec) math.vec
+#   zap.x += val
+#   return zap
+
 main
   echo pi
   echo math.pi
+  
   s = power
   echo s
   x = math.power 3
   echo x
-  # v = math.vec
-  # v.x = 3
-  # v.y = 5
-  # v.z = 7
-  # d = v.dot
-  # echo d
+
+  v = math.vec
+  v.x = 3.0
+  v.y = 5.0
+  v.z = 7.0
+  d = v.dot
+  echo d
+
+  v.init 4.0 6.0 8.0
+  # extra 2.0 v
+  echo v.x
+  echo v.y
+  echo v.z
+

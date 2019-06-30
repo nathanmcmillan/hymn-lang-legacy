@@ -1,5 +1,5 @@
 import
-  math
+  "math"
 
 immutable
   name = "foo"
@@ -8,15 +8,18 @@ mutable
   nextId = 0
 
 class foo
-  f float32[]
+  f []float32
 
-globFoo(int x) int
+macro doMac(x int)
+  x += 2
+
+globFoo(x int) int
   return x + 2
 
-appender(list[string] ls)
+appender(ls list[string])
    ls[1] = "foo"
 
-setter(map[string, int] mp)
+setter(mp map[string, int])
   mp["foo"] = 99
 
 main

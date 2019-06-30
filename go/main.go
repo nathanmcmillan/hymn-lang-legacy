@@ -55,6 +55,7 @@ func (me *program) compile(out, path string) {
 	name := fileName(path)
 
 	hymn := me.hymnFileInit()
+	hymn.name = name
 	hymn.funcPrefix = name + "_"
 	hymn.classPrefix = capital(name)
 	hymn.varPrefix = capital(name)

@@ -299,3 +299,12 @@ func (me *hmfile) classNameSpace(id string) string {
 	body := strings.ToLower(id[1:])
 	return globalClassPrefix + me.classPrefix + head + body
 }
+
+func (me *hmfile) moduleAndName(name string) (*hmfile, string) {
+	get := strings.Split(name, ".")
+	if len(get) == 1 {
+		return me, get[0]
+	}
+	module := me.program.hmfiles[get[0]]
+	return module, get[1]
+}

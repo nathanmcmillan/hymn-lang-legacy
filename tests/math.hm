@@ -11,3 +11,9 @@ power(x int) int
 
 vec dot() float
   return self.x * self.y * self.z
+
+vec init(x float, y float, z float) vec
+  self.x = x
+  self.y = y
+  self.z = z
+  return self

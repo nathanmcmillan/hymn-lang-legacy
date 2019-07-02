@@ -111,26 +111,26 @@ func (me *hmfile) checkIsClass(typed string) bool {
 }
 
 func (me *cfile) typesig(typed string) string {
+	if checkIsArray(typed) {
+		arraytype := parseArrayType(typed)
+		return fmtptr(me.typesig(arraytype))
+	}
 	module, truetype := me.hmfile.moduleAndName(typed)
 	if module.checkIsClass(truetype) {
 		return module.classNameSpace(truetype) + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
-	if checkIsArray(typed) {
-		arraytype := parseArrayType(typed)
-		return fmtptr(me.typesig(arraytype))
-	}
 	return typed
 }
 
 func (me *cfile) noMallocTypeSig(typed string) string {
-	if typed == "string" {
-		return "char *"
-	}
 	if checkIsArray(typed) {
 		arraytype := parseArrayType(typed)
 		return fmtptr(me.noMallocTypeSig(arraytype))
+	}
+	if typed == "string" {
+		return "char *"
 	}
 	module, truetype := me.hmfile.moduleAndName(typed)
 	if module.checkIsClass(truetype) {
@@ -158,7 +158,7 @@ func (me *cfile) declare(n *node) string {
 			module, truetype := me.hmfile.moduleAndName(typed)
 			if mutable {
 				code = codesig
-			} else if module.checkIsClass(truetype) || checkIsArray(typed) {
+			} else if checkIsArray(typed) || module.checkIsClass(truetype) {
 				code += codesig + "const "
 			} else {
 				code += "const " + codesig
@@ -571,8 +571,9 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 			code += ", "
 		}
 		typed := arg.typed
+		module, truetype := me.hmfile.moduleAndName(typed)
 		codesig := fmtassignspace(me.typesig(typed))
-		if me.hmfile.checkIsClass(typed) || checkIsArray(typed) {
+		if module.checkIsClass(truetype) || checkIsArray(typed) {
 			code += codesig + "const "
 		} else {
 			code += "const " + codesig

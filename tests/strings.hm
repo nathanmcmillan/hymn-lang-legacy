@@ -1,0 +1,5 @@
+main
+  one = "foo"
+  two = "bar"
+  three = one + "." + two
+  echo three

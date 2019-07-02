@@ -173,8 +173,19 @@ func (me *parser) typedecl() string {
 		me.eat("]")
 		typed += "[]"
 	}
-	typed += me.token.value
+
+	value := me.token.value
 	me.eat("id")
+	typed += value
+
+	if _, ok := me.hmfile.imports[value]; ok {
+		me.eat(".")
+		typed += "."
+		value = me.token.value
+		me.eat("id")
+		typed += value
+	}
+
 	return typed
 }
 
@@ -183,22 +194,22 @@ func (me *parser) nameOfClassFunc(classname, funcname string) string {
 }
 
 func (me *parser) classfunction() {
-	program := me.hmfile
-	classname := me.token.value
+	module := me.hmfile
+	className := me.token.value
 	me.eat("id")
-	funcname := me.token.value
-	globalfuncname := me.nameOfClassFunc(classname, funcname)
+	funcName := me.token.value
+	globalFuncName := me.nameOfClassFunc(className, funcName)
 	me.eat("id")
-	class := program.classes[classname]
-	if _, ok := program.functions[globalfuncname]; ok {
-		panic(me.fail() + "class \"" + classname + "\" with function \"" + funcname + "\" is already defined")
+	class := module.classes[className]
+	if _, ok := module.functions[globalFuncName]; ok {
+		panic(me.fail() + "class \"" + className + "\" with function \"" + funcName + "\" is already defined")
 	}
-	if _, ok := class.variables[funcname]; ok {
-		panic(me.fail() + "class \"" + classname + "\" with variable \"" + funcname + "\" is already defined")
+	if _, ok := class.variables[funcName]; ok {
+		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
 	}
-	fn := me.function(funcname, class)
-	program.functionOrder = append(program.functionOrder, globalfuncname)
-	program.functions[globalfuncname] = fn
+	fn := me.function(funcName, class)
+	module.functionOrder = append(module.functionOrder, globalFuncName)
+	module.functions[globalFuncName] = fn
 }
 
 func (me *parser) filefunction() {
@@ -227,10 +238,10 @@ func (me *parser) function(name string, self *class) *function {
 		if me.token.is != ")" {
 			for {
 				if me.token.is == "id" {
-					arg := me.token.value
+					argname := me.token.value
 					me.eat("id")
 					typed := me.typedecl()
-					fn.args = append(fn.args, varInit(typed, arg, false, true))
+					fn.args = append(fn.args, varInit(typed, argname, false, true))
 					if me.token.is == ")" {
 						break
 					} else if me.token.is == "delim" {
@@ -510,7 +521,11 @@ func (me *parser) construct(module *hmfile) *node {
 		panic(me.fail() + "class does not exist")
 	}
 	n := nodeInit("new")
-	n.typed = module.name + "." + name
+	if me.hmfile == module {
+		n.typed = name
+	} else {
+		n.typed = module.name + "." + name
+	}
 	return n
 }
 
@@ -747,12 +762,20 @@ func (me *parser) initarray() *node {
 	}
 	me.eat("]")
 	n := nodeInit("array")
-	is := me.token.value
+	typed := me.token.value
 	me.eat("id")
-	if _, ok := me.hmfile.types[is]; !ok {
-		panic(me.fail() + "array type \"" + is + "\" not found")
+	if _, ok := me.hmfile.imports[typed]; ok {
+		me.eat(".")
+		typed += "." + me.token.value
+		me.eat("id")
+		module, moduleType := me.hmfile.moduleAndName(typed)
+		if _, ok := module.types[moduleType]; !ok {
+			panic(me.fail() + "array type \"" + typed + "." + moduleType + "\" not found")
+		}
+	} else if _, ok := me.hmfile.types[typed]; !ok {
+		panic(me.fail() + "array type \"" + typed + "\" not found")
 	}
-	n.typed = "[]" + is
+	n.typed = "[]" + typed
 	n.push(size)
 	fmt.Println("array node =", n.string(0))
 	return n

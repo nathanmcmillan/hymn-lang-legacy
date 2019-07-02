@@ -1,0 +1,10 @@
+
+use(a []int)
+  size = len a
+  for ix = 0, ix < size, ix += 1
+    echo a[ix]
+
+main
+  const = 10
+  foo = [const]int
+  use foo

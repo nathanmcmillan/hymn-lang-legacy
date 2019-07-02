@@ -1,0 +1,6 @@
+import
+  "fs"
+
+main
+  contents = fs.open "openfile.hm"
+  echo contents

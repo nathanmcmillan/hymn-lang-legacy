@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -16,6 +17,10 @@ func TestCompile(t *testing.T) {
 		fmt.Println("====================================================================== test", info.Name())
 		path := tests + "/" + info.Name()
 		name := strings.TrimSuffix(info.Name(), ".hm")
+		_, err := strconv.Atoi(name)
+		if err != nil {
+			continue
+		}
 		out := folder + "/out/" + name
 		os.MkdirAll(out, os.ModePerm)
 		stdout := linker(out, path, false)

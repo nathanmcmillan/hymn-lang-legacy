@@ -7,9 +7,9 @@ immutable
 power() string
   return "pow"
 
-# extra(val float, zap math.vec) math.vec
-#   zap.x += val
-#   return zap
+extra(fl float, mv math.vec) math.vec
+  mv.x += fl
+  return mv
 
 main
   echo pi
@@ -27,9 +27,15 @@ main
   d = v.dot
   echo d
 
-  v.init 4.0 6.0 8.0
-  # extra 2.0 v
+  v.init 2.0 6.0 8.0
+  n = extra 2.0 v
   echo v.x
+  echo n.x
   echo v.y
   echo v.z
+
+  veclist = [3]math.vec
+  veclist[1] = math.vec
+  veclist[1].init 5.0 7.0 9.0
+  echo veclist[1].x
 

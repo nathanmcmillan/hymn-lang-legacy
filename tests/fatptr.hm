@@ -1,5 +1,8 @@
+class fatptr
+  []int
+  size int
 
-use(a []int)
+do(a []int)
   size = len a
   for ix = 0, ix < size, ix += 1
     echo a[ix]
@@ -7,4 +10,4 @@ use(a []int)
 main
   const = 10
   foo = [const]int
-  use foo
+  do foo

@@ -13,7 +13,7 @@
 		"name": "variable.language.this.hymn"
 	}, {
 		"explanation": "class",
-		"match": "^(class) ([a-zA-Z]*)$",
+		"match": "^(class) +([a-zA-Z]+)",
 		"captures": {
 			"1": {
 				"name": "keyword.struct.hymn"
@@ -32,16 +32,28 @@
 		"name": "constant.language.hymn"
 	}, {
 		"explanation": "numerics",
-		"match": "(int32|int64|int|float32|float64|float|bool)",
-		"name": "storage.type.numeric.hymn"
+		"match": "(?: +|,|\\[)(int32|int64|int|float32|float64|float)(?:$| +|,|\\])",
+		"captures": {
+			"1": {
+				"name": "storage.type.numeric.hymn"
+			}
+		}
 	}, {
 		"explanation": "boolean",
-		"match": "bool",
-		"name": "storage.type.boolean.hymn"
+		"match": "(?: +|,|\\[)(bool)(?:$| +|,|\\])",
+		"captures": {
+			"1": {
+				"name": "storage.type.boolean.hymn"
+			}
+		}
 	}, {
 		"explanation": "string",
-		"match": "string",
-		"name": "storage.type.string.hymn"
+		"match": "(?: +|,|\\[)(string)(?:$| +|,|\\])",
+		"captures": {
+			"1": {
+				"name": "storage.type.string.hymn"
+			}
+		}
 	}, {
 		"explanation": "flow",
 		"name": "keyword.control.hymn",
@@ -63,16 +75,8 @@
 			}
 		}
 	}, {
-		"explanation": "todo call type 2",
-		"match": "([a-zA-Z]+)(?:(?: |\\.)([a-zA-Z]+))+",
-		"captures": {
-			"1": {
-				"name": "support.function.hymn"
-			}
-		}
-	}, {
 		"explanation": "assignment",
-		"match": "([a-zA-Z]+) (=|\\+=|-=|\\/=|\\*=)",
+		"match": "^ +([a-zA-Z]+(?:\\.[a-zA-Z]+)*)(?: +)?(?:=|\\+=|-=|\/=|\\*=)",
 		"captures": {
 			"1": {
 				"name": "variable.other.assignment.hymn"

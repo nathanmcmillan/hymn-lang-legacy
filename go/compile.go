@@ -153,7 +153,7 @@ func (me *cfile) declare(n *node) string {
 		}
 		if malloc {
 			typed := n.typed
-			me.scope.variables[name] = varInit(typed, name, mutable, malloc)
+			me.scope.variables[name] = me.hmfile.varInit(typed, name, mutable, malloc)
 			codesig := fmtassignspace(me.typesig(typed))
 			module, truetype := me.hmfile.moduleAndName(typed)
 			if mutable {
@@ -166,7 +166,7 @@ func (me *cfile) declare(n *node) string {
 		} else {
 			typed := n.typed
 			module, _ := me.hmfile.moduleAndName(typed)
-			newVar := varInit(typed, name, mutable, malloc)
+			newVar := me.hmfile.varInit(typed, name, mutable, malloc)
 			newVar.cName = module.varNameSpace(name)
 			me.scope.variables[name] = newVar
 			codesig := fmtassignspace(me.noMallocTypeSig(typed))

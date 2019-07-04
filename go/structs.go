@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type token struct {
 	depth int
@@ -28,6 +31,7 @@ type node struct {
 
 type variable struct {
 	typed   string
+	members map[string]string
 	name    string
 	mutable bool
 	pointer bool
@@ -51,6 +55,7 @@ type class struct {
 	name          string
 	variables     map[string]*variable
 	variableOrder []string
+	generics      []string
 }
 
 type program struct {
@@ -110,11 +115,12 @@ var (
 	}
 )
 
-func classInit(name string, variableOrder []string, variables map[string]*variable) *class {
+func classInit(name string, variableOrder []string, variables map[string]*variable, generics []string) *class {
 	c := &class{}
 	c.name = name
 	c.variableOrder = variableOrder
 	c.variables = variables
+	c.generics = generics
 	return c
 }
 
@@ -250,7 +256,7 @@ func (me *cnode) push(n *cnode) {
 func (me *hmfile) libInit() {
 	e := funcInit()
 	e.typed = "void"
-	e.args = append(e.args, varInit("?", "s", false, false))
+	e.args = append(e.args, me.varInit("?", "s", false, false))
 	me.functions["echo"] = e
 
 	for primitive := range primitives {
@@ -265,13 +271,16 @@ func funcInit() *function {
 	return f
 }
 
-func varInit(typed, name string, mutable, pointer bool) *variable {
+func (me *hmfile) varInit(typed, name string, mutable, pointer bool) *variable {
 	v := &variable{}
 	v.typed = typed
 	v.name = name
 	v.cName = name
 	v.mutable = mutable
 	v.pointer = pointer
+
+	//hmfile
+
 	return v
 }
 
@@ -307,4 +316,18 @@ func (me *hmfile) moduleAndName(name string) (*hmfile, string) {
 	}
 	module := me.program.hmfiles[get[0]]
 	return module, get[1]
+}
+
+func (me *hmfile) getclass(name string) (*class, string) {
+	ix := strings.Index(name, "[")
+	if ix == -1 {
+		fmt.Println("getclass", name)
+		cl, _ := me.classes[name]
+		return cl, ""
+	}
+	get0 := name[0:ix]
+	get1 := name[ix+1 : len(name)-1]
+	fmt.Println("getclass", get0, "->", get1)
+	cl, _ := me.classes[get0]
+	return cl, get1
 }

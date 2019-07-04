@@ -3,6 +3,10 @@ enum snake
   viper
   cobra
 
+enum maybe[x]
+  some(x)
+  none
+
 main
   a = cobra
   b = viper

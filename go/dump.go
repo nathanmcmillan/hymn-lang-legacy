@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 func (me *variable) string() string {
 	return "{typed:" + me.typed + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
@@ -78,6 +81,22 @@ func (me *class) dump(lv int) string {
 	return s
 }
 
+func (me *enum) dump(lv int) string {
+	s := fmc(lv) + me.name + "[\n"
+	lv++
+	for _, unionType := range me.typesOrder {
+		if len(unionType.types) > 0 {
+			types := strings.Join(unionType.types, ", ")
+			s += fmc(lv) + "{name:" + unionType.name + ", union:[" + types + "]}\n"
+		} else {
+			s += fmc(lv) + "{name:" + unionType.name + "}\n"
+		}
+	}
+	lv--
+	s += fmc(lv) + "]\n"
+	return s
+}
+
 func (me *function) dump(lv int) string {
 	s := fmc(lv) + me.name + "{\n"
 	lv++
@@ -107,12 +126,20 @@ func (me *function) dump(lv int) string {
 func (me *hmfile) dump() string {
 	s := ""
 	lv := 0
-	if len(me.classOrder) > 0 {
-		s += fmc(lv) + "classes[\n"
+	if len(me.defineOrder) > 0 {
+		s += fmc(lv) + "define[\n"
 		lv++
-		for _, name := range me.classOrder {
-			cl := me.classes[name]
-			s += cl.dump(lv)
+		for _, name := range me.defineOrder {
+			def := strings.Split(name, "_")
+			name := def[0]
+			typed := def[1]
+			if typed == "class" {
+				cl := me.classes[name]
+				s += cl.dump(lv)
+			} else if typed == "enum" {
+				en := me.enums[name]
+				s += en.dump(lv)
+			}
 		}
 		lv--
 		s += fmc(lv) + "]\n"

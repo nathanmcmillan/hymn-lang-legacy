@@ -1,4 +1,4 @@
-enum maybe(x)
+enum maybe<x>
   some(x)
   none
 

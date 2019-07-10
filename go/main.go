@@ -58,7 +58,9 @@ func (me *program) compile(out, path string) {
 	hymn.name = name
 	hymn.funcPrefix = name + "_"
 	hymn.classPrefix = capital(name)
-	hymn.varPrefix = capital(name)
+	hymn.enumPrefix = hymn.classPrefix
+	hymn.unionPrefix = hymn.classPrefix
+	hymn.varPrefix = hymn.classPrefix
 
 	me.hmfiles[name] = hymn
 

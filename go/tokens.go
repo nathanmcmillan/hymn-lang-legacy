@@ -24,6 +24,9 @@ var keywords = map[string]bool{
 	"and":       true,
 	"or":        true,
 	"as":        true,
+	"enum":      true,
+	"match":     true,
+	"panic":     true,
 }
 
 func (me *token) string() string {
@@ -189,7 +192,7 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	c := stream.peek()
-	if strings.IndexByte("()=.[]", c) >= 0 {
+	if strings.IndexByte("().[]_", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.tokens = append(me.tokens, token)
@@ -201,6 +204,18 @@ func (me *tokenizer) get(pos int) *token {
 		me.tokens = append(me.tokens, token)
 		return token
 	}
+	if c == '=' {
+		stream.next()
+		op := string(c)
+		peek := stream.peek()
+		if peek == '>' {
+			stream.next()
+			op += ">"
+		}
+		token := me.simpleToken(op)
+		me.tokens = append(me.tokens, token)
+		return token
+	}
 	if c == '-' {
 		stream.next()
 		peek := stream.peek()
@@ -208,6 +223,9 @@ func (me *tokenizer) get(pos int) *token {
 		if peek == '=' {
 			stream.next()
 			token = me.simpleToken("-=")
+		} else if peek == '>' {
+			stream.next()
+			token = me.simpleToken("->")
 		} else {
 			token = me.simpleToken("-")
 		}

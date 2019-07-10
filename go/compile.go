@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 var (
 	globalClassPrefix = "Hm"
+	globalEnumPrefix  = globalClassPrefix
+	globalUnionPrefix = globalClassPrefix
 	globalFuncPrefix  = "hm_"
 	globalVarPrefix   = "hm"
 	definePrefix      = "HM_"
@@ -31,8 +34,15 @@ func (me *hmfile) generateC(folder, name string) string {
 	code += "#include \"" + name + ".h\"\n"
 	code += "\n"
 
-	for _, c := range me.classOrder {
-		head += cfile.defineClass(me.classes[c])
+	for _, c := range me.defineOrder {
+		def := strings.Split(c, "_")
+		name := def[0]
+		typed := def[1]
+		if typed == "class" {
+			head += cfile.defineClass(me.classes[name])
+		} else if typed == "enum" {
+			head += cfile.defineEnum(me.enums[name])
+		}
 	}
 
 	if len(me.statics) > 0 {
@@ -45,6 +55,10 @@ func (me *hmfile) generateC(folder, name string) string {
 		code += "\n"
 	}
 
+	// TODO init func
+	head += "void " + globalFuncPrefix + name + "_init();\n"
+	code += "void " + globalFuncPrefix + name + "_init()\n{\n\n}\n\n"
+
 	for _, f := range me.functionOrder {
 		if f == "main" {
 			decl, impl := cfile.mainc(me.functions[f])
@@ -56,6 +70,7 @@ func (me *hmfile) generateC(folder, name string) string {
 			code += impl
 		}
 	}
+
 	fmt.Println("=== end C ===")
 
 	fileCode := folder + "/" + name + ".c"
@@ -67,12 +82,28 @@ func (me *hmfile) generateC(folder, name string) string {
 	return fileCode
 }
 
-func (me *hmfile) allocstruct(typed string, n *node) string {
+func (me *hmfile) allocEnum(typed string, n *node) string {
+	enumDef := me.enums[typed]
+	if enumDef.simple {
+		enumBase := me.enumNameSpace(typed)
+		enumType := n.value
+		globalName := me.enumTypeName(enumBase, enumType)
+		return globalName
+	}
+
+	if n.attribute("no-malloc") {
+		return ""
+	}
+	unionName := me.unionNameSpace(typed)
+	return "malloc(sizeof(" + unionName + "))"
+}
+
+func (me *hmfile) allocClass(typed string, n *node) string {
 	if n.attribute("no-malloc") {
 		return ""
 	}
 	typed = me.classNameSpace(typed)
-	return fmt.Sprintf("(%s *)malloc(sizeof(%s))", typed, typed)
+	return "malloc(sizeof(" + typed + "))"
 }
 
 func fmtptr(ptr string) string {
@@ -94,9 +125,9 @@ func (me *cfile) allocarray(n *node) string {
 	if n.attribute("no-malloc") {
 		return "[" + size.code + "]"
 	}
-	atype := parseArrayType(n.typed)
-	mtype := me.typesig(atype)
-	return "(" + fmtptr(mtype) + ")malloc((" + size.code + ") * sizeof(" + mtype + "))"
+	atype := typeOfArray(n.typed)
+	mtype := me.typeSig(atype)
+	return "malloc((" + size.code + ") * sizeof(" + mtype + "))"
 }
 
 func capital(id string) string {
@@ -110,31 +141,53 @@ func (me *hmfile) checkIsClass(typed string) bool {
 	return ok
 }
 
-func (me *cfile) typesig(typed string) string {
-	if checkIsArray(typed) {
-		arraytype := parseArrayType(typed)
-		return fmtptr(me.typesig(arraytype))
+func (me *hmfile) checkIsEnum(typed string) bool {
+	_, ok := me.enums[typed]
+	return ok
+}
+
+func (me *hmfile) checkIsUnion(typed string) bool {
+	def, ok := me.enums[typed]
+	if ok {
+		return !def.simple
 	}
-	module, truetype := me.hmfile.moduleAndName(typed)
-	if module.checkIsClass(truetype) {
-		return module.classNameSpace(truetype) + " *"
+	return false
+}
+
+func (me *cfile) typeSig(typed string) string {
+	if checkIsArray(typed) {
+		arrayType := typeOfArray(typed)
+		return fmtptr(me.typeSig(arrayType))
+	}
+	module, trueType := me.hmfile.moduleAndName(typed)
+	if module.checkIsClass(trueType) {
+		return module.classNameSpace(trueType) + " *"
+	} else if module.checkIsEnum(trueType) {
+		if module.enums[trueType].simple {
+			return module.enumNameSpace(trueType)
+		}
+		return module.unionNameSpace(trueType) + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
 	return typed
 }
 
-func (me *cfile) noMallocTypeSig(typed string) string {
+func (me *cfile) noMalloctypeSig(typed string) string {
 	if checkIsArray(typed) {
-		arraytype := parseArrayType(typed)
-		return fmtptr(me.noMallocTypeSig(arraytype))
+		arraytype := typeOfArray(typed)
+		return fmtptr(me.noMalloctypeSig(arraytype))
 	}
-	if typed == "string" {
-		return "char *"
-	}
-	module, truetype := me.hmfile.moduleAndName(typed)
-	if module.checkIsClass(truetype) {
+	module, trueType := me.hmfile.moduleAndName(typed)
+	if module.checkIsClass(trueType) {
 		return module.classNameSpace(typed)
+	} else if module.checkIsEnum(trueType) {
+		if module.enums[trueType].simple {
+			return module.enumNameSpace(trueType)
+		}
+		return module.unionNameSpace(trueType)
+	} else if typed == "string" {
+		return "char *"
 	}
 	return typed
 }
@@ -154,11 +207,11 @@ func (me *cfile) declare(n *node) string {
 		if malloc {
 			typed := n.typed
 			me.scope.variables[name] = me.hmfile.varInit(typed, name, mutable, malloc)
-			codesig := fmtassignspace(me.typesig(typed))
-			module, truetype := me.hmfile.moduleAndName(typed)
+			codesig := fmtassignspace(me.typeSig(typed))
+			module, trueType := me.hmfile.moduleAndName(typed)
 			if mutable {
 				code = codesig
-			} else if checkIsArray(typed) || module.checkIsClass(truetype) {
+			} else if checkIsArray(typed) || module.checkIsClass(trueType) || module.checkIsUnion(trueType) {
 				code += codesig + "const "
 			} else {
 				code += "const " + codesig
@@ -169,7 +222,7 @@ func (me *cfile) declare(n *node) string {
 			newVar := me.hmfile.varInit(typed, name, mutable, malloc)
 			newVar.cName = module.varNameSpace(name)
 			me.scope.variables[name] = newVar
-			codesig := fmtassignspace(me.noMallocTypeSig(typed))
+			codesig := fmtassignspace(me.noMalloctypeSig(typed))
 			code += codesig
 		}
 	}
@@ -210,8 +263,30 @@ func (me *cfile) assingment(n *node) string {
 	if left.is == "variable" {
 		code = me.declare(left)
 	}
-	rightcode := me.eval(right).code
-	code += me.eval(left).code + me.maybeLet(rightcode) + rightcode
+	rightCode := me.eval(right).code
+	code += me.eval(left).code + me.maybeLet(rightCode) + rightCode
+
+	vName := left.value
+	vType := left.typed
+	enumOf, ok := me.hmfile.enums[vType]
+	if ok && !enumOf.simple {
+		fmt.Println("complex enum alloc", enumOf)
+		code += ";\n" + fmc(me.depth)
+		baseName := me.hmfile.enumNameSpace(vType)
+		enumType := right.value
+		code += vName + "->type = " + me.hmfile.enumTypeName(baseName, enumType)
+		unionOf := enumOf.types[enumType]
+		if len(unionOf.types) == 1 {
+			unionHas := right.has[0]
+			code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + " = " + me.eval(unionHas).code
+		} else {
+			for ix := range unionOf.types {
+				unionHas := right.has[ix]
+				code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + ".var" + strconv.Itoa(ix) + " = " + me.eval(unionHas).code
+			}
+		}
+	}
+
 	return code
 }
 
@@ -237,7 +312,14 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "new" {
 		module, className := me.hmfile.moduleAndName(n.typed)
-		code := module.allocstruct(className, n)
+		code := module.allocClass(className, n)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "enum" {
+		module, enumName := me.hmfile.moduleAndName(n.typed)
+		code := module.allocEnum(enumName, n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -403,6 +485,37 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
+	if op == "match" {
+		code := ""
+		depth := me.depth
+		variable := me.getvar(n.value)
+		_, isEnum := me.hmfile.enums[variable.typed]
+		baseEnum := me.hmfile.enumNameSpace(variable.typed)
+		code += "switch (" + n.value + "->type) {\n"
+		ix := 0
+		size := len(n.has)
+		for ix < size {
+			caseOf := n.has[ix]
+			thenDo := n.has[ix+1]
+			thenBlock := me.eval(thenDo).code
+			if caseOf.is == "_" {
+				code += fmc(depth) + "default:\n"
+			} else {
+				if isEnum {
+					code += fmc(depth) + "case " + me.hmfile.enumTypeName(baseEnum, caseOf.is) + ":\n"
+				} else {
+					code += fmc(depth) + "case " + caseOf.is + ":\n"
+				}
+			}
+			code += fmc(depth+1) + thenBlock + me.maybeColon(thenBlock) + "\n"
+			code += fmc(depth+1) + "break;\n"
+			ix += 2
+		}
+		code += fmc(depth) + "}"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
 	if op == "for" {
 		size := len(n.has)
 		ix := 0
@@ -443,15 +556,14 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "if" {
 		hsize := len(n.has)
-		code := "if (" + me.eval(n.has[0]).code + ")\n"
-		code += fmc(me.depth) + "{\n"
+		code := "if (" + me.eval(n.has[0]).code + ") {\n"
 		me.depth++
 		code += me.eval(n.has[1]).code
 		me.depth--
 		code += fmc(me.depth) + "}"
 		ix := 2
 		for ix < hsize && n.has[ix].is == "elif" {
-			code += "\n" + fmc(me.depth) + "else if (" + me.eval(n.has[ix].has[0]).code + ")\n" + fmc(me.depth) + "{\n"
+			code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
 			me.depth++
 			code += me.eval(n.has[ix].has[1]).code
 			me.depth--
@@ -459,7 +571,7 @@ func (me *cfile) eval(n *node) *cnode {
 			ix++
 		}
 		if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
-			code += "\n" + fmc(me.depth) + "else\n" + fmc(me.depth) + "{\n"
+			code += " else {\n"
 			me.depth++
 			code += me.eval(n.has[ix]).code
 			me.depth--
@@ -486,18 +598,60 @@ func (me *cfile) free(name string) string {
 	return "free(" + name + ");"
 }
 
-func (me *cfile) defineClass(class *class) string {
-	hmName := me.hmfile.classNameSpace(class.name)
-	code := "struct " + hmName + "\n{\n"
-	for _, name := range class.variableOrder {
-		field := class.variables[name]
-		code += fmc(1) + fmtassignspace(me.typesig(field.typed)) + field.name + ";\n"
+func (me *cfile) defineEnum(enum *enum) string {
+	fmt.Println("define enum \"" + enum.name + "\"")
+	hmBaseEnumName := me.hmfile.enumNameSpace(enum.name)
+
+	code := "typedef enum " + hmBaseEnumName + " {\n"
+	for ix, enumUnion := range enum.typesOrder {
+		if ix == 0 {
+			code += fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
+		} else {
+			code += ",\n" + fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
+		}
 	}
-	code += "};\ntypedef struct " + hmName + " " + hmName + ";\n\n"
+	code += "\n} " + hmBaseEnumName + ";\n\n"
+
+	if enum.simple || len(enum.generics) > 0 {
+		return code
+	}
+
+	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
+
+	code += "typedef struct " + hmBaseUnionName + " {\n"
+	code += fmc(1) + hmBaseEnumName + " type;\n"
+	code += fmc(1) + "union {\n"
+
+	for _, enumUnion := range enum.typesOrder {
+		if len(enumUnion.types) == 1 {
+			typed := enumUnion.types[0]
+			code += fmc(2) + fmtassignspace(me.typeSig(typed)) + enumUnion.name + ";\n"
+		} else {
+			code += fmc(2) + "struct {\n"
+			for ix, typed := range enumUnion.types {
+				code += fmc(3) + fmtassignspace(me.typeSig(typed)) + "var" + strconv.Itoa(ix) + ";\n"
+			}
+			code += fmc(2) + "} " + enumUnion.name + ";\n"
+		}
+	}
+	code += fmc(1) + "};\n"
+	code += "} " + hmBaseUnionName + ";\n\n"
+
 	return code
 }
 
-func (me *cfile) maybecolon(code string) string {
+func (me *cfile) defineClass(class *class) string {
+	hmName := me.hmfile.classNameSpace(class.name)
+	code := "typedef struct " + hmName + " {\n"
+	for _, name := range class.variableOrder {
+		field := class.variables[name]
+		code += fmc(1) + fmtassignspace(me.typeSig(field.typed)) + field.name + ";\n"
+	}
+	code += "} " + hmName + ";\n\n"
+	return code
+}
+
+func (me *cfile) maybeColon(code string) string {
 	if strings.HasSuffix(code, "}") {
 		return ""
 	}
@@ -510,7 +664,7 @@ func (me *cfile) block(n *node) *cnode {
 	for _, expr := range expressions {
 		c := me.eval(expr)
 		code += fmc(me.depth) + c.code
-		code += me.maybecolon(code) + "\n"
+		code += me.maybeColon(code) + "\n"
 	}
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
@@ -536,7 +690,7 @@ func (me *cfile) mainc(fn *function) (string, string) {
 			}
 		}
 		codeblock += fmc(me.depth) + c.code
-		codeblock += me.maybecolon(codeblock) + "\n"
+		codeblock += me.maybeColon(codeblock) + "\n"
 	}
 	if !returns {
 		codeblock += fmc(me.depth) + "return 0;\n"
@@ -561,19 +715,19 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 	for _, expr := range expressions {
 		c := me.eval(expr)
 		block += fmc(me.depth) + c.code
-		block += me.maybecolon(block) + "\n"
+		block += me.maybeColon(block) + "\n"
 	}
 	me.popScope()
 	code := ""
-	code += fmtassignspace(me.typesig(fn.typed)) + me.hmfile.funcNameSpace(name) + "("
+	code += fmtassignspace(me.typeSig(fn.typed)) + me.hmfile.funcNameSpace(name) + "("
 	for ix, arg := range args {
 		if ix > 0 {
 			code += ", "
 		}
 		typed := arg.typed
-		module, truetype := me.hmfile.moduleAndName(typed)
-		codesig := fmtassignspace(me.typesig(typed))
-		if module.checkIsClass(truetype) || checkIsArray(typed) {
+		module, trueType := me.hmfile.moduleAndName(typed)
+		codesig := fmtassignspace(me.typeSig(typed))
+		if checkIsArray(typed) || module.checkIsClass(trueType) || module.checkIsUnion(trueType) {
 			code += codesig + "const "
 		} else {
 			code += "const " + codesig

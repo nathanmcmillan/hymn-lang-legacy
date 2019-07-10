@@ -58,6 +58,19 @@ type class struct {
 	generics      []string
 }
 
+type enum struct {
+	name       string
+	simple     bool
+	types      map[string]*union
+	typesOrder []*union
+	generics   []string
+}
+
+type union struct {
+	name  string
+	types []string
+}
+
 type program struct {
 	out       string
 	directory string
@@ -71,15 +84,19 @@ type hmfile struct {
 	rootScope     *scope
 	scope         *scope
 	staticScope   map[string]*variable
+	namespace     map[string]string
 	imports       map[string]bool
 	classes       map[string]*class
+	enums         map[string]*enum
 	statics       []*node
-	classOrder    []string
+	defineOrder   []string
 	functions     map[string]*function
 	functionOrder []string
 	types         map[string]bool
 	funcPrefix    string
 	classPrefix   string
+	enumPrefix    string
+	unionPrefix   string
 	varPrefix     string
 }
 
@@ -115,6 +132,23 @@ var (
 	}
 )
 
+func unionInit(name string, types []string) *union {
+	u := &union{}
+	u.name = name
+	u.types = types
+	return u
+}
+
+func enumInit(name string, simple bool, order []*union, dict map[string]*union, generics []string) *enum {
+	e := &enum{}
+	e.name = name
+	e.simple = simple
+	e.types = dict
+	e.typesOrder = order
+	e.generics = generics
+	return e
+}
+
 func classInit(name string, variableOrder []string, variables map[string]*variable, generics []string) *class {
 	c := &class{}
 	c.name = name
@@ -144,11 +178,13 @@ func (prog *program) hymnFileInit() *hmfile {
 	hm.rootScope = scopeInit(nil)
 	hm.scope = hm.rootScope
 	hm.staticScope = make(map[string]*variable)
+	hm.namespace = make(map[string]string)
 	hm.types = make(map[string]bool)
 	hm.imports = make(map[string]bool)
 	hm.classes = make(map[string]*class, 0)
+	hm.enums = make(map[string]*enum, 0)
 	hm.statics = make([]*node, 0)
-	hm.classOrder = make([]string, 0)
+	hm.defineOrder = make([]string, 0)
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
 	hm.libInit()
@@ -278,9 +314,6 @@ func (me *hmfile) varInit(typed, name string, mutable, pointer bool) *variable {
 	v.cName = name
 	v.mutable = mutable
 	v.pointer = pointer
-
-	//hmfile
-
 	return v
 }
 
@@ -309,7 +342,28 @@ func (me *hmfile) classNameSpace(id string) string {
 	return globalClassPrefix + me.classPrefix + head + body
 }
 
+func (me *hmfile) enumNameSpace(id string) string {
+	head := strings.ToUpper(id[0:1])
+	body := strings.ToLower(id[1:])
+	return globalEnumPrefix + me.enumPrefix + head + body
+}
+
+func (me *hmfile) unionNameSpace(id string) string {
+	head := strings.ToUpper(id[0:1])
+	body := strings.ToLower(id[1:])
+	return globalUnionPrefix + me.unionPrefix + "Union" + head + body
+}
+
+func (me *hmfile) enumTypeName(base, name string) string {
+	head := strings.ToUpper(name[0:1])
+	body := strings.ToLower(name[1:])
+	return base + head + body
+}
+
 func (me *hmfile) moduleAndName(name string) (*hmfile, string) {
+	if checkIsArray(name) {
+		name = typeOfArray(name)
+	}
 	get := strings.Split(name, ".")
 	if len(get) == 1 {
 		return me, get[0]

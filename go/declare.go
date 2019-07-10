@@ -54,7 +54,7 @@ func (me *parser) nameOfClassFunc(classname, funcname string) string {
 	return classname + "_" + funcname
 }
 
-func parseArrayType(typed string) string {
+func typeOfArray(typed string) string {
 	return typed[2:]
 }
 

@@ -1,7 +1,7 @@
 class foo
   x int
 
-foo get(z int) string
+foo get(z int) -> string
   self.x += z
   return "stuff did"
 

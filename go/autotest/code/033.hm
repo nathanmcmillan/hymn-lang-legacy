@@ -4,10 +4,10 @@ import
 immutable
   pi = "tasty"
 
-power() string
+power -> string
   return "pow"
 
-extra(fl float, mv math.vec) math.vec
+extra(fl float, mv math.vec) -> math.vec
   mv.x += fl
   return mv
 

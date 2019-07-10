@@ -1,20 +1,33 @@
-class attribute[v]
+class vec
+  x float
+  y float
+  z float
+
+class link<t>
+  node t
+  next link<t>
+
+class array<type>
+  data []type
+  size int
+
+class attribute<v>
   on  bool
   has v
 
-class node[t, w]
+class node<t, w>
   data  t
   make  w
   value int
-  use   attribute[string]
-  nest  attribute[t]
+  use   attribute<string>
+  nest  attribute<t>
 
 main
-  a = attribute[int]
+  a = attribute<int>
   a.has = 6
   echo a.has
 
-  f = node[float, string]
+  f = node<float, string>
   f.use = attribute
   f.nest = attribute
   f.value = 12
@@ -28,3 +41,16 @@ main
   echo f.use.on
   echo f.use.has
   echo f.nest.has
+
+  ls = link<vec>
+  ls.node = vec
+  ls.next = link
+  ls.next.node = vec
+
+  ar = array<vec>
+  ar.data = [5]vec
+  ar.size = 5
+
+  x = [5]attribute<int>
+  x[0] = attribute
+  x[0].on = 32

@@ -1,4 +1,4 @@
-printme(a []int) []int
+printme(a []int) -> []int
   for i = 0, i < 3, i += 1
     echo a[i]
   a[2] = 777

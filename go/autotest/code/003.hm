@@ -1,4 +1,4 @@
-get() string
+get -> string
   return "hello world"
 
 main

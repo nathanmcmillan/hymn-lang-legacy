@@ -1,7 +1,7 @@
-foo(x int) int
+foo(x int) -> int
   return x + 2
 
-bar(x int, y int) int
+bar(x int, y int) -> int
   return x + y
 
 main

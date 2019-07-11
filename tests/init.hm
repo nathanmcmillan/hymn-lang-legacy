@@ -5,4 +5,4 @@ init
   glob = "bar"
 
 main
-  echo glob
+  echo(glob)

@@ -1,9 +1,9 @@
 main
   for i = 0, i < 5, i += 1
     x = 2
-    echo i
+    echo(i)
   # if we know i or x will not be used later, can declare in C scope
-  echo x
+  echo(x)
   z = 3
   if x = 2
     b = "foo"
@@ -13,5 +13,5 @@ main
       w = "zam"
   else
     b = "bar"
-  echo b
+  echo(b)
   # error w may not have been initialized

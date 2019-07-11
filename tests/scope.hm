@@ -13,9 +13,9 @@ ping(x int) int
 
 main
   x = 1
-  echo x
+  echo(x)
   ping x
   pong x
   zim x
   zam x
-  echo x
+  echo(x)

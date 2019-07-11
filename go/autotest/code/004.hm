@@ -11,4 +11,4 @@ main
   z = bar
   z.c = x
   x.b = "hello test foo & bar"
-  echo z.c.b
+  echo(z.c.b)

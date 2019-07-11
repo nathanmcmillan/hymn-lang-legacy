@@ -6,6 +6,6 @@ main
   x = foo
   match x
     foo(x) =>
-      echo "found!"
+      echo("found!")
     none => _
-  x is foo(m) => echo "found 2!
+  x is foo(m) => echo("found 2!)

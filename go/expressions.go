@@ -19,9 +19,9 @@ func (me *parser) fileExpression() {
 	} else if op == "id" {
 		name := token.value
 		if _, ok := me.hmfile.classes[name]; ok {
-			me.classfunction()
+			me.defineClassFunction()
 		} else {
-			me.filefunction()
+			me.defineFileFunction()
 		}
 	} else if op == "import" {
 		return
@@ -95,10 +95,11 @@ func (me *parser) maybeIgnore(depth int) {
 	}
 }
 
-func (me *parser) classfunction() {
+func (me *parser) defineClassFunction() {
 	module := me.hmfile
 	className := me.token.value
 	me.eat("id")
+	me.eat(".")
 	funcName := me.token.value
 	globalFuncName := me.nameOfClassFunc(className, funcName)
 	me.eat("id")
@@ -114,7 +115,7 @@ func (me *parser) classfunction() {
 	module.functions[globalFuncName] = fn
 }
 
-func (me *parser) filefunction() {
+func (me *parser) defineFileFunction() {
 	program := me.hmfile
 	token := me.token
 	name := token.value
@@ -142,7 +143,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 				if me.token.is == "id" {
 					argname := me.token.value
 					me.eat("id")
-					typed := me.typedecl()
+					typed := me.declareType()
 					fn.args = append(fn.args, me.hmfile.varInit(typed, argname, false, true))
 					if me.token.is == ")" {
 						break
@@ -157,8 +158,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		me.eat(")")
 	}
 	if me.token.is != "line" {
-		me.eat("->")
-		fn.typed = me.typedecl()
+		fn.typed = me.declareType()
 	}
 	me.eat("line")
 	me.hmfile.pushScope()
@@ -209,7 +209,7 @@ func (me *parser) returning() *node {
 }
 
 func (me *parser) pushparam(call *node, arg *variable) {
-	param := me.factor()
+	param := me.calc()
 	if param.typed != arg.typed && arg.typed != "?" {
 		panic(me.fail() + "argument " + arg.typed + " does not match parameter " + param.typed)
 	}
@@ -226,12 +226,17 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	}
 	n.typed = fn.typed
 	n.push(root)
+	me.eat("(")
 	for ix, arg := range fn.args {
 		if ix == 0 {
 			continue
 		}
+		if ix > 1 {
+			me.eat("delim")
+		}
 		me.pushparam(n, arg)
 	}
+	me.eat(")")
 	return n
 }
 
@@ -248,9 +253,14 @@ func (me *parser) call(module *hmfile) *node {
 		n.value = module.name + "." + name
 	}
 	n.typed = fn.typed
-	for _, arg := range args {
+	me.eat("(")
+	for ix, arg := range args {
+		if ix > 0 {
+			me.eat("delim")
+		}
 		me.pushparam(n, arg)
 	}
+	me.eat(")")
 	return n
 }
 
@@ -404,7 +414,7 @@ func (me *parser) assign(av *node, malloc, mutable bool) *node {
 func (me *parser) allocEnum(module *hmfile) *node {
 	enumName := me.token.value
 	me.eat("id")
-	enumDef, ok := module.enums[enumName]
+	enumOf, ok := module.enums[enumName]
 	if !ok {
 		panic(me.fail() + "enum \"" + enumName + "\" does not exist")
 	}
@@ -412,7 +422,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 	me.eat(".")
 	typeName := me.token.value
 	me.eat("id")
-	enumType, ok := enumDef.types[typeName]
+	enumType, ok := enumOf.types[typeName]
 	if !ok {
 		panic(me.fail() + "enum \"" + enumName + "\" does not have type \"" + typeName + "\"")
 	}
@@ -455,8 +465,8 @@ func (me *parser) allocClass(module *hmfile) *node {
 	gtypes := ""
 	gsize := len(classDef.generics)
 	if gsize > 0 {
-		me.eat("[")
-		gtypes += "["
+		me.eat("<")
+		gtypes += "<"
 		for i := 0; i < gsize; i++ {
 			if i != 0 {
 				me.eat("delim")
@@ -469,8 +479,8 @@ func (me *parser) allocClass(module *hmfile) *node {
 			}
 			gtypes += gimpl
 		}
-		me.eat("]")
-		gtypes += "]"
+		me.eat(">")
+		gtypes += ">"
 	}
 
 	n := nodeInit("new")
@@ -607,20 +617,42 @@ func (me *parser) forexpr() *node {
 
 func (me *parser) match() *node {
 	depth := me.token.depth
-	fmt.Println("match", depth)
+	fmt.Println("match depth", depth)
 	me.eat("match")
 	n := nodeInit("match")
 	n.typed = "void"
-	v := me.token.value
+	varMatchName := me.token.value
 	me.eat("id")
-	n.value = v
+	varMatch := me.hmfile.getvar(varMatchName)
+	enumOf, isEnum := me.hmfile.enums[varMatch.typed]
+	n.value = varMatchName
 	me.eat("line")
 	for me.token.depth > depth {
 		if me.token.is == "id" {
 			id := me.token.value
 			me.eat("id")
+			caseNode := nodeInit(id)
+			if isEnum && me.token.is == "(" {
+				enumType, ok := enumOf.types[id]
+				if !ok {
+					panic(me.fail() + "enum \"" + enumOf.name + "\" does not have type \"" + id + "\"")
+				}
+				varCount := len(enumType.types)
+				fmt.Println("matching for enum \""+enumType.name+"\", var count =", varCount)
+				me.eat("(")
+				for ix := 0; ix < varCount; ix++ {
+					if ix > 0 {
+						me.eat("delim")
+					}
+					nameMapID := me.token.value
+					me.eat("id")
+					nameMap := nodeInit(nameMapID)
+					caseNode.push(nameMap)
+				}
+				me.eat(")")
+			}
 			me.eat("=>")
-			n.push(nodeInit(id))
+			n.push(caseNode)
 			n.push(me.calc())
 			me.eat("line")
 		} else if me.token.is == "_" {
@@ -711,7 +743,11 @@ func (me *parser) getbool() *node {
 }
 
 func (me *parser) notbool() *node {
-	me.eat("!")
+	if me.token.is == "!" {
+		me.eat("!")
+	} else {
+		me.eat("not")
+	}
 	n := nodeInit("not")
 	n.typed = "bool"
 	n.push(me.getbool())
@@ -884,7 +920,9 @@ func (me *parser) defineEnum() {
 					unionType := me.token.value
 					me.eat("id")
 					if _, ok := me.hmfile.types[unionType]; !ok {
-						if _, ok2 := genericsMap[unionType]; !ok2 {
+						if _, ok2 := genericsMap[unionType]; ok2 {
+
+						} else {
 							panic(me.fail() + "union type name \"" + unionType + "\" does not exist")
 						}
 					}
@@ -955,7 +993,7 @@ func (me *parser) defineClass() {
 			if _, ok := genericsMap[mname]; ok {
 				panic(me.fail() + "cannot use \"" + mname + "\" as member name")
 			}
-			mtype := me.typedecl()
+			mtype := me.declareType()
 			me.eat("line")
 			memberorder = append(memberorder, mname)
 			membermap[mname] = me.hmfile.varInit(mtype, mname, true, true)
@@ -1047,7 +1085,7 @@ func (me *parser) factor() *node {
 		me.eat(")")
 		return n
 	}
-	if op == "!" {
+	if op == "!" || op == "not" {
 		return me.notbool()
 	}
 	panic(me.fail() + "unknown factor")

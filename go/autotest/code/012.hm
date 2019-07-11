@@ -7,4 +7,4 @@ main
   arr = [x + 1]foo
   arr[1 + y] = foo
   arr[y + 1].val = "bye!"
-  echo arr[y + 1 / 1].val
+  echo(arr[y + 1 / 1].val)

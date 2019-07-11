@@ -14,12 +14,12 @@ doUpdate(z int)
 
 main
   nextId += 1
-  echo nextId
+  echo(nextId)
   doUpdate(2)
-  echo nextId
-  echo name
+  echo(nextId)
+  echo(name)
   fooPool[0] = foo
   fooPool[0].x = "yo mama"
   fooSingle.x = "big boi"
-  echo fooPool[0].x
-  echo fooSingle.x
+  echo(fooPool[0].x)
+  echo(fooSingle.x)

@@ -1,13 +1,13 @@
 main
   mutable x = 3
   x += 2
-  echo x
+  echo(x)
   mutable z = 3.5
   z *= 2.0
-  echo z
+  echo(z)
   mutable w = 2
   w -= 1
-  echo w
+  echo(w)
   mutable g = 100
   g /= 10
-  echo g
+  echo(g)

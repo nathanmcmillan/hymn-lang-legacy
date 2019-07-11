@@ -13,6 +13,7 @@ var keywords = map[string]bool{
 	"true":      true,
 	"false":     true,
 	"free":      true,
+	"not":       true,
 	"if":        true,
 	"elif":      true,
 	"else":      true,

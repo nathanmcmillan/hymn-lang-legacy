@@ -3,4 +3,4 @@ import
 
 main
   contents = fs.open "openfile.hm"
-  echo contents
+  echo(contents)

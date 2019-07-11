@@ -5,7 +5,7 @@ class fatptr
 do(a []int)
   size = len a
   for ix = 0, ix < size, ix += 1
-    echo a[ix]
+    echo(a[ix])
 
 main
   const = 10

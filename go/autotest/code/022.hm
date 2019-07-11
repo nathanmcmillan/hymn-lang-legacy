@@ -1,6 +1,6 @@
 main
   mutable x = 3
   x += 2
-  echo x
+  echo(x)
   imx = 99
-  echo imx
+  echo(imx)

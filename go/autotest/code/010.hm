@@ -7,8 +7,8 @@ main
   x.a = 2
   x.b = "hi"
   z = x.a
-  echo z
-  echo x.a
+  echo(z)
+  echo(x.a)
   w = x.b
-  echo w
-  echo x.b
+  echo(w)
+  echo(x.b)

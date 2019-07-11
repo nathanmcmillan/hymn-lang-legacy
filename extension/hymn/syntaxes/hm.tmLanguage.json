@@ -32,7 +32,7 @@
 		"name": "constant.language.hymn"
 	}, {
 		"explanation": "numerics",
-		"match": "(?: +|<|,|\\(|\\[)(int32|int64|int|float32|float64|float)(?:$| +|>|,|\\)|\\])",
+		"match": "(?: +|<|,|\\(|\\[|\\])(int32|int64|int|float32|float64|float)(?:$| +|>|,|\\)|\\])",
 		"captures": {
 			"1": {
 				"name": "storage.type.numeric.hymn"
@@ -40,7 +40,7 @@
 		}
 	}, {
 		"explanation": "boolean",
-		"match": "(?: +|<|,\\(||\\[)(bool)(?:$| +|>|,|\\)|\\])",
+		"match": "(?: +|<|,|\\(|\\[|\\])(bool)(?:$| +|>|,|\\)|\\])",
 		"captures": {
 			"1": {
 				"name": "storage.type.boolean.hymn"
@@ -48,7 +48,7 @@
 		}
 	}, {
 		"explanation": "string",
-		"match": "(?: +|<|,\\(||\\[)(string)(?:$| +|>|,|\\)|\\])",
+		"match": "(?: +|<|,|\\(|\\[|\\])(string)(?:$| +|>|,|\\)|\\])",
 		"captures": {
 			"1": {
 				"name": "storage.type.string.hymn"
@@ -57,18 +57,37 @@
 	}, {
 		"explanation": "flow",
 		"name": "keyword.control.hymn",
-		"match": "\\b(if|elif|else|for|return|break|continue|and|or|match)\\b"
+		"match": "\\b(if|elif|else|for|return|break|continue|and|or|not|match)\\b"
 	}, {
-		"explanation": "functions",
-		"match": "^([a-zA-Z]+)($|\\(| +->)",
+		"explanation": "class function",
+		"match": "^([a-zA-Z]+)\\.([a-zA-Z]+)($|\\(| +)",
+		"captures": {
+			"1": {
+				"name": "entity.name.function.hymn"
+			},
+			"2": {
+				"name": "entity.name.function.hymn"
+			}
+		}
+	}, {
+		"explanation": "file function",
+		"match": "^([a-zA-Z]+)($|\\(| +)",
 		"captures": {
 			"1": {
 				"name": "entity.name.function.hymn"
 			}
 		}
 	}, {
+		"explanation": "file function call",
+		"match": " +([a-zA-Z]+)\\(",
+		"captures": {
+			"1": {
+				"name": "support.function.hymn"
+			}
+		}
+	}, {
 		"explanation": "call",
-		"match": "\\.([a-zA-Z]+)",
+		"match": "\\.([a-zA-Z]+)\\(",
 		"captures": {
 			"1": {
 				"name": "support.function.hymn"

@@ -3,4 +3,4 @@ main
   y = 2
   i = [x]int
   i[y] = 5
-  echo i[y]
+  echo(i[y])

@@ -2,7 +2,7 @@ package main
 
 import "strings"
 
-func (me *parser) typedecl() string {
+func (me *parser) declareType() string {
 	typed := ""
 	if me.token.is == "[" {
 		me.eat("[")
@@ -22,9 +22,9 @@ func (me *parser) typedecl() string {
 		typed += value
 	}
 
-	if me.token.is == "[" {
-		me.eat("[")
-		typed += "["
+	if me.token.is == "<" {
+		me.eat("<")
+		typed += "<"
 		ix := 0
 		for {
 			if ix > 0 {
@@ -38,13 +38,13 @@ func (me *parser) typedecl() string {
 				ix++
 				continue
 			}
-			if me.token.is == "]" {
+			if me.token.is == ">" {
 				break
 			}
 			panic(me.fail() + "bad token \"" + me.token.is + "\" in generic type declaration")
 		}
-		me.eat("]")
-		typed += "]"
+		me.eat(">")
+		typed += ">"
 	}
 
 	return typed

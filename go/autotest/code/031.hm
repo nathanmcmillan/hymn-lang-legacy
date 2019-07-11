@@ -1,15 +1,15 @@
 class foo
   x int
 
-foo get(z int) -> string
+foo.get(z int) string
   self.x += z
   return "stuff did"
 
 main
   f = foo
   f.x = 3
-  s = f.get 2
-  echo f.x
-  echo s
-  f.get 3
-  echo f.x
+  s = f.get(2)
+  echo(f.x)
+  echo(s)
+  f.get(3)
+  echo(f.x)

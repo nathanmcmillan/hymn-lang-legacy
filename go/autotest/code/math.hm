@@ -6,13 +6,13 @@ class vec
 immutable
   pi = 3.1415
 
-power(x int) -> int
+power(x int) int
   return x * x
 
-vec dot() -> float
+vec.dot() float
   return self.x * self.y * self.z
 
-vec init(x float, y float, z float) -> vec
+vec.init(x float, y float, z float) vec
   self.x = x
   self.y = y
   self.z = z

@@ -5,5 +5,5 @@ main
   f = foo
   f.x = [3]int
   f.x[0] = 88
-  echo f.x[0]
+  echo(f.x[0])
   

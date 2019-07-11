@@ -26,7 +26,7 @@ main
   x = foo
   x.a = 2
   z = x.a
-  echo z
-  echo x.a
+  echo(z)
+  echo(x.a)
   free x
 

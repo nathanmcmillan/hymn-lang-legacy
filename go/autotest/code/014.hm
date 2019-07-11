@@ -2,15 +2,15 @@ main
   x = 2
   y = 3
   if x = y
-    echo "a!"
+    echo("a!")
   else
-    echo "b!"
+    echo("b!")
     if x = 2
-      echo "c!"
+      echo("c!")
     elif x = 0
-      echo "d!"
+      echo("d!")
     if y = 4
-      echo "e!"
+      echo("e!")
     elif y = 3
-      echo "f!"
-  echo "z!"
+      echo("f!")
+  echo("z!")

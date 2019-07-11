@@ -1,7 +1,7 @@
-get -> string
+get() string
   return "hello world"
 
 main
-  x = get
-  echo x
-  echo get
+  x = get()
+  echo(x)
+  echo(get())

@@ -14,13 +14,13 @@ func TestCompile(t *testing.T) {
 	tests := folder + "/code"
 	source := scan(tests)
 	for _, info := range source {
-		fmt.Println("====================================================================== test", info.Name())
-		path := tests + "/" + info.Name()
 		name := strings.TrimSuffix(info.Name(), ".hm")
 		_, err := strconv.Atoi(name)
 		if err != nil {
 			continue
 		}
+		fmt.Println("====================================================================== test", info.Name())
+		path := tests + "/" + info.Name()
 		out := folder + "/out/" + name
 		os.MkdirAll(out, os.ModePerm)
 		stdout := linker(out, path, false)

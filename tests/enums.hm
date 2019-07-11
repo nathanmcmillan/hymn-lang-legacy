@@ -13,7 +13,7 @@ enum mammal
   dog(float)
 
 enum bug<x>
-  ant(x)
+  ant(x, string)
   bee
   
 enum result<r, e>
@@ -39,29 +39,32 @@ main
   a = snake.cobra
   b = snake.viper
   if a = b
-    echo "bad"
+    echo("bad")
   else 
-    echo "good"
+    echo("good")
 
   c = mammal.cat("meow")
   d = mammal.cat("woof")
   if c = d
-    echo "good"
+    echo("good")
   else 
-    echo "bad"
+    echo("bad")
 
   example2 = vec
   e = mammal.dog(1.4)
-  f = mammal.mouse(42, "yo", example)
+  # todo reference pointers: copy or not?
+  # f = mammal.mouse(42, "yo", example)
 
   match e
-    dog => echo "good"
-    _ => echo "bad"
+    dog => echo("good")
+    _ => echo("bad")
 
-  match f
-    mouse(x, y, z) => echo y
-    _ => echo "bad"
+  # todo match scope replace variables
+  # match f
+  #   mouse(x, y, z) => echo(y)
+  #   _ => echo("bad")
 
+  # todo generics for enums
   # g = bug.bee
-  # h = bug.ant(true)
+  # h = bug.ant(true, "buggie")
   # i = bug.ant(vec)

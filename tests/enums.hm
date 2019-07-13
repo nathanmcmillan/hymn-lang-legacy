@@ -43,6 +43,8 @@ main
   else 
     echo("good")
 
+  z = []snake
+
   c = mammal.cat("meow")
   d = mammal.cat("woof")
   if c = d

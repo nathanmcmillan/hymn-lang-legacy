@@ -16,17 +16,13 @@ class attribute<v>
   has v
 
 class node<t, w>
-  data  t
-  make  w
+  data  <t>
+  make  <w>
   value int
   use   attribute<string>
   nest  attribute<t>
 
 main
-  a = attribute<int>
-  a.has = 6
-  echo(a.has)
-
   f = node<float, string>
   f.use = attribute
   f.nest = attribute
@@ -42,15 +38,31 @@ main
   echo(f.use.has)
   echo(f.nest.has)
 
-  ls = link<vec>
-  ls.node = vec
-  ls.next = link
-  ls.next.node = vec
+  e = link<vec>
+  e.node = vec
+  e.node.z = 122.4
+  e.next = link
+  e.next.node = vec
+  e.next.node.y = 144.3
+  echo(e.node.z)
+  echo(e.next.node.y)
 
-  ar = array<vec>
-  ar.data = [5]vec
-  ar.size = 5
+  d = array<vec>
+  d.data = [5]vec
+  d.size = 5
+  d.data[0] = vec
+  d.data[0].x = 64.8
+  echo(d.data[0].x)
 
-  x = [5]attribute<int>
-  x[0] = attribute
-  x[0].on = 32
+  c = [5]attribute<float>
+  c[0] = attribute
+  c[0].has = 32.4
+  echo(c[0].has)
+  
+  b = attribute<string>
+  b.has = "foo"
+  echo(b.has)
+
+  a = attribute<int>
+  a.has = 6
+  echo(a.has)

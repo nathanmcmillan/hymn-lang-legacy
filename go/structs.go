@@ -31,7 +31,6 @@ type node struct {
 
 type variable struct {
 	typed   string
-	members map[string]string
 	name    string
 	mutable bool
 	pointer bool
@@ -109,10 +108,17 @@ type parser struct {
 }
 
 type cfile struct {
-	hmfile    *hmfile
-	rootScope *scope
-	scope     *scope
-	depth     int
+	hmfile             *hmfile
+	headPrefix         string
+	headIncludeSection string
+	headTypeDefSection string
+	headTypesSection   string
+	headExternSection  string
+	headFuncSection    string
+	headSuffix         string
+	rootScope          *scope
+	scope              *scope
+	depth              int
 }
 
 type cnode struct {
@@ -317,6 +323,16 @@ func (me *hmfile) varInit(typed, name string, mutable, pointer bool) *variable {
 	return v
 }
 
+func (me *variable) copy() *variable {
+	v := &variable{}
+	v.typed = me.typed
+	v.name = me.name
+	v.cName = me.name
+	v.mutable = me.mutable
+	v.pointer = me.pointer
+	return v
+}
+
 func (me *variable) memget() string {
 	if me.pointer {
 		return "->"
@@ -328,6 +344,18 @@ func isNumber(t string) bool {
 	return t == "int" || t == "float"
 }
 
+func capital(id string) string {
+	head := strings.ToUpper(id[0:1])
+	body := id[1:]
+	return head + body
+}
+
+func headAndBody(s string) (string, string) {
+	head := strings.ToUpper(s[0:1])
+	body := strings.ToLower(s[1:])
+	return head, body
+}
+
 func (me *hmfile) varNameSpace(id string) string {
 	return globalVarPrefix + me.varPrefix + capital(id)
 }
@@ -337,26 +365,33 @@ func (me *hmfile) funcNameSpace(id string) string {
 }
 
 func (me *hmfile) classNameSpace(id string) string {
-	head := strings.ToUpper(id[0:1])
-	body := strings.ToLower(id[1:])
+	head, body := headAndBody(id)
+	parts := strings.Split(body, "<")
+	if len(parts) > 1 {
+		impl := parts[1]
+		impl = impl[0 : len(impl)-1]
+		get := strings.Split(impl, ",")
+		body = parts[0]
+		for ix := range get {
+			h, b := headAndBody(strings.Trim(get[ix], " "))
+			body += h + b
+		}
+	}
 	return globalClassPrefix + me.classPrefix + head + body
 }
 
 func (me *hmfile) enumNameSpace(id string) string {
-	head := strings.ToUpper(id[0:1])
-	body := strings.ToLower(id[1:])
+	head, body := headAndBody(id)
 	return globalEnumPrefix + me.enumPrefix + head + body
 }
 
 func (me *hmfile) unionNameSpace(id string) string {
-	head := strings.ToUpper(id[0:1])
-	body := strings.ToLower(id[1:])
+	head, body := headAndBody(id)
 	return globalUnionPrefix + me.unionPrefix + "Union" + head + body
 }
 
 func (me *hmfile) enumTypeName(base, name string) string {
-	head := strings.ToUpper(name[0:1])
-	body := strings.ToLower(name[1:])
+	head, body := headAndBody(name)
 	return base + head + body
 }
 
@@ -384,4 +419,17 @@ func (me *hmfile) getclass(name string) (*class, string) {
 	fmt.Println("getclass", get0, "->", get1)
 	cl, _ := me.classes[get0]
 	return cl, get1
+}
+
+func (me *cfile) head() string {
+	head := ""
+	head += me.headPrefix
+	head += me.headIncludeSection
+	head += me.headTypeDefSection
+	head += "\n"
+	head += me.headTypesSection
+	head += me.headExternSection
+	head += me.headFuncSection
+	head += me.headSuffix
+	return head
 }

@@ -62,6 +62,25 @@ func checkIsArray(typed string) bool {
 	return strings.HasPrefix(typed, "[]")
 }
 
+func checkHasGeneric(typed string) bool {
+	return strings.HasSuffix(typed, ">")
+}
+
+func genericsInType(typed string) []string {
+	parts := strings.Split(typed, "<")
+	if len(parts) == 1 {
+		return nil
+	}
+	impl := parts[1]
+	impl = impl[0 : len(impl)-1]
+	get := strings.Split(impl, ",")
+	ls := make([]string, 0)
+	for ix := range get {
+		ls = append(ls, strings.Trim(get[ix], " "))
+	}
+	return ls
+}
+
 func (me *parser) assignable(n *node) bool {
 	return n.is == "variable" || n.is == "member-variable" || n.is == "array-member"
 }

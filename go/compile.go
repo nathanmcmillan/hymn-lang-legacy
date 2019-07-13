@@ -18,17 +18,17 @@ var (
 func (me *hmfile) generateC(folder, name string) string {
 	cfile := me.cFileInit()
 
-	head := ""
 	guard := definePrefix + strings.ToUpper(name) + "_H"
-	head += "#ifndef " + guard + "\n"
-	head += "#define " + guard + "\n\n"
-	head += "#include <stdio.h>\n"
-	head += "#include <stdlib.h>\n"
-	head += "#include <stdbool.h>\n"
+	cfile.headPrefix += "#ifndef " + guard + "\n"
+	cfile.headPrefix += "#define " + guard + "\n\n"
+
+	cfile.headIncludeSection += "#include <stdio.h>\n"
+	cfile.headIncludeSection += "#include <stdlib.h>\n"
+	cfile.headIncludeSection += "#include <stdbool.h>\n"
 	for importName := range me.imports {
-		head += "#include \"" + importName + ".h\"\n"
+		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"
 	}
-	head += "\n"
+	cfile.headIncludeSection += "\n"
 
 	code := ""
 	code += "#include \"" + name + ".h\"\n"
@@ -39,34 +39,34 @@ func (me *hmfile) generateC(folder, name string) string {
 		name := def[0]
 		typed := def[1]
 		if typed == "class" {
-			head += cfile.defineClass(me.classes[name])
+			cfile.defineClass(me.classes[name])
 		} else if typed == "enum" {
-			head += cfile.defineEnum(me.enums[name])
+			cfile.defineEnum(me.enums[name])
 		}
 	}
 
 	if len(me.statics) > 0 {
 		for _, s := range me.statics {
 			decl, impl := cfile.assignStatic(s)
-			head += decl
+			cfile.headExternSection += decl
 			code += impl
 		}
-		head += "\n"
+		cfile.headExternSection += "\n"
 		code += "\n"
 	}
 
 	// TODO init func
-	head += "void " + globalFuncPrefix + name + "_init();\n"
+	cfile.headFuncSection += "void " + globalFuncPrefix + name + "_init();\n"
 	code += "void " + globalFuncPrefix + name + "_init()\n{\n\n}\n\n"
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
 			decl, impl := cfile.mainc(me.functions[f])
-			head += decl
+			cfile.headFuncSection += decl
 			code += impl
 		} else {
 			decl, impl := cfile.function(f, me.functions[f])
-			head += decl
+			cfile.headFuncSection += decl
 			code += impl
 		}
 	}
@@ -76,8 +76,8 @@ func (me *hmfile) generateC(folder, name string) string {
 	fileCode := folder + "/" + name + ".c"
 	create(fileCode, code)
 
-	head += "\n#endif\n"
-	create(folder+"/"+name+".h", head)
+	cfile.headSuffix += "\n#endif\n"
+	create(folder+"/"+name+".h", cfile.head())
 
 	return fileCode
 }
@@ -128,12 +128,6 @@ func (me *cfile) allocarray(n *node) string {
 	atype := typeOfArray(n.typed)
 	mtype := me.typeSig(atype)
 	return "malloc((" + size.code + ") * sizeof(" + mtype + "))"
-}
-
-func capital(id string) string {
-	head := strings.ToUpper(id[0:1])
-	body := id[1:]
-	return head + body
 }
 
 func (me *hmfile) checkIsClass(typed string) bool {
@@ -373,7 +367,11 @@ func (me *cfile) eval(n *node) *cnode {
 				code = "[" + index.code + "]" + "->" + code
 				root = root.has[1]
 			} else if root.is == "member-variable" {
-				code = root.value + "->" + code
+				if code[0] == '[' {
+					code = root.value + code
+				} else {
+					code = root.value + "->" + code
+				}
 				root = root.has[0]
 			} else {
 				panic("missing member variable")
@@ -598,11 +596,11 @@ func (me *cfile) free(name string) string {
 	return "free(" + name + ");"
 }
 
-func (me *cfile) defineEnum(enum *enum) string {
+func (me *cfile) defineEnum(enum *enum) {
 	fmt.Println("define enum \"" + enum.name + "\"")
 	hmBaseEnumName := me.hmfile.enumNameSpace(enum.name)
-
-	code := "typedef enum " + hmBaseEnumName + " {\n"
+	me.headTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
+	code := "enum " + hmBaseEnumName + " {\n"
 	for ix, enumUnion := range enum.typesOrder {
 		if ix == 0 {
 			code += fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
@@ -610,18 +608,17 @@ func (me *cfile) defineEnum(enum *enum) string {
 			code += ",\n" + fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
 		}
 	}
-	code += "\n} " + hmBaseEnumName + ";\n\n"
+	code += "\n};\n\n"
 
 	if enum.simple || len(enum.generics) > 0 {
-		return code
+		return
 	}
 
 	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
-
-	code += "typedef struct " + hmBaseUnionName + " {\n"
+	me.headTypeDefSection += "typedef enum " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
+	code += "struct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
-
 	for _, enumUnion := range enum.typesOrder {
 		if len(enumUnion.types) == 1 {
 			typed := enumUnion.types[0]
@@ -635,20 +632,23 @@ func (me *cfile) defineEnum(enum *enum) string {
 		}
 	}
 	code += fmc(1) + "};\n"
-	code += "} " + hmBaseUnionName + ";\n\n"
-
-	return code
+	code += "};\n\n"
+	me.headTypesSection += code
 }
 
-func (me *cfile) defineClass(class *class) string {
+func (me *cfile) defineClass(class *class) {
+	if len(class.generics) > 0 {
+		return
+	}
 	hmName := me.hmfile.classNameSpace(class.name)
-	code := "typedef struct " + hmName + " {\n"
+	me.headTypeDefSection += "typedef struct " + hmName + " " + hmName + ";\n"
+	code := "struct " + hmName + " {\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
 		code += fmc(1) + fmtassignspace(me.typeSig(field.typed)) + field.name + ";\n"
 	}
-	code += "} " + hmName + ";\n\n"
-	return code
+	code += "};\n\n"
+	me.headTypesSection += code
 }
 
 func (me *cfile) maybeColon(code string) string {

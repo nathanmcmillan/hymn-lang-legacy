@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 func (me *parser) fileExpression() {
@@ -133,7 +134,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 	fn.name = name
 	fn.typed = "void"
 	if self != nil {
-		ref := me.hmfile.varInit(self.name, "self", false, true)
+		ref := me.hmfile.varInit(self.name, "this", false, true)
 		fn.args = append(fn.args, ref)
 	}
 	if me.token.is == "(" {
@@ -292,11 +293,11 @@ func (me *parser) eatvar(from *hmfile) *node {
 			dotName := me.token.value
 			me.eat("id")
 			var member *node
-			classVar, ok := rootClass.variables[dotName]
+			classOf, ok := rootClass.variables[dotName]
 			if ok {
-				fmt.Println("member variable \"" + dotName + "\" is type \"" + classVar.typed + "\"")
+				fmt.Println("member variable \"" + dotName + "\" is type \"" + classOf.typed + "\"")
 				member = nodeInit("member-variable")
-				member.typed = classVar.typed
+				member.typed = classOf.typed
 				member.value = dotName
 				member.push(root)
 			} else {
@@ -320,7 +321,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				root.is = "root-variable"
 			}
 			if !checkIsArray(root.typed) {
-				panic(me.fail() + "root variable is not array")
+				panic(me.fail() + "root variable \"" + root.value + "\" of type \"" + root.typed + "\" is not array")
 			}
 			atype := typeOfArray(root.typed)
 			me.eat("[")
@@ -363,7 +364,7 @@ func (me *parser) forceassign(malloc, mutable bool) *node {
 	return me.assign(v, malloc, mutable)
 }
 
-func (me *parser) assign(av *node, malloc, mutable bool) *node {
+func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	op := me.token.is
 	mustBeNumber := false
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
@@ -376,37 +377,41 @@ func (me *parser) assign(av *node, malloc, mutable bool) *node {
 	if mustBeNumber && !isNumber(right.typed) {
 		panic(me.fail() + "assign operation \"" + op + "\" requires number type")
 	}
-	if av.is == "variable" {
-		sv := me.hmfile.getvar(av.value)
+	if left.is == "variable" {
+		sv := me.hmfile.getvar(left.value)
 		if sv != nil {
 			if !sv.mutable {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
 		} else {
 			if mustBeNumber {
-				panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + av.value + "\" does not exist")
+				panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.value + "\" does not exist")
 			} else {
-				av.typed = right.typed
+				left.typed = right.typed
 				if mutable {
-					av.pushAttribute("mutable")
+					left.pushAttribute("mutable")
 				}
 				if !malloc {
-					av.pushAttribute("no-malloc")
+					left.pushAttribute("no-malloc")
 				}
-				me.hmfile.scope.variables[av.value] = me.hmfile.varInit(right.typed, av.value, mutable, malloc)
+				me.hmfile.scope.variables[left.value] = me.hmfile.varInit(right.typed, left.value, mutable, malloc)
 			}
 		}
-	} else if av.is == "member-variable" || av.is == "array-member" {
-		if av.typed != right.typed {
-			panic(me.fail() + "member variable type " + av.typed + " does not match expression type " + right.typed)
+	} else if left.is == "member-variable" || left.is == "array-member" {
+		if left.typed != right.typed {
+			if strings.HasPrefix(left.typed, right.typed) && strings.Index(left.typed, "<") != -1 {
+				right.typed = left.typed
+			} else {
+				panic(me.fail() + "member variable type \"" + left.typed + "\" does not match expression type \"" + right.typed + "\"")
+			}
 		}
 	} else {
-		panic(me.fail() + "bad assignment \"" + av.is + "\"")
+		panic(me.fail() + "bad assignment \"" + left.is + "\"")
 	}
 	n := nodeInit(op)
 	n.typed = "void"
-	n.push(av)
-	fmt.Println("assign set", av.string(0))
+	n.push(left)
+	fmt.Println("assign set", left.string(0))
 	n.push(right)
 	return n
 }
@@ -455,7 +460,39 @@ func (me *parser) allocEnum(module *hmfile) *node {
 	return n
 }
 
-func (me *parser) allocClass(module *hmfile) *node {
+func (me *parser) buildAnyType() string {
+
+	typed := me.token.value
+	me.verify("id")
+
+	var module *hmfile
+	if _, ok := me.hmfile.imports[typed]; ok {
+		module = me.hmfile.program.hmfiles[typed]
+		me.eat("id")
+		me.eat(".")
+		typed = me.token.value
+		me.verify("id")
+	} else {
+		module = me.hmfile
+	}
+
+	if _, ok := module.classes[typed]; ok {
+		return me.buildClass(module)
+	}
+
+	if _, ok := module.types[typed]; !ok {
+		panic(me.fail() + "type \"" + typed + "\" for module \"" + module.name + "\" not found")
+	}
+
+	me.eat("id")
+	if me.hmfile != module {
+		typed = module.name + "." + typed
+	}
+
+	return typed
+}
+
+func (me *parser) buildClass(module *hmfile) string {
 	name := me.token.value
 	me.eat("id")
 	classDef, ok := module.classes[name]
@@ -464,9 +501,10 @@ func (me *parser) allocClass(module *hmfile) *node {
 	}
 	gtypes := ""
 	gsize := len(classDef.generics)
-	if gsize > 0 {
+	if gsize > 0 && me.token.is == "<" {
 		me.eat("<")
 		gtypes += "<"
+		implOrder := make([]string, 0)
 		for i := 0; i < gsize; i++ {
 			if i != 0 {
 				me.eat("delim")
@@ -478,17 +516,67 @@ func (me *parser) allocClass(module *hmfile) *node {
 				panic(me.fail() + "generic implementation type \"" + gimpl + "\" does not exist")
 			}
 			gtypes += gimpl
+			fmt.Println("gen impl", gimpl)
+			implOrder = append(implOrder, gimpl)
 		}
 		me.eat(">")
 		gtypes += ">"
+
+		fullName := name + gtypes
+		if _, ok := me.hmfile.classes[fullName]; !ok {
+			memberMap := make(map[string]*variable)
+			for k, v := range classDef.variables {
+				memberMap[k] = v.copy()
+			}
+			for ix, gname := range classDef.generics {
+				gimpl := implOrder[ix]
+				for _, mem := range memberMap {
+					if checkIsArray(mem.typed) {
+						if typeOfArray(mem.typed) == gname {
+							mem.typed = "[]" + gimpl
+						} else if checkHasGeneric(mem.typed) {
+							mem.typed = "[]" + gimpl
+						}
+					} else if checkHasGeneric(mem.typed) {
+						fmt.Println("OH SHIT")
+						just := mem.typed[0:strings.Index(mem.typed, "<")]
+						impl := just + "<"
+						gls := genericsInType(mem.typed)
+						for gix, gt := range gls {
+							if gix != 0 {
+								impl += ","
+							}
+							if gt == gname {
+								impl += gimpl
+							}
+						}
+						impl += ">"
+						fmt.Println("BALLS :=", impl)
+						mem.typed = impl
+					} else if mem.typed == gname {
+						mem.typed = gimpl
+					}
+				}
+			}
+			me.hmfile.defineOrder = append(me.hmfile.defineOrder, fullName+"_class")
+			me.hmfile.classes[fullName] = classInit(fullName, classDef.variableOrder, memberMap, nil)
+			me.hmfile.namespace[fullName] = "class"
+			me.hmfile.types[fullName] = true
+		}
 	}
 
-	n := nodeInit("new")
+	typed := ""
 	if me.hmfile == module {
-		n.typed = name + gtypes
+		typed = name + gtypes
 	} else {
-		n.typed = module.name + "." + name + gtypes
+		typed = module.name + "." + name + gtypes
 	}
+	return typed
+}
+
+func (me *parser) allocClass(module *hmfile) *node {
+	n := nodeInit("new")
+	n.typed = me.buildClass(module)
 	return n
 }
 
@@ -774,30 +862,19 @@ func (me *parser) binary(left *node, op string) *node {
 	return n
 }
 
-func (me *parser) initarray() *node {
+func (me *parser) initArray() *node {
 	me.eat("[")
 	size := me.calc()
 	if size.typed != "int" {
 		panic(me.fail() + "array size must be integer")
 	}
 	me.eat("]")
+
 	n := nodeInit("array")
-	typed := me.token.value
-	me.eat("id")
-	if _, ok := me.hmfile.imports[typed]; ok {
-		me.eat(".")
-		typed += "." + me.token.value
-		me.eat("id")
-		module, moduleType := me.hmfile.moduleAndName(typed)
-		if _, ok := module.types[moduleType]; !ok {
-			panic(me.fail() + "array type \"" + typed + "." + moduleType + "\" not found")
-		}
-	} else if _, ok := me.hmfile.types[typed]; !ok {
-		panic(me.fail() + "array type \"" + typed + "\" not found")
-	}
-	n.typed = "[]" + typed
+	n.typed = "[]" + me.buildAnyType()
 	n.push(size)
 	fmt.Println("array node =", n.string(0))
+
 	return n
 }
 
@@ -952,9 +1029,11 @@ func (me *parser) defineClass() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	genericsMap := make(map[string]bool, 0)
-	genericsOrder := make([]string, 0)
+	var genericsMap map[string]bool
+	var genericsOrder []string
 	if me.token.is == "<" {
+		genericsMap = make(map[string]bool, 0)
+		genericsOrder = make([]string, 0)
 		me.eat("<")
 		for {
 			gname := me.token.value
@@ -973,8 +1052,8 @@ func (me *parser) defineClass() {
 		me.eat(">")
 	}
 	me.eat("line")
-	memberorder := make([]string, 0)
-	membermap := make(map[string]*variable)
+	memberOrder := make([]string, 0)
+	memberMap := make(map[string]*variable)
 	for {
 		token := me.token
 		if token.is == "line" {
@@ -987,7 +1066,7 @@ func (me *parser) defineClass() {
 		if token.is == "id" {
 			mname := token.value
 			me.eat("id")
-			if _, ok := membermap[mname]; ok {
+			if _, ok := memberMap[mname]; ok {
 				panic(me.fail() + "member name \"" + mname + "\" already used")
 			}
 			if _, ok := genericsMap[mname]; ok {
@@ -995,14 +1074,14 @@ func (me *parser) defineClass() {
 			}
 			mtype := me.declareType()
 			me.eat("line")
-			memberorder = append(memberorder, mname)
-			membermap[mname] = me.hmfile.varInit(mtype, mname, true, true)
+			memberOrder = append(memberOrder, mname)
+			memberMap[mname] = me.hmfile.varInit(mtype, mname, true, true)
 			continue
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in class")
 	}
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_class")
-	me.hmfile.classes[name] = classInit(name, memberorder, membermap, genericsOrder)
+	me.hmfile.classes[name] = classInit(name, memberOrder, memberMap, genericsOrder)
 	me.hmfile.namespace[name] = "class"
 	me.hmfile.types[name] = true
 }
@@ -1076,7 +1155,7 @@ func (me *parser) factor() *node {
 		return me.eatvar(me.hmfile)
 	}
 	if op == "[" {
-		return me.initarray()
+		return me.initArray()
 	}
 	if op == "(" {
 		me.eat("(")

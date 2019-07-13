@@ -1,0 +1,14 @@
+fmt(x=5 int)
+  echo("fmt")
+  echo(x)
+
+many(x=3 int, z="foo" string)
+  echo("many")
+  echo(x)
+  echo(z)
+
+main
+  fmt()
+  fmt(2)
+  many(4, "bar")
+  many(z="world")

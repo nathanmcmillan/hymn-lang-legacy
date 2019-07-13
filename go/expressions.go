@@ -30,7 +30,7 @@ func (me *parser) fileExpression() {
 		me.defineClass()
 	} else if op == "enum" {
 		me.defineEnum()
-	} else if op == "line" || op == "eof" {
+	} else if op == "line" || op == "eof" || op == "#" {
 		return
 	} else {
 		panic(me.fail() + "unknown top level expression \"" + op + "\"")
@@ -74,7 +74,7 @@ func (me *parser) expression() *node {
 		return me.forexpr()
 	} else if op == "return" {
 		return me.returning()
-	} else if op == "line" || op == "eof" {
+	} else if op == "line" || op == "eof" || op == "#" {
 		return nil
 	}
 	panic(me.fail() + "unknown expression \"" + op + "\"")
@@ -183,7 +183,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		if done {
 			break
 		}
-		if token.is == "eof" {
+		if token.is == "eof" || token.is == "#" {
 			break
 		}
 		expr := me.expression()
@@ -492,84 +492,110 @@ func (me *parser) buildAnyType() string {
 	return typed
 }
 
+func (me *parser) buildImplGeneric(typed, gname, gimpl string) string {
+	fmt.Println("build impl generic \"" + typed + "\" with gname \"" + gname + "\" and gimpl \"" + gimpl + "\"")
+
+	base := typed[0:strings.Index(typed, "<")]
+	baseClass, ok := me.hmfile.classes[base]
+	if !ok {
+		panic(me.fail() + "class \"" + base + "\" does not exist")
+	}
+
+	impl := base + "<"
+	gtypes := genericsInType(typed)
+	order := make([]string, 0)
+	for ix, gtype := range gtypes {
+		if ix != 0 {
+			impl += ","
+		}
+		if gtype == gname {
+			impl += gimpl
+			order = append(order, gimpl)
+		} else {
+			impl += gtype
+			order = append(order, gtype)
+		}
+	}
+	impl += ">"
+
+	fmt.Println("impl generic \"" + impl + "\"")
+
+	if _, ok := me.hmfile.classes[impl]; !ok {
+		me.defineImplGeneric(baseClass, impl, order)
+	}
+
+	return impl
+}
+
+func (me *parser) defineImplGeneric(base *class, impl string, order []string) {
+	fmt.Println("define impl generic base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
+
+	memberMap := make(map[string]*variable)
+	for k, v := range base.variables {
+		memberMap[k] = v.copy()
+	}
+
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_class")
+	me.hmfile.classes[impl] = classInit(impl, base.variableOrder, memberMap, nil)
+	me.hmfile.namespace[impl] = "class"
+	me.hmfile.types[impl] = true
+
+	for ix, gname := range base.generics {
+		gimpl := order[ix]
+		for _, mem := range memberMap {
+			if checkIsArray(mem.typed) {
+				if typeOfArray(mem.typed) == gname {
+					mem.typed = "[]" + gimpl
+				} else if checkHasGeneric(mem.typed) {
+					mem.typed = "[]" + me.buildImplGeneric(mem.typed, gname, gimpl)
+				}
+			} else if checkHasGeneric(mem.typed) {
+				mem.typed = me.buildImplGeneric(mem.typed, gname, gimpl)
+			} else if mem.typed == gname {
+				mem.typed = gimpl
+			}
+		}
+	}
+}
+
+func (me *parser) eatImplGeneric(gsize int) []string {
+	me.eat("<")
+	order := make([]string, 0)
+	for i := 0; i < gsize; i++ {
+		if i != 0 {
+			me.eat("delim")
+		}
+		gimpl := me.token.value
+		me.eat("id")
+		if _, ok := me.hmfile.types[gimpl]; !ok {
+			panic(me.fail() + "generic implementation type \"" + gimpl + "\" does not exist")
+		}
+		order = append(order, gimpl)
+	}
+	me.eat(">")
+	return order
+}
+
 func (me *parser) buildClass(module *hmfile) string {
 	name := me.token.value
 	me.eat("id")
-	classDef, ok := module.classes[name]
+	base, ok := module.classes[name]
 	if !ok {
 		panic(me.fail() + "class \"" + name + "\" does not exist")
 	}
-	gtypes := ""
-	gsize := len(classDef.generics)
+	typed := name
+	gsize := len(base.generics)
 	if gsize > 0 && me.token.is == "<" {
-		me.eat("<")
-		gtypes += "<"
-		implOrder := make([]string, 0)
-		for i := 0; i < gsize; i++ {
-			if i != 0 {
-				me.eat("delim")
-				gtypes += ","
-			}
-			gimpl := me.token.value
-			me.eat("id")
-			if _, ok := me.hmfile.types[gimpl]; !ok {
-				panic(me.fail() + "generic implementation type \"" + gimpl + "\" does not exist")
-			}
-			gtypes += gimpl
-			fmt.Println("gen impl", gimpl)
-			implOrder = append(implOrder, gimpl)
-		}
-		me.eat(">")
-		gtypes += ">"
-
-		fullName := name + gtypes
-		if _, ok := me.hmfile.classes[fullName]; !ok {
-			memberMap := make(map[string]*variable)
-			for k, v := range classDef.variables {
-				memberMap[k] = v.copy()
-			}
-			for ix, gname := range classDef.generics {
-				gimpl := implOrder[ix]
-				for _, mem := range memberMap {
-					if checkIsArray(mem.typed) {
-						if typeOfArray(mem.typed) == gname {
-							mem.typed = "[]" + gimpl
-						} else if checkHasGeneric(mem.typed) {
-							mem.typed = "[]" + gimpl
-						}
-					} else if checkHasGeneric(mem.typed) {
-						fmt.Println("OH SHIT")
-						just := mem.typed[0:strings.Index(mem.typed, "<")]
-						impl := just + "<"
-						gls := genericsInType(mem.typed)
-						for gix, gt := range gls {
-							if gix != 0 {
-								impl += ","
-							}
-							if gt == gname {
-								impl += gimpl
-							}
-						}
-						impl += ">"
-						fmt.Println("BALLS :=", impl)
-						mem.typed = impl
-					} else if mem.typed == gname {
-						mem.typed = gimpl
-					}
-				}
-			}
-			me.hmfile.defineOrder = append(me.hmfile.defineOrder, fullName+"_class")
-			me.hmfile.classes[fullName] = classInit(fullName, classDef.variableOrder, memberMap, nil)
-			me.hmfile.namespace[fullName] = "class"
-			me.hmfile.types[fullName] = true
+		gtypes := me.eatImplGeneric(gsize)
+		typed = name + "<" + strings.Join(gtypes, ",") + ">"
+		fmt.Println("building class \"" + name + "\" with as impl \"" + typed + "\"")
+		if _, ok := me.hmfile.classes[typed]; !ok {
+			me.defineImplGeneric(base, typed, gtypes)
 		}
 	}
 
-	typed := ""
-	if me.hmfile == module {
-		typed = name + gtypes
-	} else {
-		typed = module.name + "." + name + gtypes
+	if me.hmfile != module {
+		typed = module.name + "." + typed
 	}
 	return typed
 }
@@ -632,7 +658,7 @@ func (me *parser) block() *node {
 		if done {
 			break
 		}
-		if me.token.is == "eof" {
+		if me.token.is == "eof" || me.token.is == "#" {
 			break
 		}
 		expr := me.expression()
@@ -893,7 +919,7 @@ func (me *parser) imports() {
 			fmt.Println("=== continue " + me.hmfile.name + " parse === ")
 		}
 		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" {
+		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "#" {
 			break
 		}
 	}
@@ -911,7 +937,7 @@ func (me *parser) immutables() {
 		me.hmfile.statics = append(me.hmfile.statics, n)
 		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
 		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" {
+		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "#" {
 			break
 		}
 	}
@@ -929,7 +955,7 @@ func (me *parser) mutables() {
 		me.hmfile.statics = append(me.hmfile.statics, n)
 		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
 		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" {
+		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "#" {
 			break
 		}
 	}
@@ -973,7 +999,7 @@ func (me *parser) defineEnum() {
 			me.eat("line")
 			break
 		}
-		if token.is == "eof" {
+		if token.is == "eof" || token.is == "#" {
 			break
 		}
 		if token.is == "id" {
@@ -1060,7 +1086,7 @@ func (me *parser) defineClass() {
 			me.eat("line")
 			break
 		}
-		if token.is == "eof" {
+		if token.is == "eof" || token.is == "#" {
 			break
 		}
 		if token.is == "id" {

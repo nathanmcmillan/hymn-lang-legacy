@@ -49,6 +49,9 @@ func (me *hmfile) parse(out, path string) {
 		if parsing.token.is == "line" {
 			parsing.eat("line")
 		}
+		if parsing.token.is == "#" {
+			parsing.eat("#")
+		}
 	}
 
 	if debug {

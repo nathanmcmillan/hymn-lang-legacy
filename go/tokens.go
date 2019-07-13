@@ -141,15 +141,18 @@ func (me *tokenizer) forString() string {
 	return value.String()
 }
 
-func (me *tokenizer) forComment() {
+func (me *tokenizer) forComment() string {
 	stream := me.stream
 	stream.next()
+	value := &strings.Builder{}
 	for !stream.eof() {
 		c := stream.next()
 		if c == '\n' {
 			break
 		}
+		value.WriteByte(c)
 	}
+	return value.String()
 }
 
 func (me *tokenizer) get(pos int) *token {
@@ -264,8 +267,11 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	if c == '#' {
-		me.forComment()
-		return me.get(pos)
+		value := me.forComment()
+		token := me.valueToken("#", value)
+		me.tokens = append(me.tokens, token)
+		return token
+		// return me.get(pos)
 	}
 	if c == '\n' {
 		stream.next()

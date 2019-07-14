@@ -6,19 +6,10 @@ import (
 	"strings"
 )
 
-var (
-	globalClassPrefix = "Hm"
-	globalEnumPrefix  = globalClassPrefix
-	globalUnionPrefix = globalClassPrefix
-	globalFuncPrefix  = "hm_"
-	globalVarPrefix   = "hm"
-	definePrefix      = "HM_"
-)
-
 func (me *hmfile) generateC(folder, name string) string {
 	cfile := me.cFileInit()
 
-	guard := definePrefix + strings.ToUpper(name) + "_H"
+	guard := me.defNameSpace(name)
 	cfile.headPrefix += "#ifndef " + guard + "\n"
 	cfile.headPrefix += "#define " + guard + "\n\n"
 
@@ -56,8 +47,8 @@ func (me *hmfile) generateC(folder, name string) string {
 	}
 
 	// TODO init func
-	cfile.headFuncSection += "void " + globalFuncPrefix + name + "_init();\n"
-	code += "void " + globalFuncPrefix + name + "_init()\n{\n\n}\n\n"
+	cfile.headFuncSection += "void " + me.funcNameSpace("init") + "();\n"
+	code += "void " + me.funcNameSpace("init") + "()\n{\n\n}\n\n"
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
@@ -321,6 +312,22 @@ func (me *cfile) eval(n *node) *cnode {
 	if op == "call" {
 		module, callName := me.hmfile.moduleAndName(n.value)
 		code := me.call(module, callName, n.has)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "concat" {
+		paren := n.attribute("parenthesis")
+		code := ""
+		if paren {
+			code += "("
+		}
+		code += me.eval(n.has[0]).code
+		code += " + "
+		code += me.eval(n.has[1]).code
+		if paren {
+			code += ")"
+		}
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn

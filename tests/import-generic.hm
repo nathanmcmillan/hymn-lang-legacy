@@ -1,0 +1,11 @@
+import
+  "attribute" as attr
+
+import
+  static "attribute"
+
+main
+  g = attr.attribute<attr.attribute<string>>
+  g.has = attr.attribute
+  g.has.has = "import confusion"
+  echo(g.has.has)

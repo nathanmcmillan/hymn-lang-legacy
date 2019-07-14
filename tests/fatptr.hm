@@ -1,7 +1,3 @@
-class fatptr
-  []int
-  size int
-
 do(a []int)
   size = len a
   for ix = 0, ix < size, ix += 1
@@ -10,4 +6,4 @@ do(a []int)
 main
   const = 10
   foo = [const]int
-  do foo
+  do(foo)

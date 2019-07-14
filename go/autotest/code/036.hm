@@ -66,29 +66,3 @@ main
   a = attribute<int>
   a.has = 6
   echo(a.has)
-
-  # g = attribute<attribute<string>>
-  # g.has = attribute
-  # g.has.has = "confusion"
-  # echo(g.has.has)
-
-  # node<float, string>
-  # build class
-  # name = node
-  # gtypes = <float,string>
-  # if node<float,string> not defined
-  #   recursive define members of node with t=float, w=string
-  #     if attribute<float> not defined
-  #       name = attribute
-  #       gtypes = <float>
-  #       recursive define members of attribute with v=float
-  #       add def to class map
-  #   add def to class map
-  
-# class node<t, w>
-#   data  t
-#   make  w
-#   value int
-#   use   attribute<string>
-#   nest  attribute<t>
-#   add   []attribute<t>

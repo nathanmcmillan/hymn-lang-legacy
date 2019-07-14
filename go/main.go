@@ -54,13 +54,7 @@ func linker(out, path string, isLib bool) string {
 func (me *program) compile(out, path string) {
 	name := fileName(path)
 
-	hymn := me.hymnFileInit()
-	hymn.name = name
-	hymn.funcPrefix = name + "_"
-	hymn.classPrefix = capital(name)
-	hymn.enumPrefix = hymn.classPrefix
-	hymn.unionPrefix = hymn.classPrefix
-	hymn.varPrefix = hymn.classPrefix
+	hymn := me.hymnFileInit(name)
 
 	me.hmfiles[name] = hymn
 

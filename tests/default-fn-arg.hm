@@ -1,8 +1,8 @@
-fmt(x=5 int)
+fmt(x:5 int)
   echo("fmt")
   echo(x)
 
-many(x=3 int, z="foo" string)
+many(x:3 int, z:"foo" string)
   echo("many")
   echo(x)
   echo(z)

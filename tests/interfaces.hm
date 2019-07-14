@@ -1,0 +1,33 @@
+interface foo
+  get int
+  set(v int)
+  put(v int) int
+
+class bar
+  implement foo
+  x int
+
+class dud
+  implement foo
+  y int
+
+class special
+  has bool
+  one foo
+  two foo
+
+main
+  b = bar
+  b.x = 5
+  echo(b.x)
+
+  d = dud
+  d.y = 5
+  echo(d.y)
+
+  s = special
+  s.one = b
+  s.two = b
+
+  echo(s.one.get())
+  echo(s.two.get())

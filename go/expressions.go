@@ -30,7 +30,9 @@ func (me *parser) fileExpression() {
 		me.defineClass()
 	} else if op == "enum" {
 		me.defineEnum()
-	} else if op == "line" || op == "eof" || op == "#" {
+	} else if op == "#" {
+		me.eat("#")
+	} else if op == "line" || op == "eof" {
 		return
 	} else {
 		panic(me.fail() + "unknown top level expression \"" + op + "\"")
@@ -59,9 +61,6 @@ func (me *parser) expression() *node {
 		}
 		me.verify("line")
 		return n
-	} else if op == "free" {
-		me.free()
-		return nil
 	} else if op == "match" {
 		return me.match()
 	} else if op == "if" {
@@ -74,7 +73,9 @@ func (me *parser) expression() *node {
 		return me.forexpr()
 	} else if op == "return" {
 		return me.returning()
-	} else if op == "line" || op == "eof" || op == "#" {
+	} else if op == "#" {
+		return me.comment()
+	} else if op == "line" || op == "eof" {
 		return nil
 	}
 	panic(me.fail() + "unknown expression \"" + op + "\"")
@@ -183,7 +184,10 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		if done {
 			break
 		}
-		if token.is == "eof" || token.is == "#" {
+		if token.is == "#" {
+			me.eat("#")
+		}
+		if token.is == "eof" {
 			break
 		}
 		expr := me.expression()
@@ -492,90 +496,6 @@ func (me *parser) buildAnyType() string {
 	return typed
 }
 
-func (me *parser) buildImplGeneric(typed, gname, gimpl string) string {
-	fmt.Println("build impl generic \"" + typed + "\" with gname \"" + gname + "\" and gimpl \"" + gimpl + "\"")
-
-	base := typed[0:strings.Index(typed, "<")]
-	baseClass, ok := me.hmfile.classes[base]
-	if !ok {
-		panic(me.fail() + "class \"" + base + "\" does not exist")
-	}
-
-	impl := base + "<"
-	gtypes := genericsInType(typed)
-	order := make([]string, 0)
-	for ix, gtype := range gtypes {
-		if ix != 0 {
-			impl += ","
-		}
-		if gtype == gname {
-			impl += gimpl
-			order = append(order, gimpl)
-		} else {
-			impl += gtype
-			order = append(order, gtype)
-		}
-	}
-	impl += ">"
-
-	fmt.Println("impl generic \"" + impl + "\"")
-
-	if _, ok := me.hmfile.classes[impl]; !ok {
-		me.defineImplGeneric(baseClass, impl, order)
-	}
-
-	return impl
-}
-
-func (me *parser) defineImplGeneric(base *class, impl string, order []string) {
-	fmt.Println("define impl generic base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
-
-	memberMap := make(map[string]*variable)
-	for k, v := range base.variables {
-		memberMap[k] = v.copy()
-	}
-
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_class")
-	me.hmfile.classes[impl] = classInit(impl, base.variableOrder, memberMap, nil)
-	me.hmfile.namespace[impl] = "class"
-	me.hmfile.types[impl] = true
-
-	for ix, gname := range base.generics {
-		gimpl := order[ix]
-		for _, mem := range memberMap {
-			if checkIsArray(mem.typed) {
-				if typeOfArray(mem.typed) == gname {
-					mem.typed = "[]" + gimpl
-				} else if checkHasGeneric(mem.typed) {
-					mem.typed = "[]" + me.buildImplGeneric(mem.typed, gname, gimpl)
-				}
-			} else if checkHasGeneric(mem.typed) {
-				mem.typed = me.buildImplGeneric(mem.typed, gname, gimpl)
-			} else if mem.typed == gname {
-				mem.typed = gimpl
-			}
-		}
-	}
-}
-
-func (me *parser) eatImplGeneric(gsize int) []string {
-	me.eat("<")
-	order := make([]string, 0)
-	for i := 0; i < gsize; i++ {
-		if i != 0 {
-			me.eat("delim")
-		}
-		gimpl := me.token.value
-		me.eat("id")
-		if _, ok := me.hmfile.types[gimpl]; !ok {
-			panic(me.fail() + "generic implementation type \"" + gimpl + "\" does not exist")
-		}
-		order = append(order, gimpl)
-	}
-	me.eat(">")
-	return order
-}
-
 func (me *parser) buildClass(module *hmfile) string {
 	name := me.token.value
 	me.eat("id")
@@ -588,7 +508,7 @@ func (me *parser) buildClass(module *hmfile) string {
 	if gsize > 0 && me.token.is == "<" {
 		gtypes := me.eatImplGeneric(gsize)
 		typed = name + "<" + strings.Join(gtypes, ",") + ">"
-		fmt.Println("building class \"" + name + "\" with as impl \"" + typed + "\"")
+		fmt.Println("building class \"" + name + "\" with impl \"" + typed + "\"")
 		if _, ok := me.hmfile.classes[typed]; !ok {
 			me.defineImplGeneric(base, typed, gtypes)
 		}
@@ -603,6 +523,16 @@ func (me *parser) buildClass(module *hmfile) string {
 func (me *parser) allocClass(module *hmfile) *node {
 	n := nodeInit("new")
 	n.typed = me.buildClass(module)
+	// TODO merge
+	// n.typed = me.declareType()
+	return n
+}
+
+func (me *parser) comment() *node {
+	token := me.token
+	me.eat("#")
+	n := nodeInit("comment")
+	n.value = token.value
 	return n
 }
 
@@ -870,10 +800,13 @@ func (me *parser) notbool() *node {
 }
 
 func (me *parser) binary(left *node, op string) *node {
+	if op == "+" && left.typed == "string" {
+		return me.concat(left)
+	}
 	me.eat(op)
 	right := me.term()
 	if !isNumber(left.typed) || !isNumber(right.typed) {
-		err := me.fail() + "binary operation must use numbers \"" + left.typed + "\" and \"" + right.typed + "\""
+		err := me.fail() + "binary operation must be numbers \"" + left.typed + "\" and \"" + right.typed + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
 	}
@@ -882,6 +815,21 @@ func (me *parser) binary(left *node, op string) *node {
 		panic(err)
 	}
 	n := nodeInit(op)
+	n.typed = left.typed
+	n.push(left)
+	n.push(right)
+	return n
+}
+
+func (me *parser) concat(left *node) *node {
+	me.eat("+")
+	right := me.term()
+	if left.typed != "string" || right.typed != "string" {
+		err := me.fail() + "concatenation operation must be strings \"" + left.typed + "\" and \"" + right.typed + "\""
+		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
+		panic(err)
+	}
+	n := nodeInit("concat")
 	n.typed = left.typed
 	n.push(left)
 	n.push(right)

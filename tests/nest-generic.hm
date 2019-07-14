@@ -1,0 +1,22 @@
+class attribute<v>
+  on  bool
+  has v
+
+main
+  g = attribute<attribute<string>>
+  g.has = attribute
+  g.has.has = "confusion"
+  echo(g.has.has)
+
+  # g = attribute<attribute<string>>
+  #   has: attribute
+  #     has: "confusion"
+
+# class node<t, w>
+#   data  t
+#   make  w
+#   value int
+#   use   attribute<string>
+#   nest  attribute<t>
+#   add   []attribute<t>
+#   spicy attribute<attribute<t>>

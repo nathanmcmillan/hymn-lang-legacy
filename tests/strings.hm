@@ -1,5 +1,9 @@
 main
+  # todo need string hashmap
+  # hashmap for string intern pool
   one = "foo"
   two = "bar"
-  three = one + "." + two
+  three = one + " " + two
   echo(three)
+  four = "hello "
+  echo(four + "world")

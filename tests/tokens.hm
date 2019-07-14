@@ -10,7 +10,7 @@ class token
 class tokenizer
   tokens []token
 
-token toString() string
+token.toString() string
   if self.value = ""
     s = "{depth:" + self.depth + ", type:" + self.is + "}"
     return s 
@@ -20,10 +20,10 @@ token toString() string
 digit(c byte) bool
   return false
 
-tokenizer simpleToken(is string) token
-  return self.tokenFor me.depth is
+tokenizer.simpleToken(is string) token
+  return self.tokenFor(me.depth, is)
 
-tokenizer tokenFor(depth int, is string) token
+tokenizer.tokenFor(depth int, is string) token
   t = token
   t.depth = depth
   t.is = is

@@ -178,8 +178,9 @@ func programInit() *program {
 	return prog
 }
 
-func (prog *program) hymnFileInit() *hmfile {
+func (prog *program) hymnFileInit(name string) *hmfile {
 	hm := &hmfile{}
+	hm.name = name
 	hm.program = prog
 	hm.rootScope = scopeInit(nil)
 	hm.scope = hm.rootScope
@@ -194,6 +195,14 @@ func (prog *program) hymnFileInit() *hmfile {
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
 	hm.libInit()
+
+	naming := strings.ReplaceAll(name, "-", "_")
+	hm.funcPrefix = naming + "_"
+	hm.classPrefix = capital(naming)
+	hm.enumPrefix = hm.classPrefix
+	hm.unionPrefix = hm.classPrefix
+	hm.varPrefix = hm.classPrefix
+
 	return hm
 }
 
@@ -344,57 +353,6 @@ func isNumber(t string) bool {
 	return t == "int" || t == "float"
 }
 
-func capital(id string) string {
-	head := strings.ToUpper(id[0:1])
-	body := id[1:]
-	return head + body
-}
-
-func headAndBody(s string) (string, string) {
-	head := strings.ToUpper(s[0:1])
-	body := strings.ToLower(s[1:])
-	return head, body
-}
-
-func (me *hmfile) varNameSpace(id string) string {
-	return globalVarPrefix + me.varPrefix + capital(id)
-}
-
-func (me *hmfile) funcNameSpace(id string) string {
-	return globalFuncPrefix + me.funcPrefix + id
-}
-
-func (me *hmfile) classNameSpace(id string) string {
-	head, body := headAndBody(id)
-	parts := strings.Split(body, "<")
-	if len(parts) > 1 {
-		impl := parts[1]
-		impl = impl[0 : len(impl)-1]
-		get := strings.Split(impl, ",")
-		body = parts[0]
-		for ix := range get {
-			h, b := headAndBody(strings.Trim(get[ix], " "))
-			body += h + b
-		}
-	}
-	return globalClassPrefix + me.classPrefix + head + body
-}
-
-func (me *hmfile) enumNameSpace(id string) string {
-	head, body := headAndBody(id)
-	return globalEnumPrefix + me.enumPrefix + head + body
-}
-
-func (me *hmfile) unionNameSpace(id string) string {
-	head, body := headAndBody(id)
-	return globalUnionPrefix + me.unionPrefix + "Union" + head + body
-}
-
-func (me *hmfile) enumTypeName(base, name string) string {
-	head, body := headAndBody(name)
-	return base + head + body
-}
-
 func (me *hmfile) moduleAndName(name string) (*hmfile, string) {
 	if checkIsArray(name) {
 		name = typeOfArray(name)
@@ -425,8 +383,10 @@ func (me *cfile) head() string {
 	head := ""
 	head += me.headPrefix
 	head += me.headIncludeSection
-	head += me.headTypeDefSection
-	head += "\n"
+	if len(me.headTypeDefSection) != 0 {
+		head += me.headTypeDefSection
+		head += "\n"
+	}
 	head += me.headTypesSection
 	head += me.headExternSection
 	head += me.headFuncSection

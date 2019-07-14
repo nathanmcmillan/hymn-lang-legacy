@@ -267,11 +267,13 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	if c == '#' {
-		value := me.forComment()
-		token := me.valueToken("#", value)
-		me.tokens = append(me.tokens, token)
-		return token
-		// return me.get(pos)
+		// TODO buggy
+		// value := me.forComment()
+		// token := me.valueToken("#", value)
+		// me.tokens = append(me.tokens, token)
+		// return token
+		me.forComment()
+		return me.get(pos)
 	}
 	if c == '\n' {
 		stream.next()

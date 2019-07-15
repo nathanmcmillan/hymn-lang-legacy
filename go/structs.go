@@ -32,6 +32,7 @@ type node struct {
 type variable struct {
 	typed   string
 	name    string
+	dval    string
 	mutable bool
 	pointer bool
 	cName   string
@@ -328,6 +329,12 @@ func (me *hmfile) varInit(typed, name string, mutable, pointer bool) *variable {
 	v.cName = name
 	v.mutable = mutable
 	v.pointer = pointer
+	return v
+}
+
+func (me *hmfile) varWithDefaultInit(typed, name string, mutable, pointer bool, dval string) *variable {
+	v := me.varInit(typed, name, mutable, pointer)
+	v.dval = dval
 	return v
 }
 

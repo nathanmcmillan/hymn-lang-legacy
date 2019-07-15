@@ -7,12 +7,25 @@ many(x:3 int, z:"def" string)
   echo(x)
   echo(z)
 
+partial(a int, b:"def" string, c:"fed" string)
+  echo("partial")
+  echo(a)
+  echo(b)
+  echo(c)
+
 main
   fmt()
   fmt(6)
   fmt(x:7)
+
   many()
   many(4, "hello")
   many(x:5)
   many(z:"foo")
   many(x:6, z:"bar")
+
+  # partial(6)
+  # partial(6, "a", "b")
+  # partial(6, b:"c")
+  # partial(6, c:"d")
+  # partial(6, b:"e", c:"f")

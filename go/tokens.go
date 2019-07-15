@@ -196,7 +196,7 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	c := stream.peek()
-	if strings.IndexByte("().[]_", c) >= 0 {
+	if strings.IndexByte(":().[]_", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.tokens = append(me.tokens, token)

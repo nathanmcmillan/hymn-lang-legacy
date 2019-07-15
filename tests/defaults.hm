@@ -1,0 +1,18 @@
+fmt(x:5 int)
+  echo("fmt")
+  echo(x)
+
+many(x:3 int, z:"def" string)
+  echo("many")
+  echo(x)
+  echo(z)
+
+main
+  fmt()
+  fmt(6)
+  fmt(x:7)
+  many()
+  many(4, "hello")
+  many(x:5)
+  many(z:"foo")
+  many(x:6, z:"bar")

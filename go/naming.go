@@ -7,20 +7,28 @@ var (
 	globalEnumPrefix  = globalClassPrefix
 	globalUnionPrefix = globalClassPrefix
 	globalFuncPrefix  = "hm_"
-	globalVarPrefix   = "hm"
+	globalVarPrefix   = "me"
 	definePrefix      = "HM_"
 )
 
-func capital(id string) string {
-	head := strings.ToUpper(id[0:1])
-	body := id[1:]
-	return head + body
+func upperSplit(name, repl string) string {
+	full := ""
+	parts := strings.Split(name, repl)
+	for _, part := range parts {
+		head := strings.ToUpper(part[0:1])
+		body := part[1:]
+		full += head + body
+	}
+	return full
 }
 
-func headAndBody(s string) (string, string) {
-	head := strings.ToUpper(s[0:1])
-	body := strings.ToLower(s[1:])
-	return head, body
+func capital(name string) string {
+	name = strings.ReplaceAll(name, "<", "_")
+	name = strings.ReplaceAll(name, ">", "")
+	name = strings.ReplaceAll(name, ",", "And")
+	name = upperSplit(name, "_")
+	name = upperSplit(name, "And")
+	return name
 }
 
 func (me *hmfile) defNameSpace(name string) string {
@@ -38,32 +46,27 @@ func (me *hmfile) funcNameSpace(name string) string {
 }
 
 func (me *hmfile) classNameSpace(name string) string {
-	head, body := headAndBody(name)
-	parts := strings.Split(body, "<")
-	if len(parts) > 1 {
-		impl := parts[1]
-		impl = impl[0 : len(impl)-1]
-		get := strings.Split(impl, ",")
-		body = parts[0]
-		for ix := range get {
-			h, b := headAndBody(strings.Trim(get[ix], " "))
-			body += h + b
-		}
-	}
-	return globalClassPrefix + me.classPrefix + head + body
+	return globalClassPrefix + me.classPrefix + capital(name)
 }
 
-func (me *hmfile) enumNameSpace(id string) string {
-	head, body := headAndBody(id)
-	return globalEnumPrefix + me.enumPrefix + head + body
+func (me *hmfile) enumNameSpace(name string) string {
+	return globalEnumPrefix + me.enumPrefix + capital(name)
 }
 
-func (me *hmfile) unionNameSpace(id string) string {
-	head, body := headAndBody(id)
-	return globalUnionPrefix + me.unionPrefix + "Union" + head + body
+func (me *hmfile) unionNameSpace(name string) string {
+	return globalUnionPrefix + me.unionPrefix + "Union" + capital(name)
 }
 
 func (me *hmfile) enumTypeName(base, name string) string {
-	head, body := headAndBody(name)
-	return base + head + body
+	return base + capital(name)
+}
+
+func (me *hmfile) prefixes(name string) {
+	name = strings.ReplaceAll(name, "-", "_")
+
+	me.funcPrefix = name + "_"
+	me.classPrefix = capital(name)
+	me.enumPrefix = me.classPrefix
+	me.unionPrefix = me.classPrefix
+	me.varPrefix = me.classPrefix
 }

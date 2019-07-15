@@ -25,16 +25,6 @@ immutable
   snap = snake.viper
   woof = mammal.dog(7.2)
 
-# bug<x> has() bool
-#   match self
-#     is(v) => return true
-#     none => return false
-
-# bug<x> unwrap() x
-#   match self
-#     is(v) => return v
-#     none => panic
-
 main
   a = snake.cobra
   b = snake.viper
@@ -54,13 +44,13 @@ main
 
   example2 = vec
   e = mammal.dog(1.4)
-  # todo reference pointers: copy or not?
-  # f = mammal.mouse(42, "yo", example)
 
   match e
     dog => echo("good")
     _ => echo("bad")
 
+  # f = mammal.mouse(42, "yo", example)
+  
   # todo match scope replace variables
   # match f
   #   mouse(x, y, z) => echo(y)
@@ -70,3 +60,13 @@ main
   # g = bug.bee
   # h = bug.ant(true, "buggie")
   # i = bug.ant(vec)
+
+# bug<x> has() bool
+#   match self
+#     is(v) => return true
+#     none => return false
+
+# bug<x> unwrap() x
+#   match self
+#     is(v) => return v
+#     none => panic

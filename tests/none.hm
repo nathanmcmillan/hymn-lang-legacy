@@ -60,9 +60,16 @@ stuff(x int) maybe<vec>
     return some(vec(x:3, y:4, z:5))
   return none
 
+init_vec(a int, b int, c int) vec
+  v = vec(a, b, 0)
+  v.c = c * c
+  return v
+
 main
   a = none<vec>
   b = some(vec)
+
+  c = [10]init_vec(3, 5, 7)
 
   match a
     some(v) => echo(v.x)

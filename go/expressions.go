@@ -145,7 +145,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 				if me.token.is == "id" {
 					argname := me.token.value
 					me.eat("id")
-					typed := me.declareType()
+					typed := me.declareType(true)
 					fn.args = append(fn.args, me.hmfile.varInit(typed, argname, false, true))
 					if me.token.is == ")" {
 						break
@@ -160,7 +160,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		me.eat(")")
 	}
 	if me.token.is != "line" {
-		fn.typed = me.declareType()
+		fn.typed = me.declareType(true)
 	}
 	me.eat("line")
 	me.hmfile.pushScope()
@@ -464,6 +464,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 	return n
 }
 
+// TODO deprecated
 func (me *parser) buildAnyType() string {
 
 	typed := me.token.value
@@ -496,6 +497,7 @@ func (me *parser) buildAnyType() string {
 	return typed
 }
 
+// TODO deprecated
 func (me *parser) buildClass(module *hmfile) string {
 	name := me.token.value
 	me.eat("id")
@@ -506,7 +508,7 @@ func (me *parser) buildClass(module *hmfile) string {
 	typed := name
 	gsize := len(base.generics)
 	if gsize > 0 && me.token.is == "<" {
-		gtypes := me.eatImplGeneric(gsize)
+		gtypes := me.declareGeneric(true, base)
 		typed = name + "<" + strings.Join(gtypes, ",") + ">"
 		fmt.Println("building class \"" + name + "\" with impl \"" + typed + "\"")
 		if _, ok := me.hmfile.classes[typed]; !ok {
@@ -522,9 +524,9 @@ func (me *parser) buildClass(module *hmfile) string {
 
 func (me *parser) allocClass(module *hmfile) *node {
 	n := nodeInit("new")
+	// TODO deprecated
 	n.typed = me.buildClass(module)
-	// TODO merge
-	// n.typed = me.declareType()
+	// n.typed = me.declareType(true)
 	return n
 }
 
@@ -845,7 +847,9 @@ func (me *parser) initArray() *node {
 	me.eat("]")
 
 	n := nodeInit("array")
+	// TODO deprecated
 	n.typed = "[]" + me.buildAnyType()
+	// n.typed = "[]" + me.declareType
 	n.push(size)
 	fmt.Println("array node =", n.string(0))
 
@@ -1002,17 +1006,18 @@ func (me *parser) defineClass() {
 	if _, ok := me.hmfile.namespace[name]; ok {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
+	fmt.Println("define class \"" + name + "\"")
 	me.eat("id")
-	var genericsMap map[string]bool
-	var genericsOrder []string
+
+	genericsDict := make(map[string]bool, 0)
+	genericsOrder := make([]string, 0)
+
 	if me.token.is == "<" {
-		genericsMap = make(map[string]bool, 0)
-		genericsOrder = make([]string, 0)
 		me.eat("<")
 		for {
 			gname := me.token.value
 			me.eat("id")
-			genericsMap[gname] = true
+			genericsDict[gname] = true
 			genericsOrder = append(genericsOrder, gname)
 			if me.token.is == "delim" {
 				me.eat("delim")
@@ -1026,8 +1031,17 @@ func (me *parser) defineClass() {
 		me.eat(">")
 	}
 	me.eat("line")
+
+	me.hmfile.namespace[name] = "class"
+	me.hmfile.types[name] = true
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_class")
+
+	classDef := classInit(name, genericsOrder, genericsDict)
+	me.hmfile.classes[name] = classDef
+
 	memberOrder := make([]string, 0)
 	memberMap := make(map[string]*variable)
+
 	for {
 		token := me.token
 		if token.is == "line" {
@@ -1043,10 +1057,10 @@ func (me *parser) defineClass() {
 			if _, ok := memberMap[mname]; ok {
 				panic(me.fail() + "member name \"" + mname + "\" already used")
 			}
-			if _, ok := genericsMap[mname]; ok {
+			if _, ok := genericsDict[mname]; ok {
 				panic(me.fail() + "cannot use \"" + mname + "\" as member name")
 			}
-			mtype := me.declareType()
+			mtype := me.declareType(false)
 			me.eat("line")
 			memberOrder = append(memberOrder, mname)
 			memberMap[mname] = me.hmfile.varInit(mtype, mname, true, true)
@@ -1054,10 +1068,8 @@ func (me *parser) defineClass() {
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in class")
 	}
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_class")
-	me.hmfile.classes[name] = classInit(name, memberOrder, memberMap, genericsOrder)
-	me.hmfile.namespace[name] = "class"
-	me.hmfile.types[name] = true
+
+	classDef.initMembers(memberOrder, memberMap)
 }
 
 func (me *parser) calc() *node {

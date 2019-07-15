@@ -55,6 +55,7 @@ type class struct {
 	variables     map[string]*variable
 	variableOrder []string
 	generics      []string
+	genericsDict  map[string]bool
 }
 
 type enum struct {
@@ -155,13 +156,17 @@ func enumInit(name string, simple bool, order []*union, dict map[string]*union, 
 	return e
 }
 
-func classInit(name string, variableOrder []string, variables map[string]*variable, generics []string) *class {
+func classInit(name string, generics []string, genericsDict map[string]bool) *class {
 	c := &class{}
 	c.name = name
-	c.variableOrder = variableOrder
-	c.variables = variables
 	c.generics = generics
+	c.genericsDict = genericsDict
 	return c
+}
+
+func (me *class) initMembers(variableOrder []string, variables map[string]*variable) {
+	me.variableOrder = variableOrder
+	me.variables = variables
 }
 
 func scopeInit(root *scope) *scope {
@@ -195,13 +200,7 @@ func (prog *program) hymnFileInit(name string) *hmfile {
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
 	hm.libInit()
-
-	naming := strings.ReplaceAll(name, "-", "_")
-	hm.funcPrefix = naming + "_"
-	hm.classPrefix = capital(naming)
-	hm.enumPrefix = hm.classPrefix
-	hm.unionPrefix = hm.classPrefix
-	hm.varPrefix = hm.classPrefix
+	hm.prefixes(name)
 
 	return hm
 }

@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func (me *parser) buildImplGeneric(typed, gname, gimpl string) string {
-	fmt.Println("build impl generic \"" + typed + "\" with gname \"" + gname + "\" and gimpl \"" + gimpl + "\"")
+func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
+	fmt.Println("^ build impl generic: \""+typed+"\" with gmapper =>", gmapper)
 
 	base := typed[0:strings.Index(typed, "<")]
 	baseClass, ok := me.hmfile.classes[base]
@@ -14,25 +14,9 @@ func (me *parser) buildImplGeneric(typed, gname, gimpl string) string {
 		panic(me.fail() + "class \"" + base + "\" does not exist")
 	}
 
-	impl := base + "<"
-	gtypes := genericsInType(typed)
-	order := make([]string, 0)
-	for ix, gtype := range gtypes {
-		if ix != 0 {
-			impl += ","
-		}
-		if gtype == gname {
-			impl += gimpl
-			order = append(order, gimpl)
-		} else {
-			impl += gtype
-			order = append(order, gtype)
-		}
-	}
-	impl += ">"
-
-	fmt.Println("impl generic \"" + impl + "\"")
-
+	order := me.mapGenerics(typed, gmapper)
+	impl := base + "<" + strings.Join(order, ",") + ">"
+	fmt.Println("$ build impl generic: impl := \"" + impl + "\"")
 	if _, ok := me.hmfile.classes[impl]; !ok {
 		me.defineImplGeneric(baseClass, impl, order)
 	}
@@ -40,47 +24,139 @@ func (me *parser) buildImplGeneric(typed, gname, gimpl string) string {
 	return impl
 }
 
+type gstack struct {
+	name  string
+	order []string
+}
+
+func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string {
+
+	var order []string
+	stack := make([]*gstack, 0)
+	rest := typed
+
+	for {
+		begin := strings.Index(rest, "<")
+		end := strings.Index(rest, ">")
+		comma := strings.Index(rest, ",")
+
+		if begin != -1 && (begin < end || end == -1) && (begin < comma || comma == -1) {
+			name := rest[:begin]
+			current := &gstack{}
+			current.name = name
+			stack = append(stack, current)
+			rest = rest[begin+1:]
+
+		} else if end != -1 && (end < begin || begin == -1) && (end < comma || comma == -1) {
+			size := len(stack) - 1
+			current := stack[size]
+			if end == 0 {
+			} else {
+				sub := rest[:end]
+				current.order = append(current.order, me.mapAnyImpl(sub, gmapper))
+			}
+			stack = stack[:size]
+			if size == 0 {
+				order = current.order
+				break
+			} else {
+				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
+
+				if _, ok := me.hmfile.classes[pop]; !ok {
+					base := me.hmfile.classes[current.name]
+					me.defineImplGeneric(base, pop, current.order)
+				}
+
+				next := stack[len(stack)-1]
+				next.order = append(next.order, pop)
+			}
+			if end == 0 {
+				rest = rest[1:]
+			} else {
+				rest = rest[end+1:]
+			}
+
+		} else if comma != -1 && (comma < begin || begin == -1) && (comma < end || end == -1) {
+			current := stack[len(stack)-1]
+			if comma == 0 {
+				rest = rest[1:]
+				continue
+			}
+			sub := rest[:comma]
+			current.order = append(current.order, me.mapAnyImpl(sub, gmapper))
+			rest = rest[comma+1:]
+
+		} else {
+			panic(me.fail() + "could not parse impl of type \"" + typed + "\"")
+		}
+	}
+
+	fmt.Println("map generics: \"" + strings.Join(order, "|") + "\"")
+	return order
+}
+
+func (me *parser) mapAnyImpl(mem string, gmapper map[string]string) string {
+	impl, ok := gmapper[mem]
+	if ok {
+		return impl
+	}
+	return mem
+}
+
+func (me *parser) genericsReplacer(typed string, gmapper map[string]string) string {
+	fmt.Println("replacer: \""+typed+"\" =>", gmapper)
+	if checkIsArray(typed) {
+		typeOfMem := typeOfArray(typed)
+		if checkHasGeneric(typed) {
+			return "[]" + me.buildImplGeneric(typeOfMem, gmapper)
+		}
+		return "[]" + me.mapAnyImpl(typeOfMem, gmapper)
+	} else if checkHasGeneric(typed) {
+		return me.buildImplGeneric(typed, gmapper)
+	}
+	return me.mapAnyImpl(typed, gmapper)
+}
+
 func (me *parser) defineImplGeneric(base *class, impl string, order []string) {
-	fmt.Println("define impl generic base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
+	fmt.Println("define impl generic: base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
 
 	memberMap := make(map[string]*variable)
 	for k, v := range base.variables {
 		memberMap[k] = v.copy()
 	}
 
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_class")
-	me.hmfile.classes[impl] = classInit(impl, base.variableOrder, memberMap, nil)
 	me.hmfile.namespace[impl] = "class"
 	me.hmfile.types[impl] = true
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_class")
 
+	classDef := classInit(impl, nil, nil)
+	classDef.initMembers(base.variableOrder, memberMap)
+	me.hmfile.classes[impl] = classDef
+
+	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
-		gimpl := order[ix]
-		for _, mem := range memberMap {
-			if checkIsArray(mem.typed) {
-				if typeOfArray(mem.typed) == gname {
-					mem.typed = "[]" + gimpl
-				} else if checkHasGeneric(mem.typed) {
-					mem.typed = "[]" + me.buildImplGeneric(mem.typed, gname, gimpl)
-				}
-			} else if checkHasGeneric(mem.typed) {
-				mem.typed = me.buildImplGeneric(mem.typed, gname, gimpl)
-			} else if mem.typed == gname {
-				mem.typed = gimpl
-			}
-		}
+		gmapper[gname] = order[ix]
+	}
+
+	for _, mem := range memberMap {
+		mem.typed = me.genericsReplacer(mem.typed, gmapper)
 	}
 }
 
-func (me *parser) eatImplGeneric(gsize int) []string {
+func (me *parser) declareGeneric(impl bool, base *class) []string {
 	me.eat("<")
+	gsize := len(base.generics)
 	order := make([]string, 0)
 	for i := 0; i < gsize; i++ {
 		if i != 0 {
 			me.eat("delim")
 		}
-		gimpl := me.declareType()
-		if _, ok := me.hmfile.types[gimpl]; !ok {
-			panic(me.fail() + "generic implementation type \"" + gimpl + "\" does not exist")
+		gimpl := me.declareType(impl)
+		_, ok := me.hmfile.types[gimpl]
+		if !ok {
+			if impl {
+				panic(me.fail() + "generic implementation type \"" + gimpl + "\" does not exist")
+			}
 		}
 		order = append(order, gimpl)
 	}
@@ -88,65 +164,44 @@ func (me *parser) eatImplGeneric(gsize int) []string {
 	return order
 }
 
-func (me *parser) declareType() string {
-	typed := ""
+func (me *parser) declareType(impl bool) string {
+	array := false
 	if me.token.is == "[" {
 		me.eat("[")
 		me.eat("]")
-		typed += "[]"
+		array = true
 	}
 
-	value := me.token.value
+	typed := me.token.value
 	me.eat("id")
-	typed += value
 
-	if _, ok := me.hmfile.imports[value]; ok {
+	if _, ok := me.hmfile.imports[typed]; ok {
 		me.eat(".")
 		typed += "."
-		value = me.token.value
+		typed += me.token.value
 		me.eat("id")
-		typed += value
 	}
 
 	if me.token.is == "<" {
-
 		module, name := me.hmfile.moduleAndName(typed)
 		base, ok := module.classes[name]
 		if !ok {
 			panic(me.fail() + "base class \"" + name + "\" does not exist")
 		}
-		gsize := len(base.generics)
-		gtypes := me.eatImplGeneric(gsize)
+		gtypes := me.declareGeneric(impl, base)
 
 		typed += "<" + strings.Join(gtypes, ",") + ">"
 
-		fmt.Println("declare type: building class \"" + name + "\" with impl \"" + typed + "\"")
-		if _, ok := module.classes[typed]; !ok {
-			me.defineImplGeneric(base, typed, gtypes)
+		if impl {
+			fmt.Println("declare type: building class \"" + name + "\" with impl \"" + typed + "\"")
+			if _, ok := module.classes[typed]; !ok {
+				me.defineImplGeneric(base, typed, gtypes)
+			}
 		}
+	}
 
-		// me.eat("<")
-		// typed += "<"
-		// ix := 0
-		// for {
-		// 	if ix > 0 {
-		// 		typed += "," + me.token.value
-		// 	} else {
-		// 		typed += me.token.value
-		// 	}
-		// 	me.eat("id")
-		// 	if me.token.is == "delim" {
-		// 		me.eat("delim")
-		// 		ix++
-		// 		continue
-		// 	}
-		// 	if me.token.is == ">" {
-		// 		break
-		// 	}
-		// 	panic(me.fail() + "bad token \"" + me.token.is + "\" in generic type declaration")
-		// }
-		// me.eat(">")
-		// typed += ">"
+	if array {
+		typed = "[]" + typed
 	}
 
 	return typed
@@ -166,21 +221,6 @@ func checkIsArray(typed string) bool {
 
 func checkHasGeneric(typed string) bool {
 	return strings.HasSuffix(typed, ">")
-}
-
-func genericsInType(typed string) []string {
-	parts := strings.Split(typed, "<")
-	if len(parts) == 1 {
-		return nil
-	}
-	impl := parts[1]
-	impl = impl[0 : len(impl)-1]
-	get := strings.Split(impl, ",")
-	ls := make([]string, 0)
-	for ix := range get {
-		ls = append(ls, strings.Trim(get[ix], " "))
-	}
-	return ls
 }
 
 func (me *parser) assignable(n *node) bool {

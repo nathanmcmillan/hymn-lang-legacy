@@ -73,20 +73,35 @@ func (me *hmfile) generateC(folder, name string) string {
 	return fileCode
 }
 
-func (me *hmfile) allocEnum(typed string, n *node) string {
-	enumDef := me.enums[typed]
-	if enumDef.simple {
-		enumBase := me.enumNameSpace(typed)
+func (me *cfile) allocEnum(module *hmfile, typed string, n *node) string {
+	enumOf := module.enums[typed]
+	if enumOf.simple {
+		enumBase := module.enumNameSpace(typed)
 		enumType := n.value
-		globalName := me.enumTypeName(enumBase, enumType)
+		globalName := module.enumTypeName(enumBase, enumType)
 		return globalName
 	}
-
 	if n.attribute("no-malloc") {
 		return ""
 	}
-	unionName := me.unionNameSpace(typed)
-	return "malloc(sizeof(" + unionName + "))"
+	enumType := n.value
+	unionOf := enumOf.types[enumType]
+	code := ""
+	code += module.unionFnNameSpace(enumOf, unionOf) + "("
+	if len(unionOf.types) == 1 {
+		unionHas := n.has[0]
+		code += me.eval(unionHas).code
+	} else {
+		for ix := range unionOf.types {
+			if ix > 0 {
+				code += ", "
+			}
+			unionHas := n.has[ix]
+			code += me.eval(unionHas).code
+		}
+	}
+	code += ")"
+	return code
 }
 
 func (me *hmfile) allocClass(typed string, n *node) string {
@@ -250,28 +265,6 @@ func (me *cfile) assingment(n *node) string {
 	}
 	rightCode := me.eval(right).code
 	code += me.eval(left).code + me.maybeLet(rightCode) + rightCode
-
-	vName := left.value
-	vType := left.typed
-	enumOf, ok := me.hmfile.enums[vType]
-	if ok && !enumOf.simple {
-		fmt.Println("complex enum alloc", enumOf)
-		code += ";\n" + fmc(me.depth)
-		baseName := me.hmfile.enumNameSpace(vType)
-		enumType := right.value
-		code += vName + "->type = " + me.hmfile.enumTypeName(baseName, enumType)
-		unionOf := enumOf.types[enumType]
-		if len(unionOf.types) == 1 {
-			unionHas := right.has[0]
-			code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + " = " + me.eval(unionHas).code
-		} else {
-			for ix := range unionOf.types {
-				unionHas := right.has[ix]
-				code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + ".var" + strconv.Itoa(ix) + " = " + me.eval(unionHas).code
-			}
-		}
-	}
-
 	return code
 }
 
@@ -304,7 +297,7 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "enum" {
 		module, enumName := me.hmfile.moduleAndName(n.typed)
-		code := module.allocEnum(enumName, n)
+		code := me.allocEnum(module, enumName, n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -603,6 +596,52 @@ func (me *cfile) free(name string) string {
 	return "free(" + name + ");"
 }
 
+func (me *cfile) generateUnionFn(en *enum, un *union) {
+	name := me.hmfile.unionFnNameSpace(en, un)
+
+	head := ""
+	head += fmtassignspace(me.typeSig(en.name)) + name + "("
+	if len(un.types) == 1 {
+		unionHas := un.types[0]
+		head += fmtassignspace(me.typeSig(unionHas)) + un.name
+	} else {
+		for ix := range un.types {
+			if ix > 0 {
+				head += ", "
+			}
+			unionHas := un.types[ix]
+			head += fmtassignspace(me.typeSig(unionHas)) + un.name + strconv.Itoa(ix)
+		}
+	}
+
+	head += ");\n"
+	me.headFuncSection += head
+
+	// code
+	// HmEnumsUnionMammal *hm_enums_new_mammal_cat(const char *cat)
+	// {
+	//   HmEnumsUnionMammal *const var = malloc(sizeof(HmEnumsUnionMammal));
+	//   var->type = HmEnumsMammalCat;
+	//   var->cat = cat;
+	//   return var;
+	// }
+	//
+
+	// baseName := me.hmfile.enumNameSpace(vType)
+	// enumType := right.value
+	// code += vName + "->type = " + me.hmfile.enumTypeName(baseName, enumType)
+	// unionOf := enumOf.types[enumType]
+	// if len(unionOf.types) == 1 {
+	// 	unionHas := right.has[0]
+	// 	code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + " = " + me.eval(unionHas).code
+	// } else {
+	// 	for ix := range unionOf.types {
+	// 		unionHas := right.has[ix]
+	// 		code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + ".var" + strconv.Itoa(ix) + " = " + me.eval(unionHas).code
+	// 	}
+	// }
+}
+
 func (me *cfile) defineEnum(enum *enum) {
 	fmt.Println("define enum \"" + enum.name + "\"")
 	hmBaseEnumName := me.hmfile.enumNameSpace(enum.name)
@@ -616,17 +655,20 @@ func (me *cfile) defineEnum(enum *enum) {
 		}
 	}
 	code += "\n};\n\n"
+	me.headTypesSection += code
 
 	if enum.simple || len(enum.generics) > 0 {
 		return
 	}
 
+	code = ""
 	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
-	me.headTypeDefSection += "typedef enum " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
+	me.headTypeDefSection += "typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
 	code += "struct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
 	for _, enumUnion := range enum.typesOrder {
+		me.generateUnionFn(enum, enumUnion)
 		if len(enumUnion.types) == 1 {
 			typed := enumUnion.types[0]
 			code += fmc(2) + fmtassignspace(me.typeSig(typed)) + enumUnion.name + ";\n"

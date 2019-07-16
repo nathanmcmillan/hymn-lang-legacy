@@ -2,6 +2,10 @@ class vec
   x int
   y int
 
+class exception
+  message string
+  stack   string
+
 enum snake
   python
   viper
@@ -16,9 +20,9 @@ enum bug<x>
   ant(x, string)
   bee
   
-enum result<r, e>
+enum result<r>
   is(r)
-  error(e)
+  error(exception)
 
 immutable
   example = vec
@@ -33,7 +37,7 @@ main
   else 
     echo("good")
 
-  z = []snake
+  z = [10]snake
 
   c = mammal.cat("meow")
   d = mammal.cat("woof")

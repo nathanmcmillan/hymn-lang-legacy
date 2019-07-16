@@ -54,7 +54,11 @@ func (me *hmfile) enumNameSpace(name string) string {
 }
 
 func (me *hmfile) unionNameSpace(name string) string {
-	return globalUnionPrefix + me.unionPrefix + "Union" + capital(name)
+	return globalUnionPrefix + me.unionPrefix + capital(name)
+}
+
+func (me *hmfile) unionFnNameSpace(en *enum, un *union) string {
+	return globalFuncPrefix + me.funcPrefix + "new_" + en.name + "_" + un.name
 }
 
 func (me *hmfile) enumTypeName(base, name string) string {
@@ -67,6 +71,6 @@ func (me *hmfile) prefixes(name string) {
 	me.funcPrefix = name + "_"
 	me.classPrefix = capital(name)
 	me.enumPrefix = me.classPrefix
-	me.unionPrefix = me.classPrefix
+	me.unionPrefix = me.classPrefix + "Union"
 	me.varPrefix = me.classPrefix
 }

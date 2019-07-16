@@ -15,16 +15,17 @@ func TestCompile(t *testing.T) {
 	source := scan(tests)
 	for _, info := range source {
 		name := strings.TrimSuffix(info.Name(), ".hm")
-		_, err := strconv.Atoi(name)
+		nameNum := strings.Split(name, "-")[0]
+		_, err := strconv.Atoi(nameNum)
 		if err != nil {
 			continue
 		}
 		fmt.Println("====================================================================== test", info.Name())
 		path := tests + "/" + info.Name()
-		out := folder + "/out/" + name
+		out := folder + "/out/" + nameNum
 		os.MkdirAll(out, os.ModePerm)
 		stdout := linker(out, path, false)
-		expected := string(read(folder + "/assert/" + name + ".out"))
+		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {
 			t.Errorf("assert failed for " + info.Name())
 		}

@@ -69,6 +69,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 							panic(me.fail() + "function parameter default type \"" + dtype + "\" and signature \"" + typed + "\" do not match")
 						}
 					}
+					fn.argDict[argname] = len(fn.args)
 					fn.args = append(fn.args, me.hmfile.varWithDefaultInit(typed, argname, false, true, dval))
 					if me.token.is == ")" {
 						break

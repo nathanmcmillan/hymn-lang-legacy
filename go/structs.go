@@ -32,7 +32,7 @@ type node struct {
 type variable struct {
 	typed   string
 	name    string
-	dval    string
+	dfault  string
 	mutable bool
 	pointer bool
 	cName   string
@@ -47,6 +47,7 @@ type scope struct {
 type function struct {
 	name        string
 	args        []*variable
+	argDict     map[string]int
 	expressions []*node
 	typed       string
 }
@@ -318,6 +319,7 @@ func (me *hmfile) libInit() {
 func funcInit() *function {
 	f := &function{}
 	f.args = make([]*variable, 0)
+	f.argDict = make(map[string]int)
 	f.expressions = make([]*node, 0)
 	return f
 }
@@ -332,9 +334,9 @@ func (me *hmfile) varInit(typed, name string, mutable, pointer bool) *variable {
 	return v
 }
 
-func (me *hmfile) varWithDefaultInit(typed, name string, mutable, pointer bool, dval string) *variable {
+func (me *hmfile) varWithDefaultInit(typed, name string, mutable, pointer bool, dfault string) *variable {
 	v := me.varInit(typed, name, mutable, pointer)
-	v.dval = dval
+	v.dfault = dfault
 	return v
 }
 

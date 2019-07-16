@@ -1,6 +1,6 @@
-class tup(int, float)
+class foo(int, float)
 
 main
-    t = tup(9, "yo!")
+    t = foo(9, "yo!")
     echo(t.0)
     echo(t.1)

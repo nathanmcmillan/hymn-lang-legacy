@@ -52,20 +52,16 @@ func (me *hmfile) generateC(folder, name string) string {
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
-			decl, impl := cfile.mainc(me.functions[f])
-			cfile.headFuncSection += decl
-			code += impl
+			cfile.mainc(me.functions[f])
 		} else {
-			decl, impl := cfile.function(f, me.functions[f])
-			cfile.headFuncSection += decl
-			code += impl
+			cfile.function(f, me.functions[f])
 		}
 	}
 
 	fmt.Println("=== end C ===")
 
 	fileCode := folder + "/" + name + ".c"
-	create(fileCode, code)
+	create(fileCode, code+strings.Join(cfile.codeFn, ""))
 
 	cfile.headSuffix += "\n#endif\n"
 	create(folder+"/"+name+".h", cfile.head())
@@ -597,10 +593,12 @@ func (me *cfile) free(name string) string {
 }
 
 func (me *cfile) generateUnionFn(en *enum, un *union) {
-	name := me.hmfile.unionFnNameSpace(en, un)
-
+	enumName := me.hmfile.enumNameSpace(en.name)
+	unionName := me.hmfile.unionNameSpace(en.name)
+	fnName := me.hmfile.unionFnNameSpace(en, un)
+	typeOf := fmtassignspace(me.typeSig(en.name))
 	head := ""
-	head += fmtassignspace(me.typeSig(en.name)) + name + "("
+	head += typeOf + fnName + "("
 	if len(un.types) == 1 {
 		unionHas := un.types[0]
 		head += fmtassignspace(me.typeSig(unionHas)) + un.name
@@ -613,33 +611,23 @@ func (me *cfile) generateUnionFn(en *enum, un *union) {
 			head += fmtassignspace(me.typeSig(unionHas)) + un.name + strconv.Itoa(ix)
 		}
 	}
-
-	head += ");\n"
+	head += ")"
+	code := head
+	head += ";\n"
+	code += "\n{\n"
+	code += fmc(1) + typeOf + "var = malloc(sizeof(" + unionName + "));\n"
+	code += fmc(1) + "var->type = " + me.hmfile.enumTypeName(enumName, un.name)
+	if len(un.types) == 1 {
+		code += ";\n" + fmc(1) + "var->" + un.name + " = " + un.name
+	} else {
+		for ix := range un.types {
+			code += ";\n" + fmc(1) + "var->" + un.name + ".var" + strconv.Itoa(ix) + " = " + un.name + strconv.Itoa(ix)
+		}
+	}
+	code += ";\n" + fmc(1) + "return var;\n"
+	code += "}\n\n"
 	me.headFuncSection += head
-
-	// code
-	// HmEnumsUnionMammal *hm_enums_new_mammal_cat(const char *cat)
-	// {
-	//   HmEnumsUnionMammal *const var = malloc(sizeof(HmEnumsUnionMammal));
-	//   var->type = HmEnumsMammalCat;
-	//   var->cat = cat;
-	//   return var;
-	// }
-	//
-
-	// baseName := me.hmfile.enumNameSpace(vType)
-	// enumType := right.value
-	// code += vName + "->type = " + me.hmfile.enumTypeName(baseName, enumType)
-	// unionOf := enumOf.types[enumType]
-	// if len(unionOf.types) == 1 {
-	// 	unionHas := right.has[0]
-	// 	code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + " = " + me.eval(unionHas).code
-	// } else {
-	// 	for ix := range unionOf.types {
-	// 		unionHas := right.has[ix]
-	// 		code += ";\n" + fmc(me.depth) + vName + "->" + unionOf.name + ".var" + strconv.Itoa(ix) + " = " + me.eval(unionHas).code
-	// 	}
-	// }
+	me.codeFn = append(me.codeFn, code)
 }
 
 func (me *cfile) defineEnum(enum *enum) {
@@ -720,7 +708,7 @@ func (me *cfile) block(n *node) *cnode {
 	return cn
 }
 
-func (me *cfile) mainc(fn *function) (string, string) {
+func (me *cfile) mainc(fn *function) {
 	if len(fn.args) > 0 {
 		panic("main can not have arguments")
 	}
@@ -749,10 +737,12 @@ func (me *cfile) mainc(fn *function) (string, string) {
 	code += "int main()\n{\n"
 	code += codeblock
 	code += "}\n"
-	return "int main();\n", code
+
+	me.headFuncSection += "int main();\n"
+	me.codeFn = append(me.codeFn, code)
 }
 
-func (me *cfile) function(name string, fn *function) (string, string) {
+func (me *cfile) function(name string, fn *function) {
 	args := fn.args
 	expressions := fn.expressions
 	block := ""
@@ -787,7 +777,9 @@ func (me *cfile) function(name string, fn *function) (string, string) {
 	code += ")\n{\n"
 	code += block
 	code += "}\n\n"
-	return head, code
+
+	me.headFuncSection += head
+	me.codeFn = append(me.codeFn, code)
 }
 
 func (me *cfile) call(module *hmfile, name string, parameters []*node) string {

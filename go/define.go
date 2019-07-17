@@ -127,26 +127,16 @@ func (me *parser) defineFunction(name string, self *class) *function {
 	return fn
 }
 
-func (me *parser) defineClass() {
-	me.eat("class")
-	token := me.token
-	name := token.value
-	if _, ok := me.hmfile.namespace[name]; ok {
-		panic(me.fail() + "name \"" + name + "\" already defined")
-	}
-	fmt.Println("define class \"" + name + "\"")
-	me.eat("id")
-
-	genericsDict := make(map[string]bool, 0)
-	genericsOrder := make([]string, 0)
-
+func (me *parser) genericHeader() ([]string, map[string]bool) {
+	order := make([]string, 0)
+	dict := make(map[string]bool, 0)
 	if me.token.is == "<" {
 		me.eat("<")
 		for {
 			gname := me.token.value
 			me.eat("id")
-			genericsDict[gname] = true
-			genericsOrder = append(genericsOrder, gname)
+			dict[gname] = true
+			order = append(order, gname)
 			if me.token.is == "delim" {
 				me.eat("delim")
 				continue
@@ -158,6 +148,20 @@ func (me *parser) defineClass() {
 		}
 		me.eat(">")
 	}
+	return order, dict
+}
+
+func (me *parser) defineClass() {
+	me.eat("class")
+	token := me.token
+	name := token.value
+	if _, ok := me.hmfile.namespace[name]; ok {
+		panic(me.fail() + "name \"" + name + "\" already defined")
+	}
+	fmt.Println("define class \"" + name + "\"")
+	me.eat("id")
+
+	genericsOrder, genericsDict := me.genericHeader()
 	me.eat("line")
 
 	me.hmfile.namespace[name] = "class"
@@ -208,26 +212,7 @@ func (me *parser) defineEnum() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	genericsMap := make(map[string]bool, 0)
-	genericsOrder := make([]string, 0)
-	if me.token.is == "<" {
-		me.eat("<")
-		for {
-			gname := me.token.value
-			me.eat("id")
-			genericsMap[gname] = true
-			genericsOrder = append(genericsOrder, gname)
-			if me.token.is == "delim" {
-				me.eat("delim")
-				continue
-			}
-			if me.token.is == ">" {
-				break
-			}
-			panic(me.fail() + "bad token \"" + me.token.is + "\" in enum generic")
-		}
-		me.eat(">")
-	}
+	genericsOrder, genericsDict := me.genericHeader()
 	me.eat("line")
 	typesOrder := make([]*union, 0)
 	typesMap := make(map[string]*union)
@@ -248,6 +233,8 @@ func (me *parser) defineEnum() {
 				panic(me.fail() + "type name \"" + typeName + "\" already used")
 			}
 			unionList := make([]string, 0)
+			unionGOrder := make([]string, 0)
+			unionGDict := make(map[string]bool, 0)
 			if me.token.is == "(" {
 				isSimple = false
 				me.eat("(")
@@ -259,21 +246,22 @@ func (me *parser) defineEnum() {
 						me.eat("delim")
 						continue
 					}
-					unionType := me.token.value
+					unionArgType := me.token.value
 					me.eat("id")
-					if _, ok := me.hmfile.types[unionType]; !ok {
-						if _, ok2 := genericsMap[unionType]; ok2 {
-
+					if _, ok := me.hmfile.types[unionArgType]; !ok {
+						if _, ok2 := genericsDict[unionArgType]; ok2 {
+							unionGOrder = append(unionGOrder, unionArgType)
+							unionGDict[unionArgType] = true
 						} else {
-							panic(me.fail() + "union type name \"" + unionType + "\" does not exist")
+							panic(me.fail() + "union type name \"" + unionArgType + "\" does not exist")
 						}
 					}
-					unionList = append(unionList, unionType)
+					unionList = append(unionList, unionArgType)
 				}
 				me.eat(")")
 			}
 			me.eat("line")
-			un := unionInit(typeName, unionList)
+			un := unionInit(typeName, unionList, unionGOrder, unionGDict)
 			typesOrder = append(typesOrder, un)
 			typesMap[typeName] = un
 			continue
@@ -281,7 +269,7 @@ func (me *parser) defineEnum() {
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_enum")
-	me.hmfile.enums[name] = enumInit(name, isSimple, typesOrder, typesMap, genericsOrder)
+	me.hmfile.enums[name] = enumInit(name, isSimple, typesOrder, typesMap, genericsOrder, genericsDict)
 	me.hmfile.namespace[name] = "enum"
 	me.hmfile.types[name] = true
 }

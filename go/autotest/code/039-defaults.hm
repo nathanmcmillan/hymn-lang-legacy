@@ -1,0 +1,17 @@
+class vec
+    a int
+    b int
+
+vec.dot(x:5 int, z:7 int)
+  echo("dot")
+  this.a = x
+  this.b = z
+  echo(this.a)
+  echo(this.b)
+
+main
+  v = vec
+  v.dot()
+  v.dot(x:9)
+  v.dot(z:11)
+  v.dot(x:13, z:15)

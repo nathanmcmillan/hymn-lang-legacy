@@ -4,60 +4,15 @@ import (
 	"strconv"
 )
 
-func (me *parser) pushParam(call *node, arg *variable) {
-	param := me.calc()
-	if param.typed != arg.typed && arg.typed != "?" {
-		panic(me.fail() + "argument " + arg.typed + " does not match parameter " + param.typed)
-	}
-	call.push(param)
-}
-
-func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {
-	n := nodeInit("call")
-	name := me.nameOfClassFunc(c.name, fn.name)
-	if module == me.hmfile {
-		n.value = name
-	} else {
-		n.value = module.name + "." + name
-	}
-	n.typed = fn.typed
-	n.push(root)
+func (me *parser) pushParams(name string, n *node, pix, min int, params []*node, fn *function) {
 	me.eat("(")
-	for ix, arg := range fn.args {
-		if ix == 0 {
-			continue
-		}
-		if ix > 1 {
-			me.eat("delim")
-		}
-		me.pushParam(n, arg)
-	}
-	me.eat(")")
-	return n
-}
-
-func (me *parser) call(module *hmfile) *node {
-	token := me.token
-	name := token.value
-	fn := module.functions[name]
-	me.eat("id")
-	n := nodeInit("call")
-	if module == me.hmfile {
-		n.value = name
-	} else {
-		n.value = module.name + "." + name
-	}
-	n.typed = fn.typed
-	me.eat("(")
-	pix := 0
 	dict := false
-	params := make([]*node, len(fn.args))
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
 			break
 		}
-		if pix > 0 || dict {
+		if pix > min || dict {
 			me.eat("delim")
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
@@ -89,20 +44,52 @@ func (me *parser) call(module *hmfile) *node {
 			pix++
 		}
 	}
-
 	for ix, param := range params {
 		if param == nil {
 			arg := fn.args[ix]
-			if arg.dfault != "" {
-				dfault := nodeInit(arg.typed)
-				dfault.typed = arg.typed
-				dfault.value = arg.dfault
-				n.push(dfault)
+			if arg.dfault == "" {
+				panic(me.fail() + "argument[" + strconv.Itoa(pix) + "] is missing")
 			}
+			dfault := nodeInit(arg.typed)
+			dfault.typed = arg.typed
+			dfault.value = arg.dfault
+			n.push(dfault)
 		} else {
 			n.push(param)
 		}
 	}
+}
 
+func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {
+	n := nodeInit("call")
+	name := me.nameOfClassFunc(c.name, fn.name)
+	if module == me.hmfile {
+		n.value = name
+	} else {
+		n.value = module.name + "." + name
+	}
+	n.typed = fn.typed
+	params := make([]*node, len(fn.args))
+	params[0] = root
+	pix := 1
+	me.pushParams(name, n, pix, 1, params, fn)
+	return n
+}
+
+func (me *parser) call(module *hmfile) *node {
+	token := me.token
+	name := token.value
+	fn := module.functions[name]
+	me.eat("id")
+	n := nodeInit("call")
+	if module == me.hmfile {
+		n.value = name
+	} else {
+		n.value = module.name + "." + name
+	}
+	n.typed = fn.typed
+	params := make([]*node, len(fn.args))
+	pix := 0
+	me.pushParams(name, n, pix, 0, params, fn)
 	return n
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
+func (me *parser) buildClassImplGeneric(typed string, gmapper map[string]string) string {
 	fmt.Println("^ build impl generic: \""+typed+"\" with gmapper =>", gmapper)
 
 	base := typed[0:strings.Index(typed, "<")]
@@ -18,7 +18,7 @@ func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) stri
 	impl := base + "<" + strings.Join(order, ",") + ">"
 	fmt.Println("$ build impl generic: impl := \"" + impl + "\"")
 	if _, ok := me.hmfile.classes[impl]; !ok {
-		me.defineImplGeneric(baseClass, impl, order)
+		me.defineClassImplGeneric(baseClass, impl, order)
 	}
 
 	return impl
@@ -64,7 +64,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 
 				if _, ok := me.hmfile.classes[pop]; !ok {
 					base := me.hmfile.classes[current.name]
-					me.defineImplGeneric(base, pop, current.order)
+					me.defineClassImplGeneric(base, pop, current.order)
 				}
 
 				next := stack[len(stack)-1]
@@ -108,17 +108,21 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 	if checkIsArray(typed) {
 		typeOfMem := typeOfArray(typed)
 		if checkHasGeneric(typed) {
-			return "[]" + me.buildImplGeneric(typeOfMem, gmapper)
+			return "[]" + me.buildClassImplGeneric(typeOfMem, gmapper)
 		}
 		return "[]" + me.mapAnyImpl(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
-		return me.buildImplGeneric(typed, gmapper)
+		return me.buildClassImplGeneric(typed, gmapper)
 	}
 	return me.mapAnyImpl(typed, gmapper)
 }
 
-func (me *parser) defineImplGeneric(base *class, impl string, order []string) {
-	fmt.Println("define impl generic: base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
+func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string) {
+	fmt.Println("define enum impl generic: base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
+}
+
+func (me *parser) defineClassImplGeneric(base *class, impl string, order []string) {
+	fmt.Println("define class impl generic: base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
 
 	memberMap := make(map[string]*variable)
 	for k, v := range base.variables {
@@ -143,9 +147,9 @@ func (me *parser) defineImplGeneric(base *class, impl string, order []string) {
 	}
 }
 
-func (me *parser) declareGeneric(impl bool, base *class) []string {
+func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 	me.eat("<")
-	gsize := len(base.generics)
+	gsize := len(base.getGenerics())
 	order := make([]string, 0)
 	for i := 0; i < gsize; i++ {
 		if i != 0 {
@@ -184,19 +188,26 @@ func (me *parser) declareType(impl bool) string {
 
 	if me.token.is == "<" {
 		module, name := me.hmfile.moduleAndName(typed)
-		base, ok := module.classes[name]
-		if !ok {
-			panic(me.fail() + "base class \"" + name + "\" does not exist")
-		}
-		gtypes := me.declareGeneric(impl, base)
-
-		typed += "<" + strings.Join(gtypes, ",") + ">"
-
-		if impl {
-			fmt.Println("declare type: building class \"" + name + "\" with impl \"" + typed + "\"")
-			if _, ok := module.classes[typed]; !ok {
-				me.defineImplGeneric(base, typed, gtypes)
+		if base, ok := module.classes[name]; ok {
+			gtypes := me.declareGeneric(impl, base)
+			typed += "<" + strings.Join(gtypes, ",") + ">"
+			if impl {
+				fmt.Println("declare type: building class \"" + name + "\" with impl \"" + typed + "\"")
+				if _, ok := module.classes[typed]; !ok {
+					me.defineClassImplGeneric(base, typed, gtypes)
+				}
 			}
+		} else if base, ok := module.enums[name]; ok {
+			gtypes := me.declareGeneric(impl, base)
+			typed += "<" + strings.Join(gtypes, ",") + ">"
+			if impl {
+				fmt.Println("declare type: building enum \"" + name + "\" with impl \"" + typed + "\"")
+				if _, ok := module.enums[typed]; !ok {
+					me.defineEnumImplGeneric(base, typed, gtypes)
+				}
+			}
+		} else {
+			panic(me.fail() + "base enum \"" + name + "\" does not exist")
 		}
 	}
 

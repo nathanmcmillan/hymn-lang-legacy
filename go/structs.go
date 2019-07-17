@@ -52,6 +52,10 @@ type function struct {
 	typed       string
 }
 
+type hasGenerics interface {
+	getGenerics() []string
+}
+
 type class struct {
 	name          string
 	variables     map[string]*variable
@@ -61,16 +65,19 @@ type class struct {
 }
 
 type enum struct {
-	name       string
-	simple     bool
-	types      map[string]*union
-	typesOrder []*union
-	generics   []string
+	name         string
+	simple       bool
+	types        map[string]*union
+	typesOrder   []*union
+	generics     []string
+	genericsDict map[string]bool
 }
 
 type union struct {
-	name  string
-	types []string
+	name         string
+	types        []string
+	generics     []string
+	genericsDict map[string]bool
 }
 
 type program struct {
@@ -119,6 +126,7 @@ type cfile struct {
 	headExternSection  string
 	headFuncSection    string
 	headSuffix         string
+	codeFn             []string
 	rootScope          *scope
 	scope              *scope
 	depth              int
@@ -141,20 +149,23 @@ var (
 	}
 )
 
-func unionInit(name string, types []string) *union {
+func unionInit(name string, types []string, generics []string, genericsDict map[string]bool) *union {
 	u := &union{}
 	u.name = name
 	u.types = types
+	u.generics = generics
+	u.genericsDict = genericsDict
 	return u
 }
 
-func enumInit(name string, simple bool, order []*union, dict map[string]*union, generics []string) *enum {
+func enumInit(name string, simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]bool) *enum {
 	e := &enum{}
 	e.name = name
 	e.simple = simple
 	e.types = dict
 	e.typesOrder = order
 	e.generics = generics
+	e.genericsDict = genericsDict
 	return e
 }
 
@@ -221,6 +232,7 @@ func (me *hmfile) cFileInit() *cfile {
 	c.hmfile = me
 	c.rootScope = scopeInit(nil)
 	c.scope = c.rootScope
+	c.codeFn = make([]string, 0)
 	return c
 }
 
@@ -400,4 +412,12 @@ func (me *cfile) head() string {
 	head += me.headFuncSection
 	head += me.headSuffix
 	return head
+}
+
+func (me *class) getGenerics() []string {
+	return me.generics
+}
+
+func (me *enum) getGenerics() []string {
+	return me.generics
 }

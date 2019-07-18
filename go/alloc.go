@@ -41,43 +41,67 @@ func (me *parser) buildAnyType() string {
 func (me *parser) allocEnum(module *hmfile) *node {
 	enumName := me.token.value
 	me.eat("id")
-	enumOf, ok := module.enums[enumName]
+	enumDef, ok := module.enums[enumName]
 	if !ok {
 		panic(me.fail() + "enum \"" + enumName + "\" does not exist")
 	}
 
+	var order []string
+	if me.token.is == "<" {
+		order, _ = me.genericHeader()
+		enumName += "<" + strings.Join(order, ",") + ">"
+		if _, ok := module.enums[enumName]; !ok {
+			me.defineEnumImplGeneric(enumDef, enumName, order)
+		}
+	}
+
 	me.eat(".")
-	typeName := me.token.value
+	unionName := me.token.value
 	me.eat("id")
-	unionOf, ok := enumOf.types[typeName]
+	unionDef, ok := enumDef.types[unionName]
 	if !ok {
-		panic(me.fail() + "enum \"" + enumName + "\" does not have type \"" + typeName + "\"")
+		panic(me.fail() + "enum \"" + enumName + "\" does not have type \"" + unionName + "\"")
 	}
 
 	n := nodeInit("enum")
 
-	typeSize := len(unionOf.types)
+	typeSize := len(unionDef.types)
 	if typeSize > 0 {
 		me.eat("(")
-		for ix, unionType := range unionOf.types {
+		fmt.Println("UNION GEN", strings.Join(unionDef.generics, "|"))
+		gdict := unionDef.genericsDict
+		gimpl := make(map[string]string)
+		for ix, unionType := range unionDef.types {
 			if ix != 0 {
 				me.eat("delim")
 			}
 			param := me.calc()
 			if param.typed != unionType {
-				panic(me.fail() + "enum \"" + enumName + "\" type \"" + typeName + "\" expects \"" + unionType + "\" but parameter was \"" + param.typed + "\"")
+				if _, gok := gdict[unionType]; gok {
+					gimpl[unionType] = param.typed
+				} else {
+					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType + "\" but parameter was \"" + param.typed + "\"")
+				}
 			}
 			n.push(param)
 		}
 		me.eat(")")
+		if len(gimpl) > 0 {
+			fmt.Println("UNION IMPL", gimpl)
+			order = me.mapUnionGenerics(enumDef, unionDef, gimpl)
+			enumName += "<" + strings.Join(order, ",") + ">"
+			if _, ok := module.enums[enumName]; !ok {
+				me.defineEnumImplGeneric(enumDef, enumName, order)
+			}
+		}
 	}
 
 	if me.hmfile == module {
 		n.typed = enumName
-		n.value = typeName
+		n.value = unionName
 	} else {
 		n.typed = module.name + "." + enumName
-		n.value = typeName
+		n.value = unionName
 	}
 	return n
 }

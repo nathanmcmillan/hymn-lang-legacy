@@ -24,7 +24,7 @@ enum result<r>
   is(r)
   error(exception)
   
-enum double<u, v>
+enum either<u, v>
   one(u)
   two(v)
 
@@ -33,19 +33,19 @@ immutable
   snap = snake.viper
   woof = mammal.dog(7.2)
 
-calcMe(x int) double<int, float>
+calcMe(x int) either<int, float>
   if x < 10
-    d = double<int, float>.one(0)
-    return d
-  d = double<int, float>.two("big")
-  return d
+    i = either<int, float>.one(6432)
+    return i
+  f = either<int, float>.two(5329.5)
+  return f
 
 main
   a = snake.cobra
   b = snake.viper
   if a = b
     echo("bad")
-  else 
+  else
     echo("good")
 
   z = [10]snake
@@ -64,24 +64,34 @@ main
     dog => echo("good")
     _ => echo("bad")
 
-  # f = mammal.mouse(42, "yo", example)
-  
-  # todo match scope replace variables
-  # match f
-  #   mouse(x, y, z) => echo(y)
-  #   _ => echo("bad")
+  me = calcMe(5)
 
   g = bug.bee
   h = bug.ant(true)
   i = bug.ant(vec)
   j = bug.ant("buggie")
 
-# bug<x> has() bool
+  # f = mammal.mouse(42, "yo", example)
+  # echo(f.0)
+
+  # todo match scope replace variables
+  # match f
+  #   mouse(x, y, z) => echo(y)
+  #   _ => echo("bad")
+
+# todo functions for generic types
+# bug<x>.has() bool
 #   match self
 #     is(v) => return true
 #     none => return false
 
-# bug<x> unwrap() x
+# bug<x>.unwrap() x
 #   match self
 #     is(v) => return v
 #     none => panic
+
+# todo functions for impl of specific generic type
+# bug<int>.unwrap() int
+#   return self.0
+
+

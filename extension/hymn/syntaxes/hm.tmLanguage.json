@@ -8,8 +8,8 @@
 		"end": "\\n",
 		"name": "comment.line.double-slash.hymn"
 	}, {
-		"explanation": "this",
-		"match": "\\bthis\\b",
+		"explanation": "self",
+		"match": "\\bself\\b",
 		"name": "variable.language.this.hymn"
 	}, {
 		"explanation": "class",

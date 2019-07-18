@@ -48,7 +48,7 @@ func (me *hmfile) generateC(folder, name string) string {
 
 	// TODO init func
 	cfile.headFuncSection += "void " + me.funcNameSpace("init") + "();\n"
-	code += "void " + me.funcNameSpace("init") + "()\n{\n\n}\n\n"
+	code += "void " + me.funcNameSpace("init") + "() {\n\n}\n\n"
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
@@ -593,7 +593,7 @@ func (me *cfile) free(name string) string {
 }
 
 func (me *cfile) generateUnionFn(en *enum, un *union) {
-	enumName := me.hmfile.enumNameSpace(en.name)
+	_, enumName := me.hmfile.enumMaybeImplNameSpace(en.name)
 	unionName := me.hmfile.unionNameSpace(en.name)
 	fnName := me.hmfile.unionFnNameSpace(en, un)
 	typeOf := fmtassignspace(me.typeSig(en.name))
@@ -614,7 +614,7 @@ func (me *cfile) generateUnionFn(en *enum, un *union) {
 	head += ")"
 	code := head
 	head += ";\n"
-	code += "\n{\n"
+	code += " {\n"
 	code += fmc(1) + typeOf + "var = malloc(sizeof(" + unionName + "));\n"
 	code += fmc(1) + "var->type = " + me.hmfile.enumTypeName(enumName, un.name)
 	if len(un.types) == 1 {
@@ -632,24 +632,27 @@ func (me *cfile) generateUnionFn(en *enum, un *union) {
 
 func (me *cfile) defineEnum(enum *enum) {
 	fmt.Println("define enum \"" + enum.name + "\"")
-	hmBaseEnumName := me.hmfile.enumNameSpace(enum.name)
-	me.headTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
-	code := "enum " + hmBaseEnumName + " {\n"
-	for ix, enumUnion := range enum.typesOrder {
-		if ix == 0 {
-			code += fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
-		} else {
-			code += ",\n" + fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
+
+	impl, hmBaseEnumName := me.hmfile.enumMaybeImplNameSpace(enum.name)
+	if !impl {
+		me.headTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
+		code := "enum " + hmBaseEnumName + " {\n"
+		for ix, enumUnion := range enum.typesOrder {
+			if ix == 0 {
+				code += fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
+			} else {
+				code += ",\n" + fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
+			}
 		}
+		code += "\n};\n\n"
+		me.headTypesSection += code
 	}
-	code += "\n};\n\n"
-	me.headTypesSection += code
 
 	if enum.simple || len(enum.generics) > 0 {
 		return
 	}
 
-	code = ""
+	code := ""
 	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
 	me.headTypeDefSection += "typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
 	code += "struct " + hmBaseUnionName + " {\n"
@@ -734,7 +737,7 @@ func (me *cfile) mainc(fn *function) {
 	}
 	me.popScope()
 	code := ""
-	code += "int main()\n{\n"
+	code += "int main() {\n"
 	code += codeblock
 	code += "}\n"
 
@@ -774,7 +777,7 @@ func (me *cfile) function(name string, fn *function) {
 		code += arg.name
 	}
 	head := code + ");\n"
-	code += ")\n{\n"
+	code += ") {\n"
 	code += block
 	code += "}\n\n"
 

@@ -10,10 +10,10 @@ power(x int) int
   return x * x
 
 vec.dot() float
-  return this.x * this.y * this.z
+  return self.x * self.y * self.z
 
 vec.init(x float, y float, z float) vec
-  this.x = x
-  this.y = y
-  this.z = z
-  return this
+  self.x = x
+  self.y = y
+  self.z = z
+  return self

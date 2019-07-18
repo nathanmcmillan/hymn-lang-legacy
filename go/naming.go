@@ -31,6 +31,13 @@ func capital(name string) string {
 	return name
 }
 
+func flatten(name string) string {
+	name = strings.ReplaceAll(name, "<", "_")
+	name = strings.ReplaceAll(name, ">", "")
+	name = strings.ReplaceAll(name, ",", "_and_")
+	return name
+}
+
 func (me *hmfile) defNameSpace(name string) string {
 	name = strings.ToUpper(name)
 	name = strings.ReplaceAll(name, "-", "_")
@@ -49,6 +56,16 @@ func (me *hmfile) classNameSpace(name string) string {
 	return globalClassPrefix + me.classPrefix + capital(name)
 }
 
+func (me *hmfile) enumMaybeImplNameSpace(name string) (bool, string) {
+	impl := false
+	i := strings.Index(name, "<")
+	if i != -1 {
+		impl = true
+		name = name[:i]
+	}
+	return impl, me.enumNameSpace(name)
+}
+
 func (me *hmfile) enumNameSpace(name string) string {
 	return globalEnumPrefix + me.enumPrefix + capital(name)
 }
@@ -58,7 +75,7 @@ func (me *hmfile) unionNameSpace(name string) string {
 }
 
 func (me *hmfile) unionFnNameSpace(en *enum, un *union) string {
-	return globalFuncPrefix + me.funcPrefix + "new_" + en.name + "_" + un.name
+	return globalFuncPrefix + me.funcPrefix + "new_" + flatten(en.name) + "_" + un.name
 }
 
 func (me *hmfile) enumTypeName(base, name string) string {

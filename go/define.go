@@ -40,7 +40,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 	fn.name = name
 	fn.typed = "void"
 	if self != nil {
-		ref := me.hmfile.varInit(self.name, "this", false, true)
+		ref := me.hmfile.varInit(self.name, "self", false, true)
 		fn.args = append(fn.args, ref)
 	}
 	if me.token.is == "(" {
@@ -214,6 +214,11 @@ func (me *parser) defineEnum() {
 	me.eat("id")
 	genericsOrder, genericsDict := me.genericHeader()
 	me.eat("line")
+
+	me.hmfile.namespace[name] = "enum"
+	me.hmfile.types[name] = true
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_enum")
+
 	typesOrder := make([]*union, 0)
 	typesMap := make(map[string]*union)
 	isSimple := true
@@ -268,8 +273,5 @@ func (me *parser) defineEnum() {
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_enum")
 	me.hmfile.enums[name] = enumInit(name, isSimple, typesOrder, typesMap, genericsOrder, genericsDict)
-	me.hmfile.namespace[name] = "enum"
-	me.hmfile.types[name] = true
 }

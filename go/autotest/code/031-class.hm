@@ -2,7 +2,7 @@ class foo
   x int
 
 foo.get(z int) string
-  this.x += z
+  self.x += z
   return "stuff did"
 
 main

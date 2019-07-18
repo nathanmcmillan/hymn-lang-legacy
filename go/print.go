@@ -87,7 +87,7 @@ func (me *enum) dump(lv int) string {
 	for _, unionType := range me.typesOrder {
 		if len(unionType.types) > 0 {
 			types := strings.Join(unionType.types, ", ")
-			s += fmc(lv) + "{name:" + unionType.name + ", union:[" + types + "]}\n"
+			s += fmc(lv) + "{name:" + unionType.name + ", union:<" + types + ">}\n"
 		} else {
 			s += fmc(lv) + "{name:" + unionType.name + "}\n"
 		}

@@ -158,6 +158,15 @@ func unionInit(name string, types []string, generics []string, genericsDict map[
 	return u
 }
 
+func (me *union) copy() *union {
+	u := &union{}
+	u.name = me.name
+	u.types = me.types
+	u.generics = me.generics
+	u.genericsDict = me.genericsDict
+	return u
+}
+
 func enumInit(name string, simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]bool) *enum {
 	e := &enum{}
 	e.name = name

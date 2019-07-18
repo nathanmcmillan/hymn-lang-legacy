@@ -5,20 +5,37 @@ import (
 	"strings"
 )
 
-func (me *parser) buildClassImplGeneric(typed string, gmapper map[string]string) string {
+func (me *parser) mapUnionGenerics(en *enum, un *union, dict map[string]string) []string {
+	mapped := make([]string, 0)
+	return mapped
+}
+
+func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
 	fmt.Println("^ build impl generic: \""+typed+"\" with gmapper =>", gmapper)
 
 	base := typed[0:strings.Index(typed, "<")]
-	baseClass, ok := me.hmfile.classes[base]
-	if !ok {
-		panic(me.fail() + "class \"" + base + "\" does not exist")
+
+	var baseEnum *enum
+	baseClass, okc := me.hmfile.classes[base]
+
+	if !okc {
+		var oke bool
+		baseEnum, oke = me.hmfile.enums[base]
+		if !oke {
+			panic(me.fail() + "type \"" + base + "\" does not exist")
+		}
 	}
 
 	order := me.mapGenerics(typed, gmapper)
 	impl := base + "<" + strings.Join(order, ",") + ">"
 	fmt.Println("$ build impl generic: impl := \"" + impl + "\"")
-	if _, ok := me.hmfile.classes[impl]; !ok {
-		me.defineClassImplGeneric(baseClass, impl, order)
+
+	if okc {
+		if _, ok := me.hmfile.classes[impl]; !ok {
+			me.defineClassImplGeneric(baseClass, impl, order)
+		}
+	} else if _, ok := me.hmfile.enums[impl]; !ok {
+		me.defineEnumImplGeneric(baseEnum, impl, order)
 	}
 
 	return impl
@@ -62,9 +79,14 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 			} else {
 				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
 
-				if _, ok := me.hmfile.classes[pop]; !ok {
-					base := me.hmfile.classes[current.name]
-					me.defineClassImplGeneric(base, pop, current.order)
+				if _, okc := me.hmfile.classes[pop]; !okc {
+					if _, oke := me.hmfile.enums[pop]; !oke {
+						base := me.hmfile.enums[current.name]
+						me.defineEnumImplGeneric(base, pop, current.order)
+					} else {
+						base := me.hmfile.classes[current.name]
+						me.defineClassImplGeneric(base, pop, current.order)
+					}
 				}
 
 				next := stack[len(stack)-1]
@@ -108,17 +130,43 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 	if checkIsArray(typed) {
 		typeOfMem := typeOfArray(typed)
 		if checkHasGeneric(typed) {
-			return "[]" + me.buildClassImplGeneric(typeOfMem, gmapper)
+			return "[]" + me.buildImplGeneric(typeOfMem, gmapper)
 		}
 		return "[]" + me.mapAnyImpl(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
-		return me.buildClassImplGeneric(typed, gmapper)
+		return me.buildImplGeneric(typed, gmapper)
 	}
 	return me.mapAnyImpl(typed, gmapper)
 }
 
 func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string) {
 	fmt.Println("define enum impl generic: base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
+
+	unionList := make([]*union, len(base.types))
+	unionDict := make(map[string]*union)
+	for i, v := range base.typesOrder {
+		cp := v.copy()
+		unionList[i] = cp
+		unionDict[cp.name] = cp
+	}
+
+	me.hmfile.namespace[impl] = "enum"
+	me.hmfile.types[impl] = true
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_enum")
+
+	enumDef := enumInit(impl, false, unionList, unionDict, nil, nil)
+	me.hmfile.enums[impl] = enumDef
+
+	gmapper := make(map[string]string)
+	for ix, gname := range base.generics {
+		gmapper[gname] = order[ix]
+	}
+
+	for _, un := range unionList {
+		for i, typed := range un.types {
+			un.types[i] = me.genericsReplacer(typed, gmapper)
+		}
+	}
 }
 
 func (me *parser) defineClassImplGeneric(base *class, impl string, order []string) {

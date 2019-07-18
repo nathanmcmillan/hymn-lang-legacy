@@ -4,10 +4,10 @@ class vec
 
 vec.dot(x:5 int, z:7 int)
   echo("dot")
-  this.a = x
-  this.b = z
-  echo(this.a)
-  echo(this.b)
+  self.a = x
+  self.b = z
+  echo(self.a)
+  echo(self.b)
 
 main
   v = vec

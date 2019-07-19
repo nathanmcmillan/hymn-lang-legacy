@@ -660,10 +660,11 @@ func (me *cfile) defineEnum(enum *enum) {
 	code += fmc(1) + "union {\n"
 	for _, enumUnion := range enum.typesOrder {
 		me.generateUnionFn(enum, enumUnion)
-		if len(enumUnion.types) == 1 {
+		num := len(enumUnion.types)
+		if num == 1 {
 			typed := enumUnion.types[0]
 			code += fmc(2) + fmtassignspace(me.typeSig(typed)) + enumUnion.name + ";\n"
-		} else {
+		} else if num != 0 {
 			code += fmc(2) + "struct {\n"
 			for ix, typed := range enumUnion.types {
 				code += fmc(3) + fmtassignspace(me.typeSig(typed)) + "var" + strconv.Itoa(ix) + ";\n"

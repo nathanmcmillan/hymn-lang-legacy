@@ -5,8 +5,15 @@ import (
 	"strings"
 )
 
-func (me *parser) mapUnionGenerics(en *enum, un *union, dict map[string]string) []string {
-	mapped := make([]string, 0)
+func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
+	mapped := make([]string, len(en.generics))
+	for i, e := range en.generics {
+		to, ok := dict[e]
+		if !ok {
+			panic(me.fail() + "generic \"" + e + "\" not implemented for \"" + en.name + "\"")
+		}
+		mapped[i] = to
+	}
 	return mapped
 }
 

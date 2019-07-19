@@ -46,10 +46,14 @@ func (me *parser) allocEnum(module *hmfile) *node {
 		panic(me.fail() + "enum \"" + enumName + "\" does not exist")
 	}
 
+	gdict := enumDef.genericsDict
 	var order []string
 	if me.token.is == "<" {
 		order, _ = me.genericHeader()
 		enumName += "<" + strings.Join(order, ",") + ">"
+		if len(order) != len(gdict) {
+			panic(me.fail() + "generic enum \"" + enumName + "\" with impl " + fmt.Sprint(order) + " does not match " + fmt.Sprint(gdict))
+		}
 		if _, ok := module.enums[enumName]; !ok {
 			me.defineEnumImplGeneric(enumDef, enumName, order)
 		}
@@ -68,8 +72,6 @@ func (me *parser) allocEnum(module *hmfile) *node {
 	typeSize := len(unionDef.types)
 	if typeSize > 0 {
 		me.eat("(")
-		fmt.Println("UNION GEN", strings.Join(unionDef.generics, "|"))
-		gdict := unionDef.genericsDict
 		gimpl := make(map[string]string)
 		for ix, unionType := range unionDef.types {
 			if ix != 0 {
@@ -86,13 +88,22 @@ func (me *parser) allocEnum(module *hmfile) *node {
 			n.push(param)
 		}
 		me.eat(")")
-		if len(gimpl) > 0 {
-			fmt.Println("UNION IMPL", gimpl)
-			order = me.mapUnionGenerics(enumDef, unionDef, gimpl)
-			enumName += "<" + strings.Join(order, ",") + ">"
-			if _, ok := module.enums[enumName]; !ok {
-				me.defineEnumImplGeneric(enumDef, enumName, order)
+		fmt.Println(enumName, unionName, order, gimpl, gdict)
+		if len(order) == 0 {
+			if len(gimpl) != len(gdict) {
+				panic(me.fail() + "generic enum \"" + enumName + "\" with impl " + fmt.Sprint(gimpl) + " does not match " + fmt.Sprint(gdict))
 			}
+			if len(gimpl) > 0 {
+				order = me.mapUnionGenerics(enumDef, gimpl)
+				enumName += "<" + strings.Join(order, ",") + ">"
+				if _, ok := module.enums[enumName]; !ok {
+					me.defineEnumImplGeneric(enumDef, enumName, order)
+				}
+			}
+		}
+	} else {
+		if len(gdict) != 0 && len(order) == 0 {
+			panic(me.fail() + "generic enum \"" + enumName + "\" has no impl for " + fmt.Sprint(enumDef.generics))
 		}
 	}
 

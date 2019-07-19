@@ -66,12 +66,12 @@ main
 
   me = calcMe(5)
 
-  g = bug.bee
+  g = bug<int>.bee
   h = bug.ant(true)
   i = bug.ant(vec)
   j = bug.ant("buggie")
 
-  # f = mammal.mouse(42, "yo", example)
+  # f = mammal.mouse(42, "yo", vec)
   # echo(f.0)
 
   # todo match scope replace variables

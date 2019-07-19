@@ -74,10 +74,9 @@ type enum struct {
 }
 
 type union struct {
-	name         string
-	types        []string
-	generics     []string
-	genericsDict map[string]bool
+	name     string
+	types    []string
+	generics []string
 }
 
 type program struct {
@@ -149,21 +148,21 @@ var (
 	}
 )
 
-func unionInit(name string, types []string, generics []string, genericsDict map[string]bool) *union {
+func unionInit(name string, types []string, generics []string) *union {
 	u := &union{}
 	u.name = name
 	u.types = types
 	u.generics = generics
-	u.genericsDict = genericsDict
 	return u
 }
 
 func (me *union) copy() *union {
 	u := &union{}
 	u.name = me.name
-	u.types = me.types
-	u.generics = me.generics
-	u.genericsDict = me.genericsDict
+	u.types = make([]string, len(me.types))
+	u.generics = make([]string, len(me.generics))
+	copy(u.types, me.types)
+	copy(u.generics, me.generics)
 	return u
 }
 

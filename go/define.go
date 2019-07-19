@@ -239,7 +239,6 @@ func (me *parser) defineEnum() {
 			}
 			unionList := make([]string, 0)
 			unionGOrder := make([]string, 0)
-			unionGDict := make(map[string]bool, 0)
 			if me.token.is == "(" {
 				isSimple = false
 				me.eat("(")
@@ -256,7 +255,6 @@ func (me *parser) defineEnum() {
 					if _, ok := me.hmfile.types[unionArgType]; !ok {
 						if _, ok2 := genericsDict[unionArgType]; ok2 {
 							unionGOrder = append(unionGOrder, unionArgType)
-							unionGDict[unionArgType] = true
 						} else {
 							panic(me.fail() + "union type name \"" + unionArgType + "\" does not exist")
 						}
@@ -266,7 +264,7 @@ func (me *parser) defineEnum() {
 				me.eat(")")
 			}
 			me.eat("line")
-			un := unionInit(typeName, unionList, unionGOrder, unionGDict)
+			un := unionInit(typeName, unionList, unionGOrder)
 			typesOrder = append(typesOrder, un)
 			typesMap[typeName] = un
 			continue

@@ -52,6 +52,7 @@ main
 
   c = mammal.cat("meow")
   d = mammal.cat("woof")
+  # if match c and d
   if c = d
     echo("good")
   else 

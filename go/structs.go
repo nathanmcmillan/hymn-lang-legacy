@@ -326,10 +326,15 @@ func (me *cnode) push(n *cnode) {
 }
 
 func (me *hmfile) libInit() {
-	e := funcInit()
-	e.typed = "void"
-	e.args = append(e.args, me.varInit("?", "s", false, false))
-	me.functions["echo"] = e
+	echo := funcInit()
+	echo.typed = "void"
+	echo.args = append(echo.args, me.varInit("?", "s", false, false))
+	me.functions["echo"] = echo
+
+	str := funcInit()
+	str.typed = "string"
+	str.args = append(str.args, me.varInit("?", "s", false, false))
+	me.functions["string"] = str
 
 	for primitive := range primitives {
 		me.types[primitive] = true

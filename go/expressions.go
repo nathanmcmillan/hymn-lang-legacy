@@ -552,17 +552,19 @@ func (me *parser) binary(left *node, op string) *node {
 }
 
 func (me *parser) concat(left *node) *node {
-	me.eat("+")
-	right := me.term()
-	if left.typed != "string" || right.typed != "string" {
-		err := me.fail() + "concatenation operation must be strings \"" + left.typed + "\" and \"" + right.typed + "\""
-		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
-		panic(err)
-	}
 	n := nodeInit("concat")
 	n.typed = left.typed
 	n.push(left)
-	n.push(right)
+	for me.token.is == "+" {
+		me.eat("+")
+		right := me.term()
+		if right.typed != "string" {
+			err := me.fail() + "concatenation operation must be strings \"" + left.typed + "\" and \"" + right.typed + "\""
+			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
+			panic(err)
+		}
+		n.push(right)
+	}
 	return n
 }
 

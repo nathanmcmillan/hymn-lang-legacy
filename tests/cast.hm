@@ -1,0 +1,9 @@
+main
+  x = 5
+  z = string(x)
+  echo(z)
+
+  foo = "my number is " + string(99.4289743)
+  echo(foo)
+
+  echo(string(256) + " is a power of " + string(2))

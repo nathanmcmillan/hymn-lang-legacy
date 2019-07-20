@@ -16,6 +16,8 @@ func (me *hmfile) generateC(folder, name string) string {
 	cfile.headIncludeSection += "#include <stdio.h>\n"
 	cfile.headIncludeSection += "#include <stdlib.h>\n"
 	cfile.headIncludeSection += "#include <stdbool.h>\n"
+	cfile.headIncludeSection += "#include \"../lib/hmlib_strings.h\"\n"
+	cfile.hmfile.program.sources["hmlib_strings.c"] = "lib/hmlib_strings.c"
 	for importName := range me.imports {
 		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"
 	}
@@ -306,17 +308,12 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "concat" {
-		paren := n.attribute("parenthesis")
-		code := ""
-		if paren {
-			code += "("
+		size := len(n.has)
+		code := "hmlib_concat_varg(" + strconv.Itoa(size)
+		for _, snode := range n.has {
+			code += ", " + me.eval(snode).code
 		}
-		code += me.eval(n.has[0]).code
-		code += " + "
-		code += me.eval(n.has[1]).code
-		if paren {
-			code += ")"
-		}
+		code += ")"
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -787,20 +784,11 @@ func (me *cfile) function(name string, fn *function) {
 }
 
 func (me *cfile) call(module *hmfile, name string, parameters []*node) string {
-	if name == "echo" {
-		param := me.eval(parameters[0])
-		if param.typed == "string" {
-			return "printf(\"%s\\n\", " + param.code + ")"
-		} else if param.typed == "int" {
-			return "printf(\"%d\\n\", " + param.code + ")"
-		} else if param.typed == "float" {
-			return "printf(\"%f\\n\", " + param.code + ")"
-		} else if param.typed == "bool" {
-			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\")"
-		}
-		panic("argument for echo was " + param.string(0))
+	code := me.builtin(name, parameters)
+	if code != "" {
+		return code
 	}
-	code := module.funcNameSpace(name) + "("
+	code = module.funcNameSpace(name) + "("
 	for ix, parameter := range parameters {
 		if ix > 0 {
 			code += ", "
@@ -809,4 +797,40 @@ func (me *cfile) call(module *hmfile, name string, parameters []*node) string {
 	}
 	code += ")"
 	return code
+}
+
+func (me *cfile) builtin(name string, parameters []*node) string {
+	if name == "echo" {
+		param := me.eval(parameters[0])
+		if param.typed == "string" {
+			return "printf(\"%s\\n\", " + param.code + ")"
+
+		} else if param.typed == "int" {
+			return "printf(\"%d\\n\", " + param.code + ")"
+
+		} else if param.typed == "float" {
+			return "printf(\"%f\\n\", " + param.code + ")"
+
+		} else if param.typed == "bool" {
+			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\")"
+		}
+		panic("argument for echo was " + param.string(0))
+	}
+	if name == "string" {
+		param := me.eval(parameters[0])
+		if param.typed == "string" {
+			panic("redundant string cast")
+
+		} else if param.typed == "int" {
+			return "hmlib_int_to_string(" + param.code + ")"
+
+		} else if param.typed == "float" {
+			return "hmlib_float_to_string(" + param.code + ")"
+
+		} else if param.typed == "bool" {
+			return "(" + param.code + " ? \"true\" : \"false\")"
+		}
+		panic("argument for string cast was " + param.string(0))
+	}
+	return ""
 }

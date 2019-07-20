@@ -7,6 +7,10 @@
 #include <string.h>
 #include <stdarg.h>
 
-int main();
+char *hmlib_concat(const char *a, const char *b);
+char *hmlib_concat_list(const char **ls, const int size);
+char *hmlib_concat_varg(const int size, ...);
+char *hmlib_int_to_string(const int number);
+char *hmlib_float_to_string(const float number);
 
 #endif

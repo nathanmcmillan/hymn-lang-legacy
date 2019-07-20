@@ -1,11 +1,37 @@
-enum maybe<x>
-  some(x)
-  none
+enum bug
+  ant(int)
+  bee
+  moth
 
 main
-  x = foo
+  x = bug.ant(3)
+  
   match x
-    foo(x) =>
-      echo("found!")
-    none => _
-  x is foo(m) => echo("found 2!")
+    ant
+      echo(x.0)
+    else pass
+  
+  match x ant: echo(x.0)
+    
+  match x ant
+    echo(x.0)
+
+  match x
+    ant
+      echo(x.0)
+      echo("ant!")
+    bee
+      echo("bee!")
+    moth
+      echo("moth!")
+
+  match x
+    ant: echo("ant!")
+    bee: echo("bee!")
+    moth: echo("moth!")
+
+  match x
+    bee
+      echo("bee!")
+    else
+      echo("other!")

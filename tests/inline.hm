@@ -1,2 +1,0 @@
-inline pow(x int) int
-  "pow(x)"

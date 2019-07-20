@@ -1,6 +1,19 @@
 class foo(int, float)
+class bar(w int, r float)
+
+class foo
+  x int
+  y float
+
+class bar
+  w int
+  r float
 
 main
-    t = foo(9, "yo!")
-    echo(t.0)
-    echo(t.1)
+  t = foo(9, "yo!")
+  echo(t.0)
+  echo(t.1)
+  t.0 = 10
+  t.1 = "bye!"
+  echo(t.0)
+  echo(t.1)

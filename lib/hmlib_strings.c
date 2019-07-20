@@ -56,22 +56,18 @@ char *hmlib_concat_varg(const int size, ...)
   return cat;
 }
 
-int main()
+char *hmlib_int_to_string(const int number)
 {
-  const char *one = "foo";
-  const char *two = " bar";
-  const char *three = hmlib_concat(one, two);
-  printf("%s\n", three);
-  const char *four = "hello";
-  printf("%s\n", hmlib_concat(four, " world"));
+  int len = snprintf(NULL, 0, "%d", number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%d", number);
+  return str;
+}
 
-  const char *many[3];
-  many[0] = "my";
-  many[1] = " cool";
-  many[2] = " string";
-  printf("%s\n", hmlib_concat_list(many, 3));
-
-  printf("%s\n", hmlib_concat_varg(3, "super", " cool", " varg"));
-
-  return 0;
+char *hmlib_float_to_string(const float number)
+{
+  int len = snprintf(NULL, 0, "%f", number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%f", number);
+  return str;
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 var (
@@ -87,7 +88,9 @@ func gcc(sources map[string]string, fileOut string, isLib bool) {
 	} else {
 		paramGcc = append(paramGcc, fileOut)
 	}
-	stdout, err := exec.Command("gcc", paramGcc...).CombinedOutput()
+	fmt.Println("gcc", strings.Join(paramGcc, " "))
+	cmd := exec.Command("gcc", paramGcc...)
+	stdout, err := cmd.CombinedOutput()
 	std := string(stdout)
 	if std != "" {
 		fmt.Println(std)

@@ -71,3 +71,13 @@ char *hmlib_float_to_string(const float number)
   snprintf(str, len + 1, "%f", number);
   return str;
 }
+
+int hmlib_string_to_int(const char *str)
+{
+  return (int)strtol(str, NULL, 10);
+}
+
+float hmlib_string_to_float(const char *str)
+{
+  return strtof(str, NULL);
+}

@@ -73,7 +73,8 @@ func (me *cnode) string(lv int) string {
 func (me *class) dump(lv int) string {
 	s := fmc(lv) + me.name + "[\n"
 	lv++
-	for _, classVar := range me.variables {
+	for _, cls := range me.variableOrder {
+		classVar := me.variables[cls]
 		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.typed + "}\n"
 	}
 	lv--

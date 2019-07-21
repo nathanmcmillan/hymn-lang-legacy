@@ -336,6 +336,16 @@ func (me *hmfile) libInit() {
 	str.args = append(str.args, me.varInit("?", "s", false, false))
 	me.functions["string"] = str
 
+	intfn := funcInit()
+	intfn.typed = "int"
+	intfn.args = append(intfn.args, me.varInit("?", "s", false, false))
+	me.functions["int"] = intfn
+
+	floatfn := funcInit()
+	floatfn.typed = "float"
+	floatfn.args = append(floatfn.args, me.varInit("?", "s", false, false))
+	me.functions["float"] = floatfn
+
 	for primitive := range primitives {
 		me.types[primitive] = true
 	}

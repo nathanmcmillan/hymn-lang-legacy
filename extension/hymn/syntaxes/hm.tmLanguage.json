@@ -79,7 +79,7 @@
 		}
 	}, {
 		"explanation": "file function call",
-		"match": " +([a-zA-Z]+)\\(",
+		"match": "([a-zA-Z]+)\\(",
 		"captures": {
 			"1": {
 				"name": "support.function.hymn"

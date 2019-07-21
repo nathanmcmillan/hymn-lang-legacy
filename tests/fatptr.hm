@@ -1,5 +1,5 @@
 do(a []int)
-  size = len a
+  size = a.len
   for ix = 0, ix < size, ix += 1
     echo(a[ix])
 

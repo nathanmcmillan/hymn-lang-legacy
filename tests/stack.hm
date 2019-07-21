@@ -1,0 +1,13 @@
+class foo
+  data int
+
+class special
+  has $foo # force not just a pointer
+
+main
+  f = \foo # force allocate on stack
+  f.data = 3
+  echo(x)
+
+  s = special
+  s.has.data = 5 # no need to allocate, already have mem

@@ -250,6 +250,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	} else {
 		panic(me.fail() + "bad assignment \"" + left.is + "\"")
 	}
+	right.value = left.value
 	n := nodeInit(op)
 	n.typed = "void"
 	n.push(left)
@@ -529,6 +530,21 @@ func (me *parser) notbool() *node {
 	return n
 }
 
+func (me *parser) bitwise(left *node, op string) *node {
+	me.eat(op)
+	right := me.term()
+	if left.typed != "int" || right.typed != "int" {
+		err := me.fail() + "bitwise operation must be integers \"" + left.typed + "\" and \"" + right.typed + "\""
+		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
+		panic(err)
+	}
+	n := nodeInit(op)
+	n.typed = left.typed
+	n.push(left)
+	n.push(right)
+	return n
+}
+
 func (me *parser) binary(left *node, op string) *node {
 	if op == "+" && left.typed == "string" {
 		return me.concat(left)
@@ -640,6 +656,10 @@ func (me *parser) calc() *node {
 		}
 		if op == "+" || op == "-" {
 			node = me.binary(node, op)
+			continue
+		}
+		if op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
+			node = me.bitwise(node, op)
 			continue
 		}
 		break

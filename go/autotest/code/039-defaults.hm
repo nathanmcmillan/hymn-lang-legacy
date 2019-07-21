@@ -1,6 +1,6 @@
 class vec
-    a int
-    b int
+  a int
+  b int
 
 vec.dot(x:5 int, z:7 int)
   echo("dot")

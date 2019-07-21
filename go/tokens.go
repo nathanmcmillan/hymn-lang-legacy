@@ -28,6 +28,10 @@ var keywords = map[string]bool{
 	"enum":      true,
 	"match":     true,
 	"panic":     true,
+	"pass":      true,
+	"some":      true,
+	"none":      true,
+	"goto":      true,
 }
 
 func (me *token) string() string {
@@ -196,7 +200,7 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	c := stream.peek()
-	if strings.IndexByte(":().[]_", c) >= 0 {
+	if strings.IndexByte("!$&|^:().[]_", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.tokens = append(me.tokens, token)
@@ -248,12 +252,42 @@ func (me *tokenizer) get(pos int) *token {
 		me.tokens = append(me.tokens, token)
 		return token
 	}
-	if c == '<' || c == '>' || c == '!' {
+	if c == '!' {
 		stream.next()
 		var token *token
 		if stream.peek() == '=' {
 			stream.next()
-			token = me.simpleToken(string(c) + "=")
+			token = me.simpleToken("!=")
+		} else {
+			token = me.simpleToken(string(c))
+		}
+		me.tokens = append(me.tokens, token)
+		return token
+	}
+	if c == '>' {
+		stream.next()
+		var token *token
+		if stream.peek() == '=' {
+			stream.next()
+			token = me.simpleToken(">=")
+		} else if stream.peek() == '>' {
+			stream.next()
+			token = me.simpleToken(">>")
+		} else {
+			token = me.simpleToken(string(c))
+		}
+		me.tokens = append(me.tokens, token)
+		return token
+	}
+	if c == '<' {
+		stream.next()
+		var token *token
+		if stream.peek() == '=' {
+			stream.next()
+			token = me.simpleToken("<=")
+		} else if stream.peek() == '<' {
+			stream.next()
+			token = me.simpleToken("<<")
 		} else {
 			token = me.simpleToken(string(c))
 		}

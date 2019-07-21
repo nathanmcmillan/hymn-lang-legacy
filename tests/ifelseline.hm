@@ -2,4 +2,4 @@ main
   x = 0
   z = 10
   if x < z: echo("less!")
-  else echo("great!")
+  else: echo("great!")

@@ -102,12 +102,61 @@ func (me *cfile) allocEnum(module *hmfile, typed string, n *node) string {
 	return code
 }
 
-func (me *hmfile) allocClass(typed string, n *node) string {
+func (me *cfile) allocClass(n *node) *cnode {
 	if n.attribute("no-malloc") {
-		return ""
+		codeNode(n.is, n.value, n.typed, "")
 	}
-	typed = me.classNameSpace(typed)
-	return "malloc(sizeof(" + typed + "))"
+
+	module, typed := me.hmfile.moduleAndName(n.typed)
+	typed = module.classNameSpace(typed)
+
+	// HmConstructorAttributeAttributeVec *const z = calloc(1, sizeof(HmConstructorAttributeAttributeVec));
+	// z->on = true;
+	// z->has = calloc(1, sizeof(HmConstructorAttributeVec));
+	// z->has->on = true;
+	// z->has->has = calloc(1, sizeof(HmConstructorVec));
+	// z->has->has->x = 2 * 5;
+	// z->has->has->y = 2 * 6;
+	// z->has->has->z = 2 * 7;
+
+	// HmConstructorVec *temp_0 = calloc(1, sizeof(HmConstructorVec));
+	// temp_0->x = 2 * 5;
+	// temp_0->y = 2 * 6;
+	// temp_0->z = 2 * 7;
+	// HmConstructorAttributeVec *temp_1 = calloc(1, sizeof(HmConstructorAttributeVec));
+	// temp_1->on = true;
+	// temp_1->has = temp_0;
+	// HmConstructorAttributeAttributeVec *const z = calloc(1, sizeof(HmConstructorAttributeAttributeVec));
+	// z->on = true;
+	// z->has = temp_1;
+
+	// {is:=, typed:void, has[
+	//   {is:variable, value:temp_0, typed:vec}
+	//   {is:new, typed:vec, has[...]}
+	// ]}
+
+	// {is:=, typed:void, has[
+	//   {is:variable, value:temp_1, typed:vec}
+	//   {is:new, typed:attribute<attribute<vec>>, has[...]}
+	// ]}
+
+	// {is:=, typed:void, has[
+	//   {is:variable, value:z, typed:attribute<attribute<vec>>}
+	//   {is:new, typed:attribute<attribute<vec>>, has[..]}
+	// ]}
+
+	code := ""
+	code += "malloc(sizeof(" + typed + "))"
+	// code += "calloc(1, sizeof(" + typed + "))"
+
+	base := me.hmfile.classes[n.typed]
+	ctor := n.has
+	for ix, ini := range ctor {
+		v := base.variables[base.variableOrder[ix]]
+		code += ";\n" + fmc(me.depth) + n.value + "->" + v.name + " = " + me.eval(ini).code
+	}
+
+	return codeNode(n.is, n.value, n.typed, code)
 }
 
 func fmtptr(ptr string) string {
@@ -287,9 +336,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "new" {
-		module, className := me.hmfile.moduleAndName(n.typed)
-		code := module.allocClass(className, n)
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := me.allocClass(n)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -318,7 +365,7 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if op == "+" || op == "-" || op == "*" || op == "/" {
+	if op == "+" || op == "-" || op == "*" || op == "/" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
 		paren := n.attribute("parenthesis")
 		code := ""
 		if paren {
@@ -831,6 +878,32 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 			return "(" + param.code + " ? \"true\" : \"false\")"
 		}
 		panic("argument for string cast was " + param.string(0))
+	}
+	if name == "int" {
+		param := me.eval(parameters[0])
+		if param.typed == "int" {
+			panic("redundant int cast")
+
+		} else if param.typed == "float" {
+			return "((int) " + param.code + ")"
+
+		} else if param.typed == "string" {
+			return "hmlib_string_to_int(" + param.code + ")"
+		}
+		panic("argument for int cast was " + param.string(0))
+	}
+	if name == "float" {
+		param := me.eval(parameters[0])
+		if param.typed == "float" {
+			panic("redundant float cast")
+
+		} else if param.typed == "int" {
+			return "((float) " + param.code + ")"
+
+		} else if param.typed == "string" {
+			return "hmlib_string_to_float(" + param.code + ")"
+		}
+		panic("argument for float cast was " + param.string(0))
 	}
 	return ""
 }

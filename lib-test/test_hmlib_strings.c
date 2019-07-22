@@ -1,4 +1,4 @@
-#include "hmlib_strings.h"
+#include "../lib/hmlib_strings.h"
 
 int main()
 {

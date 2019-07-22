@@ -87,7 +87,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
 
 				if _, okc := me.hmfile.classes[pop]; !okc {
-					if _, oke := me.hmfile.enums[pop]; !oke {
+					if _, oke := me.hmfile.enums[pop]; oke {
 						base := me.hmfile.enums[current.name]
 						me.defineEnumImplGeneric(base, pop, current.order)
 					} else {

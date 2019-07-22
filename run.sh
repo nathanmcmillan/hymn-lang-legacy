@@ -6,5 +6,6 @@ go build -o compiler
 cd ..
 mv go/compiler .
 if [ -f compiler ]; then
-  ./compiler $@
+  lib="$PWD/lib"
+  ./compiler $lib $@
 fi

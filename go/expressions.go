@@ -24,8 +24,6 @@ func (me *parser) fileExpression() {
 		} else {
 			me.defineFileFunction()
 		}
-	} else if op == "import" {
-		return
 	} else if op == "class" {
 		me.defineClass()
 	} else if op == "enum" {
@@ -73,6 +71,12 @@ func (me *parser) expression() *node {
 		return me.forexpr()
 	} else if op == "return" {
 		return me.returning()
+	} else if op == "goto" {
+		return me.gotoLabel()
+	} else if op == "label" {
+		return me.label()
+	} else if op == "pass" {
+		return me.pass()
 	} else if op == "#" {
 		return me.comment()
 	} else if op == "line" || op == "eof" {
@@ -95,6 +99,49 @@ func (me *parser) maybeIgnore(depth int) {
 		}
 		me.next()
 	}
+}
+
+func (me *parser) gotoLabel() *node {
+	me.eat("goto")
+	n := nodeInit("goto")
+	name := me.token.value
+	me.eat("id")
+	n.value = name
+	me.verify("line")
+	return n
+}
+
+func (me *parser) label() *node {
+	me.eat("label")
+	n := nodeInit("label")
+	name := me.token.value
+	me.eat("id")
+	n.value = name
+	me.verify("line")
+	return n
+}
+
+func (me *parser) pass() *node {
+	me.eat("pass")
+	n := nodeInit("pass")
+	me.verify("line")
+	return n
+}
+
+func (me *parser) continuing() *node {
+	me.eat("continue")
+	n := nodeInit("continue")
+	n.typed = "void"
+	me.verify("line")
+	return n
+}
+
+func (me *parser) breaking() *node {
+	me.eat("break")
+	n := nodeInit("break")
+	n.typed = "void"
+	me.verify("line")
+	return n
 }
 
 func (me *parser) returning() *node {
@@ -250,7 +297,6 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	} else {
 		panic(me.fail() + "bad assignment \"" + left.is + "\"")
 	}
-	right.value = left.value
 	n := nodeInit(op)
 	n.typed = "void"
 	n.push(left)
@@ -306,21 +352,17 @@ func (me *parser) block() *node {
 	depth := me.token.depth
 	block := nodeInit("block")
 	for {
-		done := false
 		for me.token.is == "line" {
 			me.eat("line")
 			if me.token.is != "line" {
 				if me.token.depth < depth {
-					done = true
+					goto blockEnd
 				}
 				break
 			}
 		}
-		if done {
-			break
-		}
 		if me.token.is == "eof" || me.token.is == "#" {
-			break
+			goto blockEnd
 		}
 		expr := me.expression()
 		block.push(expr)
@@ -329,27 +371,12 @@ func (me *parser) block() *node {
 			if fn.typed != expr.typed {
 				panic(me.fail() + "function " + fn.name + " returns " + fn.typed + " but found " + expr.typed)
 			}
-			break
+			goto blockEnd
 		}
 	}
+blockEnd:
 	fmt.Println("> block", block.string(0))
 	return block
-}
-
-func (me *parser) continuing() *node {
-	me.eat("continue")
-	me.verify("line")
-	n := nodeInit("continue")
-	n.typed = "void"
-	return n
-}
-
-func (me *parser) breaking() *node {
-	me.eat("break")
-	me.verify("line")
-	n := nodeInit("break")
-	n.typed = "void"
-	return n
 }
 
 func (me *parser) iswhile() bool {
@@ -531,7 +558,6 @@ func (me *parser) notbool() *node {
 }
 
 func (me *parser) bitwise(left *node, op string) *node {
-	me.eat(op)
 	right := me.term()
 	if left.typed != "int" || right.typed != "int" {
 		err := me.fail() + "bitwise operation must be integers \"" + left.typed + "\" and \"" + right.typed + "\""
@@ -594,7 +620,7 @@ func (me *parser) imports() {
 		if !ok {
 			me.hmfile.imports[name] = true
 			path := me.hmfile.program.directory + "/" + name + ".hm"
-			me.hmfile.program.compile(me.hmfile.program.out, path)
+			me.hmfile.program.compile(me.hmfile.program.out, path, me.hmfile.program.libDir)
 			fmt.Println("finished compiling " + name)
 			fmt.Println("=== continue " + me.hmfile.name + " parse === ")
 		}
@@ -650,6 +676,18 @@ func (me *parser) calc() *node {
 			node = me.comparison(node, op)
 			continue
 		}
+		if op == "<" && me.peek().is == "<" {
+			me.eat("<")
+			me.eat("<")
+			node = me.bitwise(node, "<<")
+			continue
+		}
+		if op == ">" && me.peek().is == ">" {
+			me.eat(">")
+			me.eat(">")
+			node = me.bitwise(node, ">>")
+			continue
+		}
 		if op == "=" || op == ">" || op == "<" || op == ">=" || op == "<=" || op == "!=" {
 			node = me.comparison(node, op)
 			continue
@@ -658,7 +696,8 @@ func (me *parser) calc() *node {
 			node = me.binary(node, op)
 			continue
 		}
-		if op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
+		if op == "&" || op == "|" || op == "^" {
+			me.eat(op)
 			node = me.bitwise(node, op)
 			continue
 		}

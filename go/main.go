@@ -22,26 +22,28 @@ func fmc(depth int) string {
 func main() {
 	args := os.Args
 	size := len(args)
-	if size < 2 {
-		fmt.Println("path?")
+	if size < 3 {
+		fmt.Println("lib? path?")
 		return
 	}
-	path := args[1]
+	libDir := args[1]
+	path := args[2]
 	isLib := false
-	if size >= 3 {
-		if args[2] == "--lib" {
+	if size >= 4 {
+		if args[3] == "--lib" {
 			isLib = true
 		}
 	}
-	linker("out", path, isLib)
+	linker("out", path, libDir, isLib)
 }
 
-func linker(out, path string, isLib bool) string {
+func linker(out, path, libDir string, isLib bool) string {
 	prog := programInit()
 	prog.out = out
+	prog.libDir = libDir
 	prog.directory = fileDir(path)
 
-	prog.compile(out, path)
+	prog.compile(out, path, libDir)
 
 	name := fileName(path)
 	fileOut := out + "/" + name
@@ -52,7 +54,7 @@ func linker(out, path string, isLib bool) string {
 	return app(fileOut)
 }
 
-func (me *program) compile(out, path string) {
+func (me *program) compile(out, path, libDir string) {
 	name := fileName(path)
 
 	hymn := me.hymnFileInit(name)
@@ -70,7 +72,7 @@ func (me *program) compile(out, path string) {
 		fmt.Println("=== generate C ===")
 	}
 
-	source := hymn.generateC(out, name)
+	source := hymn.generateC(out, name, libDir)
 	me.sources[name] = source
 }
 

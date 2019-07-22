@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"testing"
@@ -10,6 +11,10 @@ import (
 
 func TestCompile(t *testing.T) {
 	debug = false
+	pwd, _ := os.Getwd()
+	fmt.Println("$PWD", pwd)
+	libDir := path.Clean(path.Join(pwd, "..", "lib"))
+	fmt.Println("$LIB", libDir)
 	folder := "autotest"
 	tests := folder + "/code"
 	source := scan(tests)
@@ -24,7 +29,7 @@ func TestCompile(t *testing.T) {
 		path := tests + "/" + info.Name()
 		out := folder + "/out/" + nameNum
 		os.MkdirAll(out, os.ModePerm)
-		stdout := linker(out, path, false)
+		stdout := linker(out, path, libDir, false)
 		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {
 			t.Errorf("assert failed for " + info.Name())

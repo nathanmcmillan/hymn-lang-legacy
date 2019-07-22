@@ -93,26 +93,20 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		me.hmfile.scope.variables[arg.name] = arg
 	}
 	for {
-		token := me.token
-		done := false
-		for token.is == "line" {
+		for me.token.is == "line" {
 			me.eat("line")
-			token = me.token
-			if token.is != "line" {
-				if token.depth != 1 {
-					done = true
+			if me.token.is != "line" {
+				if me.token.depth != 1 {
+					goto fnEnd
 				}
 				break
 			}
 		}
-		if done {
-			break
+		if me.token.depth == 0 {
+			goto fnEnd
 		}
-		if token.is == "#" {
+		if me.token.is == "#" {
 			me.eat("#")
-		}
-		if token.is == "eof" {
-			break
 		}
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)
@@ -120,9 +114,10 @@ func (me *parser) defineFunction(name string, self *class) *function {
 			if fn.typed != expr.typed {
 				panic(me.fail() + "function " + name + " returns " + fn.typed + " but found " + expr.typed)
 			}
-			break
+			goto fnEnd
 		}
 	}
+fnEnd:
 	me.hmfile.popScope()
 	return fn
 }
@@ -183,6 +178,11 @@ func (me *parser) defineClass() {
 		if token.is == "eof" || token.is == "#" {
 			break
 		}
+		isptr := true
+		if token.is == "$" {
+			me.eat("$")
+			isptr = false
+		}
 		if token.is == "id" {
 			mname := token.value
 			me.eat("id")
@@ -195,7 +195,7 @@ func (me *parser) defineClass() {
 			mtype := me.declareType(false)
 			me.eat("line")
 			memberOrder = append(memberOrder, mname)
-			memberMap[mname] = me.hmfile.varInit(mtype, mname, true, true)
+			memberMap[mname] = me.hmfile.varInit(mtype, mname, true, isptr)
 			continue
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in class")

@@ -1,0 +1,23 @@
+
+define foo
+define bar = 35
+
+ifdef foo
+immutable beans = "cool beans!"
+elsedef
+immutable beans = bar
+enddef
+
+defc "#define NEW(x) malloc(sizeof(x))"
+
+def print(x) = echo(x)
+
+def bar(x)
+  temp = x
+  print(temp)
+
+main
+  echo(beans)
+  print(beans)
+  bar(beans)
+  defc "int *ptr = NEW(int);"

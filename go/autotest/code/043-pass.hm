@@ -1,0 +1,13 @@
+bar(x int)
+  if x > 10
+    pass
+  else
+    echo("yo!")
+
+foo
+  pass
+  
+main
+  foo()
+  bar(20)
+  echo("done!")

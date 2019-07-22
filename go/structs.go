@@ -34,7 +34,7 @@ type variable struct {
 	name    string
 	dfault  string
 	mutable bool
-	pointer bool
+	isptr   bool
 	cName   string
 }
 
@@ -82,6 +82,7 @@ type union struct {
 type program struct {
 	out       string
 	directory string
+	libDir    string
 	hmfiles   map[string]*hmfile
 	sources   map[string]string
 }
@@ -359,18 +360,18 @@ func funcInit() *function {
 	return f
 }
 
-func (me *hmfile) varInit(typed, name string, mutable, pointer bool) *variable {
+func (me *hmfile) varInit(typed, name string, mutable, isptr bool) *variable {
 	v := &variable{}
 	v.typed = typed
 	v.name = name
 	v.cName = name
 	v.mutable = mutable
-	v.pointer = pointer
+	v.isptr = isptr
 	return v
 }
 
-func (me *hmfile) varWithDefaultInit(typed, name string, mutable, pointer bool, dfault string) *variable {
-	v := me.varInit(typed, name, mutable, pointer)
+func (me *hmfile) varWithDefaultInit(typed, name string, mutable, isptr bool, dfault string) *variable {
+	v := me.varInit(typed, name, mutable, isptr)
 	v.dfault = dfault
 	return v
 }

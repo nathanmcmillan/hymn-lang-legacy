@@ -1,8 +1,8 @@
 main
   echo(string(5))
-  echo(string(99.4289743))
+  echo(int(string(99.4289743)))
   echo(string(256) + " is a power of " + string(2))
   echo(int("256"))
-  echo(float("256"))
+  echo(int(float("256")))
   echo(int(4234.45354))
-  echo(float(512))
+  echo(int(float(512)))

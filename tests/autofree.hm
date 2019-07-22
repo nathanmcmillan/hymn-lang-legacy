@@ -1,0 +1,11 @@
+class vec
+  x int
+  z int
+
+glob
+  v = vec
+  echo(v.x)
+  # free(v)
+
+main
+  glob()

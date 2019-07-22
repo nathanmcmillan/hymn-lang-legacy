@@ -57,7 +57,7 @@
 	}, {
 		"explanation": "flow",
 		"name": "keyword.control.hymn",
-		"match": "\\b(if|elif|else|for|return|break|continue|and|or|not|match)\\b"
+		"match": "\\b(if|elif|else|for|return|break|continue|and|or|not|match|pass|goto|label)\\b"
 	}, {
 		"explanation": "class function",
 		"match": "^([a-zA-Z]+)\\.([a-zA-Z]+)($|\\(| +)",

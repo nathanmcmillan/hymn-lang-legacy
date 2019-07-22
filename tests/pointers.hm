@@ -1,9 +1,0 @@
-class foo
-  data int
-
-main
-  f = foo
-  f.data = 3
-  x = ref f.data
-  x = 6
-  echo(x)

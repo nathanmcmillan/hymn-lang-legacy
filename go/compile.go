@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (me *hmfile) generateC(folder, name string) string {
+func (me *hmfile) generateC(folder, name, libDir string) string {
 	cfile := me.cFileInit()
 
 	guard := me.defNameSpace(name)
@@ -16,8 +16,8 @@ func (me *hmfile) generateC(folder, name string) string {
 	cfile.headIncludeSection += "#include <stdio.h>\n"
 	cfile.headIncludeSection += "#include <stdlib.h>\n"
 	cfile.headIncludeSection += "#include <stdbool.h>\n"
-	cfile.headIncludeSection += "#include \"../lib/hmlib_strings.h\"\n"
-	cfile.hmfile.program.sources["hmlib_strings.c"] = "lib/hmlib_strings.c"
+	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_strings.h\"\n"
+	cfile.hmfile.program.sources["hmlib_strings.c"] = libDir + "/hmlib_strings.c"
 	for importName := range me.imports {
 		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"
 	}
@@ -71,6 +71,332 @@ func (me *hmfile) generateC(folder, name string) string {
 	return fileCode
 }
 
+func (me *cfile) eval(n *node) *cnode {
+	op := n.is
+	if op == "=" {
+		code := me.assingment(n)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
+		code := me.assignmentUpdate(n)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "new" {
+		cn := me.allocClass(n)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "enum" {
+		module, enumName := me.hmfile.moduleAndName(n.typed)
+		code := me.allocEnum(module, enumName, n)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "call" {
+		module, callName := me.hmfile.moduleAndName(n.value)
+		code := me.call(module, callName, n.has)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "concat" {
+		size := len(n.has)
+		code := "hmlib_concat_varg(" + strconv.Itoa(size)
+		for _, snode := range n.has {
+			code += ", " + me.eval(snode).code
+		}
+		code += ")"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "+" || op == "-" || op == "*" || op == "/" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
+		paren := n.attribute("parenthesis")
+		code := ""
+		if paren {
+			code += "("
+		}
+		code += me.eval(n.has[0]).code
+		code += " " + op + " "
+		code += me.eval(n.has[1]).code
+		if paren {
+			code += ")"
+		}
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "member-variable" {
+		root := n.has[0]
+		code := n.value
+		for {
+			if root.is == "root-variable" {
+				module, varName := me.hmfile.moduleAndName(root.value)
+				var vr *variable
+				var cname string
+				if module == me.hmfile {
+					vr = me.getvar(varName)
+					cname = vr.cName
+				} else {
+					vr = module.getstatic(varName)
+					cname = module.varNameSpace(varName)
+				}
+				if checkIsArray(root.typed) {
+					code = cname + code
+				} else {
+					code = cname + vr.memget() + code
+				}
+				break
+			} else if root.is == "array-member" {
+				index := me.eval(root.has[0])
+				code = "[" + index.code + "]" + "->" + code
+				root = root.has[1]
+			} else if root.is == "member-variable" {
+				if code[0] == '[' {
+					code = root.value + code
+				} else {
+					code = root.value + "->" + code
+				}
+				root = root.has[0]
+			} else {
+				panic("missing member variable")
+			}
+		}
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "variable" {
+		module, varName := me.hmfile.moduleAndName(n.value)
+		var v *variable
+		var cname string
+		if module == me.hmfile {
+			v = me.getvar(varName)
+			cname = v.cName
+		} else {
+			v = module.getstatic(varName)
+			cname = module.varNameSpace(varName)
+		}
+		if v == nil {
+			panic("unknown variable " + varName)
+		}
+		cn := codeNode(n.is, n.value, n.typed, cname)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "root-variable" {
+		v := me.getvar(n.value)
+		cn := codeNode(n.is, n.value, n.typed, v.cName)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "array-member" {
+		index := me.eval(n.has[0])
+		root := me.eval(n.has[1])
+		code := root.code + "[" + index.code + "]"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "array" {
+		code := me.allocarray(n)
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "return" {
+		in := me.eval(n.has[0])
+		cn := codeNode(n.is, n.value, n.typed, "return "+in.code)
+		cn.push(in)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "boolexpr" {
+		code := me.eval(n.has[0]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "equal" {
+		paren := n.attribute("parenthesis")
+		code := ""
+		if paren {
+			code += "("
+		}
+		code += me.eval(n.has[0]).code
+		code += " == "
+		code += me.eval(n.has[1]).code
+		if paren {
+			code += ")"
+		}
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "not" {
+		code := "!" + me.eval(n.has[0]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "not-equal" {
+		code := me.eval(n.has[0]).code
+		code += " != "
+		code += me.eval(n.has[1]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == ">" || op == ">=" || op == "<" || op == "<=" {
+		code := me.eval(n.has[0]).code
+		code += " " + op + " "
+		code += me.eval(n.has[1]).code
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "block" {
+		return me.block(n)
+	}
+	if op == "break" {
+		cn := codeNode(n.is, n.value, n.typed, "break")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "continue" {
+		cn := codeNode(n.is, n.value, n.typed, "continue")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "goto" {
+		cn := codeNode(n.is, "", "", "goto "+n.value)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "label" {
+		cn := codeNode(n.is, "", "", n.value+":")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "pass" {
+		cn := codeNode(n.is, "", "", "")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "match" {
+		code := ""
+		depth := me.depth
+		variable := me.getvar(n.value)
+		_, isEnum := me.hmfile.enums[variable.typed]
+		baseEnum := me.hmfile.enumNameSpace(variable.typed)
+		code += "switch (" + n.value + "->type) {\n"
+		ix := 0
+		size := len(n.has)
+		for ix < size {
+			caseOf := n.has[ix]
+			thenDo := n.has[ix+1]
+			thenBlock := me.eval(thenDo).code
+			if caseOf.is == "_" {
+				code += fmc(depth) + "default:\n"
+			} else {
+				if isEnum {
+					code += fmc(depth) + "case " + me.hmfile.enumTypeName(baseEnum, caseOf.is) + ":\n"
+				} else {
+					code += fmc(depth) + "case " + caseOf.is + ":\n"
+				}
+			}
+			code += fmc(depth+1) + thenBlock + me.maybeColon(thenBlock) + "\n"
+			code += fmc(depth+1) + "break;\n"
+			ix += 2
+		}
+		code += fmc(depth) + "}"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "for" {
+		size := len(n.has)
+		ix := 0
+		code := ""
+		if size > 2 {
+			ix += 3
+			vset := n.has[0]
+			if vset.is != "=" {
+				panic("for loop must start with assign")
+			}
+			vobj := vset.has[0]
+			if vobj.is != "variable" {
+				panic("for loop must assign a regular variable")
+			}
+			vname := vobj.value
+			vexist := me.getvar(vname)
+			if vexist == nil {
+				code += me.declare(vobj) + vname + ";\n" + fmc(me.depth)
+			}
+			vinit := me.assingment(vset)
+			condition := me.eval(n.has[1]).code
+			inc := me.assignmentUpdate(n.has[2])
+			code += "for (" + vinit + "; " + condition + "; " + inc + ")\n"
+		} else if size > 1 {
+			ix++
+			code += "while (" + me.eval(n.has[0]).code + ")\n"
+		} else {
+			code += "while (true)\n"
+		}
+		code += fmc(me.depth) + "{\n"
+		me.depth++
+		code += me.eval(n.has[ix]).code
+		me.depth--
+		code += fmc(me.depth) + "}"
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "if" {
+		hsize := len(n.has)
+		code := "if (" + me.eval(n.has[0]).code + ") {\n"
+		me.depth++
+		code += me.eval(n.has[1]).code
+		me.depth--
+		code += fmc(me.depth) + "}"
+		ix := 2
+		for ix < hsize && n.has[ix].is == "elif" {
+			code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
+			me.depth++
+			code += me.eval(n.has[ix].has[1]).code
+			me.depth--
+			code += fmc(me.depth) + "}"
+			ix++
+		}
+		if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
+			code += " else {\n"
+			me.depth++
+			code += me.eval(n.has[ix]).code
+			me.depth--
+			code += fmc(me.depth) + "}"
+		}
+		cn := codeNode(n.is, n.value, n.typed, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if op == "string" {
+		cn := codeNode(n.is, n.value, n.typed, "\""+n.value+"\"")
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	if _, ok := primitives[op]; ok {
+		cn := codeNode(n.is, n.value, n.typed, n.value)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+	panic("eval unknown operation " + n.string(0))
+}
+
 func (me *cfile) allocEnum(module *hmfile, typed string, n *node) string {
 	enumOf := module.enums[typed]
 	if enumOf.simple {
@@ -104,7 +430,7 @@ func (me *cfile) allocEnum(module *hmfile, typed string, n *node) string {
 
 func (me *cfile) allocClass(n *node) *cnode {
 	if n.attribute("no-malloc") {
-		codeNode(n.is, n.value, n.typed, "")
+		return codeNode(n.is, n.value, n.typed, "")
 	}
 
 	module, typed := me.hmfile.moduleAndName(n.typed)
@@ -321,317 +647,6 @@ func (me *cfile) assignmentUpdate(n *node) string {
 	return left.code + " " + n.is + " " + right.code
 }
 
-func (me *cfile) eval(n *node) *cnode {
-	op := n.is
-	if op == "=" {
-		code := me.assingment(n)
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
-		code := me.assignmentUpdate(n)
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "new" {
-		cn := me.allocClass(n)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "enum" {
-		module, enumName := me.hmfile.moduleAndName(n.typed)
-		code := me.allocEnum(module, enumName, n)
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "call" {
-		module, callName := me.hmfile.moduleAndName(n.value)
-		code := me.call(module, callName, n.has)
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "concat" {
-		size := len(n.has)
-		code := "hmlib_concat_varg(" + strconv.Itoa(size)
-		for _, snode := range n.has {
-			code += ", " + me.eval(snode).code
-		}
-		code += ")"
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "+" || op == "-" || op == "*" || op == "/" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
-		paren := n.attribute("parenthesis")
-		code := ""
-		if paren {
-			code += "("
-		}
-		code += me.eval(n.has[0]).code
-		code += " " + op + " "
-		code += me.eval(n.has[1]).code
-		if paren {
-			code += ")"
-		}
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "member-variable" {
-		root := n.has[0]
-		code := n.value
-		for {
-			if root.is == "root-variable" {
-				module, varName := me.hmfile.moduleAndName(root.value)
-				var vr *variable
-				var cname string
-				if module == me.hmfile {
-					vr = me.getvar(varName)
-					cname = vr.cName
-				} else {
-					vr = module.getstatic(varName)
-					cname = module.varNameSpace(varName)
-				}
-				if checkIsArray(root.typed) {
-					code = cname + code
-				} else {
-					code = cname + vr.memget() + code
-				}
-				break
-			} else if root.is == "array-member" {
-				index := me.eval(root.has[0])
-				code = "[" + index.code + "]" + "->" + code
-				root = root.has[1]
-			} else if root.is == "member-variable" {
-				if code[0] == '[' {
-					code = root.value + code
-				} else {
-					code = root.value + "->" + code
-				}
-				root = root.has[0]
-			} else {
-				panic("missing member variable")
-			}
-		}
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "variable" {
-		module, varName := me.hmfile.moduleAndName(n.value)
-		var v *variable
-		var cname string
-		if module == me.hmfile {
-			v = me.getvar(varName)
-			cname = v.cName
-		} else {
-			v = module.getstatic(varName)
-			cname = module.varNameSpace(varName)
-		}
-		if v == nil {
-			panic("unknown variable " + varName)
-		}
-		cn := codeNode(n.is, n.value, n.typed, cname)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "root-variable" {
-		v := me.getvar(n.value)
-		cn := codeNode(n.is, n.value, n.typed, v.cName)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "array-member" {
-		index := me.eval(n.has[0])
-		root := me.eval(n.has[1])
-		code := root.code + "[" + index.code + "]"
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "array" {
-		code := me.allocarray(n)
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "return" {
-		in := me.eval(n.has[0])
-		cn := codeNode(n.is, n.value, n.typed, "return "+in.code)
-		cn.push(in)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "boolexpr" {
-		code := me.eval(n.has[0]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "equal" {
-		paren := n.attribute("parenthesis")
-		code := ""
-		if paren {
-			code += "("
-		}
-		code += me.eval(n.has[0]).code
-		code += " == "
-		code += me.eval(n.has[1]).code
-		if paren {
-			code += ")"
-		}
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "not" {
-		code := "!" + me.eval(n.has[0]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "not-equal" {
-		code := me.eval(n.has[0]).code
-		code += " != "
-		code += me.eval(n.has[1]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == ">" || op == ">=" || op == "<" || op == "<=" {
-		code := me.eval(n.has[0]).code
-		code += " " + op + " "
-		code += me.eval(n.has[1]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "block" {
-		return me.block(n)
-	}
-	if op == "break" {
-		cn := codeNode(n.is, n.value, n.typed, "break;")
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "continue" {
-		cn := codeNode(n.is, n.value, n.typed, "continue;")
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "match" {
-		code := ""
-		depth := me.depth
-		variable := me.getvar(n.value)
-		_, isEnum := me.hmfile.enums[variable.typed]
-		baseEnum := me.hmfile.enumNameSpace(variable.typed)
-		code += "switch (" + n.value + "->type) {\n"
-		ix := 0
-		size := len(n.has)
-		for ix < size {
-			caseOf := n.has[ix]
-			thenDo := n.has[ix+1]
-			thenBlock := me.eval(thenDo).code
-			if caseOf.is == "_" {
-				code += fmc(depth) + "default:\n"
-			} else {
-				if isEnum {
-					code += fmc(depth) + "case " + me.hmfile.enumTypeName(baseEnum, caseOf.is) + ":\n"
-				} else {
-					code += fmc(depth) + "case " + caseOf.is + ":\n"
-				}
-			}
-			code += fmc(depth+1) + thenBlock + me.maybeColon(thenBlock) + "\n"
-			code += fmc(depth+1) + "break;\n"
-			ix += 2
-		}
-		code += fmc(depth) + "}"
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "for" {
-		size := len(n.has)
-		ix := 0
-		code := ""
-		if size > 2 {
-			ix += 3
-			vset := n.has[0]
-			if vset.is != "=" {
-				panic("for loop must start with assign")
-			}
-			vobj := vset.has[0]
-			if vobj.is != "variable" {
-				panic("for loop must assign a regular variable")
-			}
-			vname := vobj.value
-			vexist := me.getvar(vname)
-			if vexist == nil {
-				code += me.declare(vobj) + vname + ";\n" + fmc(me.depth)
-			}
-			vinit := me.assingment(vset)
-			condition := me.eval(n.has[1]).code
-			inc := me.assignmentUpdate(n.has[2])
-			code += "for (" + vinit + "; " + condition + "; " + inc + ")\n"
-		} else if size > 1 {
-			ix++
-			code += "while (" + me.eval(n.has[0]).code + ")\n"
-		} else {
-			code += "while (true)\n"
-		}
-		code += fmc(me.depth) + "{\n"
-		me.depth++
-		code += me.eval(n.has[ix]).code
-		me.depth--
-		code += fmc(me.depth) + "}"
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "if" {
-		hsize := len(n.has)
-		code := "if (" + me.eval(n.has[0]).code + ") {\n"
-		me.depth++
-		code += me.eval(n.has[1]).code
-		me.depth--
-		code += fmc(me.depth) + "}"
-		ix := 2
-		for ix < hsize && n.has[ix].is == "elif" {
-			code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
-			me.depth++
-			code += me.eval(n.has[ix].has[1]).code
-			me.depth--
-			code += fmc(me.depth) + "}"
-			ix++
-		}
-		if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
-			code += " else {\n"
-			me.depth++
-			code += me.eval(n.has[ix]).code
-			me.depth--
-			code += fmc(me.depth) + "}"
-		}
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if op == "string" {
-		cn := codeNode(n.is, n.value, n.typed, "\""+n.value+"\"")
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	if _, ok := primitives[op]; ok {
-		cn := codeNode(n.is, n.value, n.typed, n.value)
-		fmt.Println(cn.string(0))
-		return cn
-	}
-	panic("eval unknown operation " + n.string(0))
-}
-
 func (me *cfile) free(name string) string {
 	return "free(" + name + ");"
 }
@@ -737,10 +752,22 @@ func (me *cfile) defineClass(class *class) {
 }
 
 func (me *cfile) maybeColon(code string) string {
-	if strings.HasSuffix(code, "}") {
+	size := len(code)
+	if size == 0 {
+		return ""
+	}
+	last := code[size-1]
+	if last == '}' || last == ':' {
 		return ""
 	}
 	return ";"
+}
+
+func (me *cfile) maybeFmc(code string, depth int) string {
+	if code == "" {
+		return ""
+	}
+	return fmc(depth)
 }
 
 func (me *cfile) block(n *node) *cnode {
@@ -748,8 +775,9 @@ func (me *cfile) block(n *node) *cnode {
 	code := ""
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		code += fmc(me.depth) + c.code
-		code += me.maybeColon(code) + "\n"
+		if c.code != "" {
+			code += me.maybeFmc(c.code, me.depth) + c.code + me.maybeColon(c.code) + "\n"
+		}
 	}
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
@@ -774,8 +802,7 @@ func (me *cfile) mainc(fn *function) {
 				returns = true
 			}
 		}
-		codeblock += fmc(me.depth) + c.code
-		codeblock += me.maybeColon(codeblock) + "\n"
+		codeblock += fmc(me.depth) + c.code + me.maybeColon(c.code) + "\n"
 	}
 	if !returns {
 		codeblock += fmc(me.depth) + "return 0;\n"
@@ -801,8 +828,9 @@ func (me *cfile) function(name string, fn *function) {
 	}
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		block += fmc(me.depth) + c.code
-		block += me.maybeColon(block) + "\n"
+		if c.code != "" {
+			block += fmc(me.depth) + c.code + me.maybeColon(c.code) + "\n"
+		}
 	}
 	me.popScope()
 	code := ""

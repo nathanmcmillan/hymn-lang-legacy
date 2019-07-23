@@ -1,18 +1,18 @@
-class attribute<v>
+type attribute<v>
   on  bool
   has <v>
 
-class vec
+type vec
   x int 
   y int
   z int
 
-class foo
+type foo
   a vec
   b vec
   c vec
     
-class bar
+type bar
   a maybe<vec>
   b maybe<vec>
   c int

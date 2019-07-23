@@ -177,16 +177,14 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 }
 
 func (me *parser) defineClassImplGeneric(base *class, impl string, order []string) {
-	fmt.Println("define class impl generic: base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
-
 	memberMap := make(map[string]*variable)
 	for k, v := range base.variables {
 		memberMap[k] = v.copy()
 	}
 
-	me.hmfile.namespace[impl] = "class"
+	me.hmfile.namespace[impl] = "type"
 	me.hmfile.types[impl] = true
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_class")
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_type")
 
 	classDef := classInit(impl, nil, nil)
 	classDef.initMembers(base.variableOrder, memberMap)
@@ -231,7 +229,14 @@ func (me *parser) declareType(impl bool) string {
 		array = true
 	}
 
-	typed := me.token.value
+	typed := ""
+
+	if me.token.is == "$" {
+		me.eat("$")
+		typed += "$"
+	}
+
+	typed += me.token.value
 	me.eat("id")
 
 	if _, ok := me.hmfile.imports[typed]; ok {
@@ -242,27 +247,27 @@ func (me *parser) declareType(impl bool) string {
 	}
 
 	if me.token.is == "<" {
-		module, name := me.hmfile.moduleAndName(typed)
-		if base, ok := module.classes[name]; ok {
+		data := me.hmfile.typeToVarData(typed)
+		if base, ok := data.module.classes[data.typed]; ok {
 			gtypes := me.declareGeneric(impl, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if impl {
-				fmt.Println("declare type: building class \"" + name + "\" with impl \"" + typed + "\"")
-				if _, ok := module.classes[typed]; !ok {
+				fmt.Println("declare type: building class \"" + data.typed + "\" with impl \"" + typed + "\"")
+				if _, ok := data.module.classes[typed]; !ok {
 					me.defineClassImplGeneric(base, typed, gtypes)
 				}
 			}
-		} else if base, ok := module.enums[name]; ok {
+		} else if base, ok := data.module.enums[data.typed]; ok {
 			gtypes := me.declareGeneric(impl, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if impl {
-				fmt.Println("declare type: building enum \"" + name + "\" with impl \"" + typed + "\"")
-				if _, ok := module.enums[typed]; !ok {
+				fmt.Println("declare type: building enum \"" + data.typed + "\" with impl \"" + typed + "\"")
+				if _, ok := data.module.enums[typed]; !ok {
 					me.defineEnumImplGeneric(base, typed, gtypes)
 				}
 			}
 		} else {
-			panic(me.fail() + "base enum \"" + name + "\" does not exist")
+			panic(me.fail() + "base enum \"" + data.typed + "\" does not exist")
 		}
 	}
 

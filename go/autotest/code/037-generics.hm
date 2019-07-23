@@ -1,12 +1,12 @@
-class attribute<v>
+type attribute<v>
   on  bool
   has v
 
-class tuple<u, v>
+type tuple<u, v>
   x u
   y v
 
-class node<t, w>
+type node<t, w>
   a []attribute<t>
   b tuple<attribute<w>, string>
   c []tuple<int, tuple<int, w>>

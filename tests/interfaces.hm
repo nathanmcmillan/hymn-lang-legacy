@@ -3,15 +3,15 @@ interface foo
   set(v int)
   put(v int) int
 
-class bar
+type bar
   implement foo
   x int
 
-class dud
+type dud
   implement foo
   y int
 
-class special
+type special
   has bool
   one foo
   two foo

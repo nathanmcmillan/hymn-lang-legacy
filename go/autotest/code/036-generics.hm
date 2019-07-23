@@ -1,21 +1,21 @@
-class vec
+type vec
   x float
   y float
   z float
 
-class link<t>
+type link<t>
   node t
   next link<t>
 
-class array<type>
-  data []type
+type array<d>
+  data []d
   size int
 
-class attribute<v>
+type attribute<v>
   on  bool
   has v
 
-class node<t, w>
+type node<t, w>
   data  t
   make  w
   value int

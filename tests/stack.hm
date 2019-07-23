@@ -1,15 +1,17 @@
-class foo
+type foo
   data int
 
-class special
+type special
   has $foo # force not just a pointer
 
-class regular
+type regular
   has foo
 
 main
   a = special
   a.has.data = 5 # no need to allocate, already have mem
+
+  # h = @a.has
 
   # b = foo
   # b.data = 3
@@ -18,13 +20,13 @@ main
   # c = 6
   # echo(c)
 
-  # d = \special # force allocate on stack
+  # d = \special # force allocate on stack (no-malloc)
   # d.has.data = 5
 
   # e = \foo # force allocate on stack
   # e.data = 53
   # echo(e.data)
-  # f = ref e.data
+  # f = @e.data
   # f = 9
   # echo(f)
 

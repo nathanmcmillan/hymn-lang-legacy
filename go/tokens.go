@@ -9,7 +9,7 @@ var keywords = map[string]bool{
 	"import":    true,
 	"macro":     true,
 	"return":    true,
-	"class":     true,
+	"type":      true,
 	"true":      true,
 	"false":     true,
 	"free":      true,
@@ -152,11 +152,12 @@ func (me *tokenizer) forComment() string {
 	stream.next()
 	value := &strings.Builder{}
 	for !stream.eof() {
-		c := stream.next()
+		c := stream.peek()
 		if c == '\n' {
 			break
 		}
 		value.WriteByte(c)
+		stream.next()
 	}
 	return value.String()
 }

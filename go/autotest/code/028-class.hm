@@ -1,4 +1,4 @@
-class foo
+type foo
   x []int
 
 main

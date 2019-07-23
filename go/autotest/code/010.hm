@@ -1,4 +1,4 @@
-class foo
+type foo
   a int
   b string
 

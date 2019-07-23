@@ -1,4 +1,4 @@
-class vec
+type vec
   x float
   y float
   z float
@@ -9,7 +9,7 @@ immutable
 power(x int) int
   return x * x
 
-vec.dot() float
+vec.dot float
   return self.x * self.y * self.z
 
 vec.init(x float, y float, z float) vec

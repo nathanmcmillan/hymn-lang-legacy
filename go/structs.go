@@ -254,7 +254,7 @@ func (me *cfile) popScope() {
 	me.scope = me.scope.root
 }
 
-func (me *hmfile) getstatic(name string) *variable {
+func (me *hmfile) getStatic(name string) *variable {
 	if s, ok := me.staticScope[name]; ok {
 		return s
 	}
@@ -382,12 +382,12 @@ func (me *variable) copy() *variable {
 	v.name = me.name
 	v.cName = me.name
 	v.mutable = me.mutable
-	v.pointer = me.pointer
+	v.isptr = me.isptr
 	return v
 }
 
 func (me *variable) memget() string {
-	if me.pointer {
+	if me.isptr {
 		return "->"
 	}
 	return "."
@@ -395,18 +395,6 @@ func (me *variable) memget() string {
 
 func isNumber(t string) bool {
 	return t == "int" || t == "float"
-}
-
-func (me *hmfile) moduleAndName(name string) (*hmfile, string) {
-	if checkIsArray(name) {
-		name = typeOfArray(name)
-	}
-	get := strings.Split(name, ".")
-	if len(get) == 1 {
-		return me, get[0]
-	}
-	module := me.program.hmfiles[get[0]]
-	return module, get[1]
 }
 
 func (me *hmfile) getclass(name string) (*class, string) {

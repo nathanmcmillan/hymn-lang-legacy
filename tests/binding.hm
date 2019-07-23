@@ -1,0 +1,14 @@
+type vec
+  x int
+  y int
+  z int
+
+foobar(d dict<string, vec>)
+  v = vec(1, 2, 3)
+  d.insert("one", v)
+  bind(v, d) # v deallocated when d is
+
+main
+  d = dict<string, vec> # d deallocated at end of scope
+  foobar(d)
+  echo("done")

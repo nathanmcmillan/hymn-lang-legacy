@@ -134,7 +134,7 @@ func (me *hmfile) dump() string {
 			def := strings.Split(name, "_")
 			name := def[0]
 			typed := def[1]
-			if typed == "class" {
+			if typed == "type" {
 				cl := me.classes[name]
 				s += cl.dump(lv)
 			} else if typed == "enum" {

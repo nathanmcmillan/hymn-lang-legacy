@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func (me *parser) defineClassFunction() {
 	module := me.hmfile
 	className := me.token.value
@@ -147,21 +145,20 @@ func (me *parser) genericHeader() ([]string, map[string]bool) {
 }
 
 func (me *parser) defineClass() {
-	me.eat("class")
+	me.eat("type")
 	token := me.token
 	name := token.value
 	if _, ok := me.hmfile.namespace[name]; ok {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
-	fmt.Println("define class \"" + name + "\"")
 	me.eat("id")
 
 	genericsOrder, genericsDict := me.genericHeader()
 	me.eat("line")
 
-	me.hmfile.namespace[name] = "class"
+	me.hmfile.namespace[name] = "type"
 	me.hmfile.types[name] = true
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_class")
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_type")
 
 	classDef := classInit(name, genericsOrder, genericsDict)
 	me.hmfile.classes[name] = classDef
@@ -170,21 +167,14 @@ func (me *parser) defineClass() {
 	memberMap := make(map[string]*variable)
 
 	for {
-		token := me.token
-		if token.is == "line" {
-			me.eat("line")
+		if me.token.is == "line" {
 			break
 		}
-		if token.is == "eof" || token.is == "#" {
+		if me.token.is == "eof" || me.token.is == "#" {
 			break
 		}
-		isptr := true
-		if token.is == "$" {
-			me.eat("$")
-			isptr = false
-		}
-		if token.is == "id" {
-			mname := token.value
+		if me.token.is == "id" {
+			mname := me.token.value
 			me.eat("id")
 			if _, ok := memberMap[mname]; ok {
 				panic(me.fail() + "member name \"" + mname + "\" already used")
@@ -195,7 +185,7 @@ func (me *parser) defineClass() {
 			mtype := me.declareType(false)
 			me.eat("line")
 			memberOrder = append(memberOrder, mname)
-			memberMap[mname] = me.hmfile.varInit(mtype, mname, true, isptr)
+			memberMap[mname] = me.hmfile.varInit(mtype, mname, true, true)
 			continue
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in class")

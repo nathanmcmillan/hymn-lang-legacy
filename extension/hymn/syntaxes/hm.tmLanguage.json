@@ -12,8 +12,8 @@
 		"match": "\\bself\\b",
 		"name": "variable.language.this.hymn"
 	}, {
-		"explanation": "class",
-		"match": "^(class|enum) +([a-zA-Z]+)",
+		"explanation": "types",
+		"match": "^(type|enum) +([a-zA-Z]+)",
 		"captures": {
 			"1": {
 				"name": "keyword.struct.hymn"

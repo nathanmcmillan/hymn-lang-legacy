@@ -2,12 +2,12 @@ immutable keywords = set<string>
   "import"
   "macro"
 
-class token
+type token
   depth int
   is    string
   value string
 
-class tokenizer
+type tokenizer
   tokens []token
 
 token.toString() string

@@ -1,0 +1,12 @@
+enum snake
+  python
+  viper
+  cobra
+
+enum mammal
+  mouse(int)
+  cat(string)
+
+enum bug<x>
+  ant(x)
+  bee

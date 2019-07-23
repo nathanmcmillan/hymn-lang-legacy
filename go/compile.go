@@ -31,7 +31,7 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 		def := strings.Split(c, "_")
 		name := def[0]
 		typed := def[1]
-		if typed == "class" {
+		if typed == "type" {
 			cfile.defineClass(me.classes[name])
 		} else if typed == "enum" {
 			cfile.defineEnum(me.enums[name])
@@ -91,15 +91,15 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "enum" {
-		module, enumName := me.hmfile.moduleAndName(n.typed)
-		code := me.allocEnum(module, enumName, n)
+		data := me.hmfile.typeToVarData(n.typed)
+		code := me.allocEnum(data.module, data.typed, n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "call" {
-		module, callName := me.hmfile.moduleAndName(n.value)
-		code := me.call(module, callName, n.has)
+		data := me.hmfile.typeToVarData(n.value)
+		code := me.call(data.module, data.typed, n.has)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -136,15 +136,15 @@ func (me *cfile) eval(n *node) *cnode {
 		code := n.value
 		for {
 			if root.is == "root-variable" {
-				module, varName := me.hmfile.moduleAndName(root.value)
+				data := me.hmfile.typeToVarData(root.value)
 				var vr *variable
 				var cname string
-				if module == me.hmfile {
-					vr = me.getvar(varName)
+				if data.module == me.hmfile {
+					vr = me.getvar(data.typed)
 					cname = vr.cName
 				} else {
-					vr = module.getstatic(varName)
-					cname = module.varNameSpace(varName)
+					vr = data.module.getStatic(data.typed)
+					cname = data.module.varNameSpace(data.typed)
 				}
 				if checkIsArray(root.typed) {
 					code = cname + code
@@ -172,18 +172,18 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "variable" {
-		module, varName := me.hmfile.moduleAndName(n.value)
+		data := me.hmfile.typeToVarData(n.value)
 		var v *variable
 		var cname string
-		if module == me.hmfile {
-			v = me.getvar(varName)
+		if data.module == me.hmfile {
+			v = me.getvar(data.typed)
 			cname = v.cName
 		} else {
-			v = module.getstatic(varName)
-			cname = module.varNameSpace(varName)
+			v = data.module.getStatic(data.typed)
+			cname = data.module.varNameSpace(data.typed)
 		}
 		if v == nil {
-			panic("unknown variable " + varName)
+			panic("unknown variable " + data.typed)
 		}
 		cn := codeNode(n.is, n.value, n.typed, cname)
 		fmt.Println(cn.string(0))
@@ -433,8 +433,8 @@ func (me *cfile) allocClass(n *node) *cnode {
 		return codeNode(n.is, n.value, n.typed, "")
 	}
 
-	module, typed := me.hmfile.moduleAndName(n.typed)
-	typed = module.classNameSpace(typed)
+	data := me.hmfile.typeToVarData(n.typed)
+	typed := data.module.classNameSpace(data.typed)
 
 	// HmConstructorAttributeAttributeVec *const z = calloc(1, sizeof(HmConstructorAttributeAttributeVec));
 	// z->on = true;
@@ -532,14 +532,14 @@ func (me *cfile) typeSig(typed string) string {
 		arrayType := typeOfArray(typed)
 		return fmtptr(me.typeSig(arrayType))
 	}
-	module, trueType := me.hmfile.moduleAndName(typed)
-	if module.checkIsClass(trueType) {
-		return module.classNameSpace(trueType) + " *"
-	} else if module.checkIsEnum(trueType) {
-		if module.enums[trueType].simple {
-			return module.enumNameSpace(trueType)
+	data := me.hmfile.typeToVarData(typed)
+	if data.module.checkIsClass(data.typed) {
+		return data.module.classNameSpace(data.typed) + " *"
+	} else if data.module.checkIsEnum(data.typed) {
+		if data.module.enums[data.typed].simple {
+			return data.module.enumNameSpace(data.typed)
 		}
-		return module.unionNameSpace(trueType) + " *"
+		return data.module.unionNameSpace(data.typed) + " *"
 	} else if typed == "string" {
 		return "char *"
 	}
@@ -551,14 +551,14 @@ func (me *cfile) noMalloctypeSig(typed string) string {
 		arraytype := typeOfArray(typed)
 		return fmtptr(me.noMalloctypeSig(arraytype))
 	}
-	module, trueType := me.hmfile.moduleAndName(typed)
-	if module.checkIsClass(trueType) {
-		return module.classNameSpace(typed)
-	} else if module.checkIsEnum(trueType) {
-		if module.enums[trueType].simple {
-			return module.enumNameSpace(trueType)
+	data := me.hmfile.typeToVarData(typed)
+	if data.module.checkIsClass(data.typed) {
+		return data.module.classNameSpace(typed)
+	} else if data.module.checkIsEnum(data.typed) {
+		if data.module.enums[data.typed].simple {
+			return data.module.enumNameSpace(data.typed)
 		}
-		return module.unionNameSpace(trueType)
+		return data.module.unionNameSpace(data.typed)
 	} else if typed == "string" {
 		return "char *"
 	}
@@ -581,19 +581,19 @@ func (me *cfile) declare(n *node) string {
 			typed := n.typed
 			me.scope.variables[name] = me.hmfile.varInit(typed, name, mutable, malloc)
 			codesig := fmtassignspace(me.typeSig(typed))
-			module, trueType := me.hmfile.moduleAndName(typed)
+			data := me.hmfile.typeToVarData(typed)
 			if mutable {
 				code = codesig
-			} else if checkIsArray(typed) || module.checkIsClass(trueType) || module.checkIsUnion(trueType) {
+			} else if checkIsArray(typed) || data.module.checkIsClass(data.typed) || data.module.checkIsUnion(data.typed) {
 				code += codesig + "const "
 			} else {
 				code += "const " + codesig
 			}
 		} else {
 			typed := n.typed
-			module, _ := me.hmfile.moduleAndName(typed)
+			data := me.hmfile.typeToVarData(typed)
 			newVar := me.hmfile.varInit(typed, name, mutable, malloc)
-			newVar.cName = module.varNameSpace(name)
+			newVar.cName = data.module.varNameSpace(name)
 			me.scope.variables[name] = newVar
 			codesig := fmtassignspace(me.noMalloctypeSig(typed))
 			code += codesig
@@ -840,9 +840,9 @@ func (me *cfile) function(name string, fn *function) {
 			code += ", "
 		}
 		typed := arg.typed
-		module, trueType := me.hmfile.moduleAndName(typed)
+		data := me.hmfile.typeToVarData(typed)
 		codesig := fmtassignspace(me.typeSig(typed))
-		if checkIsArray(typed) || module.checkIsClass(trueType) || module.checkIsUnion(trueType) {
+		if checkIsArray(typed) || data.module.checkIsClass(data.typed) || data.module.checkIsUnion(data.typed) {
 			code += codesig + "const "
 		} else {
 			code += "const " + codesig

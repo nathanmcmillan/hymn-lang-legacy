@@ -24,7 +24,7 @@ func (me *parser) fileExpression() {
 		} else {
 			me.defineFileFunction()
 		}
-	} else if op == "class" {
+	} else if op == "type" {
 		me.defineClass()
 	} else if op == "enum" {
 		me.defineEnum()
@@ -173,8 +173,8 @@ func (me *parser) eatvar(from *hmfile) *node {
 				root.typed = sv.typed
 				root.is = "root-variable"
 			}
-			module, className := me.hmfile.moduleAndName(root.typed)
-			rootClass, _ := module.getclass(className)
+			data := me.hmfile.typeToVarData(root.typed)
+			rootClass, _ := data.module.getclass(data.typed)
 			if rootClass == nil {
 				panic(me.fail() + "class \"" + root.typed + "\" does not exist")
 			}
@@ -191,10 +191,10 @@ func (me *parser) eatvar(from *hmfile) *node {
 				member.push(root)
 			} else {
 				nameOfFunc := me.nameOfClassFunc(rootClass.name, dotName)
-				funcVar, ok := module.functions[nameOfFunc]
+				funcVar, ok := data.module.functions[nameOfFunc]
 				if ok {
 					fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed + "\"")
-					member = me.callClassFunction(module, root, rootClass, funcVar)
+					member = me.callClassFunction(data.module, root, rootClass, funcVar)
 				} else {
 					panic(me.fail() + "class variable or function \"" + dotName + "\" does not exist")
 				}
@@ -234,7 +234,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				root.typed = sv.typed
 			}
 		} else {
-			sv := from.getstatic(localvarname)
+			sv := from.getStatic(localvarname)
 			if sv == nil {
 				panic(me.fail() + "static variable \"" + localvarname + "\" in module \"" + from.name + "\" not found")
 			} else {
@@ -340,11 +340,14 @@ func (me *parser) extern() *node {
 	} else if _, ok := module.classes[idname]; ok {
 		fmt.Println("extern class")
 		return me.allocClass(module)
-	} else if module.getstatic(idname) != nil {
+	} else if _, ok := module.enums[idname]; ok {
+		fmt.Println("extern enum")
+		return me.allocEnum(module)
+	} else if module.getStatic(idname) != nil {
 		fmt.Println("extern var")
 		return me.eatvar(module)
 	} else {
-		panic(me.fail() + "extern " + extname + "." + idname + " does not exist")
+		panic(me.fail() + "external type \"" + extname + "." + idname + "\" does not exist")
 	}
 }
 

@@ -1,11 +1,11 @@
-class foo(int, float)
-class bar(w int, r float)
+type foo(int, float)
+type bar(w int, r float)
 
-class foo
+type foo
   x int
   y float
 
-class bar
+type bar
   w int
   r float
 

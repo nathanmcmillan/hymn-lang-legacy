@@ -12,7 +12,8 @@ main
     on: true
     has: attribute<vec>
       on: true
-      has: vec(x:2*5, y:2*6, z:2*7)
+      has: vec(2*5, 2*6, 2*7)
+  
   # echo(string(z.on) + " | " + string(z.has.on))
   # echo(z.has.has.x)
   # echo(z.has.has.y)

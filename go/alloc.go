@@ -132,6 +132,22 @@ func defaultValue(typed string) string {
 	}
 }
 
+type blockNode struct {
+	pre     []*blockNode
+	current []*node
+}
+
+// HmConstructorVec *temp_0 = calloc(1, sizeof(HmConstructorVec));
+// temp_0->x = 2 * 5;
+// temp_0->y = 2 * 6;
+// temp_0->z = 2 * 7;
+// HmConstructorAttributeVec *temp_1 = calloc(1, sizeof(HmConstructorAttributeVec));
+// temp_1->on = true;
+// temp_1->has = temp_0;
+// HmConstructorAttributeAttributeVec *const z = calloc(1, sizeof(HmConstructorAttributeAttributeVec));
+// z->on = true;
+// z->has = temp_1;
+
 func (me *parser) classParams(n *node, typed string) {
 	me.eat("(")
 	base := me.hmfile.classes[typed]

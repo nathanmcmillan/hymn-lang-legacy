@@ -1,0 +1,17 @@
+type vec
+  x int 
+  y int
+  z int
+
+main
+  a = none<vec>
+  b = some(vec)
+
+  match a
+    some => echo("oh no")
+    none => echo("none!")
+
+  match b
+    some => echo("some! " + string(b.x))
+    none => echo(v.x)
+

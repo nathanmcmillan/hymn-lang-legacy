@@ -278,10 +278,10 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			} else {
 				left.typed = right.typed
 				if mutable {
-					left.pushAttribute("mutable")
+					left.attributes["mutable"] = "true"
 				}
 				if !malloc {
-					left.pushAttribute("no-malloc")
+					left.attributes["no-malloc"] = "true"
 				}
 				me.hmfile.scope.variables[left.value] = me.hmfile.varInit(right.typed, left.value, mutable, malloc)
 			}
@@ -426,46 +426,57 @@ func (me *parser) match() *node {
 	me.eat("match")
 	n := nodeInit("match")
 	n.typed = "void"
-	varMatchName := me.token.value
-	me.eat("id")
-	varMatch := me.hmfile.getvar(varMatchName)
-	enumOf, isEnum := me.hmfile.enums[varMatch.typed]
-	n.value = varMatchName
+
+	matching := me.calc()
+	n.push(matching)
+
+	// varMatch := me.hmfile.getvar(varMatchName)
+	// enumOf, isEnum := me.hmfile.enums[varMatch.typed]
 	me.eat("line")
 	for me.token.depth > depth {
 		if me.token.is == "id" {
 			id := me.token.value
 			me.eat("id")
 			caseNode := nodeInit(id)
-			if isEnum && me.token.is == "(" {
-				enumType, ok := enumOf.types[id]
-				if !ok {
-					panic(me.fail() + "enum \"" + enumOf.name + "\" does not have type \"" + id + "\"")
-				}
-				varCount := len(enumType.types)
-				fmt.Println("matching for enum \""+enumType.name+"\", var count =", varCount)
-				me.eat("(")
-				for ix := 0; ix < varCount; ix++ {
-					if ix > 0 {
-						me.eat("delim")
-					}
-					nameMapID := me.token.value
-					me.eat("id")
-					nameMap := nodeInit(nameMapID)
-					caseNode.push(nameMap)
-				}
-				me.eat(")")
-			}
+			// if isEnum && me.token.is == "(" {
+			// 	enumType, ok := enumOf.types[id]
+			// 	if !ok {
+			// 		panic(me.fail() + "enum \"" + enumOf.name + "\" does not have type \"" + id + "\"")
+			// 	}
+			// 	varCount := len(enumType.types)
+			// 	fmt.Println("matching for enum \""+enumType.name+"\", var count =", varCount)
+			// 	me.eat("(")
+			// 	for ix := 0; ix < varCount; ix++ {
+			// 		if ix > 0 {
+			// 			me.eat("delim")
+			// 		}
+			// 		nameMapID := me.token.value
+			// 		me.eat("id")
+			// 		nameMap := nodeInit(nameMapID)
+			// 		caseNode.push(nameMap)
+			// 	}
+			// 	me.eat(")")
+			// }
 			me.eat("=>")
 			n.push(caseNode)
-			n.push(me.calc())
-			me.eat("line")
+			if me.token.is == "line" {
+				me.eat("line")
+				n.push(me.block())
+			} else {
+				n.push(me.expression())
+				me.eat("line")
+			}
 		} else if me.token.is == "_" {
 			me.eat("_")
 			me.eat("=>")
 			n.push(nodeInit("_"))
-			n.push(me.calc())
-			me.eat("line")
+			if me.token.is == "line" {
+				me.eat("line")
+				n.push(me.block())
+			} else {
+				n.push(me.expression())
+				me.eat("line")
+			}
 		} else {
 			break
 		}
@@ -761,7 +772,7 @@ func (me *parser) factor() *node {
 	if op == "(" {
 		me.eat("(")
 		n := me.calc()
-		n.pushAttribute("parenthesis")
+		n.attributes["parenthesis"] = "true"
 		me.eat(")")
 		return n
 	}

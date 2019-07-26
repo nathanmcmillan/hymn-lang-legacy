@@ -1,3 +1,3 @@
 main
-  open("files.tree") is x
+  for x in open("files.tree")
     echo(contents)

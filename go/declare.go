@@ -246,6 +246,13 @@ func (me *parser) declareType(impl bool) string {
 		me.eat("id")
 	}
 
+	if _, ok := me.hmfile.enums[typed]; ok && me.token.is == "." {
+		me.eat(".")
+		typed += "."
+		typed += me.token.value
+		me.eat("id")
+	}
+
 	if me.token.is == "<" {
 		data := me.hmfile.typeToVarData(typed)
 		if base, ok := data.module.classes[data.typed]; ok {

@@ -25,7 +25,7 @@ type node struct {
 	is         string
 	value      string
 	typed      string
-	attributes []string
+	attributes map[string]string
 	has        []*node
 }
 
@@ -40,6 +40,7 @@ type variable struct {
 
 type scope struct {
 	root      *scope
+	temp      int
 	fn        *function
 	variables map[string]*variable
 }
@@ -291,25 +292,12 @@ func nodeInit(is string) *node {
 	n := &node{}
 	n.is = is
 	n.has = make([]*node, 0)
-	n.attributes = make([]string, 0)
+	n.attributes = make(map[string]string)
 	return n
 }
 
 func (me *node) push(n *node) {
 	me.has = append(me.has, n)
-}
-
-func (me *node) attribute(find string) bool {
-	for _, a := range me.attributes {
-		if a == find {
-			return true
-		}
-	}
-	return false
-}
-
-func (me *node) pushAttribute(a string) {
-	me.attributes = append(me.attributes, a)
 }
 
 func codeNode(is, value, typed, code string) *cnode {

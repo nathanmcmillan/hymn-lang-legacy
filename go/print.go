@@ -20,11 +20,13 @@ func (me *node) string(lv int) string {
 	}
 	if len(me.attributes) > 0 {
 		s += ", attributes["
-		for ix, has := range me.attributes {
+		ix := 0
+		for key, value := range me.attributes {
 			if ix > 0 {
 				s += ", "
 			}
-			s += has
+			s += "{" + key + ":" + value + "}"
+			ix++
 		}
 		s += "]"
 	}

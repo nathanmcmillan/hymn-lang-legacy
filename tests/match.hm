@@ -1,37 +1,68 @@
+enum dog
+  bark
+  woof
+
 enum bug
   ant(int)
   bee
   moth
 
+goob(b bug) string
+  match b
+    ant => return "glob ant!"
+    bee => return "glob bee!"
+    moth => return "glob moth!"
+  
+doob(d dog) string
+  match d
+    bark => return "bark!"
+    woof => echo("ha!")
+  return "woof!"
+
+zoob(b bug.ant) string
+  return "zoob!"
+
 main
-  x = bug.ant(3)
-  
-  match x
-    ant
-      echo(x.0)
-    else pass
-  
-  match x ant: echo(x.0)
+  # match 2
+  #   0 => echo("zero")
+  #   1 => echo("one")
+  #   2 => echo("two")
+  #   _ => pass
+
+  b = bug.ant(3)
+  # echo(zoob(b))
+  echo(goob(b))
+
+  d = dog.bark
+  echo(doob(d))
+
+  match b
+    ant => echo("ant!")
+    bee => echo("bee!")
+    moth => echo("moth!")
+
+  match b
+    ant => echo("ant!")
+    _ => pass
+
+  match b
+    bee =>
+      echo("bee!")
+    _ =>
+      pass
+
+  match b
+    ant => echo("ant!")
+    bee =>
+      echo("bee!")
+      echo("bee 2!")
+    moth => echo("moth!")
+
+  # match x
+  #   bee|ant => echo("bee or ant!")
+  #   moth => echo("moth!")
+
+  # if x = ant: echo(x.0)
     
-  match x ant
-    echo(x.0)
-
-  match x
-    ant
-      echo(x.0)
-      echo("ant!")
-    bee
-      echo("bee!")
-    moth
-      echo("moth!")
-
-  match x
-    ant: echo("ant!")
-    bee: echo("bee!")
-    moth: echo("moth!")
-
-  match x
-    bee
-      echo("bee!")
-    else
-      echo("other!")
+  # if x = ant
+  #   echo(x.0)

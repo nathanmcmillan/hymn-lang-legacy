@@ -22,7 +22,7 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 			param := me.calc()
 			aix := fn.argDict[argname]
 			arg := fn.args[aix]
-			if param.typed != arg.typed && arg.typed != "?" {
+			if me.hmfile.typeToVarData(param.typed).notEqual(arg.vdat) && arg.typed != "?" {
 				err := "parameter \"" + param.typed
 				err += "\" does not match argument \"" + argname + "\" typed \"" + arg.typed + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
@@ -35,7 +35,7 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 		} else {
 			param := me.calc()
 			arg := fn.args[pix]
-			if param.typed != arg.typed && arg.typed != "?" {
+			if me.hmfile.typeToVarData(param.typed).notEqual(arg.vdat) && arg.typed != "?" {
 				err := "parameter \"" + param.typed
 				err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.typed + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
@@ -68,7 +68,7 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	} else {
 		n.value = module.name + "." + name
 	}
-	n.typed = fn.typed
+	n.typed = fn.typed.full
 	params := make([]*node, len(fn.args))
 	params[0] = root
 	pix := 1
@@ -87,7 +87,7 @@ func (me *parser) call(module *hmfile) *node {
 	} else {
 		n.value = module.name + "." + name
 	}
-	n.typed = fn.typed
+	n.typed = fn.typed.full
 	params := make([]*node, len(fn.args))
 	pix := 0
 	me.pushParams(name, n, pix, 0, params, fn)

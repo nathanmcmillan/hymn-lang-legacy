@@ -78,11 +78,11 @@ func (me *parser) allocEnum(module *hmfile) *node {
 				me.eat("delim")
 			}
 			param := me.calc()
-			if param.typed != unionType {
-				if _, gok := gdict[unionType]; gok {
-					gimpl[unionType] = param.typed
+			if me.hmfile.typeToVarData(param.typed).notEqual(unionType) {
+				if _, gok := gdict[unionType.full]; gok {
+					gimpl[unionType.full] = param.typed
 				} else {
-					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType + "\" but parameter was \"" + param.typed + "\"")
+					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.full + "\" but parameter was \"" + param.typed + "\"")
 				}
 			}
 			n.push(param)
@@ -132,21 +132,19 @@ func defaultValue(typed string) string {
 	}
 }
 
-type blockNode struct {
-	pre     []*blockNode
-	current []*node
+func (me *parser) pushClassParams(n *node, base *class, params []*node) {
+	for i, param := range params {
+		if param == nil {
+			clsvar := base.variables[base.variableOrder[i]]
+			dfault := nodeInit(clsvar.typed)
+			dfault.typed = clsvar.typed
+			dfault.value = defaultValue(clsvar.typed)
+			n.push(dfault)
+		} else {
+			n.push(param)
+		}
+	}
 }
-
-// HmConstructorVec *temp_0 = calloc(1, sizeof(HmConstructorVec));
-// temp_0->x = 2 * 5;
-// temp_0->y = 2 * 6;
-// temp_0->z = 2 * 7;
-// HmConstructorAttributeVec *temp_1 = calloc(1, sizeof(HmConstructorAttributeVec));
-// temp_1->on = true;
-// temp_1->has = temp_0;
-// HmConstructorAttributeAttributeVec *const z = calloc(1, sizeof(HmConstructorAttributeAttributeVec));
-// z->on = true;
-// z->has = temp_1;
 
 func (me *parser) classParams(n *node, typed string) {
 	me.eat("(")
@@ -169,7 +167,7 @@ func (me *parser) classParams(n *node, typed string) {
 			me.eat(":")
 			param := me.calc()
 			clsvar := base.variables[vname]
-			if param.typed != clsvar.typed && clsvar.typed != "?" {
+			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter \"" + param.typed
 				err += "\" does not match class \"" + base.name + "\" variable \""
 				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
@@ -188,7 +186,7 @@ func (me *parser) classParams(n *node, typed string) {
 		} else {
 			param := me.calc()
 			clsvar := base.variables[vars[pix]]
-			if param.typed != clsvar.typed && clsvar.typed != "?" {
+			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter \"" + param.typed
 				err += "\" does not match class \"" + base.name + "\" variable \""
 				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
@@ -198,17 +196,7 @@ func (me *parser) classParams(n *node, typed string) {
 			pix++
 		}
 	}
-	for i, param := range params {
-		if param == nil {
-			clsvar := base.variables[vars[i]]
-			dfault := nodeInit(clsvar.typed)
-			dfault.typed = clsvar.typed
-			dfault.value = defaultValue(clsvar.typed)
-			n.push(dfault)
-		} else {
-			n.push(param)
-		}
-	}
+	me.pushClassParams(n, base, params)
 }
 
 func (me *parser) specialClassParams(depth int, n *node, typed string) {
@@ -227,7 +215,7 @@ func (me *parser) specialClassParams(depth int, n *node, typed string) {
 			me.eat(":")
 			param := me.calc()
 			clsvar := base.variables[vname]
-			if param.typed != clsvar.typed && clsvar.typed != "?" {
+			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter type \"" + param.typed
 				err += "\" does not match class \"" + base.name + "\" with member \""
 				err += clsvar.name + "\" and type \"" + clsvar.typed + "\""
@@ -250,20 +238,9 @@ func (me *parser) specialClassParams(depth int, n *node, typed string) {
 		}
 		panic(me.fail() + "missing parameter")
 	}
-	for i, param := range params {
-		if param == nil {
-			clsvar := base.variables[vars[i]]
-			dfault := nodeInit(clsvar.typed)
-			dfault.typed = clsvar.typed
-			dfault.value = defaultValue(clsvar.typed)
-			n.push(dfault)
-		} else {
-			n.push(param)
-		}
-	}
+	me.pushClassParams(n, base, params)
 }
 
-// TODO deprecated
 func (me *parser) buildClass(n *node, module *hmfile) string {
 	name := me.token.value
 	depth := me.token.depth
@@ -297,9 +274,7 @@ func (me *parser) buildClass(n *node, module *hmfile) string {
 
 func (me *parser) allocClass(module *hmfile) *node {
 	n := nodeInit("new")
-	// TODO deprecated
 	n.typed = me.buildClass(n, module)
-	// n.typed = me.declareType(true)
 	return n
 }
 
@@ -312,9 +287,7 @@ func (me *parser) allocArray() *node {
 	me.eat("]")
 
 	n := nodeInit("array")
-	// TODO deprecated
 	n.typed = "[]" + me.buildAnyType()
-	// n.typed = "[]" + me.declareType
 	n.push(size)
 	fmt.Println("array node =", n.string(0))
 

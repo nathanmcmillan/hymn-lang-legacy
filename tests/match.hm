@@ -7,6 +7,11 @@ enum bug
   bee
   moth
 
+enum liquid
+  soda(string, string, string)
+  beer
+  wine
+
 goob(b bug) string
   match b
     ant => return "glob ant!"
@@ -20,18 +25,26 @@ doob(d dog) string
   return "woof!"
 
 zoob(b bug.ant) string
-  return "zoob!"
+  return "zoob " + string(b.0) + "!"
+
+moob(b liquid.soda) string
+  return "moob " + b.2 + "!"
+
+foob bug.ant
+  return bug.ant(5)
+
+noob liquid
+  return liquid.soda("1", "2", "3")
+
+numby int
+  return 2
 
 main
-  # match 2
-  #   0 => echo("zero")
-  #   1 => echo("one")
-  #   2 => echo("two")
-  #   _ => pass
-
   b = bug.ant(3)
-  # echo(zoob(b))
+  echo(zoob(b))
   echo(goob(b))
+
+  echo(moob(liquid.soda("a!", "b!", "c!")))
 
   d = dog.bark
   echo(doob(d))
@@ -58,11 +71,44 @@ main
       echo("bee 2!")
     moth => echo("moth!")
 
+  f = foob()
+  echo(f.0)
+
+  # match n := noob()
+  #   soda => echo(n.1)
+  #   beer => pass
+  #   wine => pass
+
+  # match 2
+  #   0 => echo("zero")
+  #   1 => echo("one")
+  #   2 => echo("two")
+  #   _ => pass
+
+  # match numby()
+  #   200 => echo("two hundred")
+  #   2 => echo("two")
+  #   _ => pass
+
   # match x
   #   bee|ant => echo("bee or ant!")
   #   moth => echo("moth!")
 
-  # if x = ant: echo(x.0)
+  # echo(dog.woof.type) # 0
+  # echo(dog.woof.name) # "woof"
+  # echo(bug.ant.type) # 0
+  # echo(bug.ant.name) # "ant"
+  # echo(bug.ant(0).name) # "ant"
+
+  # if x.type = y.type: echo("match!")
+
+  # if x.type = ant: echo(x.0)
     
-  # if x = ant
+  # if x.type = ant
   #   echo(x.0)
+
+  # for b in bug
+  #   echo(b.type)
+
+  # for d in dog
+  #   echo(d)

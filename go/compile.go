@@ -118,6 +118,9 @@ func (me *cfile) eval(n *node) *cnode {
 	if op == "+" || op == "-" || op == "*" || op == "/" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
 		return me.compileBinaryOp(n)
 	}
+	if op == "tuple-index" {
+		return me.compileTupleIndex(n)
+	}
 	if op == "member-variable" {
 		return me.compileMemberVariable(n)
 	}
@@ -139,7 +142,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "array" {
-		code := me.allocarray(n)
+		code := me.allocArray(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -262,6 +265,22 @@ func (me *cfile) compileBinaryOp(n *node) *cnode {
 	return cn
 }
 
+func (me *cfile) compileTupleIndex(n *node) *cnode {
+	dotIndexStr := n.value
+	root := me.eval(n.has[0])
+	data := me.hmfile.typeToVarData(root.typed)
+	_, un, _ := data.checkIsEnum()
+	code := root.code + "->"
+	if len(un.types) == 1 {
+		code += un.name
+	} else {
+		code += un.name + ".var" + dotIndexStr
+	}
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
 func (me *cfile) compileMemberVariable(n *node) *cnode {
 	root := n.has[0]
 	code := n.value
@@ -324,7 +343,6 @@ func (me *cfile) compileVariable(n *node) *cnode {
 
 func (me *cfile) compileMatch(n *node) *cnode {
 	code := ""
-	depth := me.depth
 
 	using := n.has[0]
 	match := me.eval(using)
@@ -353,23 +371,25 @@ func (me *cfile) compileMatch(n *node) *cnode {
 		thenDo := n.has[ix+1]
 		thenBlock := me.eval(thenDo).code
 		if caseOf.is == "_" {
-			code += fmc(depth) + "default:\n"
+			code += fmc(me.depth) + "default:\n"
 		} else {
 			if isEnum {
-				code += fmc(depth) + "case " + me.hmfile.enumTypeName(enumNameSpace, caseOf.is) + ":\n"
+				code += fmc(me.depth) + "case " + me.hmfile.enumTypeName(enumNameSpace, caseOf.is) + ":\n"
 			} else {
-				code += fmc(depth) + "case " + caseOf.is + ":\n"
+				code += fmc(me.depth) + "case " + caseOf.is + ":\n"
 			}
 		}
+		me.depth++
 		if thenBlock != "" {
-			code += fmc(depth+1) + thenBlock + me.maybeColon(thenBlock) + "\n"
+			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock) + "\n"
 		}
 		if !strings.Contains(thenBlock, "return") {
-			code += fmc(depth+1) + "break;\n"
+			code += fmc(me.depth) + "break;\n"
 		}
+		me.depth--
 		ix += 2
 	}
-	code += fmc(depth) + "}"
+	code += fmc(me.depth) + "}"
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
 	return cn
@@ -405,10 +425,8 @@ func (me *cfile) compileFor(n *node) *cnode {
 		code += "while (true)\n"
 	}
 	code += fmc(me.depth) + "{\n"
-	me.depth++
 	code += me.eval(n.has[ix]).code
-	me.depth--
-	code += fmc(me.depth) + "}"
+	code += "\n" + fmc(me.depth) + "}"
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
 	return cn
@@ -417,25 +435,19 @@ func (me *cfile) compileFor(n *node) *cnode {
 func (me *cfile) compileIf(n *node) *cnode {
 	hsize := len(n.has)
 	code := "if (" + me.eval(n.has[0]).code + ") {\n"
-	me.depth++
 	code += me.eval(n.has[1]).code
-	me.depth--
-	code += fmc(me.depth) + "}"
+	code += "\n" + fmc(me.depth) + "}"
 	ix := 2
 	for ix < hsize && n.has[ix].is == "elif" {
 		code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
-		me.depth++
 		code += me.eval(n.has[ix].has[1]).code
-		me.depth--
-		code += fmc(me.depth) + "}"
+		code += "\n" + fmc(me.depth) + "}"
 		ix++
 	}
 	if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
 		code += " else {\n"
-		me.depth++
 		code += me.eval(n.has[ix]).code
-		me.depth--
-		code += fmc(me.depth) + "}"
+		code += "\n" + fmc(me.depth) + "}"
 	}
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
@@ -456,52 +468,13 @@ func fmtassignspace(s string) string {
 	return s + " "
 }
 
-func (me *cfile) allocarray(n *node) string {
+func (me *cfile) allocArray(n *node) string {
 	size := me.eval(n.has[0])
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return "[" + size.code + "]"
 	}
-	atype := typeOfArray(n.typed)
-	mtype := me.typeSig(atype)
+	mtype := me.hmfile.typeToVarData(n.typed).typeSig()
 	return "malloc((" + size.code + ") * sizeof(" + mtype + "))"
-}
-
-func (me *cfile) typeSig(typed string) string {
-	if checkIsArray(typed) {
-		arrayType := typeOfArray(typed)
-		return fmtptr(me.typeSig(arrayType))
-	}
-	data := me.hmfile.typeToVarData(typed)
-	if _, ok := data.checkIsClass(); ok {
-		return data.module.classNameSpace(data.typed) + " *"
-	} else if en, ok := data.checkIsEnum(); ok {
-		if en.simple {
-			return data.module.enumNameSpace(data.typed)
-		}
-		return data.module.unionNameSpace(data.typed) + " *"
-	} else if typed == "string" {
-		return "char *"
-	}
-	return typed
-}
-
-func (me *cfile) noMalloctypeSig(typed string) string {
-	if checkIsArray(typed) {
-		arraytype := typeOfArray(typed)
-		return fmtptr(me.noMalloctypeSig(arraytype))
-	}
-	data := me.hmfile.typeToVarData(typed)
-	if _, ok := data.checkIsClass(); ok {
-		return data.module.classNameSpace(typed)
-	} else if en, ok := data.checkIsEnum(); ok {
-		if en.simple {
-			return data.module.enumNameSpace(data.typed)
-		}
-		return data.module.unionNameSpace(data.typed)
-	} else if typed == "string" {
-		return "char *"
-	}
-	return typed
 }
 
 func (me *cfile) declare(n *node) string {
@@ -517,10 +490,9 @@ func (me *cfile) declare(n *node) string {
 			mutable = true
 		}
 		if malloc {
-			typed := n.typed
-			me.scope.variables[name] = me.hmfile.varInit(typed, name, mutable, malloc)
-			codesig := fmtassignspace(me.typeSig(typed))
-			data := me.hmfile.typeToVarData(typed)
+			data := me.hmfile.typeToVarData(n.typed)
+			me.scope.variables[name] = me.hmfile.varInit(data.full, name, mutable, malloc)
+			codesig := fmtassignspace(data.typeSig())
 			if mutable {
 				code = codesig
 			} else if data.postfixConst() {
@@ -529,12 +501,11 @@ func (me *cfile) declare(n *node) string {
 				code += "const " + codesig
 			}
 		} else {
-			typed := n.typed
-			data := me.hmfile.typeToVarData(typed)
-			newVar := me.hmfile.varInit(typed, name, mutable, malloc)
+			data := me.hmfile.typeToVarData(n.typed)
+			newVar := me.hmfile.varInit(data.full, name, mutable, malloc)
 			newVar.cName = data.module.varNameSpace(name)
 			me.scope.variables[name] = newVar
-			codesig := fmtassignspace(me.noMalloctypeSig(typed))
+			codesig := fmtassignspace(data.noMallocTypeSig())
 			code += codesig
 		}
 	}
@@ -594,19 +565,19 @@ func (me *cfile) generateUnionFn(en *enum, un *union) {
 	_, enumName := me.hmfile.enumMaybeImplNameSpace(en.name)
 	unionName := me.hmfile.unionNameSpace(en.name)
 	fnName := me.hmfile.unionFnNameSpace(en, un)
-	typeOf := fmtassignspace(me.typeSig(en.name))
+	typeOf := fmtassignspace(en.typeSig())
 	head := ""
 	head += typeOf + fnName + "("
 	if len(un.types) == 1 {
 		unionHas := un.types[0]
-		head += fmtassignspace(me.typeSig(unionHas)) + un.name
+		head += fmtassignspace(unionHas.typeSig()) + un.name
 	} else {
 		for ix := range un.types {
 			if ix > 0 {
 				head += ", "
 			}
 			unionHas := un.types[ix]
-			head += fmtassignspace(me.typeSig(unionHas)) + un.name + strconv.Itoa(ix)
+			head += fmtassignspace(unionHas.typeSig()) + un.name + strconv.Itoa(ix)
 		}
 	}
 	head += ")"
@@ -661,11 +632,11 @@ func (me *cfile) defineEnum(enum *enum) {
 		num := len(enumUnion.types)
 		if num == 1 {
 			typed := enumUnion.types[0]
-			code += fmc(2) + fmtassignspace(me.typeSig(typed)) + enumUnion.name + ";\n"
+			code += fmc(2) + fmtassignspace(typed.typeSig()) + enumUnion.name + ";\n"
 		} else if num != 0 {
 			code += fmc(2) + "struct {\n"
 			for ix, typed := range enumUnion.types {
-				code += fmc(3) + fmtassignspace(me.typeSig(typed)) + "var" + strconv.Itoa(ix) + ";\n"
+				code += fmc(3) + fmtassignspace(typed.typeSig()) + "var" + strconv.Itoa(ix) + ";\n"
 			}
 			code += fmc(2) + "} " + enumUnion.name + ";\n"
 		}
@@ -684,7 +655,7 @@ func (me *cfile) defineClass(class *class) {
 	code := "struct " + hmName + " {\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
-		code += fmc(1) + fmtassignspace(me.typeSig(field.typed)) + field.name + ";\n"
+		code += fmc(1) + fmtassignspace(field.vdat.typeSig()) + field.name + ";\n"
 	}
 	code += "};\n\n"
 	me.headTypesSection += code
@@ -696,30 +667,35 @@ func (me *cfile) maybeColon(code string) string {
 		return ""
 	}
 	last := code[size-1]
-	if last == '}' || last == ':' {
+	if last == '}' || last == ':' || last == ';' {
 		return ""
 	}
 	return ";"
 }
 
 func (me *cfile) maybeFmc(code string, depth int) string {
-	if code == "" {
+	if code == "" || code[0] == ' ' {
 		return ""
 	}
 	return fmc(depth)
 }
 
 func (me *cfile) block(n *node) *cnode {
+	me.depth++
 	expressions := n.has
 	code := ""
-	for _, expr := range expressions {
+	for ix, expr := range expressions {
 		c := me.eval(expr)
 		if c.code != "" {
-			code += me.maybeFmc(c.code, me.depth) + c.code + me.maybeColon(c.code) + "\n"
+			if ix > 0 {
+				code += "\n"
+			}
+			code += me.maybeFmc(c.code, me.depth) + c.code + me.maybeColon(c.code)
 		}
 	}
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
+	me.depth--
 	return cn
 }
 
@@ -773,15 +749,13 @@ func (me *cfile) function(name string, fn *function) {
 	}
 	me.popScope()
 	code := ""
-	code += fmtassignspace(me.typeSig(fn.typed)) + me.hmfile.funcNameSpace(name) + "("
+	code += fmtassignspace(fn.typed.typeSig()) + me.hmfile.funcNameSpace(name) + "("
 	for ix, arg := range args {
 		if ix > 0 {
 			code += ", "
 		}
-		typed := arg.typed
-		data := me.hmfile.typeToVarData(typed)
-		codesig := fmtassignspace(me.typeSig(typed))
-		if data.postfixConst() {
+		codesig := fmtassignspace(arg.vdat.typeSig())
+		if arg.vdat.postfixConst() {
 			code += codesig + "const "
 		} else {
 			code += "const " + codesig

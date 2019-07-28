@@ -161,7 +161,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 	me.hmfile.types[impl] = true
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_enum")
 
-	enumDef := enumInit(impl, false, unionList, unionDict, nil, nil)
+	enumDef := enumInit(base.module, impl, false, unionList, unionDict, nil, nil)
 	me.hmfile.enums[impl] = enumDef
 
 	gmapper := make(map[string]string)
@@ -171,7 +171,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, typed := range un.types {
-			un.types[i] = me.genericsReplacer(typed, gmapper)
+			un.types[i] = me.hmfile.typeToVarData(me.genericsReplacer(typed.full, gmapper))
 		}
 	}
 }
@@ -196,7 +196,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	}
 
 	for _, mem := range memberMap {
-		mem.typed = me.genericsReplacer(mem.typed, gmapper)
+		mem.update(me.hmfile, me.genericsReplacer(mem.typed, gmapper))
 	}
 }
 
@@ -209,19 +209,19 @@ func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 			me.eat("delim")
 		}
 		gimpl := me.declareType(impl)
-		_, ok := me.hmfile.types[gimpl]
+		_, ok := me.hmfile.types[gimpl.full]
 		if !ok {
 			if impl {
-				panic(me.fail() + "generic implementation type \"" + gimpl + "\" does not exist")
+				panic(me.fail() + "generic implementation type \"" + gimpl.full + "\" does not exist")
 			}
 		}
-		order = append(order, gimpl)
+		order = append(order, gimpl.full)
 	}
 	me.eat(">")
 	return order
 }
 
-func (me *parser) declareType(impl bool) string {
+func (me *parser) declareType(impl bool) *varData {
 	array := false
 	if me.token.is == "[" {
 		me.eat("[")
@@ -282,7 +282,7 @@ func (me *parser) declareType(impl bool) string {
 		typed = "[]" + typed
 	}
 
-	return typed
+	return me.hmfile.typeToVarData(typed)
 }
 
 func (me *parser) nameOfClassFunc(classname, funcname string) string {

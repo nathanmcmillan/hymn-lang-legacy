@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"strings"
-)
-
 type token struct {
 	depth int
 	is    string
@@ -29,15 +24,6 @@ type node struct {
 	has        []*node
 }
 
-type variable struct {
-	typed   string
-	name    string
-	dfault  string
-	mutable bool
-	isptr   bool
-	cName   string
-}
-
 type scope struct {
 	root      *scope
 	temp      int
@@ -50,34 +36,11 @@ type function struct {
 	args        []*variable
 	argDict     map[string]int
 	expressions []*node
-	typed       string
+	typed       *varData
 }
 
 type hasGenerics interface {
 	getGenerics() []string
-}
-
-type class struct {
-	name          string
-	variables     map[string]*variable
-	variableOrder []string
-	generics      []string
-	genericsDict  map[string]bool
-}
-
-type enum struct {
-	name         string
-	simple       bool
-	types        map[string]*union
-	typesOrder   []*union
-	generics     []string
-	genericsDict map[string]bool
-}
-
-type union struct {
-	name     string
-	types    []string
-	generics []string
 }
 
 type program struct {
@@ -149,48 +112,6 @@ var (
 		"float":  true,
 	}
 )
-
-func unionInit(name string, types []string, generics []string) *union {
-	u := &union{}
-	u.name = name
-	u.types = types
-	u.generics = generics
-	return u
-}
-
-func (me *union) copy() *union {
-	u := &union{}
-	u.name = me.name
-	u.types = make([]string, len(me.types))
-	u.generics = make([]string, len(me.generics))
-	copy(u.types, me.types)
-	copy(u.generics, me.generics)
-	return u
-}
-
-func enumInit(name string, simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]bool) *enum {
-	e := &enum{}
-	e.name = name
-	e.simple = simple
-	e.types = dict
-	e.typesOrder = order
-	e.generics = generics
-	e.genericsDict = genericsDict
-	return e
-}
-
-func classInit(name string, generics []string, genericsDict map[string]bool) *class {
-	c := &class{}
-	c.name = name
-	c.generics = generics
-	c.genericsDict = genericsDict
-	return c
-}
-
-func (me *class) initMembers(variableOrder []string, variables map[string]*variable) {
-	me.variableOrder = variableOrder
-	me.variables = variables
-}
 
 func scopeInit(root *scope) *scope {
 	s := &scope{}
@@ -316,22 +237,22 @@ func (me *cnode) push(n *cnode) {
 
 func (me *hmfile) libInit() {
 	echo := funcInit()
-	echo.typed = "void"
+	echo.typed = me.typeToVarData("void")
 	echo.args = append(echo.args, me.varInit("?", "s", false, false))
 	me.functions["echo"] = echo
 
 	str := funcInit()
-	str.typed = "string"
+	str.typed = me.typeToVarData("string")
 	str.args = append(str.args, me.varInit("?", "s", false, false))
 	me.functions["string"] = str
 
 	intfn := funcInit()
-	intfn.typed = "int"
+	intfn.typed = me.typeToVarData("int")
 	intfn.args = append(intfn.args, me.varInit("?", "s", false, false))
 	me.functions["int"] = intfn
 
 	floatfn := funcInit()
-	floatfn.typed = "float"
+	floatfn.typed = me.typeToVarData("float")
 	floatfn.args = append(floatfn.args, me.varInit("?", "s", false, false))
 	me.functions["float"] = floatfn
 
@@ -348,55 +269,8 @@ func funcInit() *function {
 	return f
 }
 
-func (me *hmfile) varInit(typed, name string, mutable, isptr bool) *variable {
-	v := &variable{}
-	v.typed = typed
-	v.name = name
-	v.cName = name
-	v.mutable = mutable
-	v.isptr = isptr
-	return v
-}
-
-func (me *hmfile) varWithDefaultInit(typed, name string, mutable, isptr bool, dfault string) *variable {
-	v := me.varInit(typed, name, mutable, isptr)
-	v.dfault = dfault
-	return v
-}
-
-func (me *variable) copy() *variable {
-	v := &variable{}
-	v.typed = me.typed
-	v.name = me.name
-	v.cName = me.name
-	v.mutable = me.mutable
-	v.isptr = me.isptr
-	return v
-}
-
-func (me *variable) memget() string {
-	if me.isptr {
-		return "->"
-	}
-	return "."
-}
-
 func isNumber(t string) bool {
 	return t == "int" || t == "float"
-}
-
-func (me *hmfile) getclass(name string) (*class, string) {
-	ix := strings.Index(name, "[")
-	if ix == -1 {
-		fmt.Println("getclass", name)
-		cl, _ := me.classes[name]
-		return cl, ""
-	}
-	get0 := name[0:ix]
-	get1 := name[ix+1 : len(name)-1]
-	fmt.Println("getclass", get0, "->", get1)
-	cl, _ := me.classes[get0]
-	return cl, get1
 }
 
 func (me *cfile) head() string {
@@ -412,12 +286,4 @@ func (me *cfile) head() string {
 	head += me.headFuncSection
 	head += me.headSuffix
 	return head
-}
-
-func (me *class) getGenerics() []string {
-	return me.generics
-}
-
-func (me *enum) getGenerics() []string {
-	return me.generics
 }

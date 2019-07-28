@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -173,33 +174,53 @@ func (me *parser) eatvar(from *hmfile) *node {
 				root.typed = sv.typed
 				root.is = "root-variable"
 			}
+			fmt.Println("eatvar root type :=", root.typed)
 			data := me.hmfile.typeToVarData(root.typed)
-			rootClass, _ := data.module.getclass(data.typed)
-			if rootClass == nil {
-				panic(me.fail() + "class \"" + root.typed + "\" does not exist")
-			}
-			me.eat(".")
-			dotName := me.token.value
-			me.eat("id")
-			var member *node
-			classOf, ok := rootClass.variables[dotName]
-			if ok {
-				fmt.Println("member variable \"" + dotName + "\" is type \"" + classOf.typed + "\"")
-				member = nodeInit("member-variable")
-				member.typed = classOf.typed
-				member.value = dotName
-				member.push(root)
-			} else {
-				nameOfFunc := me.nameOfClassFunc(rootClass.name, dotName)
-				funcVar, ok := data.module.functions[nameOfFunc]
+			if rootClass, ok := data.checkIsClass(); ok {
+				// rootClass, _ := data.module.getclass(data.typed)
+				me.eat(".")
+				dotName := me.token.value
+				me.eat("id")
+				var member *node
+				classOf, ok := rootClass.variables[dotName]
 				if ok {
-					fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed + "\"")
-					member = me.callClassFunction(data.module, root, rootClass, funcVar)
+					fmt.Println("member variable \"" + dotName + "\" is type \"" + classOf.typed + "\"")
+					member = nodeInit("member-variable")
+					member.typed = classOf.typed
+					member.value = dotName
+					member.push(root)
 				} else {
-					panic(me.fail() + "class variable or function \"" + dotName + "\" does not exist")
+					nameOfFunc := me.nameOfClassFunc(rootClass.name, dotName)
+					funcVar, ok := data.module.functions[nameOfFunc]
+					if ok {
+						fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed.full + "\"")
+						member = me.callClassFunction(data.module, root, rootClass, funcVar)
+					} else {
+						panic(me.fail() + "class variable or function \"" + dotName + "\" does not exist")
+					}
 				}
+				root = member
+			} else if rootEnum, rootUnion, ok := data.checkIsEnum(); ok {
+				if rootUnion != nil {
+					me.eat(".")
+					dotIndexStr := me.token.value
+					me.eat("int")
+					dotIndex, _ := strconv.Atoi(dotIndexStr)
+					if dotIndex > len(rootUnion.types) {
+						panic(me.fail() + "index out of range for \"" + rootUnion.name + "\"")
+					}
+					typeInUnion := rootUnion.types[dotIndex]
+					member := nodeInit("tuple-index")
+					member.typed = typeInUnion.typed
+					member.value = dotIndexStr
+					member.push(root)
+					root = member
+				} else {
+					panic(me.fail() + "enum \"" + rootEnum.name + "\" must be union type does not exist")
+				}
+			} else {
+				panic(me.fail() + "type \"" + root.typed + "\" does not exist")
 			}
-			root = member
 		} else if me.token.is == "[" {
 			if root.is == "variable" {
 				sv := me.hmfile.getvar(root.value)
@@ -287,7 +308,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			}
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
-		if left.typed != right.typed {
+		if me.hmfile.typeToVarData(left.typed).notEqual(me.hmfile.typeToVarData(right.typed)) {
 			if strings.HasPrefix(left.typed, right.typed) && strings.Index(left.typed, "<") != -1 {
 				right.typed = left.typed
 			} else {
@@ -297,6 +318,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	} else {
 		panic(me.fail() + "bad assignment \"" + left.is + "\"")
 	}
+	right.attributes["assign"] = left.value
 	n := nodeInit(op)
 	n.typed = "void"
 	n.push(left)
@@ -371,8 +393,8 @@ func (me *parser) block() *node {
 		block.push(expr)
 		if expr.is == "return" {
 			fn := me.hmfile.scope.fn
-			if fn.typed != expr.typed {
-				panic(me.fail() + "function " + fn.name + " returns " + fn.typed + " but found " + expr.typed)
+			if fn.typed.notEqual(me.hmfile.typeToVarData(expr.typed)) {
+				panic(me.fail() + "function " + fn.name + " returns " + fn.typed.full + " but found " + expr.typed)
 			}
 			goto blockEnd
 		}
@@ -537,7 +559,7 @@ func (me *parser) comparison(left *node, op string) *node {
 		panic(me.fail() + "unknown token for boolean expression")
 	}
 	right := me.calc()
-	if left.typed != right.typed {
+	if me.hmfile.typeToVarData(left.typed).notEqual(me.hmfile.typeToVarData(right.typed)) {
 		panic(me.fail() + "comparison types \"" + left.typed + "\" and \"" + right.typed + "\" do not match")
 	}
 	n := nodeInit(typed)
@@ -596,7 +618,7 @@ func (me *parser) binary(left *node, op string) *node {
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
 	}
-	if left.typed != right.typed {
+	if me.hmfile.typeToVarData(left.typed).notEqual(me.hmfile.typeToVarData(right.typed)) {
 		err := me.fail() + "number types do not match \"" + left.typed + "\" and \"" + right.typed + "\""
 		panic(err)
 	}

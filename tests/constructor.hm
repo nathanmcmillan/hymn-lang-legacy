@@ -14,26 +14,26 @@ main
       on: true
       has: vec(2*5, 2*6, 2*7)
   
-  # echo(string(z.on) + " | " + string(z.has.on))
-  # echo(z.has.has.x)
-  # echo(z.has.has.y)
-  # echo(z.has.has.z)
+  echo(string(z.on) + " | " + string(z.has.on))
+  echo(z.has.has.x)
+  echo(z.has.has.y)
+  echo(z.has.has.z)
 
-  # w = attribute<attribute<vec>>
+  w = attribute<attribute<vec>>
 
-  # a = vec
-  # g = vec()
-  # b = vec(1)
-  # c = vec(1, 2, 3)
-  # d = vec(y:5)
-  # e = vec(x:4+10, y:5, z:6)
-  # f = vec
-  #   x: 7
-  #   y: 8
-  #   z: 9
-  # echo(string(a.x) + ", " + string(a.y) + ", " + string(a.z))
-  # echo(string(b.x) + ", " + string(b.y) + ", " + string(b.z))
-  # echo(string(c.x) + ", " + string(c.y) + ", " + string(c.z))
-  # echo(string(d.x) + ", " + string(d.y) + ", " + string(d.z))
-  # echo(string(e.x) + ", " + string(e.y) + ", " + string(e.z))
-  # echo(string(f.x) + ", " + string(f.y) + ", " + string(f.z))
+  a = vec
+  g = vec()
+  b = vec(1)
+  c = vec(1, 2, 3)
+  d = vec(y:5)
+  e = vec(x:4+10, y:5, z:6)
+  f = vec
+    x: 7
+    y: 8
+    z: 9
+  echo(string(a.x) + ", " + string(a.y) + ", " + string(a.z))
+  echo(string(b.x) + ", " + string(b.y) + ", " + string(b.z))
+  echo(string(c.x) + ", " + string(c.y) + ", " + string(c.z))
+  echo(string(d.x) + ", " + string(d.y) + ", " + string(d.z))
+  echo(string(e.x) + ", " + string(e.y) + ", " + string(e.z))
+  echo(string(f.x) + ", " + string(f.y) + ", " + string(f.z))

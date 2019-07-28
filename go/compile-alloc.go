@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 type blockNode struct {
 	pre     *blockNode
 	current []*node
@@ -16,16 +18,21 @@ func (me *blockNode) flatten() []*node {
 	return flat
 }
 
-// HmConstructorVec *temp_0 = calloc(1, sizeof(HmConstructorVec));
-// temp_0->x = 2 * 5;
-// temp_0->y = 2 * 6;
-// temp_0->z = 2 * 7;
-// HmConstructorAttributeVec *temp_1 = calloc(1, sizeof(HmConstructorAttributeVec));
-// temp_1->on = true;
-// temp_1->has = temp_0;
-// HmConstructorAttributeAttributeVec *const z = calloc(1, sizeof(HmConstructorAttributeAttributeVec));
-// z->on = true;
-// z->has = temp_1;
+func (me *cfile) tempClass(p *node) *cnode {
+	temp := "temp_" + strconv.Itoa(me.scope.temp)
+	me.scope.temp++
+	p.attributes["assign"] = temp
+
+	d := nodeInit("variable")
+	d.value = temp
+	d.typed = p.typed
+	decl := me.declare(d)
+
+	code := ""
+	code += ";\n" + fmc(me.depth) + decl + temp + " = " + me.eval(p).code
+
+	return codeNode(p.is, temp, p.typed, code)
+}
 
 func (me *cfile) allocClass(n *node) *cnode {
 	if _, ok := n.attributes["no-malloc"]; ok {
@@ -36,6 +43,23 @@ func (me *cfile) allocClass(n *node) *cnode {
 	typed := data.module.classNameSpace(data.typed)
 
 	code := "malloc(sizeof(" + typed + "))"
+
+	assign, _ := n.attributes["assign"]
+	cl, _ := data.checkIsClass()
+	params := n.has
+	for ix, p := range params {
+		clv := cl.variables[cl.variableOrder[ix]]
+		cassign := ";\n" + fmc(me.depth) + assign + "->" + clv.name + " = "
+
+		if p.is == "new" {
+			temp := me.tempClass(p)
+			code += temp.code
+			code += cassign + temp.value
+		} else {
+			code += cassign + me.eval(p).code
+		}
+	}
+
 	return codeNode(n.is, n.value, n.typed, code)
 }
 

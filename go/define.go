@@ -263,3 +263,11 @@ func (me *parser) defineEnum() {
 	}
 	me.hmfile.enums[name] = enumInit(me.hmfile, name, isSimple, typesOrder, typesMap, genericsOrder, genericsDict)
 }
+
+func (me *parser) defineMaybeImpl(typed string) {
+
+}
+
+func (me *parser) defineNoneImpl(typed string) {
+
+}

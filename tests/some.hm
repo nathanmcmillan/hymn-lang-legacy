@@ -3,15 +3,35 @@ type vec
   y int
   z int
 
+type bar
+  ge maybe<vec>
+  ne maybe<bar>
+
+foo(in maybe<vec>) maybe<vec>
+  match in
+    some => echo("foo some " + string(in.x))
+    none => echo("foo none")
+  return in
+
+zoo(in vec) maybe<vec>
+  return in
+
+moo(in none<vec>) maybe<vec>
+  return in
+
 main
   a = none<vec>
-  b = some(vec)
+  b = vec
+  c = foo(a)
+  d = foo(b)
+  e = zoo(b)
+  f = moo(a)
+  g = bar(a, b)
 
   match a
     some => echo("oh no")
-    none => echo("none!")
+    none => echo("none")
 
   match b
-    some => echo("some! " + string(b.x))
-    none => echo(v.x)
-
+    some => echo("some " + string(b.x))
+    none => echo("oh no")

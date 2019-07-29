@@ -801,5 +801,14 @@ func (me *parser) factor() *node {
 	if op == "!" || op == "not" {
 		return me.notbool()
 	}
+	if op == "none" {
+		return me.none()
+	}
+	if op == "some" {
+		return me.some()
+	}
+	if op == "maybe" {
+		return me.maybe()
+	}
 	panic(me.fail() + "unknown factor")
 }

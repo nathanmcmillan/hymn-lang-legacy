@@ -236,8 +236,26 @@ func (me *parser) declareType(impl bool) *varData {
 		typed += "$"
 	}
 
-	typed += me.token.value
-	me.eat("id")
+	if me.token.is == "maybe" {
+		me.eat("maybe")
+		me.eat("<")
+		option := me.declareType(impl).typed
+		me.eat(">")
+		typed += "maybe<" + option + ">"
+		me.defineMaybeImpl(typed)
+
+	} else if me.token.is == "none" {
+		me.eat("none")
+		me.eat("<")
+		option := me.declareType(impl).typed
+		me.eat(">")
+		typed += "none<" + option + ">"
+		me.defineNoneImpl(typed)
+
+	} else {
+		typed += me.token.value
+		me.eat("id")
+	}
 
 	if _, ok := me.hmfile.imports[typed]; ok {
 		me.eat(".")
@@ -274,7 +292,7 @@ func (me *parser) declareType(impl bool) *varData {
 				}
 			}
 		} else {
-			panic(me.fail() + "base enum \"" + data.typed + "\" does not exist")
+			panic(me.fail() + "type \"" + data.typed + "\" does not exist")
 		}
 	}
 

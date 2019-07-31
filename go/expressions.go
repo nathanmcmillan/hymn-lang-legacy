@@ -177,7 +177,6 @@ func (me *parser) eatvar(from *hmfile) *node {
 			fmt.Println("eatvar root type :=", root.typed)
 			data := me.hmfile.typeToVarData(root.typed)
 			if rootClass, ok := data.checkIsClass(); ok {
-				// rootClass, _ := data.module.getclass(data.typed)
 				me.eat(".")
 				dotName := me.token.value
 				me.eat("id")
@@ -200,6 +199,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					}
 				}
 				root = member
+
 			} else if rootEnum, rootUnion, ok := data.checkIsEnum(); ok {
 				if rootUnion != nil {
 					me.eat(".")
@@ -218,6 +218,17 @@ func (me *parser) eatvar(from *hmfile) *node {
 				} else {
 					panic(me.fail() + "enum \"" + rootEnum.name + "\" must be union type does not exist")
 				}
+				// } else if data.maybe {
+				// 	member := nodeInit("maybe")
+				// 	member.typed = data.maybeType
+				// 	member.push(root)
+				// 	root = member
+
+				// } else if data.none {
+				// 	member := nodeInit("none")
+				// 	member.typed = data.typed
+				// 	member.push(root)
+				// 	root = member
 			} else {
 				panic(me.fail() + "type \"" + root.typed + "\" does not exist")
 			}
@@ -450,35 +461,20 @@ func (me *parser) match() *node {
 	n.typed = "void"
 
 	matching := me.calc()
+	matchType := me.hmfile.typeToVarData(matching.typed)
+	var matchVar *variable
+	if matching.is == "variable" {
+		matchVar = me.hmfile.getvar(matching.value)
+	}
+
 	n.push(matching)
 
-	// varMatch := me.hmfile.getvar(varMatchName)
-	// enumOf, isEnum := me.hmfile.enums[varMatch.typed]
 	me.eat("line")
-	for me.token.depth > depth {
+	for {
 		if me.token.is == "id" {
 			id := me.token.value
 			me.eat("id")
 			caseNode := nodeInit(id)
-			// if isEnum && me.token.is == "(" {
-			// 	enumType, ok := enumOf.types[id]
-			// 	if !ok {
-			// 		panic(me.fail() + "enum \"" + enumOf.name + "\" does not have type \"" + id + "\"")
-			// 	}
-			// 	varCount := len(enumType.types)
-			// 	fmt.Println("matching for enum \""+enumType.name+"\", var count =", varCount)
-			// 	me.eat("(")
-			// 	for ix := 0; ix < varCount; ix++ {
-			// 		if ix > 0 {
-			// 			me.eat("delim")
-			// 		}
-			// 		nameMapID := me.token.value
-			// 		me.eat("id")
-			// 		nameMap := nodeInit(nameMapID)
-			// 		caseNode.push(nameMap)
-			// 	}
-			// 	me.eat(")")
-			// }
 			me.eat("=>")
 			n.push(caseNode)
 			if me.token.is == "line" {
@@ -488,6 +484,7 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
+
 		} else if me.token.is == "_" {
 			me.eat("_")
 			me.eat("=>")
@@ -499,8 +496,48 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-		} else {
+
+		} else if me.token.is == "some" {
+			me.eat("some")
+			me.eat("=>")
+			n.push(nodeInit("some"))
+
+			if matchVar != nil {
+				if !matchType.maybe {
+					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
+				}
+				fmt.Println("match temp update", matchVar.name, "to", matchType.some)
+				matchVar.update(me.hmfile, matchType.some)
+			}
+
+			if me.token.is == "line" {
+				me.eat("line")
+				n.push(me.block())
+			} else {
+				n.push(me.expression())
+				me.eat("line")
+			}
+
+			if matchVar != nil {
+				matchVar.update(me.hmfile, matchType.full)
+			}
+
+		} else if me.token.is == "none" {
+			me.eat("none")
+			me.eat("=>")
+			n.push(nodeInit("none"))
+			if me.token.is == "line" {
+				me.eat("line")
+				n.push(me.block())
+			} else {
+				n.push(me.expression())
+				me.eat("line")
+			}
+
+		} else if me.token.depth <= depth {
 			break
+		} else {
+			panic(me.fail() + "unknown match expression")
 		}
 	}
 	return n

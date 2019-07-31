@@ -30,6 +30,7 @@ var keywords = map[string]bool{
 	"panic":     true,
 	"pass":      true,
 	"none":      true,
+	"some":      true,
 	"maybe":     true,
 	"goto":      true,
 	"label":     true,

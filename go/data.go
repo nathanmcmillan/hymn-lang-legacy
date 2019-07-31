@@ -62,6 +62,10 @@ type varData struct {
 	pointer     bool
 	heap        bool
 	array       bool
+	none        bool
+	maybe       bool
+	some        string
+	noneType    string
 	typeInArray string
 	en          *enum
 	un          *union
@@ -84,6 +88,15 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	data.mutable = true
 	data.pointer = true
 	data.heap = true
+
+	if strings.HasPrefix(typed, "maybe") {
+		data.maybe = true
+		data.some = typed[6 : len(typed)-1]
+
+	} else if strings.HasPrefix(typed, "none") {
+		data.none = true
+		data.noneType = typed[5 : len(typed)-1]
+	}
 
 	data.array = checkIsArray(typed)
 	if data.array {
@@ -178,13 +191,50 @@ func (me *varData) equal(other *varData) bool {
 	if me.full == other.full {
 		return true
 	}
+
 	if en, _, ok := me.checkIsEnum(); ok {
 		if en2, _, ok2 := other.checkIsEnum(); ok2 {
 			if en.name == en2.name {
 				return true
 			}
 		}
+
+	} else if me.maybe {
+		if other.maybe {
+			if me.some == other.some {
+				return true
+			}
+		} else if other.none {
+			if me.some == other.noneType {
+				return true
+			}
+		} else if me.some == other.full {
+			return true
+		}
+
+	} else if me.none {
+		if other.maybe {
+			if me.noneType == other.some {
+				return true
+			}
+		} else if other.none {
+			if me.noneType == other.noneType {
+				return true
+			}
+		} else if me.noneType == other.full {
+			return true
+		}
+
+	} else if other.maybe {
+		if other.some == me.full {
+			return true
+		}
+	} else if other.none {
+		if other.noneType == me.full {
+			return true
+		}
 	}
+
 	return false
 }
 
@@ -195,6 +245,12 @@ func (me *varData) notEqual(other *varData) bool {
 func (me *varData) typeSig() string {
 	if me.array {
 		return fmtptr(me.module.typeToVarData(me.typeInArray).typeSig())
+	}
+	if me.maybe {
+		return me.module.typeToVarData(me.some).typeSig()
+	}
+	if me.none {
+		return me.module.typeToVarData(me.noneType).typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {
 		return me.module.classNameSpace(me.typed) + " *"

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) defineClassFunction() {
 	module := me.hmfile
 	className := me.token.value
@@ -265,9 +267,9 @@ func (me *parser) defineEnum() {
 }
 
 func (me *parser) defineMaybeImpl(typed string) {
-
+	fmt.Println("DEFINE MAYBE IMPL")
 }
 
 func (me *parser) defineNoneImpl(typed string) {
-
+	fmt.Println("DEFINE NONE IMPL")
 }

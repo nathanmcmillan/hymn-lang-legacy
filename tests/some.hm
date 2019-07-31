@@ -26,12 +26,13 @@ main
   d = foo(b)
   e = zoo(b)
   f = moo(a)
-  g = bar(a, b)
+  g = none<bar>
+  h = bar(a, g)
 
-  match a
+  match e
     some => echo("oh no")
     none => echo("none")
 
-  match b
+  match f
     some => echo("some " + string(b.x))
     none => echo("oh no")

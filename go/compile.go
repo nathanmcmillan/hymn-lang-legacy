@@ -240,6 +240,9 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
+	if op == "none" {
+		return me.compileNone(n)
+	}
 	if _, ok := primitives[op]; ok {
 		cn := codeNode(n.is, n.value, n.typed, n.value)
 		fmt.Println(cn.string(0))
@@ -341,18 +344,28 @@ func (me *cfile) compileVariable(n *node) *cnode {
 	return cn
 }
 
+func (me *cfile) compileNone(n *node) *cnode {
+	code := "NULL"
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
 func (me *cfile) compileMatch(n *node) *cnode {
-	code := ""
 
 	using := n.has[0]
 	match := me.eval(using)
-	test := match.code
 
+	if strings.HasPrefix(match.typed, "maybe") {
+		return me.compileNullCheck(match, n)
+	}
+
+	code := ""
+	test := match.code
 	isEnum := false
 	var enumNameSpace string
 
 	if using.is == "variable" {
-		// have := me.getvar(using.value)
 		var baseEnum *enum
 		baseEnum, isEnum = me.hmfile.enums[using.typed]
 		if isEnum {
@@ -395,6 +408,57 @@ func (me *cfile) compileMatch(n *node) *cnode {
 	return cn
 }
 
+func (me *cfile) compileNullCheck(match *cnode, n *node) *cnode {
+	code := ""
+	ix := 1
+	size := len(n.has)
+	for ix < size {
+		caseOf := n.has[ix]
+		thenDo := n.has[ix+1]
+		thenBlock := me.eval(thenDo).code
+		if caseOf.is == "some" {
+			code += "if (" + match.code + " != NULL) {\n"
+		} else if caseOf.is == "none" {
+			code += "if (" + match.code + " == NULL) {\n"
+		}
+		if thenBlock != "" {
+			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock)
+		}
+		code += "\n}\n"
+		ix += 2
+	}
+
+	// code := "if (" + match.code + " == NULL) {\n"
+	// code += "\n" + fmc(me.depth) + "}"
+	// code += " else {\n"
+	// code += "\n" + fmc(me.depth) + "}"
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
+func (me *cfile) compileIf(n *node) *cnode {
+	hsize := len(n.has)
+	code := "if (" + me.eval(n.has[0]).code + ") {\n"
+	code += me.eval(n.has[1]).code
+	code += "\n" + fmc(me.depth) + "}"
+	ix := 2
+	for ix < hsize && n.has[ix].is == "elif" {
+		code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
+		code += me.eval(n.has[ix].has[1]).code
+		code += "\n" + fmc(me.depth) + "}"
+		ix++
+	}
+	if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
+		code += " else {\n"
+		code += me.eval(n.has[ix]).code
+		code += "\n" + fmc(me.depth) + "}"
+	}
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
 func (me *cfile) compileFor(n *node) *cnode {
 	size := len(n.has)
 	ix := 0
@@ -427,28 +491,6 @@ func (me *cfile) compileFor(n *node) *cnode {
 	code += fmc(me.depth) + "{\n"
 	code += me.eval(n.has[ix]).code
 	code += "\n" + fmc(me.depth) + "}"
-	cn := codeNode(n.is, n.value, n.typed, code)
-	fmt.Println(cn.string(0))
-	return cn
-}
-
-func (me *cfile) compileIf(n *node) *cnode {
-	hsize := len(n.has)
-	code := "if (" + me.eval(n.has[0]).code + ") {\n"
-	code += me.eval(n.has[1]).code
-	code += "\n" + fmc(me.depth) + "}"
-	ix := 2
-	for ix < hsize && n.has[ix].is == "elif" {
-		code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
-		code += me.eval(n.has[ix].has[1]).code
-		code += "\n" + fmc(me.depth) + "}"
-		ix++
-	}
-	if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
-		code += " else {\n"
-		code += me.eval(n.has[ix]).code
-		code += "\n" + fmc(me.depth) + "}"
-	}
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
 	return cn

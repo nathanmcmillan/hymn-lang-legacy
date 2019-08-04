@@ -35,6 +35,10 @@ func (me *stream) peek() byte {
 	return me.data[me.pos]
 }
 
+func (me *stream) doublePeek() byte {
+	return me.data[me.pos+1]
+}
+
 func (me *stream) eof() bool {
 	return me.pos == len(me.data)
 }
@@ -62,6 +66,7 @@ func (me *stream) fail() string {
 			break
 		}
 		b.WriteString(fmt.Sprintf("%d: %s", line, content.String()))
+		b.WriteString("")
 	}
 	return b.String()
 }

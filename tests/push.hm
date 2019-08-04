@@ -1,0 +1,6 @@
+main
+  foo = []int
+  foo.push(2)
+  foo.push(4)
+  for num in foo
+    echo(num)

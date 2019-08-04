@@ -5,18 +5,6 @@ import (
 	"os"
 )
 
-func (me *parser) next() {
-	me.pos++
-	me.token = me.tokens.get(me.pos)
-	if me.token.is == "line" {
-		me.line++
-	}
-}
-
-func (me *parser) peek() *token {
-	return me.tokens.get(me.pos + 1)
-}
-
 func (me *parser) fail() string {
 	return fmt.Sprintf("line %d, token %s\n", me.line, me.tokens.get(me.pos).string())
 }
@@ -66,6 +54,18 @@ func (me *hmfile) parse(out, path string) {
 	delete(me.functions, "echo")
 }
 
+func (me *parser) next() {
+	me.pos++
+	me.token = me.tokens.get(me.pos)
+	if me.token.is == "line" {
+		me.line++
+	}
+}
+
+func (me *parser) peek() *token {
+	return me.tokens.get(me.pos + 1)
+}
+
 func (me *parser) verify(want string) {
 	token := me.token
 	if token.is != want {
@@ -76,4 +76,9 @@ func (me *parser) verify(want string) {
 func (me *parser) eat(want string) {
 	me.verify(want)
 	me.next()
+}
+
+func (me *parser) replace(want, is string) {
+	me.verify(want)
+	me.token.is = is
 }

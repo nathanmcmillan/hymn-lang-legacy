@@ -16,14 +16,6 @@ type tokenizer struct {
 	updateDepth bool
 }
 
-type node struct {
-	is         string
-	value      string
-	typed      string
-	attributes map[string]string
-	has        []*node
-}
-
 type scope struct {
 	root      *scope
 	temp      int
@@ -207,18 +199,6 @@ func (me *cfile) getvar(name string) *variable {
 		}
 		scope = scope.root
 	}
-}
-
-func nodeInit(is string) *node {
-	n := &node{}
-	n.is = is
-	n.has = make([]*node, 0)
-	n.attributes = make(map[string]string)
-	return n
-}
-
-func (me *node) push(n *node) {
-	me.has = append(me.has, n)
 }
 
 func codeNode(is, value, typed, code string) *cnode {

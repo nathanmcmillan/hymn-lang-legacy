@@ -14,6 +14,7 @@ foo(in maybe<vec>) maybe<vec>
   return in
 
 zoo(in vec) maybe<vec>
+  in.x = 2
   return in
 
 moo(in none<vec>) maybe<vec>
@@ -34,5 +35,16 @@ main
     none => echo("none")
 
   match f
-    some => echo("some " + string(b.x))
+    some => echo("some " + string(f.x))
     none => echo("oh no")
+
+  match e
+    some =>
+      echo("x " + string(e.x))
+      echo("y " + string(e.y))
+      echo("z " + string(e.z))
+    none => pass
+
+  match f
+    none => echo("oh no")
+    some => pass

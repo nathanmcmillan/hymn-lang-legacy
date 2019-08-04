@@ -79,7 +79,7 @@ func (me *cfile) eval(n *node) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
+	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
 		code := me.assignmentUpdate(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
@@ -114,6 +114,12 @@ func (me *cfile) eval(n *node) *cnode {
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
+	}
+	if op == "+sign" {
+		return me.compilePrefixPos(n)
+	}
+	if op == "-sign" {
+		return me.compilePrefixNeg(n)
 	}
 	if op == "+" || op == "-" || op == "*" || op == "/" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
 		return me.compileBinaryOp(n)
@@ -161,20 +167,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	if op == "equal" {
-		_, paren := n.attributes["parenthesis"]
-		code := ""
-		if paren {
-			code += "("
-		}
-		code += me.eval(n.has[0]).code
-		code += " == "
-		code += me.eval(n.has[1]).code
-		if paren {
-			code += ")"
-		}
-		cn := codeNode(n.is, n.value, n.typed, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return me.compileEqual(n)
 	}
 	if op == "not" {
 		code := "!" + me.eval(n.has[0]).code
@@ -197,6 +190,9 @@ func (me *cfile) eval(n *node) *cnode {
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
+	}
+	if op == "and" || op == "or" {
+		return me.compileAndOr(n)
 	}
 	if op == "block" {
 		return me.block(n)
@@ -249,6 +245,20 @@ func (me *cfile) eval(n *node) *cnode {
 		return cn
 	}
 	panic("eval unknown operation " + n.string(0))
+}
+
+func (me *cfile) compilePrefixPos(n *node) *cnode {
+	code := me.eval(n.has[0]).code
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
+func (me *cfile) compilePrefixNeg(n *node) *cnode {
+	code := "-" + me.eval(n.has[0]).code
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
 }
 
 func (me *cfile) compileBinaryOp(n *node) *cnode {
@@ -409,7 +419,8 @@ func (me *cfile) compileMatch(n *node) *cnode {
 }
 
 func (me *cfile) compileNullCheck(match *cnode, n *node) *cnode {
-	code := ""
+	ifNull := ""
+	ifNotNull := ""
 	ix := 1
 	size := len(n.has)
 	for ix < size {
@@ -417,21 +428,72 @@ func (me *cfile) compileNullCheck(match *cnode, n *node) *cnode {
 		thenDo := n.has[ix+1]
 		thenBlock := me.eval(thenDo).code
 		if caseOf.is == "some" {
-			code += "if (" + match.code + " != NULL) {\n"
+			ifNotNull = thenBlock
 		} else if caseOf.is == "none" {
-			code += "if (" + match.code + " == NULL) {\n"
+			ifNull = thenBlock
 		}
-		if thenBlock != "" {
-			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock)
-		}
-		code += "\n}\n"
 		ix += 2
 	}
 
-	// code := "if (" + match.code + " == NULL) {\n"
-	// code += "\n" + fmc(me.depth) + "}"
-	// code += " else {\n"
-	// code += "\n" + fmc(me.depth) + "}"
+	code := ""
+
+	if ifNull != "" && ifNotNull != "" {
+		code = "if (" + match.code + " == NULL) {\n"
+		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
+		code += "\n" + fmc(me.depth) + "} else {\n"
+		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
+		code += "\n" + fmc(me.depth) + "}"
+
+	} else if ifNull != "" {
+		code = "if (" + match.code + " == NULL) {\n"
+		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
+		code += "\n" + fmc(me.depth) + "}"
+
+	} else {
+		code = "if (" + match.code + " != NULL) {\n"
+		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
+		code += "\n" + fmc(me.depth) + "}"
+
+	}
+
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
+func (me *cfile) compileEqual(n *node) *cnode {
+	_, paren := n.attributes["parenthesis"]
+	code := ""
+	if paren {
+		code += "("
+	}
+	code += me.eval(n.has[0]).code
+	code += " == "
+	code += me.eval(n.has[1]).code
+	if paren {
+		code += ")"
+	}
+	cn := codeNode(n.is, n.value, n.typed, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
+func (me *cfile) compileAndOr(n *node) *cnode {
+	_, paren := n.attributes["parenthesis"]
+	code := ""
+	if paren {
+		code += "("
+	}
+	code += me.eval(n.has[0]).code
+	if n.is == "and" {
+		code += " && "
+	} else {
+		code += " || "
+	}
+	code += me.eval(n.has[1]).code
+	if paren {
+		code += ")"
+	}
 	cn := codeNode(n.is, n.value, n.typed, code)
 	fmt.Println(cn.string(0))
 	return cn

@@ -174,19 +174,6 @@ func (me *varData) checkIsUnion() (*enum, bool) {
 	return nil, false
 }
 
-func (me *varData) postfixConst() bool {
-	if me.checkIsArray() {
-		return true
-	}
-	if _, ok := me.checkIsClass(); ok {
-		return true
-	}
-	if _, ok := me.checkIsUnion(); ok {
-		return true
-	}
-	return false
-}
-
 func (me *varData) equal(other *varData) bool {
 	if me.full == other.full {
 		return true
@@ -240,6 +227,25 @@ func (me *varData) equal(other *varData) bool {
 
 func (me *varData) notEqual(other *varData) bool {
 	return !me.equal(other)
+}
+
+func (me *varData) postfixConst() bool {
+	if me.array {
+		return true
+	}
+	if me.maybe {
+		return me.module.typeToVarData(me.some).postfixConst()
+	}
+	if me.none {
+		return me.module.typeToVarData(me.noneType).postfixConst()
+	}
+	if _, ok := me.checkIsClass(); ok {
+		return true
+	}
+	if _, ok := me.checkIsUnion(); ok {
+		return true
+	}
+	return false
 }
 
 func (me *varData) typeSig() string {

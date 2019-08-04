@@ -19,7 +19,7 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 			argname := me.token.value
 			me.eat("id")
 			me.eat(":")
-			param := me.calc()
+			param := me.calc(0)
 			aix := fn.argDict[argname]
 			arg := fn.args[aix]
 			if me.hmfile.typeToVarData(param.typed).notEqual(arg.vdat) && arg.typed != "?" {
@@ -33,7 +33,7 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 		} else if dict {
 			panic(me.fail() + "regular paramater found after mapped parameter")
 		} else {
-			param := me.calc()
+			param := me.calc(0)
 			arg := fn.args[pix]
 			if me.hmfile.typeToVarData(param.typed).notEqual(arg.vdat) && arg.typed != "?" {
 				err := "parameter \"" + param.typed

@@ -77,7 +77,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 			if ix != 0 {
 				me.eat("delim")
 			}
-			param := me.calc()
+			param := me.calc(0)
 			if me.hmfile.typeToVarData(param.typed).notEqual(unionType) {
 				if _, gok := gdict[unionType.full]; gok {
 					gimpl[unionType.full] = param.typed
@@ -165,7 +165,7 @@ func (me *parser) classParams(n *node, typed string) {
 			vname := me.token.value
 			me.eat("id")
 			me.eat(":")
-			param := me.calc()
+			param := me.calc(0)
 			clsvar := base.variables[vname]
 			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter \"" + param.typed
@@ -184,7 +184,7 @@ func (me *parser) classParams(n *node, typed string) {
 		} else if dict {
 			panic(me.fail() + "regular paramater found after mapped parameter")
 		} else {
-			param := me.calc()
+			param := me.calc(0)
 			clsvar := base.variables[vars[pix]]
 			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter \"" + param.typed
@@ -213,7 +213,7 @@ func (me *parser) specialClassParams(depth int, n *node, typed string) {
 			vname := me.token.value
 			me.eat("id")
 			me.eat(":")
-			param := me.calc()
+			param := me.calc(0)
 			clsvar := base.variables[vname]
 			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter type \"" + param.typed
@@ -275,21 +275,5 @@ func (me *parser) buildClass(n *node, module *hmfile) string {
 func (me *parser) allocClass(module *hmfile) *node {
 	n := nodeInit("new")
 	n.typed = me.buildClass(n, module)
-	return n
-}
-
-func (me *parser) allocArray() *node {
-	me.eat("[")
-	size := me.calc()
-	if size.typed != "int" {
-		panic(me.fail() + "array size must be integer")
-	}
-	me.eat("]")
-
-	n := nodeInit("array")
-	n.typed = "[]" + me.buildAnyType()
-	n.push(size)
-	fmt.Println("array node =", n.string(0))
-
 	return n
 }

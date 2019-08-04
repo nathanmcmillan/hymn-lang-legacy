@@ -147,7 +147,7 @@ func (me *parser) breaking() *node {
 
 func (me *parser) returning() *node {
 	me.eat("return")
-	calc := me.calc()
+	calc := me.calc(0)
 	n := nodeInit("return")
 	n.typed = calc.typed
 	n.push(calc)
@@ -247,7 +247,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			atype := typeOfArray(root.typed)
 			me.eat("[")
 			member := nodeInit("array-member")
-			index := me.calc()
+			index := me.calc(0)
 			member.typed = atype
 			member.push(index)
 			member.push(root)
@@ -287,16 +287,25 @@ func (me *parser) forceassign(malloc, mutable bool) *node {
 
 func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	op := me.token.is
+	mustBeInt := false
 	mustBeNumber := false
-	if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
+	if op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
+		mustBeInt = true
+	} else if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
 		mustBeNumber = true
 	} else if op != "=" {
 		panic(me.fail() + "unknown assign operation \"" + op + "\"")
 	}
 	me.eat(op)
-	right := me.calc()
-	if mustBeNumber && !isNumber(right.typed) {
-		panic(me.fail() + "assign operation \"" + op + "\" requires number type")
+	right := me.calc(0)
+	if mustBeInt {
+		if right.typed != "int" {
+			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
+		}
+	} else if mustBeNumber {
+		if !isNumber(right.typed) {
+			panic(me.fail() + "assign operation \"" + op + "\" requires number type")
+		}
 	}
 	if left.is == "variable" {
 		sv := me.hmfile.getvar(left.value)
@@ -304,19 +313,17 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if !sv.mutable {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
+		} else if mustBeInt || mustBeNumber {
+			panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.value + "\" does not exist")
 		} else {
-			if mustBeNumber {
-				panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.value + "\" does not exist")
-			} else {
-				left.typed = right.typed
-				if mutable {
-					left.attributes["mutable"] = "true"
-				}
-				if !malloc {
-					left.attributes["no-malloc"] = "true"
-				}
-				me.hmfile.scope.variables[left.value] = me.hmfile.varInit(right.typed, left.value, mutable, malloc)
+			left.typed = right.typed
+			if mutable {
+				left.attributes["mutable"] = "true"
 			}
+			if !malloc {
+				left.attributes["no-malloc"] = "true"
+			}
+			me.hmfile.scope.variables[left.value] = me.hmfile.varInit(right.typed, left.value, mutable, malloc)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
 		if me.hmfile.typeToVarData(left.typed).notEqual(me.hmfile.typeToVarData(right.typed)) {
@@ -438,12 +445,12 @@ func (me *parser) forexpr() *node {
 	} else {
 		if me.iswhile() {
 			fmt.Println("> regular while")
-			n.push(me.getbool())
+			n.push(me.calcBool())
 		} else {
 			fmt.Println("> multi for")
 			n.push(me.forceassign(true, true))
 			me.eat("delim")
-			n.push(me.getbool())
+			n.push(me.calcBool())
 			me.eat("delim")
 			n.push(me.forceassign(true, true))
 		}
@@ -460,7 +467,7 @@ func (me *parser) match() *node {
 	n := nodeInit("match")
 	n.typed = "void"
 
-	matching := me.calc()
+	matching := me.calc(0)
 	matchType := me.hmfile.typeToVarData(matching.typed)
 	var matchVar *variable
 	if matching.is == "variable" {
@@ -548,13 +555,13 @@ func (me *parser) ifexpr() *node {
 	me.eat("if")
 	n := nodeInit("if")
 	n.typed = "void"
-	n.push(me.getbool())
+	n.push(me.calcBool())
 	me.eat("line")
 	n.push(me.block())
 	for me.token.is == "elif" {
 		me.eat("elif")
 		other := nodeInit("elif")
-		other.push(me.getbool())
+		other.push(me.calcBool())
 		me.eat("line")
 		other.push(me.block())
 		n.push(other)
@@ -568,7 +575,7 @@ func (me *parser) ifexpr() *node {
 }
 
 func (me *parser) comparison(left *node, op string) *node {
-	fmt.Println("> comparison")
+	fmt.Println("> comparison " + left.string(0) + "")
 	var typed string
 	if op == "and" || op == "or" {
 		if left.typed != "bool" {
@@ -595,7 +602,7 @@ func (me *parser) comparison(left *node, op string) *node {
 	} else {
 		panic(me.fail() + "unknown token for boolean expression")
 	}
-	right := me.calc()
+	right := me.calc(0)
 	if me.hmfile.typeToVarData(left.typed).notEqual(me.hmfile.typeToVarData(right.typed)) {
 		panic(me.fail() + "comparison types \"" + left.typed + "\" and \"" + right.typed + "\" do not match")
 	}
@@ -609,76 +616,10 @@ func (me *parser) comparison(left *node, op string) *node {
 	return n
 }
 
-func (me *parser) getbool() *node {
-	n := me.calc()
+func (me *parser) calcBool() *node {
+	n := me.calc(0)
 	if n.typed != "bool" {
 		panic(me.fail() + "must be boolean expression")
-	}
-	return n
-}
-
-func (me *parser) notbool() *node {
-	if me.token.is == "!" {
-		me.eat("!")
-	} else {
-		me.eat("not")
-	}
-	n := nodeInit("not")
-	n.typed = "bool"
-	n.push(me.getbool())
-	fmt.Println("> not bool", n.string(0))
-	return n
-}
-
-func (me *parser) bitwise(left *node, op string) *node {
-	right := me.term()
-	if left.typed != "int" || right.typed != "int" {
-		err := me.fail() + "bitwise operation must be integers \"" + left.typed + "\" and \"" + right.typed + "\""
-		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
-		panic(err)
-	}
-	n := nodeInit(op)
-	n.typed = left.typed
-	n.push(left)
-	n.push(right)
-	return n
-}
-
-func (me *parser) binary(left *node, op string) *node {
-	if op == "+" && left.typed == "string" {
-		return me.concat(left)
-	}
-	me.eat(op)
-	right := me.term()
-	if !isNumber(left.typed) || !isNumber(right.typed) {
-		err := me.fail() + "binary operation must be numbers \"" + left.typed + "\" and \"" + right.typed + "\""
-		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
-		panic(err)
-	}
-	if me.hmfile.typeToVarData(left.typed).notEqual(me.hmfile.typeToVarData(right.typed)) {
-		err := me.fail() + "number types do not match \"" + left.typed + "\" and \"" + right.typed + "\""
-		panic(err)
-	}
-	n := nodeInit(op)
-	n.typed = left.typed
-	n.push(left)
-	n.push(right)
-	return n
-}
-
-func (me *parser) concat(left *node) *node {
-	n := nodeInit("concat")
-	n.typed = left.typed
-	n.push(left)
-	for me.token.is == "+" {
-		me.eat("+")
-		right := me.term()
-		if right.typed != "string" {
-			err := me.fail() + "concatenation operation must be strings \"" + left.typed + "\" and \"" + right.typed + "\""
-			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
-			panic(err)
-		}
-		n.push(right)
 	}
 	return n
 }
@@ -738,114 +679,4 @@ func (me *parser) mutables() {
 			break
 		}
 	}
-}
-
-func (me *parser) calc() *node {
-	node := me.term()
-	for {
-		token := me.token
-		op := token.is
-		if op == "and" || op == "or" {
-			node = me.comparison(node, op)
-			continue
-		}
-		if op == "<" && me.peek().is == "<" {
-			me.eat("<")
-			me.eat("<")
-			node = me.bitwise(node, "<<")
-			continue
-		}
-		if op == ">" && me.peek().is == ">" {
-			me.eat(">")
-			me.eat(">")
-			node = me.bitwise(node, ">>")
-			continue
-		}
-		if op == "=" || op == ">" || op == "<" || op == ">=" || op == "<=" || op == "!=" {
-			node = me.comparison(node, op)
-			continue
-		}
-		if op == "+" || op == "-" {
-			node = me.binary(node, op)
-			continue
-		}
-		if op == "&" || op == "|" || op == "^" {
-			me.eat(op)
-			node = me.bitwise(node, op)
-			continue
-		}
-		break
-	}
-	return node
-}
-
-func (me *parser) term() *node {
-	node := me.factor()
-	for {
-		token := me.token
-		op := token.is
-		if op == "*" || op == "/" {
-			node = me.binary(node, op)
-			continue
-		}
-		break
-	}
-	return node
-}
-
-func (me *parser) factor() *node {
-	token := me.token
-	op := token.is
-	if _, ok := primitives[op]; ok {
-		me.eat(op)
-		n := nodeInit(op)
-		n.typed = op
-		n.value = token.value
-		return n
-	}
-	if op == "id" {
-		name := token.value
-		if _, ok := me.hmfile.functions[name]; ok {
-			return me.call(me.hmfile)
-		}
-		if _, ok := me.hmfile.types[name]; ok {
-			if _, ok := me.hmfile.classes[name]; ok {
-				return me.allocClass(me.hmfile)
-			}
-			if _, ok := me.hmfile.enums[name]; ok {
-				return me.allocEnum(me.hmfile)
-			}
-			panic(me.fail() + "bad type \"" + name + "\" definition")
-		}
-		if _, ok := me.hmfile.imports[name]; ok {
-			return me.extern()
-		}
-		if me.hmfile.getvar(name) == nil {
-			panic(me.fail() + "variable out of scope")
-		}
-		return me.eatvar(me.hmfile)
-	}
-	if op == "[" {
-		return me.allocArray()
-	}
-	if op == "(" {
-		me.eat("(")
-		n := me.calc()
-		n.attributes["parenthesis"] = "true"
-		me.eat(")")
-		return n
-	}
-	if op == "!" || op == "not" {
-		return me.notbool()
-	}
-	if op == "none" {
-		return me.none()
-	}
-	if op == "some" {
-		return me.some()
-	}
-	if op == "maybe" {
-		return me.maybe()
-	}
-	panic(me.fail() + "unknown factor")
 }

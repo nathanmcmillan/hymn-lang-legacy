@@ -1,5 +1,5 @@
 # hymn-lang
-compiles to readable C code
+compiles readable C code
 
 ```
 type foo<T>

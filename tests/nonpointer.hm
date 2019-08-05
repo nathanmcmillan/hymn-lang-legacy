@@ -1,0 +1,13 @@
+type foo
+  data int
+
+type special
+  has #foo (* force not just a pointer *)
+
+type regular
+  has foo
+
+(* this is a comment *)
+main
+  a = special
+  a.has.data = 5 (* no need to allocate, already have mem *)

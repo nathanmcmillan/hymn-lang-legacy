@@ -35,6 +35,7 @@ func init() {
 	}
 
 	infixes = map[string]infixRule{
+		":=":  infixRule{1, "", infixWalrus},
 		"and": infixRule{1, "", infixCompare},
 		"or":  infixRule{1, "", infixCompare},
 		">":   infixRule{2, "", infixCompare},
@@ -43,11 +44,12 @@ func init() {
 		"<=":  infixRule{2, "", infixCompare},
 		"=":   infixRule{2, "equal", infixCompare},
 		"!=":  infixRule{2, "not-equal", infixCompare},
-		">>":  infixRule{2, "", infixBits},
-		"<<":  infixRule{2, "", infixBits},
-		"&":   infixRule{2, "", infixBits},
-		"|":   infixRule{2, "", infixBits},
-		"^":   infixRule{2, "", infixBits},
+		">>":  infixRule{2, "", infixBinaryInt},
+		"<<":  infixRule{2, "", infixBinaryInt},
+		"&":   infixRule{2, "", infixBinaryInt},
+		"|":   infixRule{2, "", infixBinaryInt},
+		"^":   infixRule{2, "", infixBinaryInt},
+		"%":   infixRule{4, "", infixBinaryInt},
 		"+":   infixRule{3, "", infixBinary},
 		"-":   infixRule{3, "", infixBinary},
 		"*":   infixRule{4, "", infixBinary},

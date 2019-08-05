@@ -40,13 +40,13 @@ func infixBinary(me *parser, left *node, op string) *node {
 	return node
 }
 
-func infixBits(me *parser, left *node, op string) *node {
+func infixBinaryInt(me *parser, left *node, op string) *node {
 	node := nodeInit(op)
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
 	if left.typed != "int" || right.typed != "int" {
-		err := me.fail() + "bitwise operation must be integers \"" + left.typed + "\" and \"" + right.typed + "\""
+		err := me.fail() + "operation requires integers \"" + left.typed + "\" and \"" + right.typed + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
 	}
@@ -64,5 +64,10 @@ func infixCompare(me *parser, left *node, op string) *node {
 	node.push(left)
 	node.push(right)
 	node.typed = "bool"
+	return node
+}
+
+func infixWalrus(me *parser, left *node, op string) *node {
+	node := me.assign(left, true, false)
 	return node
 }

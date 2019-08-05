@@ -3,23 +3,23 @@ type foo
 
 immutable
   name = "foo"
-  fooPool = [3]foo
-  fooSingle = foo
+  foo_pool = [3]foo
+  foo_single = foo
   
 mutable
-  nextId = 0
+  next_id = 0
 
-doUpdate(z int)
-  nextId += z
+do_update(z int)
+  next_id += z
 
 main
-  nextId += 1
-  echo(nextId)
-  doUpdate(2)
-  echo(nextId)
+  next_id += 1
+  echo(next_id)
+  do_update(2)
+  echo(next_id)
   echo(name)
-  fooPool[0] = foo
-  fooPool[0].x = "yo mama"
-  fooSingle.x = "big boi"
-  echo(fooPool[0].x)
-  echo(fooSingle.x)
+  foo_pool[0] = foo
+  foo_pool[0].x = "yo mama"
+  foo_single.x = "big boi"
+  echo(foo_pool[0].x)
+  echo(foo_single.x)

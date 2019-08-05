@@ -19,6 +19,7 @@ main
 * unions
 * structs
 * matching
+* walrus
 
 ### todo
 * slices

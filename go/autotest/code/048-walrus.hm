@@ -1,0 +1,36 @@
+enum thing
+  boo
+  zoo
+
+foo(w int) bool
+  return w < 3
+
+main
+  if y := true
+    echo("true!")
+  echo(y)
+  
+  if (x := 2 + 2) > 0
+    echo("true!")
+  echo(x)
+
+  mutable r = 0
+  if 3 < (r := 3 + 3)
+    echo("true!")
+  echo(r)
+  
+  mutable w = 1
+  for z := foo(w) 
+    w += 1
+  echo(z)
+
+  mutable a = 1
+  for (b := a + a) >= (c := a * a)
+    a += 1
+  echo(a)
+  echo(b)
+  echo(c)
+
+  match t := thing.boo
+    boo => echo("boo!")
+    zoo => echo("zoo!")

@@ -29,6 +29,14 @@ func (me *parser) fileExpression() {
 		me.defineClass()
 	} else if op == "enum" {
 		me.defineEnum()
+	} else if op == "def" {
+		me.def()
+	} else if op == "ifdef" {
+		me.ifdef()
+	} else if op == "elsedef" {
+		me.elsedef()
+	} else if op == "enddef" {
+		me.enddef()
 	} else if op == "#" {
 		me.eat("#")
 	} else if op == "line" || op == "eof" {
@@ -78,6 +86,14 @@ func (me *parser) expression() *node {
 		return me.label()
 	} else if op == "pass" {
 		return me.pass()
+	} else if op == "def" {
+		return me.def()
+	} else if op == "ifdef" {
+		return me.ifdef()
+	} else if op == "elsedef" {
+		return me.elsedef()
+	} else if op == "enddef" {
+		return me.enddef()
 	} else if op == "#" {
 		return me.comment()
 	} else if op == "line" || op == "eof" {
@@ -289,11 +305,11 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	op := me.token.is
 	mustBeInt := false
 	mustBeNumber := false
-	if op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
+	if op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
 		mustBeInt = true
 	} else if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
 		mustBeNumber = true
-	} else if op != "=" {
+	} else if op != "=" && op != ":=" {
 		panic(me.fail() + "unknown assign operation \"" + op + "\"")
 	}
 	me.eat(op)
@@ -338,7 +354,11 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	}
 	right.attributes["assign"] = left.value
 	n := nodeInit(op)
-	n.typed = "void"
+	if op == ":=" {
+		n.typed = right.typed
+	} else {
+		n.typed = "void"
+	}
 	n.push(left)
 	fmt.Println("assign set", left.string(0))
 	n.push(right)
@@ -646,7 +666,9 @@ func (me *parser) imports() {
 }
 
 func (me *parser) immutables() {
-	me.eat("line")
+	if me.token.is == "line" {
+		me.eat("line")
+	}
 	for {
 		n := me.forceassign(false, false)
 		av := n.has[0]

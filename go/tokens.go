@@ -35,6 +35,13 @@ var keywords = map[string]bool{
 	"goto":      true,
 	"label":     true,
 	"async":     true,
+	"def":       true,
+	"ifdef":     true,
+	"ifndef":    true,
+	"elsedef":   true,
+	"enddef":    true,
+	"defc":      true,
+	"endc":      true,
 }
 
 func (me *token) string() string {
@@ -49,7 +56,7 @@ func digit(c byte) bool {
 }
 
 func letter(c byte) bool {
-	return strings.IndexByte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", c) >= 0
+	return strings.IndexByte("abcdefghijklmnopqrstuvwxyz", c) >= 0
 }
 
 func (me *tokenizer) forSpace() int {
@@ -123,7 +130,7 @@ func (me *tokenizer) forWord() string {
 		if !letter(c) {
 			if first {
 				break
-			} else if !digit(c) {
+			} else if !digit(c) && c != '_' {
 				break
 			}
 		}
@@ -204,9 +211,22 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	c := stream.peek()
-	if strings.IndexByte("$:().[]_", c) >= 0 {
+	if strings.IndexByte("$().[]_", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
+		me.tokens = append(me.tokens, token)
+		return token
+	}
+	if c == ':' {
+		stream.next()
+		peek := stream.peek()
+		var token *token
+		if peek == '=' {
+			stream.next()
+			token = me.simpleToken(":=")
+		} else {
+			token = me.simpleToken(":")
+		}
 		me.tokens = append(me.tokens, token)
 		return token
 	}
@@ -218,11 +238,11 @@ func (me *tokenizer) get(pos int) *token {
 	}
 	if c == '=' {
 		stream.next()
-		op := string(c)
+		op := "="
 		peek := stream.peek()
 		if peek == '>' {
 			stream.next()
-			op += ">"
+			op = "=>"
 		}
 		token := me.simpleToken(op)
 		me.tokens = append(me.tokens, token)
@@ -244,7 +264,7 @@ func (me *tokenizer) get(pos int) *token {
 		me.tokens = append(me.tokens, token)
 		return token
 	}
-	if strings.IndexByte("+*/&|^", c) >= 0 {
+	if strings.IndexByte("+*/%&|^", c) >= 0 {
 		stream.next()
 		op := string(c)
 		peek := stream.peek()

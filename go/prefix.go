@@ -37,12 +37,20 @@ func prefixIdent(me *parser, op string) *node {
 		if _, ok := me.hmfile.enums[name]; ok {
 			return me.allocEnum(me.hmfile)
 		}
+		if def, ok := me.hmfile.defs[name]; ok {
+			return me.exprDef(name, def)
+		}
 		panic(me.fail() + "bad type \"" + name + "\" definition")
 	}
 	if _, ok := me.hmfile.imports[name]; ok {
 		return me.extern()
 	}
-	if me.hmfile.getvar(name) == nil {
+	v := me.hmfile.getvar(name)
+	if me.peek().is == ":=" {
+		if v != nil && v.mutable == false {
+			panic(me.fail() + "variable not mutable")
+		}
+	} else if v == nil {
 		panic(me.fail() + "variable out of scope")
 	}
 	return me.eatvar(me.hmfile)

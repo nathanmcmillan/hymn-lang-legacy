@@ -49,8 +49,10 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	}
 
 	// TODO init func
-	cfile.headFuncSection += "void " + me.funcNameSpace("init") + "();\n"
-	code += "void " + me.funcNameSpace("init") + "() {\n\n}\n\n"
+	if len(me.statics) != 0 {
+		cfile.headFuncSection += "void " + me.funcNameSpace("init") + "();\n"
+		code += "void " + me.funcNameSpace("init") + "() {\n\n}\n\n"
+	}
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
@@ -73,13 +75,13 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 
 func (me *cfile) eval(n *node) *cnode {
 	op := n.is
-	if op == "=" {
+	if op == "=" || op == ":=" {
 		code := me.assingment(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
+	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
 		code := me.assignmentUpdate(n)
 		cn := codeNode(n.is, n.value, n.typed, code)
 		fmt.Println(cn.string(0))
@@ -121,7 +123,7 @@ func (me *cfile) eval(n *node) *cnode {
 	if op == "-sign" {
 		return me.compilePrefixNeg(n)
 	}
-	if op == "+" || op == "-" || op == "*" || op == "/" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
+	if op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
 		return me.compileBinaryOp(n)
 	}
 	if op == "tuple-index" {
@@ -363,6 +365,9 @@ func (me *cfile) compileNone(n *node) *cnode {
 
 func (me *cfile) compileMatch(n *node) *cnode {
 
+	code := ""
+	code += me.walrusMatch(n)
+
 	using := n.has[0]
 	match := me.eval(using)
 
@@ -370,7 +375,6 @@ func (me *cfile) compileMatch(n *node) *cnode {
 		return me.compileNullCheck(match, n)
 	}
 
-	code := ""
 	test := match.code
 	isEnum := false
 	var enumNameSpace string
@@ -501,7 +505,9 @@ func (me *cfile) compileAndOr(n *node) *cnode {
 
 func (me *cfile) compileIf(n *node) *cnode {
 	hsize := len(n.has)
-	code := "if (" + me.eval(n.has[0]).code + ") {\n"
+	code := ""
+	code += me.walrusIf(n)
+	code += "if (" + me.eval(n.has[0]).code + ") {\n"
 	code += me.eval(n.has[1]).code
 	code += "\n" + fmc(me.depth) + "}"
 	ix := 2
@@ -546,6 +552,7 @@ func (me *cfile) compileFor(n *node) *cnode {
 		code += "for (" + vinit + "; " + condition + "; " + inc + ")\n"
 	} else if size > 1 {
 		ix++
+		code += me.walrusLoop(n)
 		code += "while (" + me.eval(n.has[0]).code + ")\n"
 	} else {
 		code += "while (true)\n"
@@ -641,17 +648,24 @@ func (me *cfile) assignStatic(n *node) (string, string) {
 }
 
 func (me *cfile) assingment(n *node) string {
-	code := ""
 	left := n.has[0]
 	right := n.has[1]
 	if _, ok := left.attributes["mutable"]; ok {
 		right.attributes["no-malloc"] = "true"
 	}
+	code := ""
+	_, paren := n.attributes["parenthesis"]
+	if paren {
+		code += "("
+	}
 	if left.is == "variable" {
-		code = me.declare(left)
+		code += me.declare(left)
 	}
 	rightCode := me.eval(right).code
 	code += me.eval(left).code + me.maybeLet(rightCode) + rightCode
+	if paren {
+		code += ")"
+	}
 	return code
 }
 

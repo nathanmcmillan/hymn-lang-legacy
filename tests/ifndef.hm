@@ -1,6 +1,6 @@
-
-define foo
-define bar = 35
+def beans "cool beans!"
+def num 84
+def foo
 
 ifdef foo
 immutable beans = "cool beans!"
@@ -8,16 +8,25 @@ elsedef
 immutable beans = bar
 enddef
 
-defc "#define NEW(x) malloc(sizeof(x))"
-
-def print(x) = echo(x)
-
-def bar(x)
-  temp = x
-  print(temp)
-
 main
   echo(beans)
-  print(beans)
-  bar(beans)
-  defc "int *ptr = NEW(int);"
+  echo(4 + num)
+
+# ifdef foo
+# defc
+# #define NEW(x) malloc(sizeof(x))
+# endc
+# enddef
+
+# def print(x)
+#   echo(x)
+
+# def bar(x)
+#   temp = x
+#   print(temp)
+
+# main
+#   echo(beans)
+#   print(beans)
+#   bar(beans)
+#   defc int *ptr = NEW(int);

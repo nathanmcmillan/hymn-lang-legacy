@@ -1,6 +1,30 @@
 type foo
   data int
 
+type boo
+  x foo
+
+type zoo
+  y int
+
+type poo
+  z 'foo
+  w 'zoo
+
+hello(f foo) int
+  return f.data + 1
+
 main
   f = $foo(22)
   echo(f.data)
+  (* echo(hello(f)) *)
+
+  (* b = boo(f) *)
+  (* echo(b.x.data) *)
+
+  (* h = zoo(f.data) *)
+  (* echo(h.y) *)
+
+  p = poo
+  echo(p.z.data)
+  echo(p.w.y)

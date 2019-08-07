@@ -39,17 +39,28 @@ func (me *cfile) allocClass(n *node) *cnode {
 		return codeNode(n.is, n.value, n.typed, "")
 	}
 
+	_, useStack := n.attributes["use-stack"]
+	useHeap := !useStack
+
 	data := me.hmfile.typeToVarData(n.typed)
 	typed := data.module.classNameSpace(data.typed)
 
-	code := "malloc(sizeof(" + typed + "))"
+	code := ""
+
+	var ptrCh string
+	if useHeap {
+		code += "malloc(sizeof(" + typed + "))"
+		ptrCh = "->"
+	} else {
+		ptrCh = "."
+	}
 
 	assign, _ := n.attributes["assign"]
 	cl, _ := data.checkIsClass()
 	params := n.has
 	for ix, p := range params {
 		clv := cl.variables[cl.variableOrder[ix]]
-		cassign := ";\n" + fmc(me.depth) + assign + "->" + clv.name + " = "
+		cassign := ";\n" + fmc(me.depth) + assign + ptrCh + clv.name + " = "
 
 		if p.is == "new" {
 			temp := me.tempClass(p)

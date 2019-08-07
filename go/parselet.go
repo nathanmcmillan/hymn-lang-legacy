@@ -26,6 +26,7 @@ func init() {
 		"none":   prefixRule{6, "", prefixNone},
 		"maybe":  prefixRule{6, "", prefixMaybe},
 		"id":     prefixRule{6, "", prefixIdent},
+		"$":      prefixRule{8, "", prefixIdent},
 		"+":      prefixRule{8, "+sign", prefixSign},
 		"-":      prefixRule{8, "-sign", prefixSign},
 		"!":      prefixRule{8, "not", prefixNot},

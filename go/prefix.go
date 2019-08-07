@@ -26,16 +26,26 @@ func prefixPrimitive(me *parser, op string) *node {
 }
 
 func prefixIdent(me *parser, op string) *node {
+	useStack := false
+	if me.token.is == "$" {
+		me.eat("$")
+		useStack = true
+	}
+
 	name := me.token.value
 	if _, ok := me.hmfile.functions[name]; ok {
 		return me.call(me.hmfile)
 	}
 	if _, ok := me.hmfile.types[name]; ok {
 		if _, ok := me.hmfile.classes[name]; ok {
-			return me.allocClass(me.hmfile)
+			data := &allocData{}
+			data.useStack = useStack
+			return me.allocClass(me.hmfile, data)
 		}
 		if _, ok := me.hmfile.enums[name]; ok {
-			return me.allocEnum(me.hmfile)
+			data := &allocData{}
+			data.useStack = useStack
+			return me.allocEnum(me.hmfile, data)
 		}
 		if def, ok := me.hmfile.defs[name]; ok {
 			return me.exprDef(name, def)

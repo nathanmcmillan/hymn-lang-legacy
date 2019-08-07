@@ -27,7 +27,7 @@ eq(a int, b int) bool
   return false
 
 main
-  # this is a comment
+  (* this is a comment *)
   x = 2
   y = 2
   echo(less(x, y))

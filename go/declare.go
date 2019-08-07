@@ -231,11 +231,6 @@ func (me *parser) declareType(impl bool) *varData {
 
 	typed := ""
 
-	if me.token.is == "$" {
-		me.eat("$")
-		typed += "$"
-	}
-
 	if me.token.is == "maybe" {
 		me.eat("maybe")
 		me.eat("<")

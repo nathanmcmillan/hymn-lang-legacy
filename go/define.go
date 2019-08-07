@@ -105,8 +105,8 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		if me.token.depth == 0 {
 			goto fnEnd
 		}
-		if me.token.is == "#" {
-			me.eat("#")
+		if me.token.is == "comment" {
+			me.eat("comment")
 		}
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)
@@ -172,7 +172,7 @@ func (me *parser) defineClass() {
 		if me.token.is == "line" {
 			break
 		}
-		if me.token.is == "eof" || me.token.is == "#" {
+		if me.token.is == "eof" || me.token.is == "comment" {
 			break
 		}
 		if me.token.is == "id" {
@@ -184,10 +184,17 @@ func (me *parser) defineClass() {
 			if _, ok := genericsDict[mname]; ok {
 				panic(me.fail() + "cannot use \"" + mname + "\" as member name")
 			}
+
+			isptr := true
+			if me.token.is == "'" {
+				me.eat("'")
+				isptr = false
+			}
+
 			mtype := me.declareType(false)
 			me.eat("line")
 			memberOrder = append(memberOrder, mname)
-			memberMap[mname] = me.hmfile.varInit(mtype.full, mname, true, true)
+			memberMap[mname] = me.hmfile.varInit(mtype.full, mname, true, isptr)
 			continue
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in class")
@@ -220,7 +227,7 @@ func (me *parser) defineEnum() {
 			me.eat("line")
 			break
 		}
-		if token.is == "eof" || token.is == "#" {
+		if token.is == "eof" || token.is == "comment" {
 			break
 		}
 		if token.is == "id" {

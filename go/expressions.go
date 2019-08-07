@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -37,8 +36,8 @@ func (me *parser) fileExpression() {
 		me.elsedef()
 	} else if op == "enddef" {
 		me.enddef()
-	} else if op == "#" {
-		me.eat("#")
+	} else if op == "comment" {
+		me.eat("comment")
 	} else if op == "line" || op == "eof" {
 		return
 	} else {
@@ -94,7 +93,7 @@ func (me *parser) expression() *node {
 		return me.elsedef()
 	} else if op == "enddef" {
 		return me.enddef()
-	} else if op == "#" {
+	} else if op == "comment" {
 		return me.comment()
 	} else if op == "line" || op == "eof" {
 		return nil
@@ -171,128 +170,6 @@ func (me *parser) returning() *node {
 	return n
 }
 
-func (me *parser) eatvar(from *hmfile) *node {
-	root := nodeInit("variable")
-	localvarname := me.token.value
-	if from == me.hmfile {
-		root.value = localvarname
-	} else {
-		root.value = from.name + "." + localvarname
-	}
-	me.eat("id")
-	for {
-		if me.token.is == "." {
-			if root.is == "variable" {
-				sv := me.hmfile.getvar(root.value)
-				if sv == nil {
-					panic(me.fail() + "variable \"" + root.value + "\" out of scope")
-				}
-				root.typed = sv.typed
-				root.is = "root-variable"
-			}
-			fmt.Println("eatvar root type :=", root.typed)
-			data := me.hmfile.typeToVarData(root.typed)
-			if rootClass, ok := data.checkIsClass(); ok {
-				me.eat(".")
-				dotName := me.token.value
-				me.eat("id")
-				var member *node
-				classOf, ok := rootClass.variables[dotName]
-				if ok {
-					fmt.Println("member variable \"" + dotName + "\" is type \"" + classOf.typed + "\"")
-					member = nodeInit("member-variable")
-					member.typed = classOf.typed
-					member.value = dotName
-					member.push(root)
-				} else {
-					nameOfFunc := me.nameOfClassFunc(rootClass.name, dotName)
-					funcVar, ok := data.module.functions[nameOfFunc]
-					if ok {
-						fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed.full + "\"")
-						member = me.callClassFunction(data.module, root, rootClass, funcVar)
-					} else {
-						panic(me.fail() + "class variable or function \"" + dotName + "\" does not exist")
-					}
-				}
-				root = member
-
-			} else if rootEnum, rootUnion, ok := data.checkIsEnum(); ok {
-				if rootUnion != nil {
-					me.eat(".")
-					dotIndexStr := me.token.value
-					me.eat("int")
-					dotIndex, _ := strconv.Atoi(dotIndexStr)
-					if dotIndex > len(rootUnion.types) {
-						panic(me.fail() + "index out of range for \"" + rootUnion.name + "\"")
-					}
-					typeInUnion := rootUnion.types[dotIndex]
-					member := nodeInit("tuple-index")
-					member.typed = typeInUnion.typed
-					member.value = dotIndexStr
-					member.push(root)
-					root = member
-				} else {
-					panic(me.fail() + "enum \"" + rootEnum.name + "\" must be union type does not exist")
-				}
-				// } else if data.maybe {
-				// 	member := nodeInit("maybe")
-				// 	member.typed = data.maybeType
-				// 	member.push(root)
-				// 	root = member
-
-				// } else if data.none {
-				// 	member := nodeInit("none")
-				// 	member.typed = data.typed
-				// 	member.push(root)
-				// 	root = member
-			} else {
-				panic(me.fail() + "type \"" + root.typed + "\" does not exist")
-			}
-		} else if me.token.is == "[" {
-			if root.is == "variable" {
-				sv := me.hmfile.getvar(root.value)
-				if sv == nil {
-					panic(me.fail() + "variable out of scope")
-				}
-				root.typed = sv.typed
-				root.is = "root-variable"
-			}
-			if !checkIsArray(root.typed) {
-				panic(me.fail() + "root variable \"" + root.value + "\" of type \"" + root.typed + "\" is not array")
-			}
-			atype := typeOfArray(root.typed)
-			me.eat("[")
-			member := nodeInit("array-member")
-			index := me.calc(0)
-			member.typed = atype
-			member.push(index)
-			member.push(root)
-			root = member
-			me.eat("]")
-		} else {
-			break
-		}
-	}
-	if root.is == "variable" {
-		if from == me.hmfile {
-			sv := from.getvar(localvarname)
-			if sv == nil {
-				root.typed = "?"
-			} else {
-				root.typed = sv.typed
-			}
-		} else {
-			sv := from.getStatic(localvarname)
-			if sv == nil {
-				panic(me.fail() + "static variable \"" + localvarname + "\" in module \"" + from.name + "\" not found")
-			} else {
-				root.typed = sv.typed
-			}
-		}
-	}
-	return root
-}
-
 func (me *parser) forceassign(malloc, mutable bool) *node {
 	v := me.eatvar(me.hmfile)
 	if !me.assignable(v) {
@@ -353,6 +230,9 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		panic(me.fail() + "bad assignment \"" + left.is + "\"")
 	}
 	right.attributes["assign"] = left.value
+	if _, useStack := right.attributes["use-stack"]; useStack {
+		left.attributes["use-stack"] = "true"
+	}
 	n := nodeInit(op)
 	if op == ":=" {
 		n.typed = right.typed
@@ -367,7 +247,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 
 func (me *parser) comment() *node {
 	token := me.token
-	me.eat("#")
+	me.eat("comment")
 	n := nodeInit("comment")
 	n.value = token.value
 	return n
@@ -399,10 +279,10 @@ func (me *parser) extern() *node {
 		return me.call(module)
 	} else if _, ok := module.classes[idname]; ok {
 		fmt.Println("extern class")
-		return me.allocClass(module)
+		return me.allocClass(module, nil)
 	} else if _, ok := module.enums[idname]; ok {
 		fmt.Println("extern enum")
-		return me.allocEnum(module)
+		return me.allocEnum(module, nil)
 	} else if module.getStatic(idname) != nil {
 		fmt.Println("extern var")
 		return me.eatvar(module)
@@ -424,7 +304,7 @@ func (me *parser) block() *node {
 				break
 			}
 		}
-		if me.token.is == "eof" || me.token.is == "#" {
+		if me.token.is == "eof" || me.token.is == "comment" {
 			goto blockEnd
 		}
 		expr := me.expression()
@@ -659,7 +539,7 @@ func (me *parser) imports() {
 			fmt.Println("=== continue " + me.hmfile.name + " parse === ")
 		}
 		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "#" {
+		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
 			break
 		}
 	}
@@ -679,7 +559,7 @@ func (me *parser) immutables() {
 		me.hmfile.statics = append(me.hmfile.statics, n)
 		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
 		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "#" {
+		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
 			break
 		}
 	}
@@ -697,7 +577,7 @@ func (me *parser) mutables() {
 		me.hmfile.statics = append(me.hmfile.statics, n)
 		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
 		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "#" {
+		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
 			break
 		}
 	}

@@ -297,11 +297,11 @@ func (me *cfile) compileTupleIndex(n *node) *cnode {
 }
 
 func (me *cfile) compileMemberVariable(n *node) *cnode {
-	root := n.has[0]
+	head := n.has[0]
 	code := n.value
 	for {
-		if root.is == "root-variable" {
-			data := me.hmfile.typeToVarData(root.value)
+		if head.is == "root-variable" {
+			data := me.hmfile.typeToVarData(head.value)
 			var vr *variable
 			var cname string
 			if data.module == me.hmfile {
@@ -311,23 +311,23 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 				vr = data.module.getStatic(data.typed)
 				cname = data.module.varNameSpace(data.typed)
 			}
-			if checkIsArray(root.typed) {
+			if checkIsArray(head.typed) {
 				code = cname + code
 			} else {
 				code = cname + vr.memget() + code
 			}
 			break
-		} else if root.is == "array-member" {
-			index := me.eval(root.has[0])
+		} else if head.is == "array-member" {
+			index := me.eval(head.has[0])
 			code = "[" + index.code + "]" + "->" + code
-			root = root.has[1]
-		} else if root.is == "member-variable" {
+			head = head.has[1]
+		} else if head.is == "member-variable" {
 			if code[0] == '[' {
-				code = root.value + code
+				code = head.value + code
 			} else {
-				code = root.value + "->" + code
+				code = head.value + "->" + code
 			}
-			root = root.has[0]
+			head = head.has[0]
 		} else {
 			panic("missing member variable")
 		}
@@ -593,15 +593,24 @@ func (me *cfile) declare(n *node) string {
 	name := n.value
 	if me.getvar(name) == nil {
 		malloc := true
+		useStack := false
 		if _, ok := n.attributes["no-malloc"]; ok {
 			malloc = false
+		}
+		if _, ok := n.attributes["use-stack"]; ok {
+			useStack = true
 		}
 		mutable := false
 		if _, ok := n.attributes["mutable"]; ok {
 			mutable = true
 		}
-		if malloc {
-			data := me.hmfile.typeToVarData(n.typed)
+		data := me.hmfile.typeToVarDataWithAttributes(n.typed, n.attributes)
+		if useStack {
+			malloc = false
+			me.scope.variables[name] = me.hmfile.varInit(data.full, name, mutable, malloc)
+			codesig := fmtassignspace(data.typeSig())
+			code += codesig
+		} else if malloc {
 			me.scope.variables[name] = me.hmfile.varInit(data.full, name, mutable, malloc)
 			codesig := fmtassignspace(data.typeSig())
 			if mutable {
@@ -612,7 +621,6 @@ func (me *cfile) declare(n *node) string {
 				code += "const " + codesig
 			}
 		} else {
-			data := me.hmfile.typeToVarData(n.typed)
 			newVar := me.hmfile.varInit(data.full, name, mutable, malloc)
 			newVar.cName = data.module.varNameSpace(name)
 			me.scope.variables[name] = newVar
@@ -623,8 +631,11 @@ func (me *cfile) declare(n *node) string {
 	return code
 }
 
-func (me *cfile) maybeLet(code string) string {
+func (me *cfile) maybeLet(code string, attributes map[string]string) string {
 	if code == "" || strings.HasPrefix(code, "[") {
+		return ""
+	}
+	if _, ok := attributes["use-stack"]; ok {
 		return ""
 	}
 	return " = "
@@ -637,7 +648,7 @@ func (me *cfile) assignStatic(n *node) (string, string) {
 	decl := me.declare(left)
 	rightcode := me.eval(right).code
 	leftcode := me.eval(left).code
-	setsign := me.maybeLet(rightcode)
+	setsign := me.maybeLet(rightcode, right.attributes)
 	code := decl + leftcode + setsign + rightcode + ";\n"
 	decl = "extern " + decl + leftcode
 	if setsign == "" {
@@ -662,7 +673,7 @@ func (me *cfile) assingment(n *node) string {
 		code += me.declare(left)
 	}
 	rightCode := me.eval(right).code
-	code += me.eval(left).code + me.maybeLet(rightCode) + rightCode
+	code += me.eval(left).code + me.maybeLet(rightCode, right.attributes) + rightCode
 	if paren {
 		code += ")"
 	}
@@ -715,68 +726,6 @@ func (me *cfile) generateUnionFn(en *enum, un *union) {
 	code += "}\n\n"
 	me.headFuncSection += head
 	me.codeFn = append(me.codeFn, code)
-}
-
-func (me *cfile) defineEnum(enum *enum) {
-	fmt.Println("define enum \"" + enum.name + "\"")
-
-	impl, hmBaseEnumName := me.hmfile.enumMaybeImplNameSpace(enum.name)
-	if !impl {
-		me.headTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
-		code := "enum " + hmBaseEnumName + " {\n"
-		for ix, enumUnion := range enum.typesOrder {
-			if ix == 0 {
-				code += fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
-			} else {
-				code += ",\n" + fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
-			}
-		}
-		code += "\n};\n\n"
-		me.headTypesSection += code
-	}
-
-	if enum.simple || len(enum.generics) > 0 {
-		return
-	}
-
-	code := ""
-	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
-	me.headTypeDefSection += "typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
-	code += "struct " + hmBaseUnionName + " {\n"
-	code += fmc(1) + hmBaseEnumName + " type;\n"
-	code += fmc(1) + "union {\n"
-	for _, enumUnion := range enum.typesOrder {
-		me.generateUnionFn(enum, enumUnion)
-		num := len(enumUnion.types)
-		if num == 1 {
-			typed := enumUnion.types[0]
-			code += fmc(2) + fmtassignspace(typed.typeSig()) + enumUnion.name + ";\n"
-		} else if num != 0 {
-			code += fmc(2) + "struct {\n"
-			for ix, typed := range enumUnion.types {
-				code += fmc(3) + fmtassignspace(typed.typeSig()) + "var" + strconv.Itoa(ix) + ";\n"
-			}
-			code += fmc(2) + "} " + enumUnion.name + ";\n"
-		}
-	}
-	code += fmc(1) + "};\n"
-	code += "};\n\n"
-	me.headTypesSection += code
-}
-
-func (me *cfile) defineClass(class *class) {
-	if len(class.generics) > 0 {
-		return
-	}
-	hmName := me.hmfile.classNameSpace(class.name)
-	me.headTypeDefSection += "typedef struct " + hmName + " " + hmName + ";\n"
-	code := "struct " + hmName + " {\n"
-	for _, name := range class.variableOrder {
-		field := class.variables[name]
-		code += fmc(1) + fmtassignspace(field.vdat.typeSig()) + field.name + ";\n"
-	}
-	code += "};\n\n"
-	me.headTypesSection += code
 }
 
 func (me *cfile) maybeColon(code string) string {

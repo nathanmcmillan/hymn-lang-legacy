@@ -16,12 +16,11 @@ type variable struct {
 
 func (me *hmfile) varInit(typed, name string, mutable, isptr bool) *variable {
 	v := &variable{}
-	v.typed = typed
 	v.name = name
 	v.cName = name
 	v.mutable = mutable
 	v.isptr = isptr
-	v.vdat = me.typeToVarData(typed)
+	v.update(me, typed)
 	return v
 }
 
@@ -29,6 +28,12 @@ func (me *hmfile) varWithDefaultInit(typed, name string, mutable, isptr bool, df
 	v := me.varInit(typed, name, mutable, isptr)
 	v.dfault = dfault
 	return v
+}
+
+func (me *variable) update(module *hmfile, typed string) {
+	me.typed = typed
+	me.vdat = module.typeToVarData(typed)
+	me.vdat.isptr = me.isptr
 }
 
 func (me *variable) copy() *variable {
@@ -40,11 +45,6 @@ func (me *variable) copy() *variable {
 	v.isptr = me.isptr
 	v.vdat = me.vdat
 	return v
-}
-
-func (me *variable) update(module *hmfile, typed string) {
-	me.typed = typed
-	me.vdat = module.typeToVarData(typed)
 }
 
 func (me *variable) memget() string {
@@ -59,7 +59,8 @@ type varData struct {
 	typed       string
 	full        string
 	mutable     bool
-	pointer     bool
+	onStack     bool
+	isptr       bool
 	heap        bool
 	array       bool
 	none        bool
@@ -72,21 +73,31 @@ type varData struct {
 	cl          *class
 }
 
-func dataInit(module *hmfile, typed string, mutable, pointer, heap bool) *varData {
+func dataInit(module *hmfile, typed string, mutable, isptr, heap bool) *varData {
 	d := &varData{}
 	d.module = module
 	d.typed = typed
 	d.mutable = mutable
-	d.pointer = pointer
+	d.isptr = isptr
 	d.heap = heap
 	return d
+}
+
+func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[string]string) *varData {
+	data := me.typeToVarData(typed)
+
+	if _, ok := attributes["use-stack"]; ok {
+		data.onStack = true
+	}
+
+	return data
 }
 
 func (me *hmfile) typeToVarData(typed string) *varData {
 	data := &varData{}
 	data.full = typed
 	data.mutable = true
-	data.pointer = true
+	data.isptr = true
 	data.heap = true
 
 	if strings.HasPrefix(typed, "maybe") {
@@ -102,14 +113,6 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	if data.array {
 		typed = typeOfArray(typed)
 		data.typeInArray = typed
-	}
-
-	if typed[0] == '$' {
-		data.pointer = false
-		typed = typed[1:]
-	} else if typed[0] == '\\' {
-		data.heap = false
-		typed = typed[1:]
 	}
 
 	data.module = me
@@ -259,7 +262,11 @@ func (me *varData) typeSig() string {
 		return me.module.typeToVarData(me.noneType).typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {
-		return me.module.classNameSpace(me.typed) + " *"
+		sig := me.module.classNameSpace(me.typed)
+		if !me.onStack && me.isptr {
+			sig += " *"
+		}
+		return sig
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.typeSig()
 	} else if me.full == "string" {

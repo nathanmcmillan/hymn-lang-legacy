@@ -157,15 +157,27 @@ func (me *tokenizer) forString() string {
 
 func (me *tokenizer) forComment() string {
 	stream := me.stream
-	stream.next()
 	value := &strings.Builder{}
+	nest := 1
 	for !stream.eof() {
-		c := stream.peek()
-		if c == '\n' {
-			break
+		c := stream.next()
+		if c == '(' {
+			c2 := stream.peek()
+			if c2 == '*' {
+				nest++
+			}
+		}
+		if c == '*' {
+			c2 := stream.peek()
+			if c2 == ')' {
+				nest--
+				if nest == 0 {
+					stream.next()
+					break
+				}
+			}
 		}
 		value.WriteByte(c)
-		stream.next()
 	}
 	return value.String()
 }
@@ -211,7 +223,24 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	c := stream.peek()
-	if strings.IndexByte("$().[]_", c) >= 0 {
+	if c == '(' {
+		stream.next()
+		peek := stream.peek()
+		if peek == '*' {
+			stream.next()
+			// TODO buggy
+			// value := me.forComment()
+			// token := me.valueToken("comment", value)
+			// me.tokens = append(me.tokens, token)
+			// return token
+			me.forComment()
+			return me.get(pos)
+		}
+		token := me.simpleToken("(")
+		me.tokens = append(me.tokens, token)
+		return token
+	}
+	if strings.IndexByte("$).[]'_", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.tokens = append(me.tokens, token)
@@ -329,15 +358,6 @@ func (me *tokenizer) get(pos int) *token {
 		token := me.simpleToken("delim")
 		me.tokens = append(me.tokens, token)
 		return token
-	}
-	if c == '#' {
-		// TODO buggy
-		// value := me.forComment()
-		// token := me.valueToken("#", value)
-		// me.tokens = append(me.tokens, token)
-		// return token
-		me.forComment()
-		return me.get(pos)
 	}
 	if c == '\n' {
 		stream.next()

@@ -159,3 +159,7 @@ func (me *cfile) head() string {
 	head += me.headSuffix
 	return head
 }
+
+type allocData struct {
+	useStack bool
+}

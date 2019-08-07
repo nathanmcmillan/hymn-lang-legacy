@@ -38,7 +38,7 @@ func (me *parser) buildAnyType() string {
 	return typed
 }
 
-func (me *parser) allocEnum(module *hmfile) *node {
+func (me *parser) allocEnum(module *hmfile, data *allocData) *node {
 	enumName := me.token.value
 	me.eat("id")
 	enumDef, ok := module.enums[enumName]
@@ -272,8 +272,11 @@ func (me *parser) buildClass(n *node, module *hmfile) string {
 	return typed
 }
 
-func (me *parser) allocClass(module *hmfile) *node {
+func (me *parser) allocClass(module *hmfile, data *allocData) *node {
 	n := nodeInit("new")
 	n.typed = me.buildClass(n, module)
+	if data != nil && data.useStack {
+		n.attributes["use-stack"] = "true"
+	}
 	return n
 }

@@ -14,6 +14,18 @@ type variable struct {
 	vdat    *varData
 }
 
+func (me *hmfile) varInitFromData(vdat *varData, name string, mutable, isptr bool) *variable {
+	v := &variable{}
+	v.vdat = vdat
+	v.typed = vdat.full
+	v.name = name
+	v.cName = name
+	v.mutable = mutable
+	v.isptr = isptr
+	v.vdat.isptr = v.isptr
+	return v
+}
+
 func (me *hmfile) varInit(typed, name string, mutable, isptr bool) *variable {
 	v := &variable{}
 	v.name = name
@@ -67,7 +79,7 @@ type varData struct {
 	maybe       bool
 	some        string
 	noneType    string
-	typeInArray string
+	typeInArray *varData
 	en          *enum
 	un          *union
 	cl          *class
@@ -112,7 +124,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	data.array = checkIsArray(typed)
 	if data.array {
 		typed = typeOfArray(typed)
-		data.typeInArray = typed
+		data.typeInArray = me.typeToVarData(typed)
 	}
 
 	data.module = me
@@ -139,6 +151,14 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	}
 
 	return data
+}
+
+func (me *varData) merge(alloc *allocData) {
+	if alloc == nil {
+		return
+	}
+	me.array = alloc.isArray
+	me.heap = !alloc.useStack
 }
 
 func (me *varData) checkIsArray() bool {
@@ -253,7 +273,7 @@ func (me *varData) postfixConst() bool {
 
 func (me *varData) typeSig() string {
 	if me.array {
-		return fmtptr(me.module.typeToVarData(me.typeInArray).typeSig())
+		return fmtptr(me.typeInArray.typeSig())
 	}
 	if me.maybe {
 		return me.module.typeToVarData(me.some).typeSig()
@@ -277,7 +297,7 @@ func (me *varData) typeSig() string {
 
 func (me *varData) noMallocTypeSig() string {
 	if me.array {
-		return fmtptr(me.module.typeToVarData(me.typeInArray).noMallocTypeSig())
+		return fmtptr(me.typeInArray.noMallocTypeSig())
 	}
 	if _, ok := me.checkIsClass(); ok {
 		return me.module.classNameSpace(me.typed)

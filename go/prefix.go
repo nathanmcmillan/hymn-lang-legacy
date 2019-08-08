@@ -74,7 +74,9 @@ func prefixArray(me *parser, op string) *node {
 	}
 	me.eat("]")
 	node := nodeInit("array")
-	node.typed = "[]" + me.buildAnyType()
+	alloc := &allocData{}
+	alloc.isArray = true
+	node.vdata = me.buildAnyType(alloc)
 	node.push(size)
 	return node
 }

@@ -22,8 +22,8 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 			param := me.calc(0)
 			aix := fn.argDict[argname]
 			arg := fn.args[aix]
-			if me.hmfile.typeToVarData(param.typed).notEqual(arg.vdat) && arg.typed != "?" {
-				err := "parameter \"" + param.typed
+			if param.asVar(me.hmfile).notEqual(arg.vdat) && arg.typed != "?" {
+				err := "parameter \"" + param.getType()
 				err += "\" does not match argument \"" + argname + "\" typed \"" + arg.typed + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
 			}
@@ -35,8 +35,8 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 		} else {
 			param := me.calc(0)
 			arg := fn.args[pix]
-			if me.hmfile.typeToVarData(param.typed).notEqual(arg.vdat) && arg.typed != "?" {
-				err := "parameter \"" + param.typed
+			if param.asVar(me.hmfile).notEqual(arg.vdat) && arg.typed != "?" {
+				err := "parameter \"" + param.getType()
 				err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.typed + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
 			}
@@ -50,8 +50,8 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 			if arg.dfault == "" {
 				panic(me.fail() + "argument[" + strconv.Itoa(pix) + "] is missing")
 			}
-			dfault := nodeInit(arg.typed)
-			dfault.typed = arg.typed
+			dfault := nodeInit("variable")
+			dfault.vdata = arg.vdat
 			dfault.value = arg.dfault
 			n.push(dfault)
 		} else {
@@ -68,7 +68,7 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	} else {
 		n.value = module.name + "." + name
 	}
-	n.typed = fn.typed.full
+	n.vdata = fn.typed
 	params := make([]*node, len(fn.args))
 	params[0] = root
 	pix := 1
@@ -87,7 +87,7 @@ func (me *parser) call(module *hmfile) *node {
 	} else {
 		n.value = module.name + "." + name
 	}
-	n.typed = fn.typed.full
+	n.vdata = fn.typed
 	params := make([]*node, len(fn.args))
 	pix := 0
 	me.pushParams(name, n, pix, 0, params, fn)

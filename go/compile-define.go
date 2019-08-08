@@ -61,7 +61,6 @@ func (me *cfile) defineClass(class *class) {
 	code := "struct " + hmName + " {\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
-		fmt.Println("PTR?", field.name, "====>", field.isptr, field.vdat.isptr)
 		code += fmc(1) + fmtassignspace(field.vdat.typeSig()) + field.name + ";\n"
 	}
 	code += "};\n\n"

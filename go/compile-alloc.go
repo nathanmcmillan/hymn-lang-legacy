@@ -25,24 +25,24 @@ func (me *cfile) tempClass(p *node) *cnode {
 
 	d := nodeInit("variable")
 	d.value = temp
-	d.typed = p.typed
+	d.copyType(p)
 	decl := me.declare(d)
 
 	code := ""
 	code += ";\n" + fmc(me.depth) + decl + temp + " = " + me.eval(p).code
 
-	return codeNode(p.is, temp, p.typed, code)
+	return codeNode(p.is, temp, p.typed, p.vdata, code)
 }
 
 func (me *cfile) allocClass(n *node) *cnode {
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return codeNode(n.is, n.value, n.typed, "")
+		return codeNode(n.is, n.value, n.getType(), n.vdata, "")
 	}
 
 	_, useStack := n.attributes["use-stack"]
 	useHeap := !useStack
 
-	data := me.hmfile.typeToVarData(n.typed)
+	data := n.asVar(me.hmfile)
 	typed := data.module.classNameSpace(data.typed)
 
 	code := ""
@@ -71,7 +71,7 @@ func (me *cfile) allocClass(n *node) *cnode {
 		}
 	}
 
-	return codeNode(n.is, n.value, n.typed, code)
+	return codeNode(n.is, n.value, n.typed, n.vdata, code)
 }
 
 func (me *cfile) allocEnum(module *hmfile, typed string, n *node) string {

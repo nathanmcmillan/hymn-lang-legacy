@@ -6,7 +6,7 @@ import (
 )
 
 // TODO deprecated
-func (me *parser) buildAnyType() string {
+func (me *parser) buildAnyType(alloc *allocData) *varData {
 
 	typed := me.token.value
 	me.verify("id")
@@ -23,7 +23,7 @@ func (me *parser) buildAnyType() string {
 	}
 
 	if _, ok := module.classes[typed]; ok {
-		return me.buildClass(nil, module)
+		return me.buildClass(nil, module, alloc)
 	}
 
 	if _, ok := module.types[typed]; !ok {
@@ -35,10 +35,13 @@ func (me *parser) buildAnyType() string {
 		typed = module.name + "." + typed
 	}
 
-	return typed
+	vdata := me.hmfile.typeToVarData(typed)
+	vdata.merge(alloc)
+
+	return vdata
 }
 
-func (me *parser) allocEnum(module *hmfile, data *allocData) *node {
+func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 	enumName := me.token.value
 	me.eat("id")
 	enumDef, ok := module.enums[enumName]
@@ -78,11 +81,11 @@ func (me *parser) allocEnum(module *hmfile, data *allocData) *node {
 				me.eat("delim")
 			}
 			param := me.calc(0)
-			if me.hmfile.typeToVarData(param.typed).notEqual(unionType) {
+			if param.asVar(me.hmfile).notEqual(unionType) {
 				if _, gok := gdict[unionType.full]; gok {
-					gimpl[unionType.full] = param.typed
+					gimpl[unionType.full] = param.getType()
 				} else {
-					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.full + "\" but parameter was \"" + param.typed + "\"")
+					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.full + "\" but parameter was \"" + param.getType() + "\"")
 				}
 			}
 			n.push(param)
@@ -136,8 +139,8 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	for i, param := range params {
 		if param == nil {
 			clsvar := base.variables[base.variableOrder[i]]
-			dfault := nodeInit(clsvar.typed)
-			dfault.typed = clsvar.typed
+			dfault := nodeInit("variable")
+			dfault.copyTypeFromVar(clsvar)
 			dfault.value = defaultValue(clsvar.typed)
 			n.push(dfault)
 		} else {
@@ -167,7 +170,7 @@ func (me *parser) classParams(n *node, typed string) {
 			me.eat(":")
 			param := me.calc(0)
 			clsvar := base.variables[vname]
-			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
+			if param.asVar(me.hmfile).notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter \"" + param.typed
 				err += "\" does not match class \"" + base.name + "\" variable \""
 				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
@@ -186,8 +189,8 @@ func (me *parser) classParams(n *node, typed string) {
 		} else {
 			param := me.calc(0)
 			clsvar := base.variables[vars[pix]]
-			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
-				err := "parameter \"" + param.typed
+			if param.asVar(me.hmfile).notEqual(clsvar.vdat) && clsvar.typed != "?" {
+				err := "parameter \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" variable \""
 				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
 				panic(me.fail() + err)
@@ -215,8 +218,8 @@ func (me *parser) specialClassParams(depth int, n *node, typed string) {
 			me.eat(":")
 			param := me.calc(0)
 			clsvar := base.variables[vname]
-			if me.hmfile.typeToVarData(param.typed).notEqual(clsvar.vdat) && clsvar.typed != "?" {
-				err := "parameter type \"" + param.typed
+			if param.asVar(me.hmfile).notEqual(clsvar.vdat) && clsvar.typed != "?" {
+				err := "parameter type \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" with member \""
 				err += clsvar.name + "\" and type \"" + clsvar.typed + "\""
 				panic(me.fail() + err)
@@ -241,7 +244,7 @@ func (me *parser) specialClassParams(depth int, n *node, typed string) {
 	me.pushClassParams(n, base, params)
 }
 
-func (me *parser) buildClass(n *node, module *hmfile) string {
+func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData {
 	name := me.token.value
 	depth := me.token.depth
 	me.eat("id")
@@ -269,13 +272,17 @@ func (me *parser) buildClass(n *node, module *hmfile) string {
 	if me.hmfile != module {
 		typed = module.name + "." + typed
 	}
-	return typed
+
+	vdata := me.hmfile.typeToVarData(typed)
+	vdata.merge(alloc)
+
+	return vdata
 }
 
-func (me *parser) allocClass(module *hmfile, data *allocData) *node {
+func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n := nodeInit("new")
-	n.typed = me.buildClass(n, module)
-	if data != nil && data.useStack {
+	n.vdata = me.buildClass(n, module, alloc)
+	if alloc != nil && alloc.useStack {
 		n.attributes["use-stack"] = "true"
 	}
 	return n

@@ -66,14 +66,6 @@ type cfile struct {
 	depth              int
 }
 
-type cnode struct {
-	is    string
-	value string
-	has   []*cnode
-	typed string
-	code  string
-}
-
 var (
 	primitives = map[string]bool{
 		"int":    true,
@@ -119,11 +111,12 @@ func (me *cfile) getvar(name string) *variable {
 	}
 }
 
-func codeNode(is, value, typed, code string) *cnode {
+func codeNode(is, value, typed string, vdata *varData, code string) *cnode {
 	c := &cnode{}
 	c.is = is
 	c.value = value
 	c.typed = typed
+	c.vdata = vdata
 	c.code = code
 	c.has = make([]*cnode, 0)
 	return c
@@ -162,4 +155,5 @@ func (me *cfile) head() string {
 
 type allocData struct {
 	useStack bool
+	isArray  bool
 }

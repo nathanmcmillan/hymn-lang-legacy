@@ -77,13 +77,13 @@ func (me *cfile) eval(n *node) *cnode {
 	op := n.is
 	if op == "=" || op == ":=" {
 		code := me.assingment(n)
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
 		code := me.assignmentUpdate(n)
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -95,14 +95,14 @@ func (me *cfile) eval(n *node) *cnode {
 	if op == "enum" {
 		data := me.hmfile.typeToVarData(n.typed)
 		code := me.allocEnum(data.module, data.typed, n)
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "call" {
 		data := me.hmfile.typeToVarData(n.value)
 		code := me.call(data.module, data.typed, n.has)
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -113,7 +113,7 @@ func (me *cfile) eval(n *node) *cnode {
 			code += ", " + me.eval(snode).code
 		}
 		code += ")"
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -137,7 +137,7 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "root-variable" {
 		v := me.getvar(n.value)
-		cn := codeNode(n.is, n.value, n.typed, v.cName)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, v.cName)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -145,26 +145,26 @@ func (me *cfile) eval(n *node) *cnode {
 		index := me.eval(n.has[0])
 		root := me.eval(n.has[1])
 		code := root.code + "[" + index.code + "]"
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "array" {
 		code := me.allocArray(n)
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "return" {
 		in := me.eval(n.has[0])
-		cn := codeNode(n.is, n.value, n.typed, "return "+in.code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, "return "+in.code)
 		cn.push(in)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "boolexpr" {
 		code := me.eval(n.has[0]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -173,7 +173,7 @@ func (me *cfile) eval(n *node) *cnode {
 	}
 	if op == "not" {
 		code := "!" + me.eval(n.has[0]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -181,7 +181,7 @@ func (me *cfile) eval(n *node) *cnode {
 		code := me.eval(n.has[0]).code
 		code += " != "
 		code += me.eval(n.has[1]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -189,7 +189,7 @@ func (me *cfile) eval(n *node) *cnode {
 		code := me.eval(n.has[0]).code
 		code += " " + op + " "
 		code += me.eval(n.has[1]).code
-		cn := codeNode(n.is, n.value, n.typed, code)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -200,27 +200,27 @@ func (me *cfile) eval(n *node) *cnode {
 		return me.block(n)
 	}
 	if op == "break" {
-		cn := codeNode(n.is, n.value, n.typed, "break")
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, "break")
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "continue" {
-		cn := codeNode(n.is, n.value, n.typed, "continue")
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, "continue")
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "goto" {
-		cn := codeNode(n.is, "", "", "goto "+n.value)
+		cn := codeNode(n.is, "", "", nil, "goto "+n.value)
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "label" {
-		cn := codeNode(n.is, "", "", n.value+":")
+		cn := codeNode(n.is, "", "", n.vdata, n.value+":")
 		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "pass" {
-		cn := codeNode(n.is, "", "", "")
+		cn := codeNode(n.is, "", "", nil, "")
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -234,7 +234,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return me.compileIf(n)
 	}
 	if op == "string" {
-		cn := codeNode(n.is, n.value, n.typed, "\""+n.value+"\"")
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, "\""+n.value+"\"")
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -242,7 +242,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return me.compileNone(n)
 	}
 	if _, ok := primitives[op]; ok {
-		cn := codeNode(n.is, n.value, n.typed, n.value)
+		cn := codeNode(n.is, n.value, n.typed, n.vdata, n.value)
 		fmt.Println(cn.string(0))
 		return cn
 	}
@@ -251,14 +251,14 @@ func (me *cfile) eval(n *node) *cnode {
 
 func (me *cfile) compilePrefixPos(n *node) *cnode {
 	code := me.eval(n.has[0]).code
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
 
 func (me *cfile) compilePrefixNeg(n *node) *cnode {
 	code := "-" + me.eval(n.has[0]).code
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -275,7 +275,7 @@ func (me *cfile) compileBinaryOp(n *node) *cnode {
 	if paren {
 		code += ")"
 	}
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -291,7 +291,7 @@ func (me *cfile) compileTupleIndex(n *node) *cnode {
 	} else {
 		code += un.name + ".var" + dotIndexStr
 	}
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -322,6 +322,7 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			code = "[" + index.code + "]" + "->" + code
 			head = head.has[1]
 		} else if head.is == "member-variable" {
+			fmt.Println("MEM VAR HEAD VAL ::", head.value)
 			if code[0] == '[' {
 				code = head.value + code
 			} else {
@@ -332,7 +333,7 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			panic("missing member variable")
 		}
 	}
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -351,14 +352,14 @@ func (me *cfile) compileVariable(n *node) *cnode {
 	if v == nil {
 		panic("unknown variable " + data.typed)
 	}
-	cn := codeNode(n.is, n.value, n.typed, cname)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, cname)
 	fmt.Println(cn.string(0))
 	return cn
 }
 
 func (me *cfile) compileNone(n *node) *cnode {
 	code := "NULL"
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -417,7 +418,7 @@ func (me *cfile) compileMatch(n *node) *cnode {
 		ix += 2
 	}
 	code += fmc(me.depth) + "}"
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -460,7 +461,7 @@ func (me *cfile) compileNullCheck(match *cnode, n *node) *cnode {
 
 	}
 
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -477,7 +478,7 @@ func (me *cfile) compileEqual(n *node) *cnode {
 	if paren {
 		code += ")"
 	}
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -498,7 +499,7 @@ func (me *cfile) compileAndOr(n *node) *cnode {
 	if paren {
 		code += ")"
 	}
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -522,7 +523,7 @@ func (me *cfile) compileIf(n *node) *cnode {
 		code += me.eval(n.has[ix]).code
 		code += "\n" + fmc(me.depth) + "}"
 	}
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -560,7 +561,7 @@ func (me *cfile) compileFor(n *node) *cnode {
 	code += fmc(me.depth) + "{\n"
 	code += me.eval(n.has[ix]).code
 	code += "\n" + fmc(me.depth) + "}"
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -760,7 +761,7 @@ func (me *cfile) block(n *node) *cnode {
 			code += me.maybeFmc(c.code, me.depth) + c.code + me.maybeColon(c.code)
 		}
 	}
-	cn := codeNode(n.is, n.value, n.typed, code)
+	cn := codeNode(n.is, n.value, n.typed, n.vdata, code)
 	fmt.Println(cn.string(0))
 	me.depth--
 	return cn
@@ -857,58 +858,58 @@ func (me *cfile) call(module *hmfile, name string, parameters []*node) string {
 func (me *cfile) builtin(name string, parameters []*node) string {
 	if name == "echo" {
 		param := me.eval(parameters[0])
-		if param.typed == "string" {
+		if param.getType() == "string" {
 			return "printf(\"%s\\n\", " + param.code + ")"
 
-		} else if param.typed == "int" {
+		} else if param.getType() == "int" {
 			return "printf(\"%d\\n\", " + param.code + ")"
 
-		} else if param.typed == "float" {
+		} else if param.getType() == "float" {
 			return "printf(\"%f\\n\", " + param.code + ")"
 
-		} else if param.typed == "bool" {
+		} else if param.getType() == "bool" {
 			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\")"
 		}
 		panic("argument for echo was " + param.string(0))
 	}
 	if name == "string" {
 		param := me.eval(parameters[0])
-		if param.typed == "string" {
+		if param.getType() == "string" {
 			panic("redundant string cast")
 
-		} else if param.typed == "int" {
+		} else if param.getType() == "int" {
 			return "hmlib_int_to_string(" + param.code + ")"
 
-		} else if param.typed == "float" {
+		} else if param.getType() == "float" {
 			return "hmlib_float_to_string(" + param.code + ")"
 
-		} else if param.typed == "bool" {
+		} else if param.getType() == "bool" {
 			return "(" + param.code + " ? \"true\" : \"false\")"
 		}
 		panic("argument for string cast was " + param.string(0))
 	}
 	if name == "int" {
 		param := me.eval(parameters[0])
-		if param.typed == "int" {
+		if param.getType() == "int" {
 			panic("redundant int cast")
 
-		} else if param.typed == "float" {
+		} else if param.getType() == "float" {
 			return "((int) " + param.code + ")"
 
-		} else if param.typed == "string" {
+		} else if param.getType() == "string" {
 			return "hmlib_string_to_int(" + param.code + ")"
 		}
 		panic("argument for int cast was " + param.string(0))
 	}
 	if name == "float" {
 		param := me.eval(parameters[0])
-		if param.typed == "float" {
+		if param.getType() == "float" {
 			panic("redundant float cast")
 
-		} else if param.typed == "int" {
+		} else if param.getType() == "int" {
 			return "((float) " + param.code + ")"
 
-		} else if param.typed == "string" {
+		} else if param.getType() == "string" {
 			return "hmlib_string_to_float(" + param.code + ")"
 		}
 		panic("argument for float cast was " + param.string(0))

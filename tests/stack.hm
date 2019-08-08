@@ -17,7 +17,7 @@ hello(f foo) int
 main
   f = $foo(22)
   echo(f.data)
-  (* echo(hello(f)) *)
+  echo(hello(f))
 
   (* b = boo(f) *)
   (* echo(b.x.data) *)

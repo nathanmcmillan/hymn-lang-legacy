@@ -18,6 +18,9 @@ func (me *node) string(lv int) string {
 	if me.typed != "" {
 		s += ", typed:" + me.typed
 	}
+	if me.vdata != nil {
+		s += ", var:" + me.vdata.full
+	}
 	if len(me.attributes) > 0 {
 		s += ", attributes["
 		ix := 0
@@ -53,7 +56,12 @@ func (me *cnode) string(lv int) string {
 	if me.value != "" {
 		s += ", value:" + me.value
 	}
-	s += ", typed:" + me.typed
+	if me.typed != "" {
+		s += ", typed:" + me.typed
+	}
+	if me.vdata != nil {
+		s += ", var:" + me.vdata.full
+	}
 	s += ", code:" + me.code
 	if len(me.has) > 0 {
 		s += ", has[\n"

@@ -25,18 +25,18 @@ func infixBinary(me *parser, left *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
-	if !isNumber(left.typed) || !isNumber(right.typed) {
-		err := me.fail() + "binary operation must be numbers \"" + left.typed + "\" and \"" + right.typed + "\""
+	if !isNumber(left.getType()) || !isNumber(right.getType()) {
+		err := me.fail() + "binary operation must be numbers \"" + left.getType() + "\" and \"" + right.getType() + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
 	}
-	if me.hmfile.typeToVarData(left.typed).notEqual(me.hmfile.typeToVarData(right.typed)) {
-		err := me.fail() + "number types do not match \"" + left.typed + "\" and \"" + right.typed + "\""
+	if left.asVar(me.hmfile).notEqual(right.asVar(me.hmfile)) {
+		err := me.fail() + "number types do not match \"" + left.getType() + "\" and \"" + right.getType() + "\""
 		panic(err)
 	}
 	node.push(left)
 	node.push(right)
-	node.typed = left.typed
+	node.copyType(left)
 	return node
 }
 

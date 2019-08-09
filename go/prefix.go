@@ -5,7 +5,7 @@ func prefixSign(me *parser, op string) *node {
 	me.eat(op)
 	right := me.calc(getPrefixPrecedence(op))
 	node.push(right)
-	node.typed = right.typed
+	node.copyType(right)
 	return node
 }
 
@@ -19,7 +19,7 @@ func prefixGroup(me *parser, op string) *node {
 
 func prefixPrimitive(me *parser, op string) *node {
 	node := nodeInit(op)
-	node.typed = op
+	node.vdata = me.hmfile.typeToVarData(op)
 	node.value = me.token.value
 	me.eat(op)
 	return node
@@ -69,7 +69,7 @@ func prefixIdent(me *parser, op string) *node {
 func prefixArray(me *parser, op string) *node {
 	me.eat("[")
 	size := me.calc(0)
-	if size.typed != "int" {
+	if size.getType() != "int" {
 		panic(me.fail() + "array size must be integer")
 	}
 	me.eat("]")
@@ -88,7 +88,7 @@ func prefixNot(me *parser, op string) *node {
 		me.eat("not")
 	}
 	node := nodeInit("not")
-	node.typed = "bool"
+	node.vdata = me.hmfile.typeToVarData("bool")
 	node.push(me.calcBool())
 	return node
 }
@@ -96,25 +96,27 @@ func prefixNot(me *parser, op string) *node {
 func prefixNone(me *parser, op string) *node {
 	me.eat("none")
 	me.eat("<")
-	option := me.declareType(true).typed
+	option := me.declareType(true)
 	me.eat(">")
-	typed := "none<" + option + ">"
+	typed := "none<" + option.typed + ">"
+	data := me.hmfile.typeToVarData(typed)
 	me.defineMaybeImpl(typed)
 
 	node := nodeInit("none")
-	node.typed = typed
+	node.vdata = data
 	return node
 }
 
 func prefixMaybe(me *parser, op string) *node {
 	me.eat("maybe")
 	me.eat("<")
-	option := me.declareType(true).typed
+	option := me.declareType(true)
 	me.eat(">")
-	typed := "maybe<" + option + ">"
+	typed := "maybe<" + option.typed + ">"
+	data := me.hmfile.typeToVarData(typed)
 	me.defineMaybeImpl(typed)
 
 	n := nodeInit("maybe")
-	n.typed = typed
+	n.vdata = data
 	return n
 }

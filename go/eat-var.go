@@ -77,11 +77,11 @@ func (me *parser) eatvar(from *hmfile) *node {
 				if sv == nil {
 					panic(me.fail() + "variable out of scope")
 				}
-				head.typed = sv.typed
+				head.copyTypeFromVar(sv)
 				head.is = "root-variable"
 			}
-			if !checkIsArray(head.typed) {
-				panic(me.fail() + "root variable \"" + head.value + "\" of type \"" + head.typed + "\" is not array")
+			if !head.asVar().array {
+				panic(me.fail() + "root variable \"" + head.value + "\" of type \"" + head.getType() + "\" is not array")
 			}
 			me.eat("[")
 			member := nodeInit("array-member")
@@ -99,7 +99,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 		if from == me.hmfile {
 			sv := from.getvar(localvarname)
 			if sv == nil {
-				head.typed = "?"
+				head.vdata = me.hmfile.typeToVarData("?")
 			} else {
 				head.vdata = sv.vdat
 			}

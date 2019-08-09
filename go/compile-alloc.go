@@ -44,7 +44,7 @@ func (me *cfile) allocClass(n *node) *cnode {
 	_, useStack := n.attributes["use-stack"]
 	useHeap := !useStack
 
-	data := n.asVar(me.hmfile)
+	data := n.asVar()
 	typed := data.module.classNameSpace(data.typed)
 
 	code := ""

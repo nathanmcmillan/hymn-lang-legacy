@@ -15,9 +15,6 @@ func (me *node) string(lv int) string {
 	if me.value != "" {
 		s += ", value:" + me.value
 	}
-	if me.typed != "" {
-		s += ", typed:" + me.typed
-	}
 	if me.vdata != nil {
 		s += ", var:" + me.vdata.full
 	}

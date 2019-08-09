@@ -81,7 +81,7 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 				me.eat("delim")
 			}
 			param := me.calc(0)
-			if param.asVar(me.hmfile).notEqual(unionType) {
+			if param.asVar().notEqual(unionType) {
 				if _, gok := gdict[unionType.full]; gok {
 					gimpl[unionType.full] = param.getType()
 				} else {
@@ -171,7 +171,7 @@ func (me *parser) classParams(n *node, typed string) {
 			me.eat(":")
 			param := me.calc(0)
 			clsvar := base.variables[vname]
-			if param.asVar(me.hmfile).notEqual(clsvar.vdat) && clsvar.typed != "?" {
+			if param.asVar().notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" variable \""
 				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
@@ -190,7 +190,7 @@ func (me *parser) classParams(n *node, typed string) {
 		} else {
 			param := me.calc(0)
 			clsvar := base.variables[vars[pix]]
-			if param.asVar(me.hmfile).notEqual(clsvar.vdat) && clsvar.typed != "?" {
+			if param.asVar().notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" variable \""
 				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
@@ -219,7 +219,7 @@ func (me *parser) specialClassParams(depth int, n *node, typed string) {
 			me.eat(":")
 			param := me.calc(0)
 			clsvar := base.variables[vname]
-			if param.asVar(me.hmfile).notEqual(clsvar.vdat) && clsvar.typed != "?" {
+			if param.asVar().notEqual(clsvar.vdat) && clsvar.typed != "?" {
 				err := "parameter type \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" with member \""
 				err += clsvar.name + "\" and type \"" + clsvar.typed + "\""

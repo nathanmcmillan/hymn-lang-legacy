@@ -111,7 +111,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)
 		if expr.is == "return" {
-			if fn.typed.notEqual(expr.asVar(me.hmfile)) {
+			if fn.typed.notEqual(expr.asVar()) {
 				panic(me.fail() + "function " + name + " returns " + fn.typed.full + " but found " + expr.getType())
 			}
 			goto fnEnd

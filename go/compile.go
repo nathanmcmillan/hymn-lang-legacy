@@ -281,7 +281,7 @@ func (me *cfile) compileBinaryOp(n *node) *cnode {
 func (me *cfile) compileTupleIndex(n *node) *cnode {
 	dotIndexStr := n.value
 	root := me.eval(n.has[0])
-	data := root.asVar(me.hmfile)
+	data := root.vdata
 	_, un, _ := data.checkIsEnum()
 	code := root.code + "->"
 	if len(un.types) == 1 {
@@ -299,7 +299,7 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 	code := n.value
 	for {
 		if head.is == "root-variable" {
-			data := head.asVar(me.hmfile)
+			data := head.asVar()
 			var vr *variable
 			var cname string
 			if data.module == me.hmfile {
@@ -582,7 +582,7 @@ func (me *cfile) allocArray(n *node) string {
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return "[" + size.code + "]"
 	}
-	mtype := n.asVar(me.hmfile).typeSig()
+	mtype := n.asVar().typeSig()
 	return "malloc((" + size.code + ") * sizeof(" + mtype + "))"
 }
 

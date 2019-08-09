@@ -147,7 +147,6 @@ func (me *parser) pass() *node {
 func (me *parser) continuing() *node {
 	me.eat("continue")
 	n := nodeInit("continue")
-	n.typed = "void"
 	me.verify("line")
 	return n
 }
@@ -155,7 +154,6 @@ func (me *parser) continuing() *node {
 func (me *parser) breaking() *node {
 	me.eat("break")
 	n := nodeInit("break")
-	n.typed = "void"
 	me.verify("line")
 	return n
 }
@@ -173,7 +171,7 @@ func (me *parser) returning() *node {
 func (me *parser) forceassign(malloc, mutable bool) *node {
 	v := me.eatvar(me.hmfile)
 	if !me.assignable(v) {
-		panic(me.fail() + "expected variable for assignment but was \"" + v.typed + "\"")
+		panic(me.fail() + "expected variable for assignment but was \"" + v.getType() + "\"")
 	}
 	return me.assign(v, malloc, mutable)
 }
@@ -217,10 +215,10 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if !malloc {
 				left.attributes["no-malloc"] = "true"
 			}
-			me.hmfile.scope.variables[left.value] = me.hmfile.varInitFromData(right.asVar(me.hmfile), left.value, mutable, malloc)
+			me.hmfile.scope.variables[left.value] = me.hmfile.varInitFromData(right.asVar(), left.value, mutable, malloc)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
-		if left.asVar(me.hmfile).notEqual(right.asVar(me.hmfile)) {
+		if left.asVar().notEqual(right.asVar()) {
 			if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
 				right.copyType(left)
 			} else {
@@ -237,8 +235,6 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	n := nodeInit(op)
 	if op == ":=" {
 		n.copyType(right)
-	} else {
-		n.typed = "void"
 	}
 	n.push(left)
 	fmt.Println("assign set", left.string(0))
@@ -312,7 +308,7 @@ func (me *parser) block() *node {
 		block.push(expr)
 		if expr.is == "return" {
 			fn := me.hmfile.scope.fn
-			if fn.typed.notEqual(expr.asVar(me.hmfile)) {
+			if fn.typed.notEqual(expr.asVar()) {
 				panic(me.fail() + "function " + fn.name + " returns " + fn.typed.full + " but found " + expr.getType())
 			}
 			goto blockEnd
@@ -340,7 +336,6 @@ func (me *parser) forexpr() *node {
 	fmt.Println("> for expression")
 	me.eat("for")
 	n := nodeInit("for")
-	n.typed = "void"
 	if me.token.is == "line" {
 		me.eat("line")
 	} else {
@@ -366,10 +361,9 @@ func (me *parser) match() *node {
 	fmt.Println("match depth", depth)
 	me.eat("match")
 	n := nodeInit("match")
-	n.typed = "void"
 
 	matching := me.calc(0)
-	matchType := matching.asVar(me.hmfile)
+	matchType := matching.asVar()
 	var matchVar *variable
 	if matching.is == "variable" {
 		matchVar = me.hmfile.getvar(matching.value)
@@ -455,7 +449,6 @@ func (me *parser) ifexpr() *node {
 	fmt.Println("> if")
 	me.eat("if")
 	n := nodeInit("if")
-	n.typed = "void"
 	n.push(me.calcBool())
 	me.eat("line")
 	n.push(me.block())
@@ -504,11 +497,11 @@ func (me *parser) comparison(left *node, op string) *node {
 		panic(me.fail() + "unknown token for boolean expression")
 	}
 	right := me.calc(0)
-	if left.asVar(me.hmfile).notEqual(right.asVar(me.hmfile)) {
+	if left.asVar().notEqual(right.asVar()) {
 		panic(me.fail() + "comparison types \"" + left.getType() + "\" and \"" + right.getType() + "\" do not match")
 	}
 	n := nodeInit(opType)
-	n.typed = "bool"
+	n.vdata = me.hmfile.typeToVarData("bool")
 	n.push(left)
 	n.push(right)
 	fmt.Println("> compare using", opType)

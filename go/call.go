@@ -22,7 +22,7 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 			param := me.calc(0)
 			aix := fn.argDict[argname]
 			arg := fn.args[aix]
-			if param.asVar(me.hmfile).notEqual(arg.vdat) && arg.typed != "?" {
+			if param.asVar().notEqual(arg.vdat) && arg.typed != "?" {
 				err := "parameter \"" + param.getType()
 				err += "\" does not match argument \"" + argname + "\" typed \"" + arg.typed + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
@@ -35,7 +35,7 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 		} else {
 			param := me.calc(0)
 			arg := fn.args[pix]
-			if param.asVar(me.hmfile).notEqual(arg.vdat) && arg.typed != "?" {
+			if param.asVar().notEqual(arg.vdat) && arg.typed != "?" {
 				err := "parameter \"" + param.getType()
 				err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.typed + "\" for function \"" + name + "\""
 				panic(me.fail() + err)

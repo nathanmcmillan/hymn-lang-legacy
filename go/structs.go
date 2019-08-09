@@ -111,12 +111,12 @@ func (me *cfile) getvar(name string) *variable {
 	}
 }
 
-func codeNode(is, value, typed string, vdata *varData, code string) *cnode {
+func codeNode(node *node, code string) *cnode {
 	c := &cnode{}
-	c.is = is
-	c.value = value
-	c.typed = typed
-	c.vdata = vdata
+	c.is = node.is
+	c.value = node.value
+	c.typed = node.typed
+	c.vdata = node.vdata
 	c.code = code
 	c.has = make([]*cnode, 0)
 	return c

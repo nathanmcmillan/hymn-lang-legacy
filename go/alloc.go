@@ -111,10 +111,11 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 	}
 
 	if me.hmfile == module {
-		n.typed = enumName
+		n.vdata = me.hmfile.typeToVarData(enumName)
 		n.value = unionName
 	} else {
-		n.typed = module.name + "." + enumName
+		// n.vdata = module.name + "." + enumName
+		n.vdata = module.typeToVarData(enumName)
 		n.value = unionName
 	}
 	return n
@@ -171,7 +172,7 @@ func (me *parser) classParams(n *node, typed string) {
 			param := me.calc(0)
 			clsvar := base.variables[vname]
 			if param.asVar(me.hmfile).notEqual(clsvar.vdat) && clsvar.typed != "?" {
-				err := "parameter \"" + param.typed
+				err := "parameter \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" variable \""
 				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
 				panic(me.fail() + err)

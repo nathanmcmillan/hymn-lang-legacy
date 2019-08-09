@@ -210,6 +210,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.value + "\" does not exist")
 		} else {
 			left.copyType(right)
+			fmt.Println("RIGHT ::", right.string(0))
 			if mutable {
 				left.attributes["mutable"] = "true"
 			}

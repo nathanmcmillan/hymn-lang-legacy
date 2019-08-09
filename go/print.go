@@ -6,7 +6,7 @@ import (
 )
 
 func (me *variable) string() string {
-	return "{typed:" + me.typed + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
+	return "{var:" + me.vdat.full + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
 }
 
 func (me *node) string(lv int) string {

@@ -1,9 +1,9 @@
 package main
 
 type node struct {
-	is         string
-	value      string
-	typed      string
+	is    string
+	value string
+	// typed      string
 	vdata      *varData
 	attributes map[string]string
 	has        []*node

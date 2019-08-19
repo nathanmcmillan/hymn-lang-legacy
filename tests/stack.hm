@@ -26,5 +26,7 @@ main
   (* echo(h.y) *)
 
   p = poo
+  p.z.data = 24
+  p.w.y = 25
   echo(p.z.data)
   echo(p.w.y)

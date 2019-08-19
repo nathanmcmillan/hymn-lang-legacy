@@ -59,13 +59,6 @@ func (me *variable) copy() *variable {
 	return v
 }
 
-func (me *variable) memget() string {
-	if me.isptr {
-		return "->"
-	}
-	return "."
-}
-
 type varData struct {
 	module      *hmfile
 	typed       string
@@ -307,4 +300,11 @@ func (me *varData) noMallocTypeSig() string {
 		return "char *"
 	}
 	return me.full
+}
+
+func (me *varData) memPtr() string {
+	if me.isptr {
+		return "->"
+	}
+	return "."
 }

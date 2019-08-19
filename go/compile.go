@@ -73,7 +73,7 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	return fileCode
 }
 
-func (me *cfile) eval(n *node) *cnode {
+func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	op := n.is
 	if op == "=" || op == ":=" {
 		code := me.assingment(n)
@@ -130,7 +130,7 @@ func (me *cfile) eval(n *node) *cnode {
 		return me.compileMemberVariable(n)
 	}
 	if op == "variable" {
-		return me.compileVariable(n)
+		return me.compileVariable(n, hint)
 	}
 	if op == "root-variable" {
 		v := me.getvar(n.value)
@@ -247,6 +247,10 @@ func (me *cfile) eval(n *node) *cnode {
 	panic("eval unknown operation " + n.string(0))
 }
 
+func (me *cfile) eval(n *node) *cnode {
+	return me.hintEval(n, nil)
+}
+
 func (me *cfile) compilePrefixPos(n *node) *cnode {
 	code := me.eval(n.has[0]).code
 	cn := codeNode(n, code)
@@ -303,16 +307,16 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			var vr *variable
 			var cname string
 			if data.module == me.hmfile {
-				vr = me.getvar(data.typed)
+				vr = me.getvar(head.value)
 				cname = vr.cName
 			} else {
-				vr = data.module.getStatic(data.typed)
-				cname = data.module.varNameSpace(data.typed)
+				vr = data.module.getStatic(head.value)
+				cname = data.module.varNameSpace(head.value)
 			}
 			if data.array {
 				code = cname + code
 			} else {
-				code = cname + vr.memget() + code
+				code = cname + data.memPtr() + code
 			}
 			break
 		} else if head.is == "array-member" {
@@ -323,7 +327,7 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			if code[0] == '[' {
 				code = head.value + code
 			} else {
-				code = head.value + "->" + code
+				code = head.value + head.asVar().memPtr() + code
 			}
 			head = head.has[0]
 		} else {
@@ -335,21 +339,21 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 	return cn
 }
 
-func (me *cfile) compileVariable(n *node) *cnode {
+func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 	data := n.vdata
-	var v *variable
-	var cname string
+	code := ""
 	if data.module == me.hmfile {
-		v = me.getvar(n.value)
-		cname = v.cName
+		v := me.getvar(n.value)
+		vd := v.vdat
+		code = v.cName
+		if hint != nil && hint.isptr && !vd.isptr {
+			code = "&" + code
+		}
 	} else {
-		v = data.module.getStatic(n.value)
-		cname = data.module.varNameSpace(data.typed)
+		// v := data.module.getStatic(n.value)
+		code = data.module.varNameSpace(data.typed)
 	}
-	if v == nil {
-		panic("unknown variable " + n.value)
-	}
-	cn := codeNode(n, cname)
+	cn := codeNode(n, code)
 	fmt.Println(cn.string(0))
 	return cn
 }
@@ -838,20 +842,21 @@ func (me *cfile) function(name string, fn *function) {
 }
 
 func (me *cfile) call(node *node) *cnode {
-	module := me.hmfile // TODO parse module and name similar to typeToVarData(n.value)
+	module := me.hmfile
 	name := node.value
 	parameters := node.has
 
 	code := me.builtin(name, parameters)
 	if code == "" {
 		code = module.funcNameSpace(name) + "("
-		// fn := module.functions[name]
+		fn := module.functions[name]
 		for ix, parameter := range parameters {
 			if ix > 0 {
 				code += ", "
 			}
-			// arg := fn.args[ix]
-			code += me.eval(parameter).code
+			arg := fn.args[ix]
+			fmt.Println("CALL ARG ::", arg.vdat.full)
+			code += me.hintEval(parameter, arg.vdat).code
 		}
 		code += ")"
 	}

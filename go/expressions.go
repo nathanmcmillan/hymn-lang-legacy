@@ -199,23 +199,22 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		}
 	}
 	if left.is == "variable" {
-		sv := me.hmfile.getvar(left.value)
+		sv := me.hmfile.getvar(left.idata.name)
 		if sv != nil {
 			if !sv.mutable {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
 		} else if mustBeInt || mustBeNumber {
-			panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.value + "\" does not exist")
+			panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.idata.name + "\" does not exist")
 		} else {
 			left.copyType(right)
-			fmt.Println("RIGHT ::", right.string(0))
 			if mutable {
 				left.attributes["mutable"] = "true"
 			}
 			if !malloc {
 				left.attributes["no-malloc"] = "true"
 			}
-			me.hmfile.scope.variables[left.value] = me.hmfile.varInitFromData(right.asVar(), left.value, mutable, malloc)
+			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.asVar(), left.idata.name, mutable, malloc)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
 		if left.asVar().notEqual(right.asVar()) {
@@ -228,7 +227,9 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	} else {
 		panic(me.fail() + "bad assignment \"" + left.is + "\"")
 	}
-	right.attributes["assign"] = left.value
+	if left.idata != nil {
+		right.attributes["assign"] = left.idata.name
+	}
 	if _, useStack := right.attributes["use-stack"]; useStack {
 		left.attributes["use-stack"] = "true"
 	}
@@ -275,7 +276,7 @@ func (me *parser) extern() *node {
 		fmt.Println("extern call")
 		return me.call(module)
 	} else if _, ok := module.classes[idname]; ok {
-		fmt.Println("extern class")
+		fmt.Println("extern class ::", extname, idname)
 		return me.allocClass(module, nil)
 	} else if _, ok := module.enums[idname]; ok {
 		fmt.Println("extern enum")
@@ -366,7 +367,7 @@ func (me *parser) match() *node {
 	matchType := matching.asVar()
 	var matchVar *variable
 	if matching.is == "variable" {
-		matchVar = me.hmfile.getvar(matching.value)
+		matchVar = me.hmfile.getvar(matching.idata.name)
 	}
 
 	n.push(matching)
@@ -551,7 +552,7 @@ func (me *parser) immutables() {
 			panic(me.fail() + "invalid static variable")
 		}
 		me.hmfile.statics = append(me.hmfile.statics, n)
-		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
+		me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
 			break
@@ -569,7 +570,7 @@ func (me *parser) mutables() {
 			panic(me.fail() + "invalid static variable")
 		}
 		me.hmfile.statics = append(me.hmfile.statics, n)
-		me.hmfile.staticScope[av.value] = me.hmfile.scope.variables[av.value]
+		me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
 		me.eat("line")
 		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
 			break

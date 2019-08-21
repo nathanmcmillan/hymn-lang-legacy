@@ -63,11 +63,9 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {
 	n := nodeInit("call")
 	name := me.nameOfClassFunc(c.name, fn.name)
-	if module == me.hmfile {
-		n.value = name
-	} else {
-		n.value = module.name + "." + name
-	}
+	n.cdata = &callData{}
+	n.cdata.module = module
+	n.cdata.name = name
 	n.vdata = fn.typed
 	params := make([]*node, len(fn.args))
 	params[0] = root
@@ -82,11 +80,9 @@ func (me *parser) call(module *hmfile) *node {
 	fn := module.functions[name]
 	me.eat("id")
 	n := nodeInit("call")
-	if module == me.hmfile {
-		n.value = name
-	} else {
-		n.value = module.name + "." + name
-	}
+	n.cdata = &callData{}
+	n.cdata.module = module
+	n.cdata.name = name
 	n.vdata = fn.typed
 	params := make([]*node, len(fn.args))
 	pix := 0

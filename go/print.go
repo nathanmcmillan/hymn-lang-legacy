@@ -15,6 +15,12 @@ func (me *node) string(lv int) string {
 	if me.value != "" {
 		s += ", value:" + me.value
 	}
+	if me.idata != nil {
+		s += ", id:" + me.idata.module.name + "." + me.idata.name
+	}
+	if me.cdata != nil {
+		s += ", call:" + me.cdata.module.name + "." + me.cdata.name
+	}
 	if me.vdata != nil {
 		s += ", var:" + me.vdata.full
 	}

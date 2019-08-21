@@ -19,12 +19,6 @@ main
   echo(f.data)
   echo(hello(f))
 
-  (* b = boo(f) *)
-  (* echo(b.x.data) *)
-
-  (* h = zoo(f.data) *)
-  (* echo(h.y) *)
-
   p = poo
   p.z.data = 24
   p.w.y = 25

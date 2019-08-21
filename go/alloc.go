@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// TODO deprecated
 func (me *parser) buildAnyType(alloc *allocData) *varData {
 
 	typed := me.token.value

@@ -8,16 +8,14 @@ import (
 func (me *parser) eatvar(from *hmfile) *node {
 	head := nodeInit("variable")
 	localvarname := me.token.value
-	if from == me.hmfile {
-		head.value = localvarname
-	} else {
-		head.value = from.name + "." + localvarname
-	}
+	head.idata = &idData{}
+	head.idata.module = from
+	head.idata.name = localvarname
 	me.eat("id")
 	for {
 		if me.token.is == "." {
 			if head.is == "variable" {
-				sv := me.hmfile.getvar(head.value)
+				sv := me.hmfile.getvar(head.idata.name)
 				if sv == nil {
 					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
 				}
@@ -36,7 +34,9 @@ func (me *parser) eatvar(from *hmfile) *node {
 					fmt.Println("member variable \"" + dotName + "\" is type \"" + classOf.vdat.full + "\"")
 					member = nodeInit("member-variable")
 					member.vdata = classOf.vdat
-					member.value = dotName
+					member.idata = &idData{}
+					member.idata.module = from
+					member.idata.name = dotName
 					member.push(head)
 				} else {
 					nameOfFunc := me.nameOfClassFunc(rootClass.name, dotName)
@@ -62,7 +62,9 @@ func (me *parser) eatvar(from *hmfile) *node {
 					typeInUnion := rootUnion.types[dotIndex]
 					member := nodeInit("tuple-index")
 					member.vdata = typeInUnion
-					member.value = dotIndexStr
+					member.idata = &idData{}
+					member.idata.module = from
+					member.idata.name = dotIndexStr
 					member.push(head)
 					head = member
 				} else {
@@ -73,7 +75,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {
-				sv := me.hmfile.getvar(head.value)
+				sv := me.hmfile.getvar(head.idata.name)
 				if sv == nil {
 					panic(me.fail() + "variable out of scope")
 				}
@@ -81,7 +83,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head.is = "root-variable"
 			}
 			if !head.asVar().array {
-				panic(me.fail() + "root variable \"" + head.value + "\" of type \"" + head.getType() + "\" is not array")
+				panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not array")
 			}
 			me.eat("[")
 			member := nodeInit("array-member")

@@ -133,7 +133,7 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return me.compileVariable(n, hint)
 	}
 	if op == "root-variable" {
-		v := me.getvar(n.value)
+		v := me.getvar(n.idata.name)
 		cn := codeNode(n, v.cName)
 		fmt.Println(cn.string(0))
 		return cn
@@ -300,18 +300,19 @@ func (me *cfile) compileTupleIndex(n *node) *cnode {
 
 func (me *cfile) compileMemberVariable(n *node) *cnode {
 	head := n.has[0]
-	code := n.value
+	code := n.idata.name
 	for {
 		if head.is == "root-variable" {
 			data := head.asVar()
 			var vr *variable
 			var cname string
-			if data.module == me.hmfile {
-				vr = me.getvar(head.value)
+			// if data.module == me.hmfile {
+			if head.idata.module == me.hmfile {
+				vr = me.getvar(head.idata.name)
 				cname = vr.cName
 			} else {
-				vr = data.module.getStatic(head.value)
-				cname = data.module.varNameSpace(head.value)
+				vr = data.module.getStatic(head.idata.name)
+				cname = data.module.varNameSpace(head.idata.name)
 			}
 			if data.array {
 				code = cname + code
@@ -325,9 +326,9 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			head = head.has[1]
 		} else if head.is == "member-variable" {
 			if code[0] == '[' {
-				code = head.value + code
+				code = head.idata.name + code
 			} else {
-				code = head.value + head.asVar().memPtr() + code
+				code = head.idata.name + head.asVar().memPtr() + code
 			}
 			head = head.has[0]
 		} else {
@@ -342,8 +343,13 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 	data := n.vdata
 	code := ""
-	if data.module == me.hmfile {
-		v := me.getvar(n.value)
+	fmt.Println("COMPILE VAR NAME OF ::", n.idata.name)
+	fmt.Println("COMPILE VAR DATA MODULE ::", data.module.name)
+	fmt.Println("COMPILE VAR ID MODULE ::", n.idata.module.name)
+	fmt.Println("COMPILE VAR CURR MODULE ::", me.hmfile.name)
+	// if data.module == me.hmfile {
+	if n.idata.module == me.hmfile {
+		v := me.getvar(n.idata.name)
 		vd := v.vdat
 		code = v.cName
 		if hint != nil && hint.isptr && !vd.isptr {
@@ -351,7 +357,8 @@ func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 		}
 	} else {
 		// v := data.module.getStatic(n.value)
-		code = data.module.varNameSpace(data.typed)
+		code = data.module.varNameSpace(n.idata.name)
+		// code = data.module.varNameSpace(data.typed)
 	}
 	cn := codeNode(n, code)
 	fmt.Println(cn.string(0))
@@ -592,7 +599,7 @@ func (me *cfile) allocArray(n *node) string {
 
 func (me *cfile) declare(n *node) string {
 	code := ""
-	name := n.value
+	name := n.idata.name
 	if me.getvar(name) == nil {
 		malloc := true
 		useStack := false
@@ -607,7 +614,6 @@ func (me *cfile) declare(n *node) string {
 			mutable = true
 		}
 		data := n.vdata
-		fmt.Println("DECLARE ::", n.string(0))
 		if useStack {
 			malloc = false
 			me.scope.variables[name] = me.hmfile.varInitFromData(data, name, mutable, malloc)
@@ -842,10 +848,9 @@ func (me *cfile) function(name string, fn *function) {
 }
 
 func (me *cfile) call(node *node) *cnode {
-	module := me.hmfile
-	name := node.value
+	module := node.cdata.module
+	name := node.cdata.name
 	parameters := node.has
-
 	code := me.builtin(name, parameters)
 	if code == "" {
 		code = module.funcNameSpace(name) + "("
@@ -855,7 +860,6 @@ func (me *cfile) call(node *node) *cnode {
 				code += ", "
 			}
 			arg := fn.args[ix]
-			fmt.Println("CALL ARG ::", arg.vdat.full)
 			code += me.hintEval(parameter, arg.vdat).code
 		}
 		code += ")"

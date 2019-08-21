@@ -34,8 +34,8 @@ main
   echo(v.y)
   echo(v.z)
 
-  veclist = [3]math.vec
-  veclist[1] = math.vec
-  veclist[1].init(5.0, 7.0, 9.0)
-  echo(veclist[1].x)
+  vl = [3]math.vec
+  vl[1] = math.vec
+  vl[1].init(5.0, 7.0, 9.0)
+  echo(vl[1].x)
 

@@ -7,7 +7,7 @@ var (
 	globalEnumPrefix  = globalClassPrefix
 	globalUnionPrefix = globalClassPrefix
 	globalFuncPrefix  = "hm_"
-	globalVarPrefix   = "me"
+	globalVarPrefix   = "hm"
 	definePrefix      = "HM_"
 )
 

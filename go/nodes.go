@@ -3,6 +3,8 @@ package main
 type node struct {
 	is         string
 	value      string
+	idata      *idData
+	cdata      *callData
 	vdata      *varData
 	attributes map[string]string
 	has        []*node

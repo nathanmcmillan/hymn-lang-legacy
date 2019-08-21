@@ -59,6 +59,16 @@ func (me *variable) copy() *variable {
 	return v
 }
 
+type idData struct {
+	module *hmfile
+	name   string
+}
+
+type callData struct {
+	module *hmfile
+	name   string
+}
+
 type varData struct {
 	module      *hmfile
 	typed       string
@@ -76,6 +86,27 @@ type varData struct {
 	en          *enum
 	un          *union
 	cl          *class
+}
+
+func (me *varData) copy() *varData {
+	v := &varData{}
+	v.module = me.module
+	v.typed = me.typed
+	v.full = me.full
+	v.mutable = me.mutable
+	v.onStack = me.onStack
+	v.isptr = me.isptr
+	v.heap = me.heap
+	v.array = me.array
+	v.none = me.none
+	v.maybe = me.maybe
+	v.some = me.some
+	v.noneType = me.noneType
+	v.typeInArray = me.typeInArray
+	v.en = me.en
+	v.un = me.un
+	v.cl = me.cl
+	return v
 }
 
 func dataInit(module *hmfile, typed string, mutable, isptr, heap bool) *varData {
@@ -150,8 +181,18 @@ func (me *varData) merge(alloc *allocData) {
 	if alloc == nil {
 		return
 	}
+
 	me.array = alloc.isArray
 	me.heap = !alloc.useStack
+
+	if me.array {
+		typeInArray := me.copy()
+		typeInArray.array = false
+
+		me.typeInArray = typeInArray
+		me.full = "[]" + typeInArray.full
+		me.typed = "[]" + typeInArray.typed
+	}
 }
 
 func (me *varData) checkIsArray() bool {

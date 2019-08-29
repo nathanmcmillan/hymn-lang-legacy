@@ -62,9 +62,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					typeInUnion := rootUnion.types[dotIndex]
 					member := nodeInit("tuple-index")
 					member.vdata = typeInUnion
-					member.idata = &idData{}
-					member.idata.module = from
-					member.idata.name = dotIndexStr
+					member.value = dotIndexStr
 					member.push(head)
 					head = member
 				} else {

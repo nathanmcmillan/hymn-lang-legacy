@@ -93,7 +93,6 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return cn
 	}
 	if op == "enum" {
-		// data := me.hmfile.typeToVarData(n.typed)
 		data := n.vdata
 		code := me.allocEnum(data.module, data.typed, n)
 		cn := codeNode(n, code)
@@ -306,7 +305,6 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			data := head.asVar()
 			var vr *variable
 			var cname string
-			// if data.module == me.hmfile {
 			if head.idata.module == me.hmfile {
 				vr = me.getvar(head.idata.name)
 				cname = vr.cName
@@ -341,15 +339,10 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 }
 
 func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
-	data := n.vdata
 	code := ""
-	fmt.Println("COMPILE VAR NAME OF ::", n.idata.name)
-	fmt.Println("COMPILE VAR DATA MODULE ::", data.module.name)
-	fmt.Println("COMPILE VAR ID MODULE ::", n.idata.module.name)
-	fmt.Println("COMPILE VAR CURR MODULE ::", me.hmfile.name)
-	// if data.module == me.hmfile {
 	if n.idata.module == me.hmfile {
 		v := me.getvar(n.idata.name)
+		fmt.Println(">>>", n.idata.name, me.scope)
 		vd := v.vdat
 		code = v.cName
 		if hint != nil && hint.isptr && !vd.isptr {
@@ -357,11 +350,9 @@ func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 		}
 	} else {
 		// v := data.module.getStatic(n.value)
-		code = data.module.varNameSpace(n.idata.name)
-		// code = data.module.varNameSpace(data.typed)
+		code = n.idata.module.varNameSpace(n.idata.name)
 	}
 	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
 	return cn
 }
 
@@ -380,7 +371,7 @@ func (me *cfile) compileMatch(n *node) *cnode {
 	using := n.has[0]
 	match := me.eval(using)
 
-	if strings.HasPrefix(match.typed, "maybe") {
+	if match.vdata.maybe {
 		return me.compileNullCheck(match, n)
 	}
 
@@ -394,7 +385,7 @@ func (me *cfile) compileMatch(n *node) *cnode {
 		if isEnum {
 			enumNameSpace = me.hmfile.enumNameSpace(using.getType())
 			if !baseEnum.simple {
-				test = using.value + "->type"
+				test = using.idata.name + "->type"
 			}
 		}
 	}
@@ -550,7 +541,7 @@ func (me *cfile) compileFor(n *node) *cnode {
 		if vobj.is != "variable" {
 			panic("for loop must assign a regular variable")
 		}
-		vname := vobj.value
+		vname := vobj.idata.name
 		vexist := me.getvar(vname)
 		if vexist == nil {
 			code += me.declare(vobj) + vname + ";\n" + fmc(me.depth)

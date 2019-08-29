@@ -33,7 +33,7 @@ immutable
   snap = snake.viper
   woof = mammal.dog(7.2)
 
-calcMe(x int) either<int, float>
+calc_me(x int) either<int, float>
   if x < 10
     i = either<int, float>.one(6432)
     return i
@@ -65,7 +65,7 @@ main
     dog => echo("good")
     _ => echo("bad")
 
-  me = calcMe(5)
+  me = calc_me(5)
 
   g = bug<int>.bee
   h = bug.ant(true)

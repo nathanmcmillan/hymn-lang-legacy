@@ -1,0 +1,72 @@
+type vec
+  x int
+  y int
+
+type exception
+  message string
+  stack   string
+
+enum snake
+  python
+  viper
+  cobra
+
+enum mammal
+  mouse(int, string, vec)
+  cat(string)
+  dog(float)
+
+enum bug<x>
+  ant(x)
+  bee
+  
+enum result<r>
+  is(r)
+  error(exception)
+  
+enum either<u, v>
+  one(u)
+  two(v)
+
+immutable
+  example = vec
+  snap = snake.viper
+  woof = mammal.dog(7.2)
+
+calc_me(x int) either<int, float>
+  if x < 10
+    i = either<int, float>.one(6432)
+    return i
+  f = either<int, float>.two(5329.5)
+  return f
+
+main
+  a = snake.cobra
+  b = snake.viper
+  if a = b
+    echo("bad")
+  else
+    echo("good")
+
+  z = [10]snake
+
+  c = mammal.cat("meow")
+  d = mammal.cat("woof")
+  if c = d
+    echo("good")
+  else 
+    echo("bad")
+
+  example2 = vec
+  e = mammal.dog(1.4)
+
+  match e
+    dog => echo("good")
+    _ => echo("bad")
+
+  me = calc_me(5)
+
+  g = bug<int>.bee
+  h = bug.ant(true)
+  i = bug.ant(vec)
+  j = bug.ant("buggie")

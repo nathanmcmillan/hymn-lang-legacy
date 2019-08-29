@@ -139,7 +139,7 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	for i, param := range params {
 		if param == nil {
 			clsvar := base.variables[base.variableOrder[i]]
-			dfault := nodeInit("variable")
+			dfault := nodeInit(clsvar.typed)
 			dfault.copyTypeFromVar(clsvar)
 			dfault.value = defaultValue(clsvar.typed)
 			n.push(dfault)

@@ -50,7 +50,7 @@ func (me *parser) pushParams(name string, n *node, pix, min int, params []*node,
 			if arg.dfault == "" {
 				panic(me.fail() + "argument[" + strconv.Itoa(pix) + "] is missing")
 			}
-			dfault := nodeInit("variable")
+			dfault := nodeInit(arg.vdat.full)
 			dfault.vdata = arg.vdat
 			dfault.value = arg.dfault
 			n.push(dfault)

@@ -24,7 +24,9 @@ func (me *cfile) tempClass(p *node) *cnode {
 	p.attributes["assign"] = temp
 
 	d := nodeInit("variable")
-	d.value = temp
+	d.idata = &idData{}
+	d.idata.module = me.hmfile
+	d.idata.name = temp
 	d.copyType(p)
 	decl := me.declare(d)
 

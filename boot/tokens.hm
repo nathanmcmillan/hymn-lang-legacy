@@ -11,21 +11,21 @@ type tokenizer
   tokens []token
 
 token.to_string() string
-  if self.value = ""
-    s = "{depth:" + self.depth + ", type:" + self.is + "}"
-    return s 
-  s = "{depth:" + self.depth + ", type:" + self.is + ", value:" + self.value + "}"
-  return s 
+  mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.is
+  if self.value != ""
+    s += ", value:" + self.value
+  s += "}" 
+  return s
 
 digit(c byte) bool
   return false
 
 tokenizer.simple_token(is string) token
-  return self.token_for(me.depth, is)
+  return self.token_for(self.depth, is)
 
 tokenizer.token_for(depth int, is string) token
   t = token
     depth: depth
-    is: is
+    is   : is
     value: ""
   return t

@@ -52,10 +52,6 @@ main
 
   c = mammal.cat("meow")
   d = mammal.cat("woof")
-  if c = d
-    echo("good")
-  else 
-    echo("bad")
 
   example2 = vec
   e = mammal.dog(1.4)

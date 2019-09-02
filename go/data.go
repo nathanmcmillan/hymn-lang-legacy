@@ -4,67 +4,7 @@ import (
 	"strings"
 )
 
-type variable struct {
-	typed   string
-	name    string
-	dfault  string
-	mutable bool
-	isptr   bool
-	cName   string
-	vdat    *varData
-}
-
-func (me *hmfile) varInitFromData(vdat *varData, name string, mutable, isptr bool) *variable {
-	v := &variable{}
-	v.vdat = vdat
-	v.typed = vdat.full
-	v.name = name
-	v.cName = name
-	v.mutable = mutable
-	v.isptr = isptr
-	v.vdat.isptr = v.isptr
-	return v
-}
-
-func (me *hmfile) varInit(typed, name string, mutable, isptr bool) *variable {
-	v := &variable{}
-	v.name = name
-	v.cName = name
-	v.mutable = mutable
-	v.isptr = isptr
-	v.update(me, typed)
-	return v
-}
-
-func (me *hmfile) varWithDefaultInit(typed, name string, mutable, isptr bool, dfault string) *variable {
-	v := me.varInit(typed, name, mutable, isptr)
-	v.dfault = dfault
-	return v
-}
-
-func (me *variable) update(module *hmfile, typed string) {
-	me.typed = typed
-	me.vdat = module.typeToVarData(typed)
-	me.vdat.isptr = me.isptr
-}
-
-func (me *variable) copy() *variable {
-	v := &variable{}
-	v.typed = me.typed
-	v.name = me.name
-	v.cName = me.name
-	v.mutable = me.mutable
-	v.isptr = me.isptr
-	v.vdat = me.vdat
-	return v
-}
-
 type idData struct {
-	module *hmfile
-	name   string
-}
-
-type callData struct {
 	module *hmfile
 	name   string
 }
@@ -76,6 +16,7 @@ type varData struct {
 	mutable     bool
 	onStack     bool
 	isptr       bool
+	isfunc      bool
 	heap        bool
 	array       bool
 	none        bool
@@ -96,6 +37,7 @@ func (me *varData) copy() *varData {
 	v.mutable = me.mutable
 	v.onStack = me.onStack
 	v.isptr = me.isptr
+	v.isfunc = me.isfunc
 	v.heap = me.heap
 	v.array = me.array
 	v.none = me.none
@@ -177,6 +119,12 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	return data
 }
 
+func (me *varData) asVariable() *variable {
+	v := &variable{}
+	v.vdat = me
+	return v
+}
+
 func (me *varData) merge(alloc *allocData) {
 	if alloc == nil {
 		return
@@ -199,6 +147,11 @@ func (me *varData) checkIsArray() bool {
 	return strings.HasPrefix(me.full, "[]")
 }
 
+func (me *varData) checkIsFunction() (*function, bool) {
+	cl, ok := me.module.functions[me.typed]
+	return cl, ok
+}
+
 func (me *varData) checkIsClass() (*class, bool) {
 	cl, ok := me.module.classes[me.typed]
 	return cl, ok
@@ -213,22 +166,6 @@ func (me *varData) checkIsEnum() (*enum, *union, bool) {
 	}
 	en, ok := me.module.enums[me.typed]
 	return en, nil, ok
-}
-
-func (me *varData) checkIsUnion() (*enum, bool) {
-	dot := strings.Split(me.typed, ".")
-	if len(dot) != 1 {
-		en, ok := me.module.enums[dot[0]]
-		if ok && en.simple {
-			return en, true
-		}
-		return nil, false
-	}
-	en, ok := me.module.enums[me.typed]
-	if ok && en.simple {
-		return en, true
-	}
-	return nil, false
 }
 
 func (me *varData) equal(other *varData) bool {
@@ -299,7 +236,7 @@ func (me *varData) postfixConst() bool {
 	if _, ok := me.checkIsClass(); ok {
 		return true
 	}
-	if _, ok := me.checkIsUnion(); ok {
+	if _, _, ok := me.checkIsEnum(); ok {
 		return true
 	}
 	return false

@@ -1,0 +1,7 @@
+impl_get() int
+  return 3
+
+main
+  i = impl_get
+  echo(i())
+  (* print("{} - {}\n\n", i(), i()) *)

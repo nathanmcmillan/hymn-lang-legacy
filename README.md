@@ -20,12 +20,13 @@ main
 * structs
 * matching
 * walrus
+* stack variables
 
 ### todo
 * slices
 * scope
-* stack variables
 * references to primitives
 * free heap space
 * interfaces
 * dictionaries
+* threads / async await

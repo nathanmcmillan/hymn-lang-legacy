@@ -1,0 +1,10 @@
+type foo
+  x any
+
+type bar
+  y int
+
+main
+  b = bar(y:3)
+  f = foo(x:b)
+  w = cast(f.x, bar)

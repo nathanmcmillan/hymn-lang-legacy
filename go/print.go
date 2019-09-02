@@ -18,8 +18,8 @@ func (me *node) string(lv int) string {
 	if me.idata != nil {
 		s += ", id:" + me.idata.module.name + "." + me.idata.name
 	}
-	if me.cdata != nil {
-		s += ", call:" + me.cdata.module.name + "." + me.cdata.name
+	if me.fn != nil {
+		s += ", call:" + me.fn.module.name + "." + me.fn.name
 	}
 	if me.vdata != nil {
 		s += ", var:" + me.vdata.full
@@ -88,7 +88,7 @@ func (me *class) dump(lv int) string {
 	lv++
 	for _, cls := range me.variableOrder {
 		classVar := me.variables[cls]
-		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.typed + "}\n"
+		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.vdat.full + "}\n"
 	}
 	lv--
 	s += fmc(lv) + "]\n"

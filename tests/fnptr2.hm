@@ -1,0 +1,9 @@
+type foo
+  fn(int) int
+
+impl_set(f int) int
+  return f
+
+main
+  f = foo(impl_set)
+  echo(f.fn(3))

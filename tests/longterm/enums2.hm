@@ -33,19 +33,13 @@ immutable
   snap = snake.viper
   woof = mammal.dog(7.2)
 
-calc_me(x int) either<int, float>
-  if x < 10
-    i = either<int, float>.one(6432)
-    return i
-  f = either<int, float>.two(5329.5)
-  return f
-
 main
   a = snake.cobra
   b = snake.viper
   if a = b
     echo("bad")
   else
+    echo("a.index = " + to_str(a.index))
     echo("good")
 
   z = [10]snake
@@ -54,6 +48,7 @@ main
   d = mammal.cat("woof")
   (* if match c and d *)
   if c = d
+  (* if c.index = d.index *)
     echo("good")
   else 
     echo("bad")
@@ -71,6 +66,9 @@ main
   h = bug.ant(true)
   i = bug.ant(vec)
   j = bug.ant("buggie")
+
+  (* echo(snake.python.index)
+  echo(mammal.cat.index) *)
 
   (* f = mammal.mouse(42, "yo", vec) *)
   (* echo(f.0) *)

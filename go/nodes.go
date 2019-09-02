@@ -4,7 +4,7 @@ type node struct {
 	is         string
 	value      string
 	idata      *idData
-	cdata      *callData
+	fn         *function
 	vdata      *varData
 	attributes map[string]string
 	has        []*node

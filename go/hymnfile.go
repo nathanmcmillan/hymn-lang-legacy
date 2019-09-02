@@ -1,5 +1,12 @@
 package main
 
+const (
+	libEcho    = "echo"
+	libToStr   = "to_str"
+	libToInt   = "to_int"
+	libToFloat = "to_float"
+)
+
 type hmfile struct {
 	program       *program
 	name          string
@@ -85,25 +92,25 @@ func (me *hmfile) getvar(name string) *variable {
 }
 
 func (me *hmfile) libInit() {
-	echo := funcInit()
+	echo := funcInit(me, libEcho)
 	echo.typed = me.typeToVarData("void")
-	echo.args = append(echo.args, me.varInit("?", "s", false, false))
-	me.functions["echo"] = echo
+	echo.args = append(echo.args, me.fnArgInit("?", "s", false, false))
+	me.functions[libEcho] = echo
 
-	str := funcInit()
+	str := funcInit(me, libToStr)
 	str.typed = me.typeToVarData("string")
-	str.args = append(str.args, me.varInit("?", "s", false, false))
-	me.functions["string"] = str
+	str.args = append(str.args, me.fnArgInit("?", "s", false, false))
+	me.functions[libToStr] = str
 
-	intfn := funcInit()
+	intfn := funcInit(me, libToInt)
 	intfn.typed = me.typeToVarData("int")
-	intfn.args = append(intfn.args, me.varInit("?", "s", false, false))
-	me.functions["int"] = intfn
+	intfn.args = append(intfn.args, me.fnArgInit("?", "s", false, false))
+	me.functions[libToInt] = intfn
 
-	floatfn := funcInit()
+	floatfn := funcInit(me, libToFloat)
 	floatfn.typed = me.typeToVarData("float")
-	floatfn.args = append(floatfn.args, me.varInit("?", "s", false, false))
-	me.functions["float"] = floatfn
+	floatfn.args = append(floatfn.args, me.fnArgInit("?", "s", false, false))
+	me.functions[libToFloat] = floatfn
 
 	for primitive := range primitives {
 		me.types[primitive] = true

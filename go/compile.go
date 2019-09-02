@@ -104,9 +104,17 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	}
 	if op == "concat" {
 		size := len(n.has)
-		code := "hmlib_concat_varg(" + strconv.Itoa(size)
-		for _, snode := range n.has {
-			code += ", " + me.eval(snode).code
+		code := ""
+		if size == 2 {
+			code += "hmlib_concat("
+			code += me.eval(n.has[0]).code
+			code += ", "
+			code += me.eval(n.has[1]).code
+		} else {
+			code += "hmlib_concat_varg(" + strconv.Itoa(size)
+			for _, snode := range n.has {
+				code += ", " + me.eval(snode).code
+			}
 		}
 		code += ")"
 		cn := codeNode(n, code)
@@ -342,7 +350,6 @@ func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 	code := ""
 	if n.idata.module == me.hmfile {
 		v := me.getvar(n.idata.name)
-		fmt.Println(">>>", n.idata.name, me.scope)
 		vd := v.vdat
 		code = v.cName
 		if hint != nil && hint.isptr && !vd.isptr {
@@ -713,7 +720,7 @@ func (me *cfile) generateUnionFn(en *enum, un *union) {
 	code := head
 	head += ";\n"
 	code += " {\n"
-	code += fmc(1) + typeOf + "var = malloc(sizeof(" + unionName + "));\n"
+	code += fmc(1) + typeOf + "const var = malloc(sizeof(" + unionName + "));\n"
 	code += fmc(1) + "var->type = " + me.hmfile.enumTypeName(enumName, un.name)
 	if len(un.types) == 1 {
 		code += ";\n" + fmc(1) + "var->" + un.name + " = " + un.name
@@ -806,7 +813,7 @@ func (me *cfile) function(name string, fn *function) {
 	me.pushScope()
 	me.depth = 1
 	for _, arg := range args {
-		me.scope.variables[arg.name] = arg
+		me.scope.variables[arg.name] = arg.variable
 	}
 	for _, expr := range expressions {
 		c := me.eval(expr)
@@ -839,18 +846,21 @@ func (me *cfile) function(name string, fn *function) {
 }
 
 func (me *cfile) call(node *node) *cnode {
-	module := node.cdata.module
-	name := node.cdata.name
+	fn := node.fn
+	module := fn.module
+	name := fn.name
 	parameters := node.has
 	code := me.builtin(name, parameters)
 	if code == "" {
+		if fn.forClass != nil {
+			name = nameOfClassFunc(fn.forClass.name, fn.name)
+		}
 		code = module.funcNameSpace(name) + "("
-		fn := module.functions[name]
 		for ix, parameter := range parameters {
 			if ix > 0 {
 				code += ", "
 			}
-			arg := fn.args[ix]
+			arg := node.fn.args[ix]
 			code += me.hintEval(parameter, arg.vdat).code
 		}
 		code += ")"
@@ -862,7 +872,7 @@ func (me *cfile) call(node *node) *cnode {
 }
 
 func (me *cfile) builtin(name string, parameters []*node) string {
-	if name == "echo" {
+	if name == libEcho {
 		param := me.eval(parameters[0])
 		if param.getType() == "string" {
 			return "printf(\"%s\\n\", " + param.code + ")"
@@ -878,7 +888,7 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 		}
 		panic("argument for echo was " + param.string(0))
 	}
-	if name == "string" {
+	if name == libToStr {
 		param := me.eval(parameters[0])
 		if param.getType() == "string" {
 			panic("redundant string cast")
@@ -894,7 +904,7 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 		}
 		panic("argument for string cast was " + param.string(0))
 	}
-	if name == "int" {
+	if name == libToInt {
 		param := me.eval(parameters[0])
 		if param.getType() == "int" {
 			panic("redundant int cast")
@@ -907,7 +917,7 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 		}
 		panic("argument for int cast was " + param.string(0))
 	}
-	if name == "float" {
+	if name == libToFloat {
 		param := me.eval(parameters[0])
 		if param.getType() == "float" {
 			panic("redundant float cast")

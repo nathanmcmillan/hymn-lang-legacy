@@ -1,0 +1,7 @@
+main
+  a = "foo"
+  b =  "foo"
+  if a = b
+    echo("good")
+  else
+    echo("bad")

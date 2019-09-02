@@ -1,33 +1,44 @@
-interface foo
-  get int
-  set(v int)
-  put(v int) int
+interface expl
+  get() int
+  set(value int)
 
-type bar
-  implement foo
+type foo
+  implement expl
   x int
 
-type dud
-  implement foo
+foo.get()
+  return self.x
+
+foo.set(value int)
+  self.x = value
+
+type bar
+  implement expl
   y int
+  
+bar.get()
+  return self.y
+
+bar.set(value int)
+  self.y = value
 
 type special
-  has bool
-  one foo
-  two foo
+  one expl
+  two expl
 
 main
-  b = bar
-  b.x = 5
-  echo(b.x)
+  a = foo(x:2)
+  echo(a.x)
 
-  d = dud
-  d.y = 5
-  echo(d.y)
+  b = bar(y:3)
+  echo(b.y)
 
-  s = special
-  s.one = b
-  s.two = b
+  e = special
+  e.one = a
+  e.two = b
 
-  echo(s.one.get())
-  echo(s.two.get())
+  e.one.set(4)
+  e.two.set(5)
+
+  echo(e.one.get())
+  echo(e.two.get())

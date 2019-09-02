@@ -34,7 +34,7 @@ func prefixIdent(me *parser, op string) *node {
 
 	name := me.token.value
 	if _, ok := me.hmfile.functions[name]; ok {
-		return me.call(me.hmfile)
+		return me.parseFn(me.hmfile)
 	}
 	if _, ok := me.hmfile.types[name]; ok {
 		if _, ok := me.hmfile.classes[name]; ok {
@@ -100,7 +100,6 @@ func prefixNone(me *parser, op string) *node {
 	me.eat(">")
 	typed := "none<" + option.typed + ">"
 	data := me.hmfile.typeToVarData(typed)
-	me.defineMaybeImpl(typed)
 
 	node := nodeInit("none")
 	node.vdata = data
@@ -114,7 +113,6 @@ func prefixMaybe(me *parser, op string) *node {
 	me.eat(">")
 	typed := "maybe<" + option.typed + ">"
 	data := me.hmfile.typeToVarData(typed)
-	me.defineMaybeImpl(typed)
 
 	n := nodeInit("maybe")
 	n.vdata = data

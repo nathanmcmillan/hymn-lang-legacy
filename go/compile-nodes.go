@@ -15,7 +15,6 @@ func (me *cnode) copyType(other *cnode) {
 }
 
 func (me *cnode) copyTypeFromVar(other *variable) {
-	me.typed = other.typed
 	me.vdata = other.vdat
 }
 

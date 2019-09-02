@@ -1,3 +1,5 @@
 main
-  for x := open("files.tree")
-    echo(x.read())
+  x = open("files.tree", "r")
+  echo(x.read())
+  echo(x.read_line())
+  x.close()

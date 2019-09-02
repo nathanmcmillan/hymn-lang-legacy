@@ -1,7 +1,7 @@
 main
   mutable i = 0
   label start
-  echo("i=" + string(i))
+  echo("i=" + to_str(i))
   i += 1
   if i < 10
     goto start

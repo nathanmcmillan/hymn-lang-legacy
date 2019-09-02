@@ -23,14 +23,6 @@ type scope struct {
 	variables map[string]*variable
 }
 
-type function struct {
-	name        string
-	args        []*variable
-	argDict     map[string]int
-	expressions []*node
-	typed       *varData
-}
-
 type hasGenerics interface {
 	getGenerics() []string
 }
@@ -129,14 +121,6 @@ func codeNode(node *node, code string) *cnode {
 
 func (me *cnode) push(n *cnode) {
 	me.has = append(me.has, n)
-}
-
-func funcInit() *function {
-	f := &function{}
-	f.args = make([]*variable, 0)
-	f.argDict = make(map[string]int)
-	f.expressions = make([]*node, 0)
-	return f
 }
 
 func isNumber(t string) bool {

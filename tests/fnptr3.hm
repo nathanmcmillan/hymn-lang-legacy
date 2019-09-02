@@ -1,0 +1,8 @@
+print_this(fn() int)
+  echo(fn())
+
+impl_get() int
+  return 3
+
+main
+  print_this(impl_get)

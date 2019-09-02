@@ -57,7 +57,7 @@ func (me *parser) expression() *node {
 	if op == "id" {
 		name := token.value
 		if _, ok := me.hmfile.functions[name]; ok {
-			return me.call(me.hmfile)
+			return me.parseFn(me.hmfile)
 		}
 		n := me.eatvar(me.hmfile)
 		if me.assignable(n) {
@@ -274,9 +274,9 @@ func (me *parser) extern() *node {
 
 	if _, ok := module.functions[idname]; ok {
 		fmt.Println("extern call")
-		return me.call(module)
+		return me.parseFn(module)
 	} else if _, ok := module.classes[idname]; ok {
-		fmt.Println("extern class ::", extname, idname)
+		fmt.Println("extern class ", extname, idname)
 		return me.allocClass(module, nil)
 	} else if _, ok := module.enums[idname]; ok {
 		fmt.Println("extern enum")

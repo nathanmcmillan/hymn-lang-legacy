@@ -9,7 +9,7 @@ type bar
 
 foo(in maybe<vec>) maybe<vec>
   match in
-    some => echo("foo some " + string(in.x))
+    some => echo("foo some " + to_str(in.x))
     none => echo("foo none")
   return in
 
@@ -35,14 +35,14 @@ main
     none => echo("none")
 
   match f
-    some => echo("some " + string(f.x))
+    some => echo("some " + to_str(f.x))
     none => echo("oh no")
 
   match e
     some =>
-      echo("x " + string(e.x))
-      echo("y " + string(e.y))
-      echo("z " + string(e.z))
+      echo("x " + to_str(e.x))
+      echo("y " + to_str(e.y))
+      echo("z " + to_str(e.z))
     none => pass
 
   match f

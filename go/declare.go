@@ -196,7 +196,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	}
 
 	for _, mem := range memberMap {
-		mem.update(me.hmfile, me.genericsReplacer(mem.typed, gmapper))
+		mem.update(me.hmfile, me.genericsReplacer(mem.vdat.full, gmapper))
 	}
 }
 
@@ -221,6 +221,38 @@ func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 	return order
 }
 
+func (me *parser) declareFn() *varData {
+	fmt.Println("DECLARE FN ::")
+	me.eat("(")
+	fn := fnSigInit()
+	if me.token.is != ")" {
+		for {
+			typed := me.declareType(true)
+			fn.args = append(fn.args, fnArgInit(typed.asVariable()))
+			if me.token.is == ")" {
+				break
+			} else if me.token.is == "delim" {
+				me.eat("delim")
+				continue
+			}
+			panic(me.fail() + "unexpected token in function pointer")
+		}
+	}
+	me.eat(")")
+	if me.token.is != "line" && me.token.is != "," {
+		fn.typed = me.declareType(true)
+	} else {
+		fn.typed = me.hmfile.typeToVarData("void")
+	}
+
+	return fn.asVar()
+}
+
+func (me *parser) declareFnPtr(fn *function) *varData {
+	fmt.Println("DECLARE FN PTR ::", fn.name)
+	return me.hmfile.typeToVarData(fn.name)
+}
+
 func (me *parser) declareType(impl bool) *varData {
 	array := false
 	if me.token.is == "[" {
@@ -231,13 +263,15 @@ func (me *parser) declareType(impl bool) *varData {
 
 	typed := ""
 
-	if me.token.is == "maybe" {
+	if me.token.is == "(" {
+		return me.declareFn()
+
+	} else if me.token.is == "maybe" {
 		me.eat("maybe")
 		me.eat("<")
 		option := me.declareType(impl).typed
 		me.eat(">")
 		typed += "maybe<" + option + ">"
-		me.defineMaybeImpl(typed)
 
 	} else if me.token.is == "none" {
 		me.eat("none")
@@ -245,7 +279,6 @@ func (me *parser) declareType(impl bool) *varData {
 		option := me.declareType(impl).typed
 		me.eat(">")
 		typed += "none<" + option + ">"
-		me.defineNoneImpl(typed)
 
 	} else {
 		typed += me.token.value
@@ -264,6 +297,10 @@ func (me *parser) declareType(impl bool) *varData {
 		typed += "."
 		typed += me.token.value
 		me.eat("id")
+	}
+
+	if fn, ok := me.hmfile.functions[typed]; ok {
+		return me.declareFnPtr(fn)
 	}
 
 	if me.token.is == "<" {
@@ -298,7 +335,7 @@ func (me *parser) declareType(impl bool) *varData {
 	return me.hmfile.typeToVarData(typed)
 }
 
-func (me *parser) nameOfClassFunc(classname, funcname string) string {
+func nameOfClassFunc(classname, funcname string) string {
 	return classname + "_" + funcname
 }
 

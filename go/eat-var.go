@@ -39,7 +39,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.idata.name = dotName
 					member.push(head)
 				} else {
-					nameOfFunc := me.nameOfClassFunc(rootClass.name, dotName)
+					nameOfFunc := nameOfClassFunc(rootClass.name, dotName)
 					funcVar, ok := data.module.functions[nameOfFunc]
 					if ok {
 						fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed.full + "\"")
@@ -51,7 +51,22 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head = member
 
 			} else if rootEnum, rootUnion, ok := data.checkIsEnum(); ok {
-				if rootUnion != nil {
+				if rootUnion == nil {
+					peek := me.peek().value
+					if peek == "index" {
+						me.eat(".")
+						me.eat("id")
+						member := nodeInit("member-variable")
+						member.vdata = me.hmfile.typeToVarData("int")
+						member.idata = &idData{}
+						member.idata.module = from
+						member.idata.name = "type"
+						member.push(head)
+						head = member
+					} else {
+						panic(me.fail() + "enum \"" + rootEnum.name + "\" must be union type; missing root enum")
+					}
+				} else {
 					me.eat(".")
 					dotIndexStr := me.token.value
 					me.eat("int")
@@ -65,8 +80,6 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.value = dotIndexStr
 					member.push(head)
 					head = member
-				} else {
-					panic(me.fail() + "enum \"" + rootEnum.name + "\" must be union type does not exist")
 				}
 			} else {
 				panic(me.fail() + "type \"" + head.vdata.full + "\" does not exist")

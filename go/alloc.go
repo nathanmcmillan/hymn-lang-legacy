@@ -90,7 +90,6 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 			n.push(param)
 		}
 		me.eat(")")
-		fmt.Println(enumName, unionName, order, gimpl, gdict)
 		if len(order) == 0 {
 			if len(gimpl) != len(gdict) {
 				panic(me.fail() + "generic enum \"" + enumName + "\" with impl " + fmt.Sprint(gimpl) + " does not match " + fmt.Sprint(gdict))
@@ -139,9 +138,9 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	for i, param := range params {
 		if param == nil {
 			clsvar := base.variables[base.variableOrder[i]]
-			dfault := nodeInit(clsvar.typed)
+			dfault := nodeInit(clsvar.vdat.full)
 			dfault.copyTypeFromVar(clsvar)
-			dfault.value = defaultValue(clsvar.typed)
+			dfault.value = defaultValue(clsvar.vdat.full)
 			n.push(dfault)
 		} else {
 			n.push(param)
@@ -170,10 +169,10 @@ func (me *parser) classParams(n *node, typed string) {
 			me.eat(":")
 			param := me.calc(0)
 			clsvar := base.variables[vname]
-			if param.asVar().notEqual(clsvar.vdat) && clsvar.typed != "?" {
+			if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
 				err := "parameter \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" variable \""
-				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
+				err += clsvar.name + "\" with type \"" + clsvar.vdat.full + "\""
 				panic(me.fail() + err)
 			}
 			for i, v := range vars {
@@ -189,10 +188,10 @@ func (me *parser) classParams(n *node, typed string) {
 		} else {
 			param := me.calc(0)
 			clsvar := base.variables[vars[pix]]
-			if param.asVar().notEqual(clsvar.vdat) && clsvar.typed != "?" {
+			if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
 				err := "parameter \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" variable \""
-				err += clsvar.name + "\" with type \"" + clsvar.typed + "\""
+				err += clsvar.name + "\" with type \"" + clsvar.vdat.full + "\""
 				panic(me.fail() + err)
 			}
 			params[pix] = param
@@ -218,10 +217,10 @@ func (me *parser) specialClassParams(depth int, n *node, typed string) {
 			me.eat(":")
 			param := me.calc(0)
 			clsvar := base.variables[vname]
-			if param.asVar().notEqual(clsvar.vdat) && clsvar.typed != "?" {
+			if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
 				err := "parameter type \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" with member \""
-				err += clsvar.name + "\" and type \"" + clsvar.typed + "\""
+				err += clsvar.name + "\" and type \"" + clsvar.vdat.full + "\""
 				panic(me.fail() + err)
 			}
 			for i, v := range vars {

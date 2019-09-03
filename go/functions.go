@@ -24,17 +24,25 @@ func funcInit(module *hmfile, name string) *function {
 
 func (me *function) asSig() *fnSig {
 	fmt.Println(":: FN TO SIG")
-	sig := fnSigInit()
+	sig := fnSigInit(me.module)
 	for _, arg := range me.args {
 		sig.args = append(sig.args, arg)
 	}
 	sig.typed = me.typed
-	return nil
+	return sig
 }
 
 func (me *function) asVar() *varData {
 	fmt.Println(":: FN TO VAR")
 	return me.asSig().asVar()
+}
+
+func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
+	module.functionOrder = append(module.functionOrder, name)
+	module.functions[name] = fn
+	if me.file != nil {
+		me.file.WriteString(fn.dump(0))
+	}
 }
 
 func (me *parser) defineClassFunction() {
@@ -54,21 +62,19 @@ func (me *parser) defineClassFunction() {
 	}
 	fn := me.defineFunction(funcName, class)
 	fn.forClass = class
-	module.functionOrder = append(module.functionOrder, globalFuncName)
-	module.functions[globalFuncName] = fn
+	me.pushFunction(globalFuncName, module, fn)
 }
 
 func (me *parser) defineFileFunction() {
-	program := me.hmfile
+	module := me.hmfile
 	token := me.token
 	name := token.value
-	if _, ok := program.functions[name]; ok {
+	if _, ok := module.functions[name]; ok {
 		panic(me.fail() + "function \"" + name + "\" is already defined")
 	}
 	me.eat("id")
 	fn := me.defineFunction(name, nil)
-	program.functionOrder = append(program.functionOrder, name)
-	program.functions[name] = fn
+	me.pushFunction(name, module, fn)
 }
 
 func (me *parser) defineFunction(name string, self *class) *function {

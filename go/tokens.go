@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -42,6 +43,23 @@ var keywords = map[string]bool{
 	"enddef":    true,
 	"defc":      true,
 	"endc":      true,
+}
+
+type token struct {
+	depth int
+	is    string
+	value string
+}
+
+type tokenizer struct {
+	stream      *stream
+	current     string
+	tokens      []*token
+	eof         *token
+	size        int
+	depth       int
+	updateDepth bool
+	file        *os.File
 }
 
 func (me *token) string() string {
@@ -182,6 +200,13 @@ func (me *tokenizer) forComment() string {
 	return value.String()
 }
 
+func (me *tokenizer) push(t *token) {
+	me.tokens = append(me.tokens, t)
+	if me.file != nil {
+		me.file.WriteString(t.string() + "\n")
+	}
+}
+
 func (me *tokenizer) get(pos int) *token {
 	if pos < len(me.tokens) {
 		return me.tokens[pos]
@@ -204,7 +229,7 @@ func (me *tokenizer) get(pos int) *token {
 	typed, number := me.forNumber()
 	if number != "" {
 		token := me.valueToken(typed, number)
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	word := me.forWord()
@@ -219,7 +244,7 @@ func (me *tokenizer) get(pos int) *token {
 		} else {
 			token = me.valueToken("id", word)
 		}
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	c := stream.peek()
@@ -231,19 +256,19 @@ func (me *tokenizer) get(pos int) *token {
 			// TODO buggy
 			// value := me.forComment()
 			// token := me.valueToken("comment", value)
-			// me.tokens = append(me.tokens, token)
+			// me.push(token)
 			// return token
 			me.forComment()
 			return me.get(pos)
 		}
 		token := me.simpleToken("(")
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if strings.IndexByte("$).[]'_", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == ':' {
@@ -256,13 +281,13 @@ func (me *tokenizer) get(pos int) *token {
 		} else {
 			token = me.simpleToken(":")
 		}
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == '"' {
 		value := me.forString()
 		token := me.valueToken("string", value)
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == '=' {
@@ -274,7 +299,7 @@ func (me *tokenizer) get(pos int) *token {
 			op = "=>"
 		}
 		token := me.simpleToken(op)
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == '-' {
@@ -290,7 +315,7 @@ func (me *tokenizer) get(pos int) *token {
 		} else {
 			token = me.simpleToken("-")
 		}
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if strings.IndexByte("+*/%&|^", c) >= 0 {
@@ -302,7 +327,7 @@ func (me *tokenizer) get(pos int) *token {
 			op += "="
 		}
 		token := me.simpleToken(op)
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == '!' {
@@ -314,7 +339,7 @@ func (me *tokenizer) get(pos int) *token {
 		} else {
 			token = me.simpleToken(string(c))
 		}
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == '>' {
@@ -330,7 +355,7 @@ func (me *tokenizer) get(pos int) *token {
 		} else {
 			token = me.simpleToken(string(c))
 		}
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == '<' {
@@ -350,26 +375,26 @@ func (me *tokenizer) get(pos int) *token {
 		} else {
 			token = me.simpleToken(string(c))
 		}
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == ',' {
 		stream.next()
 		token := me.simpleToken("delim")
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		return token
 	}
 	if c == '\n' {
 		stream.next()
 		token := me.tokenFor(0, "line")
-		me.tokens = append(me.tokens, token)
+		me.push(token)
 		me.updateDepth = true
 		return token
 	}
 	panic("unknown token " + stream.fail())
 }
 
-func tokenize(stream *stream) *tokenizer {
+func tokenize(stream *stream, file *os.File) *tokenizer {
 	me := &tokenizer{}
 	me.stream = stream
 	me.tokens = make([]*token, 0)
@@ -377,5 +402,6 @@ func tokenize(stream *stream) *tokenizer {
 	me.depth = 0
 	me.updateDepth = true
 	me.size = len(stream.data)
+	me.file = file
 	return me
 }

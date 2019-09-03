@@ -16,7 +16,6 @@ type varData struct {
 	mutable     bool
 	onStack     bool
 	isptr       bool
-	isfunc      bool
 	heap        bool
 	array       bool
 	none        bool
@@ -27,6 +26,7 @@ type varData struct {
 	en          *enum
 	un          *union
 	cl          *class
+	fn          *fnSig
 }
 
 func (me *varData) copy() *varData {
@@ -37,7 +37,6 @@ func (me *varData) copy() *varData {
 	v.mutable = me.mutable
 	v.onStack = me.onStack
 	v.isptr = me.isptr
-	v.isfunc = me.isfunc
 	v.heap = me.heap
 	v.array = me.array
 	v.none = me.none
@@ -48,17 +47,8 @@ func (me *varData) copy() *varData {
 	v.en = me.en
 	v.un = me.un
 	v.cl = me.cl
+	v.fn = me.fn
 	return v
-}
-
-func dataInit(module *hmfile, typed string, mutable, isptr, heap bool) *varData {
-	d := &varData{}
-	d.module = module
-	d.typed = typed
-	d.mutable = mutable
-	d.isptr = isptr
-	d.heap = heap
-	return d
 }
 
 func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[string]string) *varData {

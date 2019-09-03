@@ -238,7 +238,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		n.copyType(right)
 	}
 	n.push(left)
-	fmt.Println("assign set", left.string(0))
+	fmt.Println("assign", left.string(0), "as", right.string(0))
 	n.push(right)
 	return n
 }

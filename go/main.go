@@ -62,15 +62,6 @@ func (me *program) compile(out, path, libDir string) {
 	me.hmfiles[name] = hymn
 
 	hymn.parse(out, path)
-	if debug {
-		fileTree := out + "/" + name + ".tree"
-		dump := hymn.dump()
-		if exists(fileTree) {
-			os.Remove(fileTree)
-		}
-		create(fileTree, dump)
-		fmt.Println("=== generate C ===")
-	}
 
 	source := hymn.generateC(out, name, libDir)
 	me.sources[name] = source

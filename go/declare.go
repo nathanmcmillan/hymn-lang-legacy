@@ -224,7 +224,7 @@ func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 func (me *parser) declareFn() *varData {
 	fmt.Println("DECLARE FN ::")
 	me.eat("(")
-	fn := fnSigInit()
+	fn := fnSigInit(me.hmfile)
 	if me.token.is != ")" {
 		for {
 			typed := me.declareType(true)

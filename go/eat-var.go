@@ -104,6 +104,20 @@ func (me *parser) eatvar(from *hmfile) *node {
 			member.push(head)
 			head = member
 			me.eat("]")
+		} else if me.token.is == "(" {
+			fmt.Println("HEAD FN PTR ::", head.string(0))
+			if head.is == "variable" {
+				sv := me.hmfile.getvar(head.idata.name)
+				if sv == nil {
+					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
+				}
+				fmt.Println("GET FN VAR ::", sv.string())
+				head.copyTypeFromVar(sv)
+			}
+			head.is = "call"
+			sig := head.vdata.fn
+			head.vdata = sig.typed
+			me.pushSigParams(head, sig)
 		} else {
 			break
 		}

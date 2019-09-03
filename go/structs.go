@@ -1,21 +1,5 @@
 package main
 
-type token struct {
-	depth int
-	is    string
-	value string
-}
-
-type tokenizer struct {
-	stream      *stream
-	current     string
-	tokens      []*token
-	eof         *token
-	size        int
-	depth       int
-	updateDepth bool
-}
-
 type scope struct {
 	root      *scope
 	temp      int
@@ -33,14 +17,6 @@ type program struct {
 	libDir    string
 	hmfiles   map[string]*hmfile
 	sources   map[string]string
-}
-
-type parser struct {
-	hmfile *hmfile
-	tokens *tokenizer
-	token  *token
-	pos    int
-	line   int
 }
 
 type cfile struct {

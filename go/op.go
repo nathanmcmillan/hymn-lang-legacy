@@ -6,7 +6,15 @@ import (
 	"strings"
 )
 
-func create(path, content string) {
+func create(path string) *os.File {
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	return f
+}
+
+func write(path, content string) {
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)

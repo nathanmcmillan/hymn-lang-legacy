@@ -5,6 +5,15 @@ import (
 	"os"
 )
 
+type parser struct {
+	hmfile *hmfile
+	tokens *tokenizer
+	token  *token
+	pos    int
+	line   int
+	file   *os.File
+}
+
 func (me *parser) fail() string {
 	return fmt.Sprintf("line %d, token %s\n", me.line, me.tokens.get(me.pos).string())
 }
@@ -22,15 +31,36 @@ func (me *parser) skipLines() {
 func (me *hmfile) parse(out, path string) {
 	name := fileName(path)
 	data := read(path)
+
+	var tokenFile *os.File
+	var treeFile *os.File
+
 	if debug {
 		fmt.Println("=== " + name + " parse ===")
+
+		fileTokens := out + "/" + name + ".tokens"
+		if exists(fileTokens) {
+			os.Remove(fileTokens)
+		}
+		tokenFile = create(fileTokens)
+		defer tokenFile.Close()
+
+		fileTree := out + "/" + name + ".tree"
+		if exists(fileTree) {
+			os.Remove(fileTree)
+		}
+		treeFile = create(fileTree)
+		defer treeFile.Close()
 	}
+
 	stream := newStream(data)
 	parsing := parser{}
 	parsing.hmfile = me
 	parsing.line = 1
-	parsing.tokens = tokenize(stream)
+	parsing.tokens = tokenize(stream, tokenFile)
 	parsing.token = parsing.tokens.get(0)
+	parsing.file = treeFile
+
 	parsing.skipLines()
 	for parsing.token.is != "eof" {
 		parsing.fileExpression()
@@ -39,19 +69,10 @@ func (me *hmfile) parse(out, path string) {
 		}
 	}
 
-	if debug {
-		dump := ""
-		for _, token := range parsing.tokens.tokens {
-			dump += token.string() + "\n"
-		}
-		fileTokens := out + "/" + name + ".tokens"
-		if exists(fileTokens) {
-			os.Remove(fileTokens)
-		}
-		create(fileTokens, dump)
-	}
-
-	delete(me.functions, "echo")
+	treeFile.Truncate(0)
+	treeFile.Seek(0, 0)
+	treeFile.WriteString(me.dump())
+	treeFile.WriteString("\n")
 }
 
 func (me *parser) next() {

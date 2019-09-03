@@ -7,6 +7,11 @@ import (
 )
 
 func (me *hmfile) generateC(folder, name, libDir string) string {
+
+	if debug {
+		fmt.Println("=== generate C ===")
+	}
+
 	cfile := me.cFileInit()
 
 	guard := me.defNameSpace(name)
@@ -65,10 +70,10 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	fmt.Println("=== end C ===")
 
 	fileCode := folder + "/" + name + ".c"
-	create(fileCode, code+strings.Join(cfile.codeFn, ""))
+	write(fileCode, code+strings.Join(cfile.codeFn, ""))
 
 	cfile.headSuffix += "\n#endif\n"
-	create(folder+"/"+name+".h", cfile.head())
+	write(folder+"/"+name+".h", cfile.head())
 
 	return fileCode
 }

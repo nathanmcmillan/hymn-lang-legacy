@@ -5,15 +5,40 @@ import (
 	"strconv"
 )
 
-func (me *parser) pushParams(name string, n *node, pix, min int, params []*node, fn *function) {
+func (me *parser) pushSigParams(n *node, sig *fnSig) {
+	params := make([]*node, 0)
 	me.eat("(")
+	ix := 0
+	for {
+		if me.token.is == ")" {
+			me.eat(")")
+			break
+		} else if ix > 0 {
+			me.eat("delim")
+		}
+		param := me.calc(0)
+		arg := sig.args[ix]
+		if param.asVar().notEqual(arg.vdat) && arg.vdat.full != "?" {
+			err := "parameter \"" + param.getType()
+			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.vdat.full + "\" for function"
+			panic(me.fail() + err)
+		}
+		params = append(params, param)
+	}
+	for _, param := range params {
+		n.push(param)
+	}
+}
+
+func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *function) {
+	me.eat("(")
+	min := pix
 	dict := false
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
 			break
-		}
-		if pix > min || dict {
+		} else if pix > min || dict {
 			me.eat("delim")
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
@@ -65,8 +90,7 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	n.vdata = fn.typed
 	params := make([]*node, len(fn.args))
 	params[0] = root
-	pix := 1
-	me.pushParams(name, n, pix, 1, params, fn)
+	me.pushParams(name, n, 1, params, fn)
 	return n
 }
 
@@ -78,8 +102,7 @@ func (me *parser) call(module *hmfile) *node {
 	n.fn = fn
 	n.vdata = fn.typed
 	params := make([]*node, len(fn.args))
-	pix := 0
-	me.pushParams(name, n, pix, 0, params, fn)
+	me.pushParams(name, n, 0, params, fn)
 	return n
 }
 
@@ -89,14 +112,13 @@ func (me *parser) parseFn(module *hmfile) *node {
 	}
 
 	name := me.token.value
-
-	fmt.Println("FUNCTION PTR ::", name)
-
 	fn := module.functions[name]
 	me.eat("id")
 	n := nodeInit("function-ptr")
 	n.vdata = fn.asVar()
 	n.fn = fn
+
+	fmt.Println("FUNCTION PTR ::", n.string(0))
 
 	return n
 }

@@ -114,7 +114,7 @@ func (me *parser) parseFn(module *hmfile) *node {
 	name := me.token.value
 	fn := module.functions[name]
 	me.eat("id")
-	n := nodeInit("function-ptr")
+	n := nodeInit("fn-ptr")
 	n.vdata = fn.asVar()
 	n.fn = fn
 

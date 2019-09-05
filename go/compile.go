@@ -141,6 +141,9 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	if op == "member-variable" {
 		return me.compileMemberVariable(n)
 	}
+	if op == "fn-ptr" {
+		return me.compileFnPtr(n, hint)
+	}
 	if op == "variable" {
 		return me.compileVariable(n, hint)
 	}
@@ -351,6 +354,14 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 	return cn
 }
 
+func (me *cfile) compileFnPtr(n *node, hint *varData) *cnode {
+	code := ""
+	fn := n.fn
+	code += "&" + fn.module.funcNameSpace(fn.name)
+	cn := codeNode(n, code)
+	return cn
+}
+
 func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 	code := ""
 	if n.idata.module == me.hmfile {
@@ -553,10 +564,9 @@ func (me *cfile) compileFor(n *node) *cnode {
 		if vobj.is != "variable" {
 			panic("for loop must assign a regular variable")
 		}
-		vname := vobj.idata.name
-		vexist := me.getvar(vname)
+		vexist := me.getvar(vobj.idata.name)
 		if vexist == nil {
-			code += me.declare(vobj) + vname + ";\n" + fmc(me.depth)
+			code += me.declare(vobj) + ";\n" + fmc(me.depth)
 		}
 		vinit := me.assingment(vset)
 		condition := me.eval(n.has[1]).code
@@ -622,24 +632,52 @@ func (me *cfile) declare(n *node) string {
 			me.scope.variables[name] = me.hmfile.varInitFromData(data, name, mutable, malloc)
 			codesig := fmtassignspace(data.typeSig())
 			code += codesig
+			code += name
+
 		} else if malloc {
 			me.scope.variables[name] = me.hmfile.varInitFromData(data, name, mutable, malloc)
-			codesig := fmtassignspace(data.typeSig())
-			if mutable {
-				code = codesig
-			} else if data.postfixConst() {
-				code += codesig + "const "
+
+			if _, ok := data.checkIsFunction(); ok {
+				sig := data.fn
+				code += fmtassignspace(sig.typed.typeSig())
+				code += "(*"
+				if !mutable {
+					code += "const "
+				}
+				code += name
+				code += ")("
+				for ix, arg := range sig.args {
+					if ix > 0 {
+						code += ", "
+					}
+					code += arg.vdat.typeSig()
+				}
+				code += ")"
+
 			} else {
-				code += "const " + codesig
+				codesig := fmtassignspace(data.typeSig())
+				if mutable {
+					code = codesig
+				} else if data.postfixConst() {
+					code += codesig + "const "
+				} else {
+					code += "const " + codesig
+				}
+				code += name
 			}
+
 		} else {
 			newVar := me.hmfile.varInitFromData(data, name, mutable, malloc)
 			newVar.cName = data.module.varNameSpace(name)
 			me.scope.variables[name] = newVar
 			codesig := fmtassignspace(data.noMallocTypeSig())
 			code += codesig
+			code += name
 		}
+	} else {
+		code += name
 	}
+
 	return code
 }
 
@@ -681,11 +719,13 @@ func (me *cfile) assingment(n *node) string {
 	if paren {
 		code += "("
 	}
-	if left.is == "variable" {
-		code += me.declare(left)
-	}
+	// TODO
+	// if left.is == "variable" {
+	code += me.declare(left)
+	// }
+	leftCode := "" // me.eval(left).code
 	rightCode := me.eval(right).code
-	code += me.eval(left).code + me.maybeLet(rightCode, right.attributes) + rightCode
+	code += leftCode + me.maybeLet(rightCode, right.attributes) + rightCode
 	if paren {
 		code += ")"
 	}
@@ -852,6 +892,25 @@ func (me *cfile) function(name string, fn *function) {
 
 func (me *cfile) call(node *node) *cnode {
 	fn := node.fn
+	if fn == nil {
+		id := node.idata
+		va := me.getvar(id.name)
+		fmt.Println("COMPILE CALL FN PTR ::", va.cName, "->", va.string())
+		sig := va.vdat.fn
+		parameters := node.has
+		code := "(*" + id.name + ")("
+		for ix, parameter := range parameters {
+			if ix > 0 {
+				code += ", "
+			}
+			arg := sig.args[ix]
+			code += me.hintEval(parameter, arg.vdat).code
+		}
+		code += ")"
+		cn := codeNode(node, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
 	module := fn.module
 	name := fn.name
 	parameters := node.has

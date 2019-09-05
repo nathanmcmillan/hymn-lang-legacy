@@ -137,9 +137,8 @@ func (me *varData) checkIsArray() bool {
 	return strings.HasPrefix(me.full, "[]")
 }
 
-func (me *varData) checkIsFunction() (*function, bool) {
-	cl, ok := me.module.functions[me.typed]
-	return cl, ok
+func (me *varData) checkIsFunction() (*fnSig, bool) {
+	return me.fn, me.fn != nil
 }
 
 func (me *varData) checkIsClass() (*class, bool) {

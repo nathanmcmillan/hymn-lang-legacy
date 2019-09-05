@@ -1,11 +1,25 @@
-impl_get(x int) int
+get(x int) int
   return x
 
+get2(x int) int
+  return x * x
+
+get3() int
+  return 4
+
+foo()
+  echo("foo")
+
 main
-  i = impl_get
-  i(3)
-  impl_get(4)
+  a = get
+  echo(a(3))
 
-  (* echo(i()) *)
+  mutable b = get
+  b = get2
+  echo(b(3))
 
-  (* print("{} - {}\n\n", i(), i()) *)
+  c = get3
+  echo(c())
+
+  f = foo
+  f()

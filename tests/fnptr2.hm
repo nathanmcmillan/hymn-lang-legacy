@@ -1,9 +1,9 @@
 type foo
-  fn(int) int
+  zoo(int) int
 
-impl_set(f int) int
-  return f
+goo(x int) int
+  return x
 
 main
-  f = foo(impl_set)
-  echo(f.fn(3))
+  f = foo(goo)
+  echo(f.zoo(3))

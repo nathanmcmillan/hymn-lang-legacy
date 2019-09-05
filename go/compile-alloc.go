@@ -31,7 +31,7 @@ func (me *cfile) tempClass(p *node) *cnode {
 	decl := me.declare(d)
 
 	code := ""
-	code += ";\n" + fmc(me.depth) + decl + temp + " = " + me.eval(p).code
+	code += ";\n" + fmc(me.depth) + decl + " = " + me.eval(p).code
 
 	cn := codeNode(p, code)
 	cn.value = temp

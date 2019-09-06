@@ -61,9 +61,9 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
-			cfile.mainc(me.functions[f])
+			cfile.defineMain(me.functions[f])
 		} else {
-			cfile.function(f, me.functions[f])
+			cfile.defineFunction(f, me.functions[f])
 		}
 	}
 
@@ -654,17 +654,8 @@ func (me *cfile) declare(n *node) string {
 				}
 				code += ")"
 
-			} else {
-				codesig := fmtassignspace(data.typeSig())
-				if mutable {
-					code = codesig
-				} else if data.postfixConst() {
-					code += codesig + "const "
-				} else {
-					code += "const " + codesig
-				}
-				code += name
 			}
+			code += data.typeSigOf(name, mutable)
 
 		} else {
 			newVar := me.hmfile.varInitFromData(data, name, mutable, malloc)
@@ -818,84 +809,13 @@ func (me *cfile) block(n *node) *cnode {
 	return cn
 }
 
-func (me *cfile) mainc(fn *function) {
-	if len(fn.args) > 0 {
-		panic("main can not have arguments")
-	}
-	expressions := fn.expressions
-	codeblock := ""
-	returns := false
-	me.pushScope()
-	me.depth = 1
-	for _, expr := range expressions {
-		c := me.eval(expr)
-		if c.is == "return" {
-			if c.getType() != "int" {
-				panic("main must return int")
-			} else {
-				returns = true
-			}
-		}
-		codeblock += fmc(me.depth) + c.code + me.maybeColon(c.code) + "\n"
-	}
-	if !returns {
-		codeblock += fmc(me.depth) + "return 0;\n"
-	}
-	me.popScope()
-	code := ""
-	code += "int main() {\n"
-	code += codeblock
-	code += "}\n"
-
-	me.headFuncSection += "int main();\n"
-	me.codeFn = append(me.codeFn, code)
-}
-
-func (me *cfile) function(name string, fn *function) {
-	args := fn.args
-	expressions := fn.expressions
-	block := ""
-	me.pushScope()
-	me.depth = 1
-	for _, arg := range args {
-		me.scope.variables[arg.name] = arg.variable
-	}
-	for _, expr := range expressions {
-		c := me.eval(expr)
-		if c.code != "" {
-			block += fmc(me.depth) + c.code + me.maybeColon(c.code) + "\n"
-		}
-	}
-	me.popScope()
-	code := ""
-	code += fmtassignspace(fn.typed.typeSig()) + me.hmfile.funcNameSpace(name) + "("
-	for ix, arg := range args {
-		if ix > 0 {
-			code += ", "
-		}
-		codesig := fmtassignspace(arg.vdat.typeSig())
-		if arg.vdat.postfixConst() {
-			code += codesig + "const "
-		} else {
-			code += "const " + codesig
-		}
-		code += arg.name
-	}
-	head := code + ");\n"
-	code += ") {\n"
-	code += block
-	code += "}\n\n"
-
-	me.headFuncSection += head
-	me.codeFn = append(me.codeFn, code)
-}
-
 func (me *cfile) call(node *node) *cnode {
 	fn := node.fn
 	if fn == nil {
 		id := node.idata
+		fmt.Println("COMPILE CALL FN PTR ID ::", id.name)
 		va := me.getvar(id.name)
-		fmt.Println("COMPILE CALL FN PTR ::", va.cName, "->", va.string())
+		fmt.Println("COMPILE CALL FN PTR VAR ::", va.cName, "->", va.string())
 		sig := va.vdat.fn
 		parameters := node.has
 		code := "(*" + id.name + ")("

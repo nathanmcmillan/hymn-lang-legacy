@@ -231,6 +231,39 @@ func (me *varData) postfixConst() bool {
 	return false
 }
 
+func (me *varData) typeSigOf(name string, mutable bool) string {
+	code := ""
+	if _, ok := me.checkIsFunction(); ok {
+		sig := me.fn
+		code += fmtassignspace(sig.typed.typeSig())
+		code += "(*"
+		if !mutable {
+			code += "const "
+		}
+		code += name
+		code += ")("
+		for ix, arg := range sig.args {
+			if ix > 0 {
+				code += ", "
+			}
+			code += arg.vdat.typeSig()
+		}
+		code += ")"
+
+	} else {
+		sig := fmtassignspace(me.typeSig())
+		if mutable {
+			code += sig
+		} else if me.postfixConst() {
+			code += sig + "const "
+		} else {
+			code += "const " + sig
+		}
+		code += name
+	}
+	return code
+}
+
 func (me *varData) typeSig() string {
 	if me.array {
 		return fmtptr(me.typeInArray.typeSig())

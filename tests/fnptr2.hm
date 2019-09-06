@@ -1,9 +1,12 @@
-type foo
-  zoo(int) int
+type typ
+  ptr(int) int
+  other int
 
-goo(x int) int
+fun(x int) int
   return x
 
 main
-  f = foo(goo)
-  echo(f.zoo(3))
+  t = typ(fun)
+  echo(t.ptr(3))
+
+  echo(t.other)

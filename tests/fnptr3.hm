@@ -1,8 +1,8 @@
-print_this(fn() int)
-  echo(fn())
+fun(ptr() int)
+  echo(ptr())
 
-impl_get() int
+get() int
   return 3
 
 main
-  print_this(impl_get)
+  fun(get)

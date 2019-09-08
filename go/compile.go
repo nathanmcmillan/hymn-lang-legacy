@@ -104,9 +104,6 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		fmt.Println(cn.string(0))
 		return cn
 	}
-	if op == "call" {
-		return me.call(n)
-	}
 	if op == "concat" {
 		size := len(n.has)
 		code := ""
@@ -135,12 +132,6 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	if op == "+" || op == "-" || op == "*" || op == "/" || op == "%" || op == "&" || op == "|" || op == "^" || op == "<<" || op == ">>" {
 		return me.compileBinaryOp(n)
 	}
-	if op == "tuple-index" {
-		return me.compileTupleIndex(n)
-	}
-	if op == "member-variable" {
-		return me.compileMemberVariable(n)
-	}
 	if op == "fn-ptr" {
 		return me.compileFnPtr(n, hint)
 	}
@@ -160,6 +151,15 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		cn := codeNode(n, code)
 		fmt.Println(cn.string(0))
 		return cn
+	}
+	if op == "member-variable" {
+		return me.compileMemberVariable(n)
+	}
+	if op == "tuple-index" {
+		return me.compileTupleIndex(n)
+	}
+	if op == "call" {
+		return me.compileCall(n)
 	}
 	if op == "array" {
 		code := me.allocArray(n)
@@ -612,6 +612,10 @@ func (me *cfile) allocArray(n *node) string {
 
 func (me *cfile) declare(n *node) string {
 	code := ""
+	fmt.Println("DECLARE ::", n.string(0))
+	if n.idata == nil {
+		return ""
+	}
 	name := n.idata.name
 	if me.getvar(name) == nil {
 		malloc := true
@@ -621,48 +625,27 @@ func (me *cfile) declare(n *node) string {
 		}
 		if _, ok := n.attributes["use-stack"]; ok {
 			useStack = true
+			malloc = false
 		}
 		mutable := false
 		if _, ok := n.attributes["mutable"]; ok {
 			mutable = true
 		}
 		data := n.vdata
+		newVar := me.hmfile.varInitFromData(data, name, mutable, malloc)
 		if useStack {
-			malloc = false
-			me.scope.variables[name] = me.hmfile.varInitFromData(data, name, mutable, malloc)
-			codesig := fmtassignspace(data.typeSig())
-			code += codesig
+			me.scope.variables[name] = newVar
+			code += fmtassignspace(data.typeSig())
 			code += name
 
 		} else if malloc {
-			me.scope.variables[name] = me.hmfile.varInitFromData(data, name, mutable, malloc)
-
-			if _, ok := data.checkIsFunction(); ok {
-				sig := data.fn
-				code += fmtassignspace(sig.typed.typeSig())
-				code += "(*"
-				if !mutable {
-					code += "const "
-				}
-				code += name
-				code += ")("
-				for ix, arg := range sig.args {
-					if ix > 0 {
-						code += ", "
-					}
-					code += arg.vdat.typeSig()
-				}
-				code += ")"
-
-			}
+			me.scope.variables[name] = newVar
 			code += data.typeSigOf(name, mutable)
 
 		} else {
-			newVar := me.hmfile.varInitFromData(data, name, mutable, malloc)
 			newVar.cName = data.module.varNameSpace(name)
 			me.scope.variables[name] = newVar
-			codesig := fmtassignspace(data.noMallocTypeSig())
-			code += codesig
+			code += fmtassignspace(data.noMallocTypeSig())
 			code += name
 		}
 	} else {
@@ -809,16 +792,13 @@ func (me *cfile) block(n *node) *cnode {
 	return cn
 }
 
-func (me *cfile) call(node *node) *cnode {
+func (me *cfile) compileCall(node *node) *cnode {
 	fn := node.fn
 	if fn == nil {
-		id := node.idata
-		fmt.Println("COMPILE CALL FN PTR ID ::", id.name)
-		va := me.getvar(id.name)
-		fmt.Println("COMPILE CALL FN PTR VAR ::", va.cName, "->", va.string())
-		sig := va.vdat.fn
-		parameters := node.has
-		code := "(*" + id.name + ")("
+		head := node.has[0]
+		sig := head.vdata.fn
+		code := "(*" + me.eval(head).code + ")("
+		parameters := node.has[1:len(node.has)]
 		for ix, parameter := range parameters {
 			if ix > 0 {
 				code += ", "

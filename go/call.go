@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -117,8 +116,6 @@ func (me *parser) parseFn(module *hmfile) *node {
 	n := nodeInit("fn-ptr")
 	n.vdata = fn.asVar()
 	n.fn = fn
-
-	fmt.Println("FUNCTION PTR ::", n.string(0))
 
 	return n
 }

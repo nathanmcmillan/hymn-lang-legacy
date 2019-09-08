@@ -16,7 +16,7 @@ func (me *node) string(lv int) string {
 		s += ", value:" + me.value
 	}
 	if me.idata != nil {
-		s += ", id:" + me.idata.module.name + "." + me.idata.name
+		s += ", id:" + me.idata.string()
 	}
 	if me.fn != nil {
 		s += ", call:" + me.fn.module.name + "." + me.fn.name

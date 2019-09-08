@@ -11,6 +11,21 @@ func (me *parser) eatvar(from *hmfile) *node {
 	head.idata = &idData{}
 	head.idata.module = from
 	head.idata.name = localvarname
+	if from == me.hmfile {
+		sv := from.getvar(localvarname)
+		if sv == nil {
+			head.vdata = me.hmfile.typeToVarData("?")
+		} else {
+			head.vdata = sv.vdat
+		}
+	} else {
+		sv := from.getStatic(localvarname)
+		if sv == nil {
+			panic(me.fail() + "static variable \"" + localvarname + "\" in module \"" + from.name + "\" not found")
+		} else {
+			head.vdata = sv.vdat
+		}
+	}
 	me.eat("id")
 	for {
 		if me.token.is == "." {
@@ -106,37 +121,27 @@ func (me *parser) eatvar(from *hmfile) *node {
 			me.eat("]")
 		} else if me.token.is == "(" {
 			fmt.Println("HEAD FN PTR ::", head.string(0))
+			var sig *fnSig
 			if head.is == "variable" {
 				sv := me.hmfile.getvar(head.idata.name)
 				if sv == nil {
 					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
 				}
 				fmt.Println("GET FN VAR ::", sv.string())
-				head.copyTypeFromVar(sv)
+				sig = sv.vdat.fn
+
+			} else if head.is == "member-variable" {
+				fmt.Println("CALL FROM MEMBER ::", head.string(0))
+				sig = head.vdata.fn
 			}
-			head.is = "call"
-			sig := head.vdata.fn
-			head.vdata = sig.typed
-			me.pushSigParams(head, sig)
+			member := nodeInit("call")
+			member.vdata = sig.typed
+			member.push(head)
+			me.pushSigParams(member, sig)
+			head = member
+
 		} else {
 			break
-		}
-	}
-	if head.is == "variable" {
-		if from == me.hmfile {
-			sv := from.getvar(localvarname)
-			if sv == nil {
-				head.vdata = me.hmfile.typeToVarData("?")
-			} else {
-				head.vdata = sv.vdat
-			}
-		} else {
-			sv := from.getStatic(localvarname)
-			if sv == nil {
-				panic(me.fail() + "static variable \"" + localvarname + "\" in module \"" + from.name + "\" not found")
-			} else {
-				head.vdata = sv.vdat
-			}
 		}
 	}
 	return head

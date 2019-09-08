@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type fnSig struct {
 	module *hmfile
 	args   []*funcArg
@@ -33,7 +31,6 @@ func (me *fnSig) print() string {
 
 func (me *fnSig) asVar() *varData {
 	sig := me.print()
-	fmt.Println("SIG TO VAR ::", sig)
 	d := &varData{}
 	d.fn = me
 	d.full = sig

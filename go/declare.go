@@ -222,7 +222,6 @@ func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 }
 
 func (me *parser) declareFn() *varData {
-	fmt.Println("DECLARE FN ::")
 	me.eat("(")
 	fn := fnSigInit(me.hmfile)
 	if me.token.is != ")" {
@@ -249,7 +248,6 @@ func (me *parser) declareFn() *varData {
 }
 
 func (me *parser) declareFnPtr(fn *function) *varData {
-	fmt.Println("DECLARE FN PTR ::", fn.name)
 	return me.hmfile.typeToVarData(fn.name)
 }
 

@@ -1,3 +1,9 @@
+type typ
+  ptr(int) int
+
+fun(ptr() int)
+  echo(ptr())
+  
 get(x int) int
   return x
 
@@ -23,3 +29,8 @@ main
 
   f = foo
   f()
+
+  t = typ(get)
+  echo(t.ptr(3))
+
+  fun(get3)

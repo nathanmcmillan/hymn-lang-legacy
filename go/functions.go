@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type function struct {
 	name        string
 	module      *hmfile
@@ -23,7 +21,6 @@ func funcInit(module *hmfile, name string) *function {
 }
 
 func (me *function) asSig() *fnSig {
-	fmt.Println(":: FN TO SIG")
 	sig := fnSigInit(me.module)
 	for _, arg := range me.args {
 		sig.args = append(sig.args, arg)
@@ -33,7 +30,6 @@ func (me *function) asSig() *fnSig {
 }
 
 func (me *function) asVar() *varData {
-	fmt.Println(":: FN TO VAR")
 	return me.asSig().asVar()
 }
 
@@ -98,7 +94,6 @@ func (me *parser) defineFunction(name string, self *class) *function {
 						if _, ok := primitives[op]; ok {
 							defaultValue = me.token.value
 							defaultType = op
-							fmt.Println(defaultType, "::", defaultValue)
 							me.eat(op)
 						} else {
 							panic(me.fail() + "only primitives allowed for parameter defaults. was \"" + me.token.is + "\"")

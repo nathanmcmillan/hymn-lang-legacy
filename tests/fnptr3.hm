@@ -1,8 +1,0 @@
-fun(ptr() int)
-  echo(ptr())
-
-get() int
-  return 3
-
-main
-  fun(get)

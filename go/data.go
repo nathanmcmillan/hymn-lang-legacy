@@ -9,6 +9,10 @@ type idData struct {
 	name   string
 }
 
+func (me *idData) string() string {
+	return me.module.name + "." + me.name
+}
+
 type varData struct {
 	module      *hmfile
 	typed       string

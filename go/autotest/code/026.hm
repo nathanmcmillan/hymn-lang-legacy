@@ -8,7 +8,7 @@ main
     echo("loop b")
     echo(i)
   k = 0
-  for i = 0, i = k, i += 1
+  for i = 0, i == k, i += 1
     echo("loop c")
     echo(i)
   echo("bye!")

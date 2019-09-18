@@ -36,6 +36,7 @@ func (me *function) asVar() *varData {
 func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	module.functionOrder = append(module.functionOrder, name)
 	module.functions[name] = fn
+	module.types[name] = ""
 	if me.file != nil {
 		me.file.WriteString(fn.dump(0))
 	}
@@ -156,8 +157,15 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)
 		if expr.is == "return" {
-			if fn.typed.notEqual(expr.asVar()) {
-				panic(me.fail() + "function " + name + " returns " + fn.typed.full + " but found " + expr.getType())
+			ret := expr.asVar()
+			if ret.none {
+				if !fn.typed.maybe {
+					panic(me.fail() + "return must be maybe type but was \"" + ret.full + "\"")
+				} else if ret.noneType.full != "" {
+					panic(me.fail() + "unnecessary none definition")
+				}
+			} else if fn.typed.notEqual(ret) {
+				panic(me.fail() + "function \"" + name + "\" returns \"" + fn.typed.full + "\" but found \"" + expr.getType() + "\"")
 			}
 			goto fnEnd
 		}

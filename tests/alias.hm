@@ -1,0 +1,15 @@
+type zoo
+	s string
+
+alias echo = foo
+alias zoo  = boo
+alias int  = size
+
+fun(i size)
+	echo("size = " + to_str(i))
+
+main
+	foo("alias of echo")
+	b = boo(s:"alias of zoo")
+	foo(b.s)
+	fun(66)

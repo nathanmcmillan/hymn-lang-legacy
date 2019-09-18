@@ -34,6 +34,11 @@ func (me *variable) update(module *hmfile, typed string) {
 	me.vdat.isptr = me.isptr
 }
 
+func (me *variable) updateFromVar(module *hmfile, data *varData) {
+	me.vdat = data
+	me.vdat.isptr = me.isptr
+}
+
 func (me *variable) copy() *variable {
 	v := &variable{}
 	v.name = me.name

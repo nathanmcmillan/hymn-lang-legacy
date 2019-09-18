@@ -67,6 +67,42 @@ func infixCompare(me *parser, left *node, op string) *node {
 	return node
 }
 
+func infixCompareEnumIs(me *parser, left *node, op string) *node {
+	node := nodeInit(getInfixName(op))
+	node.value = me.token.value
+	me.eat(op)
+	if left.vdata.none {
+	} else if left.vdata.maybe {
+	} else if _, _, ok := left.vdata.checkIsEnum(); !ok {
+		panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.vdata.full + "\"")
+	}
+	right := me.calc(getInfixPrecedence(op))
+	node.push(left)
+	node.push(right)
+	node.vdata = me.hmfile.typeToVarData("bool")
+	return node
+}
+
+func infixTernary(me *parser, condition *node, op string) *node {
+	node := nodeInit(getInfixName(op))
+	node.value = me.token.value
+	me.eat(op)
+	one := me.calc(getInfixPrecedence(op))
+	if one.getType() == "void" {
+		panic(me.fail() + "left type cannot be void")
+	}
+	node.push(condition)
+	node.push(one)
+	me.eat(":")
+	two := me.calc(getInfixPrecedence(op))
+	if one.getType() != two.getType() {
+		panic(me.fail() + "left \"" + one.getType() + "\" and right \"" + two.getType() + "\" types do not match")
+	}
+	node.push(two)
+	node.copyType(one)
+	return node
+}
+
 func infixWalrus(me *parser, left *node, op string) *node {
 	node := me.assign(left, true, false)
 	return node

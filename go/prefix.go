@@ -33,10 +33,10 @@ func prefixIdent(me *parser, op string) *node {
 	}
 
 	name := me.token.value
-	if _, ok := me.hmfile.functions[name]; ok {
-		return me.parseFn(me.hmfile)
-	}
 	if _, ok := me.hmfile.types[name]; ok {
+		if _, ok := me.hmfile.functions[name]; ok {
+			return me.parseFn(me.hmfile)
+		}
 		if _, ok := me.hmfile.classes[name]; ok {
 			data := &allocData{}
 			data.useStack = useStack
@@ -95,14 +95,16 @@ func prefixNot(me *parser, op string) *node {
 
 func prefixNone(me *parser, op string) *node {
 	me.eat("none")
-	me.eat("<")
-	option := me.declareType(true)
-	me.eat(">")
-	typed := "none<" + option.typed + ">"
-	data := me.hmfile.typeToVarData(typed)
-
 	node := nodeInit("none")
-	node.vdata = data
+	if me.token.is == "<" {
+		me.eat("<")
+		option := me.declareType(true)
+		me.eat(">")
+		typed := "none<" + option.typed + ">"
+		node.vdata = me.hmfile.typeToVarData(typed)
+	} else {
+		node.vdata = me.hmfile.typeToVarData("none")
+	}
 	return node
 }
 

@@ -37,7 +37,7 @@ func (me *parser) defineClass() {
 	me.eat("line")
 
 	me.hmfile.namespace[name] = "type"
-	me.hmfile.types[name] = true
+	me.hmfile.types[name] = ""
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_type")
 
 	classDef := classInit(name, genericsOrder, genericsDict)
@@ -93,7 +93,7 @@ func (me *parser) defineEnum() {
 	me.eat("line")
 
 	me.hmfile.namespace[name] = "enum"
-	me.hmfile.types[name] = true
+	me.hmfile.types[name] = ""
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_enum")
 
 	typesOrder := make([]*union, 0)

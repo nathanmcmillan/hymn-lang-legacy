@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *cfile) walrusIf(n *node) string {
 	ifnode := n.has[0]
 	has := len(ifnode.has)
@@ -54,6 +56,7 @@ func (me *cfile) walrusLoop(n *node) string {
 func (me *cfile) walrusMatch(n *node) string {
 	ifnode := n.has[0]
 	code := ""
+	fmt.Println("WALRUS MATCH ::", n.string(0))
 	if ifnode.is == ":=" {
 		delete(ifnode.attributes, "parenthesis")
 		code += me.eval(ifnode).code + ";\n" + fmc(me.depth)

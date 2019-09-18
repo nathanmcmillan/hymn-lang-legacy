@@ -22,7 +22,7 @@ type hmfile struct {
 	defineOrder   []string
 	functions     map[string]*function
 	functionOrder []string
-	types         map[string]bool
+	types         map[string]string
 	funcPrefix    string
 	classPrefix   string
 	enumPrefix    string
@@ -38,7 +38,7 @@ func (prog *program) hymnFileInit(name string) *hmfile {
 	hm.scope = hm.rootScope
 	hm.staticScope = make(map[string]*variable)
 	hm.namespace = make(map[string]string)
-	hm.types = make(map[string]bool)
+	hm.types = make(map[string]string)
 	hm.imports = make(map[string]bool)
 	hm.classes = make(map[string]*class)
 	hm.enums = make(map[string]*enum)
@@ -96,23 +96,27 @@ func (me *hmfile) libInit() {
 	echo.typed = me.typeToVarData("void")
 	echo.args = append(echo.args, me.fnArgInit("?", "s", false, false))
 	me.functions[libEcho] = echo
+	me.types[libEcho] = ""
 
 	str := funcInit(me, libToStr)
 	str.typed = me.typeToVarData("string")
 	str.args = append(str.args, me.fnArgInit("?", "s", false, false))
 	me.functions[libToStr] = str
+	me.types[libToStr] = ""
 
 	intfn := funcInit(me, libToInt)
 	intfn.typed = me.typeToVarData("int")
 	intfn.args = append(intfn.args, me.fnArgInit("?", "s", false, false))
 	me.functions[libToInt] = intfn
+	me.types[libToInt] = ""
 
 	floatfn := funcInit(me, libToFloat)
 	floatfn.typed = me.typeToVarData("float")
 	floatfn.args = append(floatfn.args, me.fnArgInit("?", "s", false, false))
 	me.functions[libToFloat] = floatfn
+	me.types[libToFloat] = ""
 
 	for primitive := range primitives {
-		me.types[primitive] = true
+		me.types[primitive] = ""
 	}
 }

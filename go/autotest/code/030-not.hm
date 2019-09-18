@@ -6,9 +6,9 @@ main
     echo("good")
   if !z
     echo("good")
-  if !(x = y)
+  if !(x == y)
     echo("good")
-  if not(x = y)
+  if not(x == y)
     echo("good")
   if not false
     echo("good")

@@ -1,0 +1,86 @@
+immutable
+	uint64_max = 2000000
+
+hash_string(key string) int
+	mutable pos = 0
+	mutable value = (* uint64 *) 0
+	length = key.len
+	for value < uint64_max and pos < length
+		value = (value << 8) + key[pos]
+		pos++
+	return value
+
+type dict_element<v>
+	hash  int
+	value v
+	next  maybe<dict_element<v>>
+
+type dict<k, v>
+	size     int
+	capacity int
+	hashing  (k) int
+	table    []maybe<dict_element<v>>
+
+dict.hash_int(code int) int
+	return code % self.capacity
+
+dict.hash_element(key k) int
+	code = self.hashing(key)
+	return self.hash_int(code)
+
+dict.set(key k, value v)
+	bin = self.hash_element(key)
+	next = self.table[bin]
+	last = none<dict_element<v>>
+	for next is some and key != next.key
+		last = next
+		next = next.next
+	if next is some : if key == next.key : return
+	element = dict_element<v>(hash:bin, value:value)
+	if next = self.table[bin]
+		element.next = next
+		self.table[bin] = element
+	elif next is none
+		last.next = element
+	else
+		element.next = next
+		last.next = element
+	self.size += 1
+
+dict.get(key k) maybe<v>
+	bin = self.hash_element(key)
+	match element := self.table[bin]
+		some =>
+			if key != element.key
+				return none
+			return element.value
+		none => return none
+
+dict.has(key k) bool
+	match self.get(key)
+		some => return true
+		none => return false
+
+dict.delete
+	(* todo *)
+	self.size -= 1
+
+dict.clear
+	self.size = 0
+
+main
+	m = dict<int, string>
+	m.set(0, "cool")
+	out = m.get(0)
+	echo(out)
+
+(* alias uint64 as hash_size *)
+
+(*
+interfaces
+instead of void pointer for interfaces, can use a union struct of all possible combinations
+
+https://en.wikipedia.org/wiki/Hash_table 
+dictionary takes in hash function that returns key
+hashable objects must implement hash interface 
+*)

@@ -16,7 +16,7 @@ func (me *parser) def() *node {
 	me.eat("line")
 	me.hmfile.defs[name] = value
 	me.hmfile.namespace[name] = "def"
-	me.hmfile.types[name] = true
+	me.hmfile.types[name] = ""
 	return nil
 }
 

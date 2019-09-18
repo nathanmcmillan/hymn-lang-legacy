@@ -120,18 +120,15 @@ func (me *parser) eatvar(from *hmfile) *node {
 			head = member
 			me.eat("]")
 		} else if me.token.is == "(" {
-			fmt.Println("HEAD FN PTR ::", head.string(0))
 			var sig *fnSig
 			if head.is == "variable" {
 				sv := me.hmfile.getvar(head.idata.name)
 				if sv == nil {
 					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
 				}
-				fmt.Println("GET FN VAR ::", sv.string())
 				sig = sv.vdat.fn
 
 			} else if head.is == "member-variable" {
-				fmt.Println("CALL FROM MEMBER ::", head.string(0))
 				sig = head.vdata.fn
 			}
 			member := nodeInit("call")

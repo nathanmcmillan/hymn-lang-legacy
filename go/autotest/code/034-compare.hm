@@ -22,7 +22,7 @@ ge(a int, b int) bool
   return false
 
 eq(a int, b int) bool
-  if a = b
+  if a == b
     return true
   return false
 
@@ -36,7 +36,7 @@ main
   echo(le(x, y))
   echo(ge(x, y))
   echo(eq(x, y))
-  e = x = y
+  e = x == y
   g = x > y
   f = x < y
   w = x >= y
@@ -60,11 +60,11 @@ main
     echo("bad")
   else
     echo("good")
-  if true = true
+  if true == true
     echo("good")
   else
     echo("bad")
-  if false = false
+  if false == false
     echo("good")
   else
     echo("bad")

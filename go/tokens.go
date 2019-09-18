@@ -43,6 +43,8 @@ var keywords = map[string]bool{
 	"enddef":    true,
 	"defc":      true,
 	"endc":      true,
+	"alias":     true,
+	"is":        true,
 }
 
 type token struct {
@@ -82,11 +84,15 @@ func (me *tokenizer) forSpace() int {
 	count := 0
 	for !stream.eof() {
 		c := stream.peek()
-		if c != ' ' || c == '\t' {
+		if c == ' ' {
+			count++
+			stream.next()
+		} else if c == '\t' {
+			count += 2
+			stream.next()
+		} else {
 			break
 		}
-		count++
-		stream.next()
 	}
 	return count
 }
@@ -265,7 +271,7 @@ func (me *tokenizer) get(pos int) *token {
 		me.push(token)
 		return token
 	}
-	if strings.IndexByte("$).[]'_", c) >= 0 {
+	if strings.IndexByte("$).[]'_?", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.push(token)
@@ -297,6 +303,9 @@ func (me *tokenizer) get(pos int) *token {
 		if peek == '>' {
 			stream.next()
 			op = "=>"
+		} else if peek == '=' {
+			stream.next()
+			op = "=="
 		}
 		token := me.simpleToken(op)
 		me.push(token)

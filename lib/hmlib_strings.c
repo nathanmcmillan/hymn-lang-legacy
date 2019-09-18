@@ -1,5 +1,54 @@
 #include "hmlib_strings.h"
 
+hmlib_string_head *hmlib_string_head_init(size_t len)
+{
+  size_t mem = sizeof(hmlib_string_head) + len + 1;
+  hmlib_string_head *sh = (hmlib_string_head *)malloc(mem);
+  memset(sh, 0, mem);
+  sh->len = len;
+  sh->cap = len;
+  return sh;
+}
+
+hmlib_string hmlib_string_init_with_length(const char *init, size_t len)
+{
+  hmlib_string_head *sh = hmlib_string_head_init(len);
+  char *s = (char *)sh + sizeof(hmlib_string_head);
+  memcpy(s, init, len);
+  s[len] = '\0';
+  return (hmlib_string)s;
+}
+
+hmlib_string hmlib_string_concat(const hmlib_string a, const hmlib_string b)
+{
+  const size_t len_a = hmlib_string_len(a);
+  const size_t len_b = hmlib_string_len(b);
+  const size_t len = len_a + len_b;
+  hmlib_string_head *sh = hmlib_string_head_init(len);
+  char *s = (char *)sh + sizeof(hmlib_string_head);
+  memcpy(s, a, len_a);
+  memcpy(s + len_a, b, len_b + 1);
+  s[len] = '\0';
+  return (hmlib_string)s;
+}
+
+hmlib_string hmlib_string_init(const char *init)
+{
+  size_t len = strlen(init);
+  return hmlib_string_init_with_length(init, len);
+}
+
+size_t hmlib_string_len(const hmlib_string s)
+{
+  hmlib_string_head *sh = (hmlib_string_head *)((char *)s - sizeof(hmlib_string_head));
+  return sh->len;
+}
+
+void hmlib_string_free(const hmlib_string s)
+{
+  free((char *)s - sizeof(hmlib_string_head));
+}
+
 char *hmlib_concat(const char *a, const char *b)
 {
   const size_t len1 = strlen(a);

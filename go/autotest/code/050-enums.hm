@@ -43,7 +43,7 @@ calc_me(x int) either<int, float>
 main
   a = snake.cobra
   b = snake.viper
-  if a = b
+  if a == b
     echo("bad")
   else
     echo("good")

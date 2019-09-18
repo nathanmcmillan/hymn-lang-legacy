@@ -24,8 +24,8 @@ type varData struct {
 	array       bool
 	none        bool
 	maybe       bool
-	some        string
-	noneType    string
+	some        *varData
+	noneType    *varData
 	typeInArray *varData
 	en          *enum
 	un          *union
@@ -74,11 +74,15 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 
 	if strings.HasPrefix(typed, "maybe") {
 		data.maybe = true
-		data.some = typed[6 : len(typed)-1]
+		data.some = me.typeToVarData(typed[6 : len(typed)-1])
 
 	} else if strings.HasPrefix(typed, "none") {
 		data.none = true
-		data.noneType = typed[5 : len(typed)-1]
+		if len(typed) > 4 {
+			data.noneType = me.typeToVarData(typed[5 : len(typed)-1])
+		} else {
+			data.noneType = me.typeToVarData("")
+		}
 	}
 
 	data.array = checkIsArray(typed)
@@ -175,36 +179,36 @@ func (me *varData) equal(other *varData) bool {
 
 	} else if me.maybe {
 		if other.maybe {
-			if me.some == other.some {
+			if me.some.equal(other.some) {
 				return true
 			}
 		} else if other.none {
-			if me.some == other.noneType {
+			if me.some.equal(other.noneType) {
 				return true
 			}
-		} else if me.some == other.full {
+		} else if me.some.equal(other) {
 			return true
 		}
 
 	} else if me.none {
 		if other.maybe {
-			if me.noneType == other.some {
+			if me.noneType.equal(other.some) {
 				return true
 			}
 		} else if other.none {
 			if me.noneType == other.noneType {
 				return true
 			}
-		} else if me.noneType == other.full {
+		} else if me.noneType.equal(other) {
 			return true
 		}
 
 	} else if other.maybe {
-		if other.some == me.full {
+		if other.some.equal(me) {
 			return true
 		}
 	} else if other.none {
-		if other.noneType == me.full {
+		if other.noneType.equal(me) {
 			return true
 		}
 	}
@@ -221,10 +225,10 @@ func (me *varData) postfixConst() bool {
 		return true
 	}
 	if me.maybe {
-		return me.module.typeToVarData(me.some).postfixConst()
+		return me.some.postfixConst()
 	}
 	if me.none {
-		return me.module.typeToVarData(me.noneType).postfixConst()
+		return me.noneType.postfixConst()
 	}
 	if _, ok := me.checkIsClass(); ok {
 		return true
@@ -273,10 +277,10 @@ func (me *varData) typeSig() string {
 		return fmtptr(me.typeInArray.typeSig())
 	}
 	if me.maybe {
-		return me.module.typeToVarData(me.some).typeSig()
+		return me.some.typeSig()
 	}
 	if me.none {
-		return me.module.typeToVarData(me.noneType).typeSig()
+		return me.noneType.typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {
 		sig := me.module.classNameSpace(me.typed)

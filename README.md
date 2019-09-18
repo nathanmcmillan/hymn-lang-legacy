@@ -13,14 +13,13 @@ main
 
 ### features
 * generics
-* goto
-* labels
-* enums
-* unions
+* goto + labels
+* enums + unions
 * structs
 * matching
-* walrus
+* walrus operator
 * stack variables
+* function pointers
 
 ### todo
 * slices

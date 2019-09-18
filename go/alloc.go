@@ -108,14 +108,8 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 		}
 	}
 
-	if me.hmfile == module {
-		n.vdata = me.hmfile.typeToVarData(enumName)
-		n.value = unionName
-	} else {
-		// n.vdata = module.name + "." + enumName
-		n.vdata = module.typeToVarData(enumName)
-		n.value = unionName
-	}
+	n.vdata = module.typeToVarData(enumName + "." + unionName)
+
 	return n
 }
 

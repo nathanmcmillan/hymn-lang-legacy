@@ -1,0 +1,45 @@
+enum foo
+	hello(int)
+	world(string)
+
+fun(r int) maybe<foo>
+	if r == 2
+		return foo.hello(8)
+	return none
+
+main
+	match f := foo.hello(8)
+		hello =>
+			echo("hello " + to_str(f.0))
+		world =>
+			echo("world " + to_str(f.0))
+
+	match m := fun(2)
+		none => echo("no")
+		some =>
+			echo("yes")
+			(* match m
+				hello =>
+					echo("hello")
+					echo(m.0)
+				world =>
+					echo("world")
+					echo(m.0) *)
+
+(* 
+	m = fun(2)
+	if m is none
+		echo("none")
+
+	if m is some
+		echo("some")  *)
+
+(* 
+	mutable f = foo.hello
+
+	if f is hello
+		echo("hello!")
+
+	for f is hello
+		f = foo.world
+*)

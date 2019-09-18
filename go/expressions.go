@@ -410,7 +410,7 @@ func (me *parser) match() *node {
 					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
 				}
 				fmt.Println("match temp update", matchVar.name, "to", matchType.some)
-				matchVar.update(me.hmfile, matchType.some)
+				matchVar.updateFromVar(me.hmfile, matchType.some)
 			}
 
 			if me.token.is == "line" {
@@ -451,20 +451,38 @@ func (me *parser) ifexpr() *node {
 	me.eat("if")
 	n := nodeInit("if")
 	n.push(me.calcBool())
-	me.eat("line")
-	n.push(me.block())
+	if me.token.is == ":" {
+		me.eat(":")
+		n.push(me.expression())
+		me.eat("line")
+	} else {
+		me.eat("line")
+		n.push(me.block())
+	}
 	for me.token.is == "elif" {
 		me.eat("elif")
 		other := nodeInit("elif")
 		other.push(me.calcBool())
-		me.eat("line")
-		other.push(me.block())
+		if me.token.is == ":" {
+			me.eat(":")
+			other.push(me.expression())
+			me.eat("line")
+		} else {
+			me.eat("line")
+			other.push(me.block())
+		}
 		n.push(other)
 	}
 	if me.token.is == "else" {
 		me.eat("else")
-		me.eat("line")
-		n.push(me.block())
+		if me.token.is == ":" {
+			me.eat(":")
+			n.push(me.expression())
+			me.eat("line")
+		} else {
+			me.eat("line")
+			n.push(me.block())
+		}
 	}
 	return n
 }
@@ -480,7 +498,7 @@ func (me *parser) comparison(left *node, op string) *node {
 		}
 		opType = op
 		me.eat(op)
-	} else if op == "=" {
+	} else if op == "==" {
 		opType = "equal"
 		me.eat(op)
 	} else if op == "!=" {

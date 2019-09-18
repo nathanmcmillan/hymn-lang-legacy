@@ -78,21 +78,22 @@ func (me *cfile) allocClass(n *node) *cnode {
 	return codeNode(n, code)
 }
 
-func (me *cfile) allocEnum(module *hmfile, typed string, n *node) string {
-	enumOf := module.enums[typed]
-	if enumOf.simple {
-		enumBase := module.enumNameSpace(typed)
-		enumType := n.value
-		globalName := module.enumTypeName(enumBase, enumType)
-		return globalName
-	}
+func (me *cfile) allocEnum(n *node) string {
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return ""
 	}
-	enumType := n.value
-	unionOf := enumOf.types[enumType]
+	data := n.vdata
+	module := data.module
+	en, un, _ := data.checkIsEnum()
+	enumType := un.name
+	if en.simple {
+		enumBase := module.enumNameSpace(en.name)
+		globalName := module.enumTypeName(enumBase, enumType)
+		return globalName
+	}
+	unionOf := en.types[enumType]
 	code := ""
-	code += module.unionFnNameSpace(enumOf, unionOf) + "("
+	code += module.unionFnNameSpace(en, unionOf) + "("
 	if len(unionOf.types) == 1 {
 		unionHas := n.has[0]
 		code += me.eval(unionHas).code

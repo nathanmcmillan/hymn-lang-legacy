@@ -1,5 +1,0 @@
-main
-  m = dict<int, string>
-  m.set(0, "cool")
-  out = m.get(0)
-  echo(out)

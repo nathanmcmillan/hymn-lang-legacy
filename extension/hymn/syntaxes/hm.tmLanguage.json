@@ -31,8 +31,16 @@
 		"match": "\\b(true|false|null)\\b",
 		"name": "constant.language.hymn"
 	}, {
+		"explanation": "optionals",
+		"match": "[^a-zA-Z0-9_](maybe|some|none)[^a-zA-Z0-9_]",
+		"captures": {
+			"1": {
+				"name": "entity.name.type.hymn"
+			}
+		}
+	}, {
 		"explanation": "numerics",
-		"match": "(?: +|<|,|\\(|\\[|\\])(int32|int64|int|float32|float64|float)(?:$| +|>|,|\\)|\\])",
+		"match": "[^a-zA-Z0-9_](int|int8|int16|int32|int64|float32|float64|float|uint8|uint16|uint32|uint64|byte|char)[^a-zA-Z0-9_]",
 		"captures": {
 			"1": {
 				"name": "storage.type.numeric.hymn"
@@ -40,7 +48,7 @@
 		}
 	}, {
 		"explanation": "boolean",
-		"match": "(?: +|<|,|\\(|\\[|\\])(bool)(?:$| +|>|,|\\)|\\])",
+		"match": "[^a-zA-Z0-9_](bool)[^a-zA-Z0-9_]",
 		"captures": {
 			"1": {
 				"name": "storage.type.boolean.hymn"
@@ -48,7 +56,7 @@
 		}
 	}, {
 		"explanation": "string",
-		"match": "(?: +|<|,|\\(|\\[|\\])(string)(?:$| +|>|,|\\)|\\])",
+		"match": "[^a-zA-Z0-9_](string)[^a-zA-Z0-9_]",
 		"captures": {
 			"1": {
 				"name": "storage.type.string.hymn"
@@ -56,8 +64,8 @@
 		}
 	}, {
 		"explanation": "flow",
-		"name": "keyword.control.hymn",
-		"match": "\\b(if|elif|else|for|return|break|continue|and|or|not|match|pass|goto|label)\\b"
+		"match": "\\b(if|elif|else|for|return|break|continue|and|or|not|match|is|pass|goto|label)\\b",
+		"name": "keyword.control.hymn"
 	}, {
 		"explanation": "class function",
 		"match": "^([a-z_0-9]+)\\.([a-z_0-9]+)($|\\(| +)",
@@ -111,6 +119,23 @@
 		"captures": {
 			"2": {
 				"name": "keyword.operator.comparison.hymn"
+			}
+		}
+	}, {
+		"explanation": "alias",
+		"match": "^(alias) +([a-z_0-9]+) +(->) +([a-z_0-9]+)$",
+		"captures": {
+			"1": {
+				"name": "keyword.struct.hymn"
+			},
+			"2": {
+				"name": "entity.name.type.hymn"
+			},
+			"3": {
+				"name": "support.function.hymn"
+			},
+			"4": {
+				"name": "entity.name.type.hymn"
 			}
 		}
 	}, {

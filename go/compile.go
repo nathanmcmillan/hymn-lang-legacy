@@ -45,9 +45,7 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 
 	if len(me.statics) > 0 {
 		for _, s := range me.statics {
-			decl, impl := cfile.assignStatic(s)
-			cfile.headExternSection += decl
-			code += impl
+			code += cfile.assignStatic(s)
 		}
 		cfile.headExternSection += "\n"
 		code += "\n"
@@ -70,6 +68,7 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	fmt.Println("=== end C ===")
 
 	fileCode := folder + "/" + name + ".c"
+
 	write(fileCode, code+strings.Join(cfile.codeFn, ""))
 
 	cfile.headSuffix += "\n#endif\n"
@@ -98,8 +97,7 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return cn
 	}
 	if op == "enum" {
-		data := n.vdata
-		code := me.allocEnum(data.module, data.typed, n)
+		code := me.allocEnum(n)
 		cn := codeNode(n, code)
 		fmt.Println(cn.string(0))
 		return cn
@@ -205,6 +203,9 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		cn := codeNode(n, code)
 		fmt.Println(cn.string(0))
 		return cn
+	}
+	if op == "?" {
+		return me.compileTernary(n)
 	}
 	if op == "and" || op == "or" {
 		return me.compileAndOr(n)
@@ -403,10 +404,9 @@ func (me *cfile) compileMatch(n *node) *cnode {
 	var enumNameSpace string
 
 	if using.is == "variable" {
-		var baseEnum *enum
-		baseEnum, isEnum = me.hmfile.enums[using.getType()]
-		if isEnum {
-			enumNameSpace = me.hmfile.enumNameSpace(using.getType())
+		if baseEnum, _, ok := using.vdata.checkIsEnum(); ok {
+			isEnum = true
+			enumNameSpace = me.hmfile.enumNameSpace(baseEnum.name)
 			if !baseEnum.simple {
 				test = using.idata.name + "->type"
 			}
@@ -505,6 +505,18 @@ func (me *cfile) compileEqual(n *node) *cnode {
 	return cn
 }
 
+func (me *cfile) compileTernary(n *node) *cnode {
+	code := ""
+	code += me.eval(n.has[0]).code
+	code += " ? "
+	code += me.eval(n.has[1]).code
+	code += " : "
+	code += me.eval(n.has[2]).code
+	cn := codeNode(n, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
 func (me *cfile) compileAndOr(n *node) *cnode {
 	_, paren := n.attributes["parenthesis"]
 	code := ""
@@ -531,18 +543,21 @@ func (me *cfile) compileIf(n *node) *cnode {
 	code := ""
 	code += me.walrusIf(n)
 	code += "if (" + me.eval(n.has[0]).code + ") {\n"
-	code += me.eval(n.has[1]).code
+	c := me.eval(n.has[1]).code
+	code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 	code += "\n" + fmc(me.depth) + "}"
 	ix := 2
 	for ix < hsize && n.has[ix].is == "elif" {
 		code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
-		code += me.eval(n.has[ix].has[1]).code
+		c := me.eval(n.has[ix].has[1]).code
+		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 		code += "\n" + fmc(me.depth) + "}"
 		ix++
 	}
-	if ix >= 2 && ix < hsize && n.has[ix].is == "block" {
+	if ix >= 2 && ix < hsize {
 		code += " else {\n"
-		code += me.eval(n.has[ix]).code
+		c := me.eval(n.has[ix]).code
+		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 		code += "\n" + fmc(me.depth) + "}"
 	}
 	cn := codeNode(n, code)
@@ -611,11 +626,13 @@ func (me *cfile) allocArray(n *node) string {
 }
 
 func (me *cfile) declare(n *node) string {
-	code := ""
-	fmt.Println("DECLARE ::", n.string(0))
+	if n.is != "variable" {
+		return me.eval(n).code
+	}
 	if n.idata == nil {
 		return ""
 	}
+	code := ""
 	name := n.idata.name
 	if me.getvar(name) == nil {
 		malloc := true
@@ -646,7 +663,7 @@ func (me *cfile) declare(n *node) string {
 			newVar.cName = data.module.varNameSpace(name)
 			me.scope.variables[name] = newVar
 			code += fmtassignspace(data.noMallocTypeSig())
-			code += name
+			code += newVar.cName
 		}
 	} else {
 		code += name
@@ -665,21 +682,24 @@ func (me *cfile) maybeLet(code string, attributes map[string]string) string {
 	return " = "
 }
 
-func (me *cfile) assignStatic(n *node) (string, string) {
+func (me *cfile) assignStatic(n *node) string {
 	left := n.has[0]
 	right := n.has[1]
 	right.attributes["no-malloc"] = "true"
-	decl := me.declare(left)
-	rightcode := me.eval(right).code
-	leftcode := me.eval(left).code
-	setsign := me.maybeLet(rightcode, right.attributes)
-	code := decl + leftcode + setsign + rightcode + ";\n"
-	decl = "extern " + decl + leftcode
-	if setsign == "" {
-		decl += rightcode
+
+	declareCode := me.declare(left)
+	rightCode := me.eval(right).code
+	setSign := me.maybeLet(rightCode, right.attributes)
+
+	head := "extern " + declareCode
+	if setSign == "" {
+		head += rightCode
 	}
-	decl += ";\n"
-	return decl, code
+	head += ";\n"
+	me.headExternSection += head
+
+	code := declareCode + setSign + rightCode + ";\n"
+	return code
 }
 
 func (me *cfile) assingment(n *node) string {
@@ -693,13 +713,8 @@ func (me *cfile) assingment(n *node) string {
 	if paren {
 		code += "("
 	}
-	// TODO
-	// if left.is == "variable" {
-	code += me.declare(left)
-	// }
-	leftCode := "" // me.eval(left).code
 	rightCode := me.eval(right).code
-	code += leftCode + me.maybeLet(rightCode, right.attributes) + rightCode
+	code += me.declare(left) + me.maybeLet(rightCode, right.attributes) + rightCode
 	if paren {
 		code += ")"
 	}

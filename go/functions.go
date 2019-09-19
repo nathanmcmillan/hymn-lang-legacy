@@ -160,9 +160,12 @@ func (me *parser) defineFunction(name string, self *class) *function {
 			ret := expr.asVar()
 			if ret.none {
 				if !fn.typed.maybe {
-					panic(me.fail() + "return must be maybe type but was \"" + ret.full + "\"")
+					panic(me.fail() + "return type was \"" + ret.full + "\" but function is \"" + fn.typed.full + "\"")
 				} else if ret.noneType.full != "" {
-					panic(me.fail() + "unnecessary none definition")
+					src := expr.has[0]
+					if src.is == "none" {
+						panic(me.fail() + "unnecessary none definition for return " + expr.string(0))
+					}
 				}
 			} else if fn.typed.notEqual(ret) {
 				panic(me.fail() + "function \"" + name + "\" returns \"" + fn.typed.full + "\" but found \"" + expr.getType() + "\"")

@@ -8,6 +8,14 @@
 		"end": "\\*\\)",
 		"name": "comment.block.hymn"
 	}, {
+		"explanation": "quotes",
+		"match": "\".*\"",
+		"name": "string.quoted.double.hymn",
+		"patterns": [{
+			"match": "\\\\.",
+			"name": "constant.character.escape.hymn"
+		}]
+	}, {
 		"explanation": "self",
 		"match": "\\bself\\b",
 		"name": "variable.language.this.hymn"
@@ -138,14 +146,5 @@
 				"name": "entity.name.type.hymn"
 			}
 		}
-	}, {
-		"explanation": "quotes",
-		"name": "string.quoted.double.hymn",
-		"begin": "\"",
-		"end": "\"",
-		"patterns": [{
-			"name": "constant.character.escape.hymn",
-			"match": "\\\\."
-		}]
 	}]
 }

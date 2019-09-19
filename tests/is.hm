@@ -7,39 +7,44 @@ fun(r int) maybe<foo>
 		return foo.hello(8)
 	return none
 
-main
-	match f := foo.hello(8)
-		hello =>
-			echo("hello " + to_str(f.0))
-		world =>
-			echo("world " + to_str(f.0))
+the_world() foo
+	return foo.world("wow")
 
-	match m := fun(2)
+main()
+	mutable e = foo.hello(2)
+	if e is hello
+		echo("hello!")
+
+	for e is hello
+		e = foo.world("e")
+
+	if e is the_world()
+		echo("e is the world")
+
+	a = fun(2)
+	test = a is none
+	if test
+		echo("none")
+	if a is some
+		echo("some")
+
+	match b := fun(2)
 		none => echo("no")
 		some =>
 			echo("yes")
-			(* match m
+			(* match b
 				hello =>
 					echo("hello")
-					echo(m.0)
+					echo(b.0)
 				world =>
 					echo("world")
-					echo(m.0) *)
+					echo(b.0) *)
 
-(* 
-	m = fun(2)
-	if m is none
-		echo("none")
-
-	if m is some
-		echo("some")  *)
-
-(* 
-	mutable f = foo.hello
-
-	if f is hello
-		echo("hello!")
-
-	for f is hello
-		f = foo.world
-*)
+	match c := foo.hello(8)
+		hello =>
+			echo("hello " + to_str(c.0))
+		world =>
+			echo("world " + to_str(c.0))
+	
+	if fun(2) is some
+		echo("some")

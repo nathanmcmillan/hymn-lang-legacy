@@ -21,7 +21,7 @@ enum bug<x>
   bee
   
 enum result<r>
-  is(r)
+  value(r)
   error(exception)
   
 enum either<u, v>

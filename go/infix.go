@@ -68,19 +68,42 @@ func infixCompare(me *parser, left *node, op string) *node {
 }
 
 func infixCompareEnumIs(me *parser, left *node, op string) *node {
-	node := nodeInit(getInfixName(op))
-	node.value = me.token.value
+	n := nodeInit(getInfixName(op))
+	n.vdata = me.hmfile.typeToVarData("bool")
 	me.eat(op)
-	if left.vdata.none {
-	} else if left.vdata.maybe {
-	} else if _, _, ok := left.vdata.checkIsEnum(); !ok {
-		panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.vdata.full + "\"")
+	var right *node
+	if left.vdata.none || left.vdata.maybe {
+		if me.token.is == "some" {
+			right = nodeInit("some")
+			me.eat("some")
+		} else if me.token.is == "none" {
+			right = nodeInit("none")
+			me.eat("none")
+		} else {
+			// todo functions that return maybe/some/none
+			panic(me.fail() + "right side of \"is\" was \"" + me.token.is + "\"")
+		}
+	} else {
+		if _, _, ok := left.vdata.checkIsEnum(); !ok {
+			panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.vdata.full + "\"")
+		}
+		if me.token.is == "id" {
+			name := me.token.value
+			baseEnum, _, _ := left.vdata.checkIsEnum()
+			if un, ok := baseEnum.types[name]; ok {
+				me.eat("id")
+				right = nodeInit("match-enum")
+				right.vdata = me.hmfile.typeToVarData(baseEnum.name + "." + un.name)
+			} else {
+				right = me.calc(getInfixPrecedence(op))
+			}
+		} else {
+			panic(me.fail() + "unknown right side of \"is\"")
+		}
 	}
-	right := me.calc(getInfixPrecedence(op))
-	node.push(left)
-	node.push(right)
-	node.vdata = me.hmfile.typeToVarData("bool")
-	return node
+	n.push(left)
+	n.push(right)
+	return n
 }
 
 func infixTernary(me *parser, condition *node, op string) *node {

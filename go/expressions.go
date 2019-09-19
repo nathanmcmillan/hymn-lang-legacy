@@ -359,7 +359,6 @@ func (me *parser) forexpr() *node {
 
 func (me *parser) match() *node {
 	depth := me.token.depth
-	fmt.Println("match depth", depth)
 	me.eat("match")
 	n := nodeInit("match")
 

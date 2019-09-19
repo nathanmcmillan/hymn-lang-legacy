@@ -241,6 +241,9 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	if op == "match" {
 		return me.compileMatch(n)
 	}
+	if op == "is" {
+		return me.compileIs(n)
+	}
 	if op == "for" {
 		return me.compileFor(n)
 	}
@@ -373,7 +376,6 @@ func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 			code = "&" + code
 		}
 	} else {
-		// v := data.module.getStatic(n.value)
 		code = n.idata.module.varNameSpace(n.idata.name)
 	}
 	cn := codeNode(n, code)
@@ -387,16 +389,60 @@ func (me *cfile) compileNone(n *node) *cnode {
 	return cn
 }
 
-func (me *cfile) compileMatch(n *node) *cnode {
-
+func (me *cfile) compileIs(n *node) *cnode {
 	code := ""
 	code += me.walrusMatch(n)
-
 	using := n.has[0]
 	match := me.eval(using)
 
 	if match.vdata.maybe {
-		return me.compileNullCheck(match, n)
+		caseOf := n.has[1]
+		if caseOf.is == "some" {
+			code += match.code + " != NULL"
+		} else if caseOf.is == "none" {
+			code += match.code + " == NULL"
+		}
+		cn := codeNode(n, code)
+		fmt.Println(cn.string(0))
+		return cn
+	}
+
+	baseEnum, _, _ := using.vdata.checkIsEnum()
+	if baseEnum.simple {
+		code += match.code
+	} else {
+		code += using.idata.name + "->type"
+	}
+
+	code += " == "
+
+	caseOf := n.has[1]
+	if caseOf.is == "match-enum" {
+		matchBaseEnum, matchBaseUn, _ := caseOf.vdata.checkIsEnum()
+		enumNameSpace := me.hmfile.enumNameSpace(matchBaseEnum.name)
+		code += me.hmfile.enumTypeName(enumNameSpace, matchBaseUn.name)
+	} else {
+		compare := me.eval(caseOf)
+		compareEnum, _, _ := compare.vdata.checkIsEnum()
+		code += compare.code
+		if !compareEnum.simple {
+			code += "->type"
+		}
+	}
+
+	cn := codeNode(n, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
+func (me *cfile) compileMatch(n *node) *cnode {
+	code := ""
+	code += me.walrusMatch(n)
+	using := n.has[0]
+	match := me.eval(using)
+
+	if match.vdata.maybe {
+		return me.compileNullCheck(match, n, code)
 	}
 
 	test := match.code
@@ -445,7 +491,7 @@ func (me *cfile) compileMatch(n *node) *cnode {
 	return cn
 }
 
-func (me *cfile) compileNullCheck(match *cnode, n *node) *cnode {
+func (me *cfile) compileNullCheck(match *cnode, n *node, code string) *cnode {
 	ifNull := ""
 	ifNotNull := ""
 	ix := 1
@@ -462,22 +508,20 @@ func (me *cfile) compileNullCheck(match *cnode, n *node) *cnode {
 		ix += 2
 	}
 
-	code := ""
-
 	if ifNull != "" && ifNotNull != "" {
-		code = "if (" + match.code + " == NULL) {\n"
+		code += "if (" + match.code + " == NULL) {\n"
 		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
 		code += "\n" + fmc(me.depth) + "} else {\n"
 		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
 		code += "\n" + fmc(me.depth) + "}"
 
 	} else if ifNull != "" {
-		code = "if (" + match.code + " == NULL) {\n"
+		code += "if (" + match.code + " == NULL) {\n"
 		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
 		code += "\n" + fmc(me.depth) + "}"
 
 	} else {
-		code = "if (" + match.code + " != NULL) {\n"
+		code += "if (" + match.code + " != NULL) {\n"
 		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
 		code += "\n" + fmc(me.depth) + "}"
 
@@ -586,15 +630,14 @@ func (me *cfile) compileFor(n *node) *cnode {
 		vinit := me.assingment(vset)
 		condition := me.eval(n.has[1]).code
 		inc := me.assignmentUpdate(n.has[2])
-		code += "for (" + vinit + "; " + condition + "; " + inc + ")\n"
+		code += "for (" + vinit + "; " + condition + "; " + inc + ") {\n"
 	} else if size > 1 {
 		ix++
 		code += me.walrusLoop(n)
-		code += "while (" + me.eval(n.has[0]).code + ")\n"
+		code += "while (" + me.eval(n.has[0]).code + ") {\n"
 	} else {
-		code += "while (true)\n"
+		code += "while (true) {\n"
 	}
-	code += fmc(me.depth) + "{\n"
 	code += me.eval(n.has[ix]).code
 	code += "\n" + fmc(me.depth) + "}"
 	cn := codeNode(n, code)
@@ -706,7 +749,7 @@ func (me *cfile) assingment(n *node) string {
 	left := n.has[0]
 	right := n.has[1]
 	if _, ok := left.attributes["mutable"]; ok {
-		right.attributes["no-malloc"] = "true"
+		right.attributes["mutable"] = "true"
 	}
 	code := ""
 	_, paren := n.attributes["parenthesis"]

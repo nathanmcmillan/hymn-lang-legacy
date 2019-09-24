@@ -10,10 +10,17 @@ fun(r int) maybe<foo>
 the_world() foo
 	return foo.world("wow")
 
+do_things(f foo)
+	match f
+		hello =>
+			echo("hello!")
+		world =>
+			echo("world!")
+			echo(f.0)
+
 main()
 	mutable e = foo.hello(2)
-	if e is hello
-		echo("hello!")
+	if e is hello : if 0 == 0 : echo("#1 hello!")
 
 	for e is hello
 		e = foo.world("e")
@@ -32,19 +39,18 @@ main()
 		none => echo("no")
 		some =>
 			echo("yes")
-			(* match b
+			do_things(b)
+			match b
 				hello =>
-					echo("hello")
-					echo(b.0)
+					echo("#2 hello " + to_str(b.0))
 				world =>
-					echo("world")
-					echo(b.0) *)
-
+					echo("#2 world " + b.0)
+	
 	match c := foo.hello(8)
 		hello =>
-			echo("hello " + to_str(c.0))
+			echo("#3 hello " + to_str(c.0))
 		world =>
-			echo("world " + to_str(c.0))
+			echo("#3 world " + to_str(c.0))
 	
-	if fun(2) is some
-		echo("some")
+	if fun(0) is none
+		echo("fun(0) is none")

@@ -99,19 +99,19 @@ func (me *hmfile) libInit() {
 	me.types[libEcho] = ""
 
 	str := funcInit(me, libToStr)
-	str.typed = me.typeToVarData("string")
+	str.typed = me.typeToVarData(TokenString)
 	str.args = append(str.args, me.fnArgInit("?", "s", false, false))
 	me.functions[libToStr] = str
 	me.types[libToStr] = ""
 
 	intfn := funcInit(me, libToInt)
-	intfn.typed = me.typeToVarData("int")
+	intfn.typed = me.typeToVarData(TokenInt)
 	intfn.args = append(intfn.args, me.fnArgInit("?", "s", false, false))
 	me.functions[libToInt] = intfn
 	me.types[libToInt] = ""
 
 	floatfn := funcInit(me, libToFloat)
-	floatfn.typed = me.typeToVarData("float")
+	floatfn.typed = me.typeToVarData(TokenFloat)
 	floatfn.args = append(floatfn.args, me.fnArgInit("?", "s", false, false))
 	me.functions[libToFloat] = floatfn
 	me.types[libToFloat] = ""

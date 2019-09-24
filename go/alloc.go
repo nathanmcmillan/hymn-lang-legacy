@@ -7,17 +7,21 @@ import (
 
 func (me *parser) buildAnyType(alloc *allocData) *varData {
 
-	typed := me.token.value
-	me.verify("id")
-
 	var module *hmfile
-	if _, ok := me.hmfile.imports[typed]; ok {
-		module = me.hmfile.program.hmfiles[typed]
-		me.eat("id")
-		me.eat(".")
-		typed = me.token.value
-		me.verify("id")
-	} else {
+
+	if me.token.is == "id" {
+		name := me.token.value
+		if _, ok := me.hmfile.imports[name]; ok {
+			module = me.hmfile.program.hmfiles[name]
+			me.eat("id")
+			me.eat(".")
+		}
+	}
+
+	typed := me.token.value
+	me.verifyWordOrPrimitive()
+
+	if module == nil {
 		module = me.hmfile
 	}
 
@@ -29,7 +33,7 @@ func (me *parser) buildAnyType(alloc *allocData) *varData {
 		panic(me.fail() + "type \"" + typed + "\" for module \"" + module.name + "\" not found")
 	}
 
-	me.eat("id")
+	me.wordOrPrimitive()
 	if me.hmfile != module {
 		typed = module.name + "." + typed
 	}
@@ -112,16 +116,18 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 		}
 	}
 
+	fmt.Println("DEBUG ALLOC ::", n.string(0))
+
 	return n
 }
 
 func defaultValue(typed string) string {
 	switch typed {
-	case "string":
+	case TokenString:
 		return ""
-	case "int":
+	case TokenInt:
 		return "0"
-	case "float":
+	case TokenFloat:
 		return "0"
 	case "bool":
 		return "false"
@@ -252,7 +258,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 	if gsize > 0 && me.token.is == "<" {
 		gtypes := me.declareGeneric(true, base)
 		typed = name + "<" + strings.Join(gtypes, ",") + ">"
-		fmt.Println("building class \"" + name + "\" with impl \"" + typed + "\"")
+		fmt.Println("BUILDING CLASS :: \"" + name + "\" WITH IMPL \"" + typed + "\"")
 		if _, ok := me.hmfile.classes[typed]; !ok {
 			me.defineClassImplGeneric(base, typed, gtypes)
 		}

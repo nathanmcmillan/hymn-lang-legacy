@@ -1,0 +1,17 @@
+
+main
+	x = uint64 1
+	echo(x)
+	f = float 2
+	echo(f)
+	z = int 3
+	echo(z)
+	w = float x
+	echo(w)
+	q = uint64 f
+	echo(q)
+	a = uint64 65.453454
+	echo(a)
+
+(* todo c files use tabs instead of spaces *)
+(* todo fix unit tests 050-enums *)

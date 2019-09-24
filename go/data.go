@@ -272,6 +272,16 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 	return code
 }
 
+func primitiveC(primitive string) string {
+	switch primitive {
+	case TokenString:
+		return "char *"
+	case "uint64":
+		return "uint64_t"
+	}
+	return primitive
+}
+
 func (me *varData) typeSig() string {
 	if me.array {
 		return fmtptr(me.typeInArray.typeSig())
@@ -290,10 +300,8 @@ func (me *varData) typeSig() string {
 		return sig
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.typeSig()
-	} else if me.full == "string" {
-		return "char *"
 	}
-	return me.full
+	return primitiveC(me.full)
 }
 
 func (me *varData) noMallocTypeSig() string {
@@ -304,10 +312,8 @@ func (me *varData) noMallocTypeSig() string {
 		return me.module.classNameSpace(me.typed)
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.noMallocTypeSig()
-	} else if me.full == "string" {
-		return "char *"
 	}
-	return me.full
+	return primitiveC(me.full)
 }
 
 func (me *varData) memPtr() string {

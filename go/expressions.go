@@ -190,7 +190,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	me.eat(op)
 	right := me.calc(0)
 	if mustBeInt {
-		if right.getType() != "int" {
+		if right.getType() != TokenInt {
 			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
 		}
 	} else if mustBeNumber {
@@ -365,20 +365,33 @@ func (me *parser) match() *node {
 	matching := me.calc(0)
 	matchType := matching.asVar()
 	var matchVar *variable
+	fmt.Println("MATCH ::", matching.string(0))
 	if matching.is == "variable" {
 		matchVar = me.hmfile.getvar(matching.idata.name)
+		fmt.Println("MATCH VAR ::", matchVar.string())
+	} else if matching.is == ":=" {
+		matchVar = me.hmfile.getvar(matching.has[0].idata.name)
+		fmt.Println("MATCH VAR WALRUS ::", matchVar.string())
 	}
 
 	n.push(matching)
 
 	me.eat("line")
 	for {
-		if me.token.is == "id" {
-			id := me.token.value
+		if me.token.depth <= depth {
+			break
+		} else if me.token.is == "id" {
+			name := me.token.value
 			me.eat("id")
-			caseNode := nodeInit(id)
+			caseNode := nodeInit(name)
 			me.eat("=>")
 			n.push(caseNode)
+			if matchVar != nil {
+				fmt.Println("MATCH UPGRADE ::", matchVar.vdat.full, "+++", name)
+				fullUnion := me.hmfile.typeToVarData(matching.vdata.full + "." + name)
+				fmt.Println("MATCH TEMP UPDATE ::", matchVar.name, "to", fullUnion.full)
+				matchVar.updateFromVar(me.hmfile, fullUnion)
+			}
 			if me.token.is == "line" {
 				me.eat("line")
 				n.push(me.block())
@@ -386,7 +399,9 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-
+			if matchVar != nil {
+				matchVar.update(me.hmfile, matchType.full)
+			}
 		} else if me.token.is == "_" {
 			me.eat("_")
 			me.eat("=>")
@@ -398,12 +413,10 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-
 		} else if me.token.is == "some" {
 			me.eat("some")
 			me.eat("=>")
 			n.push(nodeInit("some"))
-
 			if matchVar != nil {
 				if !matchType.maybe {
 					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
@@ -411,7 +424,6 @@ func (me *parser) match() *node {
 				fmt.Println("match temp update", matchVar.name, "to", matchType.some)
 				matchVar.updateFromVar(me.hmfile, matchType.some)
 			}
-
 			if me.token.is == "line" {
 				me.eat("line")
 				n.push(me.block())
@@ -419,11 +431,9 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-
 			if matchVar != nil {
 				matchVar.update(me.hmfile, matchType.full)
 			}
-
 		} else if me.token.is == "none" {
 			me.eat("none")
 			me.eat("=>")
@@ -435,9 +445,6 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-
-		} else if me.token.depth <= depth {
-			break
 		} else {
 			panic(me.fail() + "unknown match expression")
 		}
@@ -452,7 +459,10 @@ func (me *parser) ifexpr() *node {
 	n.push(me.calcBool())
 	if me.token.is == ":" {
 		me.eat(":")
-		n.push(me.expression())
+		exp := me.expression()
+		block := nodeInit("block")
+		block.push(exp)
+		n.push(block)
 		me.eat("line")
 	} else {
 		me.eat("line")
@@ -464,7 +474,10 @@ func (me *parser) ifexpr() *node {
 		other.push(me.calcBool())
 		if me.token.is == ":" {
 			me.eat(":")
-			other.push(me.expression())
+			exp := me.expression()
+			block := nodeInit("block")
+			block.push(exp)
+			n.push(block)
 			me.eat("line")
 		} else {
 			me.eat("line")
@@ -476,7 +489,10 @@ func (me *parser) ifexpr() *node {
 		me.eat("else")
 		if me.token.is == ":" {
 			me.eat(":")
-			n.push(me.expression())
+			exp := me.expression()
+			block := nodeInit("block")
+			block.push(exp)
+			n.push(block)
 			me.eat("line")
 		} else {
 			me.eat("line")
@@ -541,7 +557,7 @@ func (me *parser) imports() {
 	for {
 		name := me.token.value
 		fmt.Println("importing " + name)
-		me.eat("string")
+		me.eat(TokenStringLiteral)
 		_, ok := me.hmfile.imports[name]
 		if !ok {
 			me.hmfile.imports[name] = true

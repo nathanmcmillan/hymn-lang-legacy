@@ -28,6 +28,10 @@ func main() {
 	}
 	libDir := args[1]
 	path := args[2]
+	if size >= 4 && args[3] == "--fmt" {
+		hymnFmt(path)
+		return
+	}
 	isLib := false
 	if size >= 4 {
 		if args[3] == "--lib" {
@@ -56,13 +60,9 @@ func linker(out, path, libDir string, isLib bool) string {
 
 func (me *program) compile(out, path, libDir string) {
 	name := fileName(path)
-
 	hymn := me.hymnFileInit(name)
-
 	me.hmfiles[name] = hymn
-
 	hymn.parse(out, path)
-
 	source := hymn.generateC(out, name, libDir)
 	me.sources[name] = source
 }

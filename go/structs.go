@@ -36,10 +36,42 @@ type cfile struct {
 
 var (
 	primitives = map[string]bool{
-		"int":    true,
-		"string": true,
-		"bool":   true,
-		"float":  true,
+		TokenInt:     true,
+		TokenInt8:    true,
+		TokenInt16:   true,
+		TokenInt32:   true,
+		TokenInt64:   true,
+		TokenUInt:    true,
+		TokenUInt8:   true,
+		TokenUInt16:  true,
+		TokenUInt32:  true,
+		TokenUInt64:  true,
+		TokenFloat:   true,
+		TokenFloat32: true,
+		TokenFloat64: true,
+		TokenString:  true,
+		TokenBoolean: true,
+	}
+	literals = map[string]string{
+		TokenIntLiteral:     TokenInt,
+		TokenFloatLiteral:   TokenFloat,
+		TokenStringLiteral:  TokenString,
+		TokenBooleanLiteral: TokenBoolean,
+	}
+	numbers = map[string]bool{
+		TokenInt:     true,
+		TokenInt8:    true,
+		TokenInt16:   true,
+		TokenInt32:   true,
+		TokenInt64:   true,
+		TokenUInt:    true,
+		TokenUInt8:   true,
+		TokenUInt16:  true,
+		TokenUInt32:  true,
+		TokenUInt64:  true,
+		TokenFloat:   true,
+		TokenFloat32: true,
+		TokenFloat64: true,
 	}
 )
 
@@ -100,7 +132,8 @@ func (me *cnode) push(n *cnode) {
 }
 
 func isNumber(t string) bool {
-	return t == "int" || t == "float"
+	_, ok := numbers[t]
+	return ok
 }
 
 func (me *cfile) head() string {

@@ -72,7 +72,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 						me.eat(".")
 						me.eat("id")
 						member := nodeInit("member-variable")
-						member.vdata = me.hmfile.typeToVarData("int")
+						member.vdata = me.hmfile.typeToVarData(TokenInt)
 						member.idata = &idData{}
 						member.idata.module = from
 						member.idata.name = "type"
@@ -84,7 +84,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				} else {
 					me.eat(".")
 					dotIndexStr := me.token.value
-					me.eat("int")
+					me.eat(TokenInt)
 					dotIndex, _ := strconv.Atoi(dotIndexStr)
 					if dotIndex > len(rootUnion.types) {
 						panic(me.fail() + "index out of range for \"" + rootUnion.name + "\"")

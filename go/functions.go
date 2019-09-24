@@ -84,45 +84,44 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		me.eat("(")
 		if me.token.is != ")" {
 			for {
-				if me.token.is == "id" {
-					argname := me.token.value
-					me.eat("id")
-					defaultValue := ""
-					defaultType := ""
-					if me.token.is == ":" {
-						me.eat(":")
-						op := me.token.is
-						if _, ok := primitives[op]; ok {
-							defaultValue = me.token.value
-							defaultType = op
-							me.eat(op)
-						} else {
-							panic(me.fail() + "only primitives allowed for parameter defaults. was \"" + me.token.is + "\"")
-						}
-					}
-					typed := me.declareType(true)
-					fn.argDict[argname] = len(fn.args)
-					fnArg := &funcArg{}
-					fnArg.variable = me.hmfile.varInitFromData(typed, argname, false, true)
-					if defaultValue != "" {
-						defaultTypeVarData := me.hmfile.typeToVarData(defaultType)
-						if typed.notEqual(defaultTypeVarData) {
-							panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.full + "\" do not match")
-						}
-						defaultNode := nodeInit(defaultTypeVarData.full)
-						defaultNode.vdata = defaultTypeVarData
-						defaultNode.value = defaultValue
-						fnArg.defaultNode = defaultNode
-					}
-					fn.args = append(fn.args, fnArg)
-					if me.token.is == ")" {
-						break
-					} else if me.token.is == "delim" {
-						me.eat("delim")
-						continue
+				if me.token.is != "id" {
+					panic(me.fail() + "unexpected token in function definition")
+				}
+				argname := me.token.value
+				me.eat("id")
+				defaultValue := ""
+				defaultType := ""
+				if me.token.is == ":" {
+					me.eat(":")
+					op := me.token.is
+					if literal, ok := literals[op]; ok {
+						defaultValue = me.token.value
+						defaultType = literal
+						me.eat(op)
+					} else {
+						panic(me.fail() + "only primitive literals allowed for parameter defaults. was \"" + me.token.is + "\"")
 					}
 				}
-				panic(me.fail() + "unexpected token in function definition")
+				typed := me.declareType(true)
+				fn.argDict[argname] = len(fn.args)
+				fnArg := &funcArg{}
+				fnArg.variable = me.hmfile.varInitFromData(typed, argname, false, true)
+				if defaultValue != "" {
+					defaultTypeVarData := me.hmfile.typeToVarData(defaultType)
+					if typed.notEqual(defaultTypeVarData) {
+						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.full + "\" do not match")
+					}
+					defaultNode := nodeInit(defaultTypeVarData.full)
+					defaultNode.vdata = defaultTypeVarData
+					defaultNode.value = defaultValue
+					fnArg.defaultNode = defaultNode
+				}
+				fn.args = append(fn.args, fnArg)
+				if me.token.is == ")" {
+					break
+				} else {
+					me.eat("delim")
+				}
 			}
 		}
 		me.eat(")")

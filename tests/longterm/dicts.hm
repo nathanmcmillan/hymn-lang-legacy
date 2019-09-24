@@ -1,9 +1,9 @@
 immutable
-	uint64_max = 2000000
+	uint64_max = uint64 2000000
 
 hash_string(key string) int
 	mutable pos = 0
-	mutable value = (* uint64 *) 0
+	mutable value = uint64 0
 	length = key.len
 	for value < uint64_max and pos < length
 		value = (value << 8) + key[pos]
@@ -37,7 +37,7 @@ dict.set(key k, value v)
 		next = next.next
 	if next is some : if key == next.key : return
 	element = dict_element<v>(hash:bin, value:value)
-	if next = self.table[bin]
+	if next == self.table[bin]
 		element.next = next
 		self.table[bin] = element
 	elif next is none

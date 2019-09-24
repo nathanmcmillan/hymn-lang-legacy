@@ -280,7 +280,7 @@ func (me *parser) declareType(impl bool) *varData {
 
 	} else {
 		typed += me.token.value
-		me.eat("id")
+		me.wordOrPrimitive()
 	}
 
 	if _, ok := me.hmfile.imports[typed]; ok {

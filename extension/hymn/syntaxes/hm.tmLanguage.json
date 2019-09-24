@@ -9,7 +9,7 @@
 		"name": "comment.block.hymn"
 	}, {
 		"explanation": "quotes",
-		"match": "\".*\"",
+		"match": "\".*?\"",
 		"name": "string.quoted.double.hymn",
 		"patterns": [{
 			"match": "\\\\.",
@@ -123,7 +123,7 @@
 		"name": "constant.numeric.decimal.hymn"
 	}, {
 		"explanation": "comparison",
-		"match": "(if|for|=).* (>=|<=|!=|<|>|=) ",
+		"match": "(if|for|=).*? (>=|<=|!=|<|>|=) ",
 		"captures": {
 			"2": {
 				"name": "keyword.operator.comparison.hymn"

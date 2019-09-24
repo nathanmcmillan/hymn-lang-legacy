@@ -112,7 +112,7 @@ func (me *cfile) defineMain(fn *function) {
 	for _, expr := range expressions {
 		c := me.eval(expr)
 		if c.is == "return" {
-			if c.getType() != "int" {
+			if c.getType() != TokenInt {
 				panic("main must return int")
 			} else {
 				returns = true

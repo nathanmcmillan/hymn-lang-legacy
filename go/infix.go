@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) infixConcat(left *node) *node {
 	node := nodeInit("concat")
 	node.copyType(left)
@@ -7,7 +9,7 @@ func (me *parser) infixConcat(left *node) *node {
 	for me.token.is == "+" {
 		me.eat("+")
 		right := me.calc(getInfixPrecedence("+"))
-		if right.getType() != "string" {
+		if right.getType() != TokenString {
 			err := me.fail() + "concatenation operation must be strings \"" + left.getType() + "\" and \"" + right.getType() + "\""
 			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 			panic(err)
@@ -18,7 +20,7 @@ func (me *parser) infixConcat(left *node) *node {
 }
 
 func infixBinary(me *parser, left *node, op string) *node {
-	if op == "+" && left.getType() == "string" {
+	if op == "+" && left.getType() == TokenString {
 		return me.infixConcat(left)
 	}
 	node := nodeInit(op)
@@ -45,7 +47,7 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
-	if left.getType() != "int" || right.getType() != "int" {
+	if left.getType() != TokenInt || right.getType() != TokenInt {
 		err := me.fail() + "operation requires integers \"" + left.getType() + "\" and \"" + right.getType() + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
@@ -80,7 +82,6 @@ func infixCompareEnumIs(me *parser, left *node, op string) *node {
 			right = nodeInit("none")
 			me.eat("none")
 		} else {
-			// todo functions that return maybe/some/none
 			panic(me.fail() + "right side of \"is\" was \"" + me.token.is + "\"")
 		}
 	} else {
@@ -103,6 +104,7 @@ func infixCompareEnumIs(me *parser, left *node, op string) *node {
 	}
 	n.push(left)
 	n.push(right)
+	fmt.Println("IS ::", left.string(0), right.string(0))
 	return n
 }
 
@@ -128,5 +130,6 @@ func infixTernary(me *parser, condition *node, op string) *node {
 
 func infixWalrus(me *parser, left *node, op string) *node {
 	node := me.assign(left, true, false)
+	fmt.Println("INFIX WALRUS ::", node.string(0))
 	return node
 }

@@ -103,3 +103,20 @@ func (me *parser) replace(want, is string) {
 	me.verify(want)
 	me.token.is = is
 }
+
+func (me *parser) wordOrPrimitive() {
+	me.verifyWordOrPrimitive()
+	me.next()
+}
+
+func (me *parser) verifyWordOrPrimitive() {
+	t := me.token.is
+	if t == "id" {
+		me.verify("id")
+		return
+	} else if _, ok := primitives[t]; ok {
+		me.verify(t)
+		return
+	}
+	me.verify("id or primitive")
+}

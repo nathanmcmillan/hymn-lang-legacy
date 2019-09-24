@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func prefixSign(me *parser, op string) *node {
 	node := nodeInit(getPrefixName(op))
 	me.eat(op)
@@ -18,8 +20,12 @@ func prefixGroup(me *parser, op string) *node {
 }
 
 func prefixPrimitive(me *parser, op string) *node {
-	node := nodeInit(op)
-	node.vdata = me.hmfile.typeToVarData(op)
+	t, ok := literals[op]
+	if !ok {
+		panic(me.fail() + "unknown primitive \"" + op + "\"")
+	}
+	node := nodeInit(t)
+	node.vdata = me.hmfile.typeToVarData(t)
 	node.value = me.token.value
 	me.eat(op)
 	return node
@@ -69,7 +75,7 @@ func prefixIdent(me *parser, op string) *node {
 func prefixArray(me *parser, op string) *node {
 	me.eat("[")
 	size := me.calc(0)
-	if size.getType() != "int" {
+	if size.getType() != TokenInt {
 		panic(me.fail() + "array size must be integer")
 	}
 	me.eat("]")
@@ -119,4 +125,18 @@ func prefixMaybe(me *parser, op string) *node {
 	n := nodeInit("maybe")
 	n.vdata = data
 	return n
+}
+
+func prefixCast(me *parser, op string) *node {
+	fmt.Println("CAST ::", op)
+	me.eat(op)
+	node := nodeInit("cast")
+	node.vdata = me.hmfile.typeToVarData(op)
+	calc := me.calc(0)
+	value := calc.vdata.full
+	if !isNumber(value) {
+		panic(me.fail() + "cannot cast \"" + value + "\"")
+	}
+	node.push(calc)
+	return node
 }

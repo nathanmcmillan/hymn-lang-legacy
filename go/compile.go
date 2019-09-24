@@ -20,6 +20,8 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 
 	cfile.headIncludeSection += "#include <stdio.h>\n"
 	cfile.headIncludeSection += "#include <stdlib.h>\n"
+	cfile.headIncludeSection += "#include <stdint.h>\n"
+	cfile.headIncludeSection += "#include <inttypes.h>\n"
 	cfile.headIncludeSection += "#include <stdbool.h>\n"
 	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_strings.h\"\n"
 	cfile.hmfile.program.sources["hmlib_strings.c"] = libDir + "/hmlib_strings.c"
@@ -101,6 +103,9 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		cn := codeNode(n, code)
 		fmt.Println(cn.string(0))
 		return cn
+	}
+	if op == "cast" {
+		return me.compileCast(n)
 	}
 	if op == "concat" {
 		size := len(n.has)
@@ -250,7 +255,7 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	if op == "if" {
 		return me.compileIf(n)
 	}
-	if op == "string" {
+	if op == TokenString {
 		cn := codeNode(n, "\""+n.value+"\"")
 		fmt.Println(cn.string(0))
 		return cn
@@ -279,6 +284,14 @@ func (me *cfile) compilePrefixPos(n *node) *cnode {
 
 func (me *cfile) compilePrefixNeg(n *node) *cnode {
 	code := "-" + me.eval(n.has[0]).code
+	cn := codeNode(n, code)
+	fmt.Println(cn.string(0))
+	return cn
+}
+
+func (me *cfile) compileCast(n *node) *cnode {
+	typ := primitiveC(n.vdata.full)
+	code := "(" + typ + ")" + me.eval(n.has[0]).code
 	cn := codeNode(n, code)
 	fmt.Println(cn.string(0))
 	return cn
@@ -896,58 +909,54 @@ func (me *cfile) compileCall(node *node) *cnode {
 func (me *cfile) builtin(name string, parameters []*node) string {
 	if name == libEcho {
 		param := me.eval(parameters[0])
-		if param.getType() == "string" {
+		switch param.getType() {
+		case TokenString:
 			return "printf(\"%s\\n\", " + param.code + ")"
-
-		} else if param.getType() == "int" {
+		case TokenInt:
 			return "printf(\"%d\\n\", " + param.code + ")"
-
-		} else if param.getType() == "float" {
+		case TokenUInt64:
+			return "printf(\"%\" PRId64 \"\\n\", " + param.code + ")"
+		case TokenFloat:
 			return "printf(\"%f\\n\", " + param.code + ")"
-
-		} else if param.getType() == "bool" {
+		case "bool":
 			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\")"
 		}
 		panic("argument for echo was " + param.string(0))
 	}
 	if name == libToStr {
 		param := me.eval(parameters[0])
-		if param.getType() == "string" {
+		switch param.getType() {
+		case TokenString:
 			panic("redundant string cast")
-
-		} else if param.getType() == "int" {
+		case TokenInt:
 			return "hmlib_int_to_string(" + param.code + ")"
-
-		} else if param.getType() == "float" {
+		case TokenFloat:
 			return "hmlib_float_to_string(" + param.code + ")"
-
-		} else if param.getType() == "bool" {
+		case "bool":
 			return "(" + param.code + " ? \"true\" : \"false\")"
 		}
 		panic("argument for string cast was " + param.string(0))
 	}
 	if name == libToInt {
 		param := me.eval(parameters[0])
-		if param.getType() == "int" {
+		switch param.getType() {
+		case TokenInt:
 			panic("redundant int cast")
-
-		} else if param.getType() == "float" {
+		case TokenFloat:
 			return "((int) " + param.code + ")"
-
-		} else if param.getType() == "string" {
+		case TokenString:
 			return "hmlib_string_to_int(" + param.code + ")"
 		}
 		panic("argument for int cast was " + param.string(0))
 	}
 	if name == libToFloat {
 		param := me.eval(parameters[0])
-		if param.getType() == "float" {
+		switch param.getType() {
+		case TokenFloat:
 			panic("redundant float cast")
-
-		} else if param.getType() == "int" {
+		case TokenInt:
 			return "((float) " + param.code + ")"
-
-		} else if param.getType() == "string" {
+		case TokenString:
 			return "hmlib_string_to_float(" + param.code + ")"
 		}
 		panic("argument for float cast was " + param.string(0))

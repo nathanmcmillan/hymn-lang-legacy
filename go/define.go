@@ -7,7 +7,7 @@ func (me *parser) genericHeader() ([]string, map[string]bool) {
 		me.eat("<")
 		for {
 			gname := me.token.value
-			me.eat("id")
+			me.wordOrPrimitive()
 			dict[gname] = true
 			order = append(order, gname)
 			if me.token.is == "delim" {
@@ -128,7 +128,7 @@ func (me *parser) defineEnum() {
 						continue
 					}
 					unionArgType := me.token.value
-					me.eat("id")
+					me.wordOrPrimitive()
 					if _, ok := me.hmfile.types[unionArgType]; !ok {
 						if _, ok2 := genericsDict[unionArgType]; ok2 {
 							unionGOrder = append(unionGOrder, unionArgType)

@@ -6,45 +6,81 @@ import (
 	"strings"
 )
 
+// tokens
+const (
+	TokenIntLiteral     = "int-v"
+	TokenFloatLiteral   = "float-v"
+	TokenStringLiteral  = "string-v"
+	TokenBooleanLiteral = "bool-v"
+	TokenInt            = "int"
+	TokenInt8           = "int8"
+	TokenInt16          = "int16"
+	TokenInt32          = "int32"
+	TokenInt64          = "int64"
+	TokenUInt           = "uint"
+	TokenUInt8          = "uint8"
+	TokenUInt16         = "uint16"
+	TokenUInt32         = "uint32"
+	TokenUInt64         = "uint64"
+	TokenFloat          = "float"
+	TokenFloat32        = "float32"
+	TokenFloat64        = "float64"
+	TokenString         = "string"
+	TokenBoolean        = "bool"
+)
+
 var keywords = map[string]bool{
-	"import":    true,
-	"macro":     true,
-	"return":    true,
-	"type":      true,
-	"true":      true,
-	"false":     true,
-	"free":      true,
-	"not":       true,
-	"if":        true,
-	"elif":      true,
-	"else":      true,
-	"for":       true,
-	"continue":  true,
-	"break":     true,
-	"mutable":   true,
-	"immutable": true,
-	"and":       true,
-	"or":        true,
-	"as":        true,
-	"enum":      true,
-	"match":     true,
-	"panic":     true,
-	"pass":      true,
-	"none":      true,
-	"some":      true,
-	"maybe":     true,
-	"goto":      true,
-	"label":     true,
-	"async":     true,
-	"def":       true,
-	"ifdef":     true,
-	"ifndef":    true,
-	"elsedef":   true,
-	"enddef":    true,
-	"defc":      true,
-	"endc":      true,
-	"alias":     true,
-	"is":        true,
+	"import":     true,
+	"macro":      true,
+	"return":     true,
+	"type":       true,
+	"true":       true,
+	"false":      true,
+	"free":       true,
+	"not":        true,
+	"if":         true,
+	"elif":       true,
+	"else":       true,
+	"for":        true,
+	"continue":   true,
+	"break":      true,
+	"mutable":    true,
+	"immutable":  true,
+	"and":        true,
+	"or":         true,
+	"as":         true,
+	"enum":       true,
+	"match":      true,
+	"panic":      true,
+	"pass":       true,
+	"none":       true,
+	"some":       true,
+	"maybe":      true,
+	"goto":       true,
+	"label":      true,
+	"async":      true,
+	"def":        true,
+	"ifdef":      true,
+	"ifndef":     true,
+	"elsedef":    true,
+	"enddef":     true,
+	"defc":       true,
+	"endc":       true,
+	"alias":      true,
+	"is":         true,
+	TokenInt:     true,
+	TokenInt8:    true,
+	TokenInt16:   true,
+	TokenInt32:   true,
+	TokenInt64:   true,
+	TokenUInt:    true,
+	TokenUInt8:   true,
+	TokenUInt16:  true,
+	TokenUInt32:  true,
+	TokenUInt64:  true,
+	TokenFloat:   true,
+	TokenFloat32: true,
+	TokenFloat64: true,
 }
 
 type token struct {
@@ -119,7 +155,7 @@ func (me *tokenizer) valueToken(is, value string) *token {
 
 func (me *tokenizer) forNumber() (string, string) {
 	stream := me.stream
-	typed := "int"
+	typed := TokenIntLiteral
 	value := &strings.Builder{}
 	for !stream.eof() {
 		c := stream.peek()
@@ -127,7 +163,7 @@ func (me *tokenizer) forNumber() (string, string) {
 			if value.Len() == 0 {
 				break
 			}
-			typed = "float"
+			typed = TokenFloatLiteral
 			value.WriteByte(c)
 			stream.next()
 			if !digit(stream.peek()) {
@@ -243,7 +279,9 @@ func (me *tokenizer) get(pos int) *token {
 		var token *token
 		if _, ok := keywords[word]; ok {
 			if word == "true" || word == "false" {
-				token = me.valueToken("bool", word)
+				token = me.valueToken(TokenBooleanLiteral, word)
+			} else if _, ok := primitives[word]; ok {
+				token = me.valueToken(word, word)
 			} else {
 				token = me.simpleToken(word)
 			}
@@ -292,7 +330,7 @@ func (me *tokenizer) get(pos int) *token {
 	}
 	if c == '"' {
 		value := me.forString()
-		token := me.valueToken("string", value)
+		token := me.valueToken(TokenStringLiteral, value)
 		me.push(token)
 		return token
 	}

@@ -1,8 +1,8 @@
 square(x int, z int) int
-  x2 = x + 1
-  z2 = z + 1
-  w2 = 5 / 2
-  return x2 * z2 * w2
+  a = x + 1
+  b = z + 1
+  c = 5 / 2
+  return a * b * c
 
 main
   x = 1

@@ -84,7 +84,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				} else {
 					me.eat(".")
 					dotIndexStr := me.token.value
-					me.eat(TokenInt)
+					me.eat(TokenIntLiteral)
 					dotIndex, _ := strconv.Atoi(dotIndexStr)
 					if dotIndex > len(rootUnion.types) {
 						panic(me.fail() + "index out of range for \"" + rootUnion.name + "\"")

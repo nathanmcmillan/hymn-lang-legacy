@@ -74,7 +74,6 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 	}
 
 	n := nodeInit("enum")
-	n.vdata = module.typeToVarData(enumName + "." + unionName)
 
 	typeSize := len(unionDef.types)
 	if typeSize > 0 {
@@ -116,7 +115,7 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 		}
 	}
 
-	fmt.Println("DEBUG ALLOC ::", n.string(0))
+	n.vdata = module.typeToVarData(enumName + "." + unionName)
 
 	return n
 }

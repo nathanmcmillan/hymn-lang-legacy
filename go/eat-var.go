@@ -37,7 +37,6 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head.vdata = sv.vdat
 				head.is = "root-variable"
 			}
-			fmt.Println("eatvar root type :=", head.vdata.full)
 			data := head.vdata
 			if rootClass, ok := data.checkIsClass(); ok {
 				me.eat(".")

@@ -3,12 +3,10 @@
 	"name": "hymn",
 	"scopeName": "source.hymn",
 	"patterns": [{
-		"explanation": "comments",
 		"begin": "\\(\\*",
 		"end": "\\*\\)",
 		"name": "comment.block.hymn"
 	}, {
-		"explanation": "quotes",
 		"match": "\".*?\"",
 		"name": "string.quoted.double.hymn",
 		"patterns": [{
@@ -16,134 +14,128 @@
 			"name": "constant.character.escape.hymn"
 		}]
 	}, {
-		"explanation": "self",
-		"match": "\\bself\\b",
-		"name": "variable.language.this.hymn"
-	}, {
-		"explanation": "types",
-		"match": "^(type|enum) +([a-z_0-9]+)",
+		"match": "\\b(self)\\b",
 		"captures": {
 			"1": {
-				"name": "keyword.struct.hymn"
-			},
-			"2": {
-				"name": "entity.name.type.hymn"
+				"name": "variable.language.this.hymn"
 			}
 		}
 	}, {
-		"explanation": "modifiers",
 		"match": "\\b(mutable|immutable)\\b",
-		"name": "storage.modifier.hymn"
+		"captures": {
+			"1": {
+				"name": "storage.modifier.hymn"
+			}
+		}
 	}, {
-		"explanation": "booleans",
+		"match": "\\b(import)\\b",
+		"captures": {
+			"1": {
+				"name": "keyword.import.hymn"
+			}
+		}
+	}, {
 		"match": "\\b(true|false|null)\\b",
-		"name": "constant.language.hymn"
+		"captures": {
+			"1": {
+				"name": "constant.language.hymn"
+			}
+		}
 	}, {
-		"explanation": "optionals",
-		"match": "[^a-zA-Z0-9_](maybe|some|none)[^a-zA-Z0-9_]",
+		"match": "\\b(maybe|some|none)\\b",
 		"captures": {
 			"1": {
 				"name": "entity.name.type.hymn"
 			}
 		}
 	}, {
-		"explanation": "numerics",
-		"match": "[^a-zA-Z0-9_](int|int8|int16|int32|int64|float32|float64|float|uint8|uint16|uint32|uint64|byte|char)[^a-zA-Z0-9_]",
+		"match": "\\b(int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float|float32|float64)\\b",
 		"captures": {
 			"1": {
 				"name": "storage.type.numeric.hymn"
 			}
 		}
 	}, {
-		"explanation": "boolean",
-		"match": "[^a-zA-Z0-9_](bool)[^a-zA-Z0-9_]",
+		"match": "\\b(bool)\\b",
 		"captures": {
 			"1": {
 				"name": "storage.type.boolean.hymn"
 			}
 		}
 	}, {
-		"explanation": "string",
-		"match": "[^a-zA-Z0-9_](string)[^a-zA-Z0-9_]",
+		"match": "\\b(string)\\b",
 		"captures": {
 			"1": {
 				"name": "storage.type.string.hymn"
 			}
 		}
 	}, {
-		"explanation": "flow",
 		"match": "\\b(if|elif|else|for|return|break|continue|and|or|not|match|is|pass|goto|label)\\b",
-		"name": "keyword.control.hymn"
-	}, {
-		"explanation": "class function",
-		"match": "^([a-z_0-9]+)\\.([a-z_0-9]+)($|\\(| +)",
 		"captures": {
 			"1": {
-				"name": "entity.name.function.hymn"
-			},
-			"2": {
-				"name": "entity.name.function.hymn"
+				"name": "keyword.control.hymn"
 			}
 		}
 	}, {
-		"explanation": "file function",
-		"match": "^([a-z_0-9]+)($|\\(| +)",
-		"captures": {
-			"1": {
-				"name": "entity.name.function.hymn"
-			}
-		}
-	}, {
-		"explanation": "file function call",
-		"match": "([a-z_0-9]+)\\(",
-		"captures": {
-			"1": {
-				"name": "support.function.hymn"
-			}
-		}
-	}, {
-		"explanation": "call",
-		"match": "\\.([a-z_0-9]+)\\(",
-		"captures": {
-			"1": {
-				"name": "support.function.hymn"
-			}
-		}
-	}, {
-		"explanation": "assignment",
-		"match": "^ +([a-z_0-9]+(?:\\.[a-z_0-9]+)*)(?: +)?(?:=|\\+=|-=|\/=|\\*=|\\^=|\\|=|&=|<<=|>>=)",
-		"captures": {
-			"1": {
-				"name": "variable.other.assignment.hymn"
-			}
-		}
-	}, {
-		"explanation": "numbers",
-		"match": "\\b[0-9]+(.[0-9]+)?\\b",
-		"name": "constant.numeric.decimal.hymn"
-	}, {
-		"explanation": "comparison",
-		"match": "(if|for|=).*? (>=|<=|!=|<|>|=) ",
-		"captures": {
-			"2": {
-				"name": "keyword.operator.comparison.hymn"
-			}
-		}
-	}, {
-		"explanation": "alias",
-		"match": "^(alias) +([a-z_0-9]+) +(->) +([a-z_0-9]+)$",
+		"match": "^(type|enum) +(\\w+)",
 		"captures": {
 			"1": {
 				"name": "keyword.struct.hymn"
 			},
 			"2": {
 				"name": "entity.name.type.hymn"
+			}
+		}
+	}, {
+		"match": "^(\\w+)\\.(\\w+)($|\\()",
+		"captures": {
+			"1": {
+				"name": "entity.name.function.hymn"
 			},
-			"3": {
+			"2": {
+				"name": "entity.name.function.hymn"
+			}
+		}
+	}, {
+		"match": "^(\\w+)($|\\()",
+		"captures": {
+			"1": {
+				"name": "entity.name.function.hymn"
+			}
+		}
+	}, {
+		"match": "(\\w+)\\(",
+		"captures": {
+			"1": {
 				"name": "support.function.hymn"
-			},
-			"4": {
-				"name": "entity.name.type.hymn"
+			}
+		}
+	}, {
+		"match": "\\.(\\w+)\\(",
+		"captures": {
+			"1": {
+				"name": "support.function.hymn"
+			}
+		}
+	}, {
+		"match": "\\b([0-9]+(?:.[0-9]+)?)\\b",
+		"captures": {
+			"1": {
+				"name": "constant.numeric.decimal.hymn"
+			}
+		}
+	}, {
+		"match": "\\b(>=|<=|!=|<|>|==)\\b",
+		"captures": {
+			"1": {
+				"name": "keyword.operator.comparison.hymn"
+			}
+		}
+	}, {
+		"match": "(\\w+(?:\\.\\w+)*) *(?:=|\\+=|-=|\/=|\\*=|\\^=|\\|=|&=|<<=|>>=)",
+		"captures": {
+			"1": {
+				"name": "variable.other.assignment.hymn"
 			}
 		}
 	}]

@@ -147,7 +147,6 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 }
 
 func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string) {
-	fmt.Println("define enum impl generic: base \"" + base.name + "\" with impl \"" + impl + "\" and order \"" + strings.Join(order, "|") + "\"")
 
 	unionList := make([]*union, len(base.types))
 	unionDict := make(map[string]*union)

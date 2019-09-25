@@ -83,26 +83,18 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	op := n.is
 	if op == "=" || op == ":=" {
 		code := me.assingment(n)
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
 		code := me.assignmentUpdate(n)
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "new" {
-		cn := me.allocClass(n)
-		fmt.Println(cn.string(0))
-		return cn
+		return me.allocClass(n)
 	}
 	if op == "enum" {
 		code := me.allocEnum(n)
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "cast" {
 		return me.compileCast(n)
@@ -122,9 +114,7 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 			}
 		}
 		code += ")"
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "+sign" {
 		return me.compilePrefixPos(n)
@@ -143,17 +133,13 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	}
 	if op == "root-variable" {
 		v := me.getvar(n.idata.name)
-		cn := codeNode(n, v.cName)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, v.cName)
 	}
 	if op == "array-member" {
 		index := me.eval(n.has[0])
 		root := me.eval(n.has[1])
 		code := root.code + "[" + index.code + "]"
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "member-variable" {
 		return me.compileMemberVariable(n)
@@ -166,48 +152,37 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	}
 	if op == "array" {
 		code := me.allocArray(n)
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "return" {
 		in := me.eval(n.has[0])
 		code := "return " + in.code
 		cn := codeNode(n, code)
 		cn.push(in)
-		fmt.Println(cn.string(0))
 		return cn
 	}
 	if op == "boolexpr" {
 		code := me.eval(n.has[0]).code
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "equal" {
 		return me.compileEqual(n)
 	}
 	if op == "not" {
 		code := "!" + me.eval(n.has[0]).code
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "not-equal" {
 		code := me.eval(n.has[0]).code
 		code += " != "
 		code += me.eval(n.has[1]).code
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == ">" || op == ">=" || op == "<" || op == "<=" {
 		code := me.eval(n.has[0]).code
 		code += " " + op + " "
 		code += me.eval(n.has[1]).code
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 	if op == "?" {
 		return me.compileTernary(n)
@@ -277,24 +252,18 @@ func (me *cfile) eval(n *node) *cnode {
 
 func (me *cfile) compilePrefixPos(n *node) *cnode {
 	code := me.eval(n.has[0]).code
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compilePrefixNeg(n *node) *cnode {
 	code := "-" + me.eval(n.has[0]).code
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileCast(n *node) *cnode {
 	typ := primitiveC(n.vdata.full)
 	code := "(" + typ + ")" + me.eval(n.has[0]).code
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileBinaryOp(n *node) *cnode {
@@ -309,9 +278,7 @@ func (me *cfile) compileBinaryOp(n *node) *cnode {
 	if paren {
 		code += ")"
 	}
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileTupleIndex(n *node) *cnode {
@@ -325,9 +292,7 @@ func (me *cfile) compileTupleIndex(n *node) *cnode {
 	} else {
 		code += un.name + ".var" + dotIndexStr
 	}
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileMemberVariable(n *node) *cnode {
@@ -366,17 +331,14 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			panic("missing member variable")
 		}
 	}
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileFnPtr(n *node, hint *varData) *cnode {
 	code := ""
 	fn := n.fn
 	code += "&" + fn.module.funcNameSpace(fn.name)
-	cn := codeNode(n, code)
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
@@ -391,15 +353,12 @@ func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 	} else {
 		code = n.idata.module.varNameSpace(n.idata.name)
 	}
-	cn := codeNode(n, code)
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileNone(n *node) *cnode {
 	code := "NULL"
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileIs(n *node) *cnode {
@@ -415,9 +374,7 @@ func (me *cfile) compileIs(n *node) *cnode {
 		} else if caseOf.is == "none" {
 			code += match.code + " == NULL"
 		}
-		cn := codeNode(n, code)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, code)
 	}
 
 	baseEnum, _, _ := using.vdata.checkIsEnum()
@@ -443,9 +400,7 @@ func (me *cfile) compileIs(n *node) *cnode {
 		}
 	}
 
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileMatch(n *node) *cnode {
@@ -499,9 +454,7 @@ func (me *cfile) compileMatch(n *node) *cnode {
 		ix += 2
 	}
 	code += fmc(me.depth) + "}"
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileNullCheck(match *cnode, n *node, code string) *cnode {
@@ -540,9 +493,7 @@ func (me *cfile) compileNullCheck(match *cnode, n *node, code string) *cnode {
 
 	}
 
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileEqual(n *node) *cnode {
@@ -557,9 +508,7 @@ func (me *cfile) compileEqual(n *node) *cnode {
 	if paren {
 		code += ")"
 	}
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileTernary(n *node) *cnode {
@@ -569,9 +518,7 @@ func (me *cfile) compileTernary(n *node) *cnode {
 	code += me.eval(n.has[1]).code
 	code += " : "
 	code += me.eval(n.has[2]).code
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileAndOr(n *node) *cnode {
@@ -590,9 +537,7 @@ func (me *cfile) compileAndOr(n *node) *cnode {
 	if paren {
 		code += ")"
 	}
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileIf(n *node) *cnode {
@@ -617,9 +562,7 @@ func (me *cfile) compileIf(n *node) *cnode {
 		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 		code += "\n" + fmc(me.depth) + "}"
 	}
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileFor(n *node) *cnode {
@@ -653,9 +596,7 @@ func (me *cfile) compileFor(n *node) *cnode {
 	}
 	code += me.eval(n.has[ix]).code
 	code += "\n" + fmc(me.depth) + "}"
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
-	return cn
+	return codeNode(n, code)
 }
 
 func fmtptr(ptr string) string {
@@ -838,7 +779,7 @@ func (me *cfile) maybeColon(code string) string {
 }
 
 func (me *cfile) maybeFmc(code string, depth int) string {
-	if code == "" || code[0] == ' ' {
+	if code == "" || code[0] == spaceChar {
 		return ""
 	}
 	return fmc(depth)
@@ -857,10 +798,8 @@ func (me *cfile) block(n *node) *cnode {
 			code += me.maybeFmc(c.code, me.depth) + c.code + me.maybeColon(c.code)
 		}
 	}
-	cn := codeNode(n, code)
-	fmt.Println(cn.string(0))
 	me.depth--
-	return cn
+	return codeNode(n, code)
 }
 
 func (me *cfile) compileCall(node *node) *cnode {
@@ -914,9 +853,29 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 			return "printf(\"%s\\n\", " + param.code + ")"
 		case TokenInt:
 			return "printf(\"%d\\n\", " + param.code + ")"
+		case TokenInt8:
+			return "printf(\"%\" PRId8 \"\\n\", " + param.code + ")"
+		case TokenInt16:
+			return "printf(\"%\" PRId16 \"\\n\", " + param.code + ")"
+		case TokenInt32:
+			return "printf(\"%\" PRId32 \"\\n\", " + param.code + ")"
+		case TokenInt64:
+			return "printf(\"%\" PRId64 \"\\n\", " + param.code + ")"
+		case TokenUInt:
+			return "printf(\"%u\\n\", " + param.code + ")"
+		case TokenUInt8:
+			return "printf(\"%\" PRId8 \"\\n\", " + param.code + ")"
+		case TokenUInt16:
+			return "printf(\"%\" PRId16 \"\\n\", " + param.code + ")"
+		case TokenUInt32:
+			return "printf(\"%\" PRId32 \"\\n\", " + param.code + ")"
 		case TokenUInt64:
 			return "printf(\"%\" PRId64 \"\\n\", " + param.code + ")"
 		case TokenFloat:
+			return "printf(\"%f\\n\", " + param.code + ")"
+		case TokenFloat32:
+			return "printf(\"%f\\n\", " + param.code + ")"
+		case TokenFloat64:
 			return "printf(\"%f\\n\", " + param.code + ")"
 		case "bool":
 			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\")"

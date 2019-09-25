@@ -1,13 +1,11 @@
 type foo
   x string
 
-immutable
-  name = "foo"
-  foo_pool = [3]foo
-  foo_single = foo
-  
-mutable
-  next_id = 0
+immutable name = "foo"
+immutable foo_pool = [3]foo
+immutable foo_single = foo
+
+mutable next_id = 0
 
 do_update(z int)
   next_id += z

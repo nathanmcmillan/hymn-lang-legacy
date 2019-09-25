@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
 func (me *cfile) defineEnum(enum *enum) {
-	fmt.Println("define enum \"" + enum.name + "\"")
 
 	impl, hmBaseEnumName := me.hmfile.enumMaybeImplNameSpace(enum.name)
 	if !impl {

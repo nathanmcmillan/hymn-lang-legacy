@@ -1,8 +1,6 @@
-import
-  "math"
+import "math"
 
-immutable
-  pi = "tasty"
+immutable pi = "tasty"
 
 power string
   return "pow"

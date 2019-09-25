@@ -274,9 +274,29 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 
 func primitiveC(primitive string) string {
 	switch primitive {
+	case TokenFloat32:
+		return "float"
+	case TokenFloat64:
+		return "double"
 	case TokenString:
 		return "char *"
-	case "uint64":
+	case TokenInt8:
+		return "int8_t"
+	case TokenInt16:
+		return "int16_t"
+	case TokenInt32:
+		return "int32_t"
+	case TokenInt64:
+		return "int64_t"
+	case TokenUInt:
+		return "unsigned int"
+	case TokenUInt8:
+		return "uint8_t"
+	case TokenUInt16:
+		return "uint16_t"
+	case TokenUInt32:
+		return "uint32_t"
+	case TokenUInt64:
 		return "uint64_t"
 	}
 	return primitive

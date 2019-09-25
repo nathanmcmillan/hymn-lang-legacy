@@ -257,7 +257,6 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 	if gsize > 0 && me.token.is == "<" {
 		gtypes := me.declareGeneric(true, base)
 		typed = name + "<" + strings.Join(gtypes, ",") + ">"
-		fmt.Println("BUILDING CLASS :: \"" + name + "\" WITH IMPL \"" + typed + "\"")
 		if _, ok := me.hmfile.classes[typed]; !ok {
 			me.defineClassImplGeneric(base, typed, gtypes)
 		}

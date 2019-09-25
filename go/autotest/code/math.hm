@@ -3,8 +3,7 @@ type vec
   y float
   z float
 
-immutable
-  pi = 3.1415
+immutable pi = 3.1415
 
 power(x int) int
   return x * x

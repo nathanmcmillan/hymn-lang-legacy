@@ -28,10 +28,9 @@ enum either<u, v>
   one(u)
   two(v)
 
-immutable
-  example = vec
-  snap = snake.viper
-  woof = mammal.dog(7.2)
+immutable example = vec
+immutable snap = snake.viper
+immutable woof = mammal.dog(7.2)
 
 calc_me(x int) either<int, float>
   if x < 10

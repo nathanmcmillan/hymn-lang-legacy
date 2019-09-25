@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func prefixSign(me *parser, op string) *node {
 	node := nodeInit(getPrefixName(op))
 	me.eat(op)
@@ -128,14 +126,13 @@ func prefixMaybe(me *parser, op string) *node {
 }
 
 func prefixCast(me *parser, op string) *node {
-	fmt.Println("CAST ::", op)
 	me.eat(op)
 	node := nodeInit("cast")
 	node.vdata = me.hmfile.typeToVarData(op)
-	calc := me.calc(0)
+	calc := me.calc(getPrefixPrecedence(op))
 	value := calc.vdata.full
 	if !isNumber(value) {
-		panic(me.fail() + "cannot cast \"" + value + "\"")
+		panic(me.fail() + "invalid cast \"" + value + "\"")
 	}
 	node.push(calc)
 	return node

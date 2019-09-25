@@ -37,6 +37,7 @@ func init() {
 		TokenInt64:          prefixRule{8, "cast", prefixCast},
 		TokenUInt:           prefixRule{8, "cast", prefixCast},
 		TokenUInt8:          prefixRule{8, "cast", prefixCast},
+		TokenUInt16:         prefixRule{8, "cast", prefixCast},
 		TokenUInt32:         prefixRule{8, "cast", prefixCast},
 		TokenUInt64:         prefixRule{8, "cast", prefixCast},
 		TokenFloat:          prefixRule{8, "cast", prefixCast},

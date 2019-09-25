@@ -10,13 +10,13 @@ func (me *parser) fileExpression() {
 	op := token.is
 	if op == "import" {
 		me.eat(op)
-		me.imports()
+		me.include()
 	} else if op == "immutable" {
 		me.eat(op)
-		me.immutables()
+		me.immutable()
 	} else if op == "mutable" {
 		me.eat(op)
-		me.mutables()
+		me.mutable()
 	} else if op == "id" {
 		name := token.value
 		if _, ok := me.hmfile.classes[name]; ok {
@@ -238,7 +238,6 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		n.copyType(right)
 	}
 	n.push(left)
-	fmt.Println("assign", left.string(0), "as", right.string(0))
 	n.push(right)
 	return n
 }
@@ -316,7 +315,6 @@ func (me *parser) block() *node {
 		}
 	}
 blockEnd:
-	fmt.Println("> block", block.string(0))
 	return block
 }
 
@@ -334,17 +332,14 @@ func (me *parser) iswhile() bool {
 }
 
 func (me *parser) forexpr() *node {
-	fmt.Println("> for expression")
 	me.eat("for")
 	n := nodeInit("for")
 	if me.token.is == "line" {
 		me.eat("line")
 	} else {
 		if me.iswhile() {
-			fmt.Println("> regular while")
 			n.push(me.calcBool())
 		} else {
-			fmt.Println("> multi for")
 			n.push(me.forceassign(true, true))
 			me.eat("delim")
 			n.push(me.calcBool())
@@ -365,13 +360,10 @@ func (me *parser) match() *node {
 	matching := me.calc(0)
 	matchType := matching.asVar()
 	var matchVar *variable
-	fmt.Println("MATCH ::", matching.string(0))
 	if matching.is == "variable" {
 		matchVar = me.hmfile.getvar(matching.idata.name)
-		fmt.Println("MATCH VAR ::", matchVar.string())
 	} else if matching.is == ":=" {
 		matchVar = me.hmfile.getvar(matching.has[0].idata.name)
-		fmt.Println("MATCH VAR WALRUS ::", matchVar.string())
 	}
 
 	n.push(matching)
@@ -387,9 +379,7 @@ func (me *parser) match() *node {
 			me.eat("=>")
 			n.push(caseNode)
 			if matchVar != nil {
-				fmt.Println("MATCH UPGRADE ::", matchVar.vdat.full, "+++", name)
 				fullUnion := me.hmfile.typeToVarData(matching.vdata.full + "." + name)
-				fmt.Println("MATCH TEMP UPDATE ::", matchVar.name, "to", fullUnion.full)
 				matchVar.updateFromVar(me.hmfile, fullUnion)
 			}
 			if me.token.is == "line" {
@@ -421,7 +411,6 @@ func (me *parser) match() *node {
 				if !matchType.maybe {
 					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
 				}
-				fmt.Println("match temp update", matchVar.name, "to", matchType.some)
 				matchVar.updateFromVar(me.hmfile, matchType.some)
 			}
 			if me.token.is == "line" {
@@ -453,7 +442,6 @@ func (me *parser) match() *node {
 }
 
 func (me *parser) ifexpr() *node {
-	fmt.Println("> if")
 	me.eat("if")
 	n := nodeInit("if")
 	n.push(me.calcBool())
@@ -552,61 +540,41 @@ func (me *parser) calcBool() *node {
 	return n
 }
 
-func (me *parser) imports() {
-	me.eat("line")
-	for {
-		name := me.token.value
-		fmt.Println("importing " + name)
-		me.eat(TokenStringLiteral)
-		_, ok := me.hmfile.imports[name]
-		if !ok {
-			me.hmfile.imports[name] = true
-			path := me.hmfile.program.directory + "/" + name + ".hm"
-			me.hmfile.program.compile(me.hmfile.program.out, path, me.hmfile.program.libDir)
-			fmt.Println("finished compiling " + name)
-			fmt.Println("=== continue " + me.hmfile.name + " parse === ")
-		}
-		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
-			break
-		}
+func (me *parser) include() {
+	name := me.token.value
+	fmt.Println("importing " + name)
+	me.eat(TokenStringLiteral)
+	_, ok := me.hmfile.imports[name]
+	if !ok {
+		me.hmfile.imports[name] = true
+		path := me.hmfile.program.directory + "/" + name + ".hm"
+		me.hmfile.program.compile(me.hmfile.program.out, path, me.hmfile.program.libDir)
+		fmt.Println("finished compiling " + name)
+		fmt.Println("=== continue " + me.hmfile.name + " parse === ")
 	}
+	me.eat("line")
 }
 
-func (me *parser) immutables() {
-	if me.token.is == "line" {
-		me.eat("line")
+func (me *parser) immutable() {
+	n := me.forceassign(false, false)
+	av := n.has[0]
+	fmt.Println("static immutable", n.string(0))
+	if n.is != "=" || av.is != "variable" {
+		panic(me.fail() + "invalid static variable")
 	}
-	for {
-		n := me.forceassign(false, false)
-		av := n.has[0]
-		fmt.Println("static immutable", n.string(0))
-		if n.is != "=" || av.is != "variable" {
-			panic(me.fail() + "invalid static variable")
-		}
-		me.hmfile.statics = append(me.hmfile.statics, n)
-		me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
-		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
-			break
-		}
-	}
+	me.hmfile.statics = append(me.hmfile.statics, n)
+	me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
+	me.eat("line")
 }
 
-func (me *parser) mutables() {
-	me.eat("line")
-	for {
-		n := me.forceassign(false, true)
-		av := n.has[0]
-		fmt.Println("static mutable", n.string(0))
-		if n.is != "=" || av.is != "variable" {
-			panic(me.fail() + "invalid static variable")
-		}
-		me.hmfile.statics = append(me.hmfile.statics, n)
-		me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
-		me.eat("line")
-		if me.token.is == "line" || me.token.is == "eof" || me.token.is == "comment" {
-			break
-		}
+func (me *parser) mutable() {
+	n := me.forceassign(false, true)
+	av := n.has[0]
+	fmt.Println("static mutable", n.string(0))
+	if n.is != "=" || av.is != "variable" {
+		panic(me.fail() + "invalid static variable")
 	}
+	me.hmfile.statics = append(me.hmfile.statics, n)
+	me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
+	me.eat("line")
 }

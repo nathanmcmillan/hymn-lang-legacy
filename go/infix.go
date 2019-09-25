@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func (me *parser) infixConcat(left *node) *node {
 	node := nodeInit("concat")
 	node.copyType(left)
@@ -104,7 +102,6 @@ func infixCompareEnumIs(me *parser, left *node, op string) *node {
 	}
 	n.push(left)
 	n.push(right)
-	fmt.Println("IS ::", left.string(0), right.string(0))
 	return n
 }
 
@@ -130,6 +127,5 @@ func infixTernary(me *parser, condition *node, op string) *node {
 
 func infixWalrus(me *parser, left *node, op string) *node {
 	node := me.assign(left, true, false)
-	fmt.Println("INFIX WALRUS ::", node.string(0))
 	return node
 }

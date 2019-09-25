@@ -11,10 +11,15 @@ var (
 	debug = true
 )
 
+const (
+	spaceChar = '\t'
+	spaceFmc  = string(spaceChar)
+)
+
 func fmc(depth int) string {
 	space := ""
 	for i := 0; i < depth; i++ {
-		space += "  "
+		space += spaceFmc
 	}
 	return space
 }

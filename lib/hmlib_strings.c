@@ -113,7 +113,92 @@ char *hmlib_int_to_string(const int number)
   return str;
 }
 
+char *hmlib_int8_to_string(const int8_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId8, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId8, number);
+  return str;
+}
+
+char *hmlib_int16_to_string(const int16_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId16, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId16, number);
+  return str;
+}
+
+char *hmlib_int32_to_string(const int32_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId32, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId32, number);
+  return str;
+}
+
+char *hmlib_int64_to_string(const int64_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId64, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId64, number);
+  return str;
+}
+
+char *hmlib_uint_to_string(const unsigned int number)
+{
+  int len = snprintf(NULL, 0, "%u", number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%u", number);
+  return str;
+}
+
+char *hmlib_uint8_to_string(const uint8_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId8, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId8, number);
+  return str;
+}
+
+char *hmlib_uint16_to_string(const uint16_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId16, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId16, number);
+  return str;
+}
+
+char *hmlib_uint32_to_string(const uint32_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId32, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId32, number);
+  return str;
+}
+
+char *hmlib_uint64_to_string(const uint64_t number)
+{
+  int len = snprintf(NULL, 0, "%" PRId64, number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%" PRId64, number);
+  return str;
+}
+
 char *hmlib_float_to_string(const float number)
+{
+  int len = snprintf(NULL, 0, "%f", number);
+  char *str = malloc(len + 1);
+  snprintf(str, len + 1, "%f", number);
+  return str;
+}
+
+char *hmlib_float32_to_string(const float number)
+{
+  return hmlib_float_to_string(number);
+}
+
+char *hmlib_float64_to_string(const double number)
 {
   int len = snprintf(NULL, 0, "%f", number);
   char *str = malloc(len + 1);
@@ -126,7 +211,62 @@ int hmlib_string_to_int(const char *str)
   return (int)strtol(str, NULL, 10);
 }
 
+int8_t hmlib_string_to_int8(const char *str)
+{
+  return (int8_t)strtol(str, NULL, 10);
+}
+
+int16_t hmlib_string_to_int16(const char *str)
+{
+  return (int16_t)strtol(str, NULL, 10);
+}
+
+int32_t hmlib_string_to_int32(const char *str)
+{
+  return (int32_t)strtol(str, NULL, 10);
+}
+
+int64_t hmlib_string_to_int64(const char *str)
+{
+  return (int64_t)strtoll(str, NULL, 10);
+}
+
+unsigned int hmlib_string_to_uint(const char *str)
+{
+  return (unsigned int)strtoul(str, NULL, 10);
+}
+
+uint8_t hmlib_string_to_uint8(const char *str)
+{
+  return (uint8_t)strtoul(str, NULL, 10);
+}
+
+uint16_t hmlib_string_to_uint16(const char *str)
+{
+  return (uint16_t)strtoul(str, NULL, 10);
+}
+
+uint32_t hmlib_string_to_uint32(const char *str)
+{
+  return (uint32_t)strtoul(str, NULL, 10);
+}
+
+uint64_t hmlib_string_to_uint64(const char *str)
+{
+  return (uint64_t)strtoull(str, NULL, 10);
+}
+
 float hmlib_string_to_float(const char *str)
 {
   return strtof(str, NULL);
+}
+
+float hmlib_string_to_float32(const char *str)
+{
+  return hmlib_string_to_float(str);
+}
+
+double hmlib_string_to_float64(const char *str)
+{
+  return strtod(str, NULL);
 }

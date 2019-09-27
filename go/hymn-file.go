@@ -1,10 +1,21 @@
 package main
 
 const (
-	libEcho    = "echo"
-	libToStr   = "to_str"
-	libToInt   = "to_int"
-	libToFloat = "to_float"
+	libEcho      = "echo"
+	libToStr     = "to_str"
+	libToInt     = "to_int"
+	libToInt8    = "to_int8"
+	libToInt16   = "to_int16"
+	libToInt32   = "to_int32"
+	libToInt64   = "to_int64"
+	libToUInt    = "to_uint"
+	libToUInt8   = "to_uint8"
+	libToUInt16  = "to_uint16"
+	libToUInt32  = "to_uint32"
+	libToUInt64  = "to_uint64"
+	libToFloat   = "to_float"
+	libToFloat32 = "to_float32"
+	libToFloat64 = "to_float64"
 )
 
 type hmfile struct {
@@ -91,30 +102,34 @@ func (me *hmfile) getvar(name string) *variable {
 	}
 }
 
+func (me *hmfile) mkBuiltIn(name string, ret string) {
+	fn := funcInit(me, name)
+	fn.typed = me.typeToVarData(ret)
+	fn.args = append(fn.args, me.fnArgInit("?", "s", false, false))
+	me.functions[name] = fn
+	me.types[name] = ""
+}
+
 func (me *hmfile) libInit() {
-	echo := funcInit(me, libEcho)
-	echo.typed = me.typeToVarData("void")
-	echo.args = append(echo.args, me.fnArgInit("?", "s", false, false))
-	me.functions[libEcho] = echo
-	me.types[libEcho] = ""
+	me.mkBuiltIn(libEcho, "void")
 
-	str := funcInit(me, libToStr)
-	str.typed = me.typeToVarData(TokenString)
-	str.args = append(str.args, me.fnArgInit("?", "s", false, false))
-	me.functions[libToStr] = str
-	me.types[libToStr] = ""
+	me.mkBuiltIn(libToStr, TokenString)
 
-	intfn := funcInit(me, libToInt)
-	intfn.typed = me.typeToVarData(TokenInt)
-	intfn.args = append(intfn.args, me.fnArgInit("?", "s", false, false))
-	me.functions[libToInt] = intfn
-	me.types[libToInt] = ""
+	me.mkBuiltIn(libToInt, TokenInt)
+	me.mkBuiltIn(libToInt8, TokenInt8)
+	me.mkBuiltIn(libToInt16, TokenInt16)
+	me.mkBuiltIn(libToInt32, TokenInt32)
+	me.mkBuiltIn(libToInt64, TokenInt64)
 
-	floatfn := funcInit(me, libToFloat)
-	floatfn.typed = me.typeToVarData(TokenFloat)
-	floatfn.args = append(floatfn.args, me.fnArgInit("?", "s", false, false))
-	me.functions[libToFloat] = floatfn
-	me.types[libToFloat] = ""
+	me.mkBuiltIn(libToUInt, TokenUInt)
+	me.mkBuiltIn(libToUInt8, TokenUInt8)
+	me.mkBuiltIn(libToUInt16, TokenUInt16)
+	me.mkBuiltIn(libToUInt32, TokenUInt32)
+	me.mkBuiltIn(libToUInt64, TokenUInt64)
+
+	me.mkBuiltIn(libToFloat, TokenFloat)
+	me.mkBuiltIn(libToFloat32, TokenFloat32)
+	me.mkBuiltIn(libToFloat64, TokenFloat64)
 
 	for primitive := range primitives {
 		me.types[primitive] = ""

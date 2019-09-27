@@ -889,8 +889,30 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 			panic("redundant string cast")
 		case TokenInt:
 			return "hmlib_int_to_string(" + param.code + ")"
+		case TokenInt8:
+			return "hmlib_int8_to_string(" + param.code + ")"
+		case TokenInt16:
+			return "hmlib_int16_to_string(" + param.code + ")"
+		case TokenInt32:
+			return "hmlib_int32_to_string(" + param.code + ")"
+		case TokenInt64:
+			return "hmlib_int64_to_string(" + param.code + ")"
+		case TokenUInt:
+			return "hmlib_uint_to_string(" + param.code + ")"
+		case TokenUInt8:
+			return "hmlib_uint8_to_string(" + param.code + ")"
+		case TokenUInt16:
+			return "hmlib_uint16_to_string(" + param.code + ")"
+		case TokenUInt32:
+			return "hmlib_uint32_to_string(" + param.code + ")"
+		case TokenUInt64:
+			return "hmlib_uint64_to_string(" + param.code + ")"
 		case TokenFloat:
 			return "hmlib_float_to_string(" + param.code + ")"
+		case TokenFloat32:
+			return "hmlib_float32_to_string(" + param.code + ")"
+		case TokenFloat64:
+			return "hmlib_float64_to_string(" + param.code + ")"
 		case "bool":
 			return "(" + param.code + " ? \"true\" : \"false\")"
 		}
@@ -898,27 +920,94 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 	}
 	if name == libToInt {
 		param := me.eval(parameters[0])
-		switch param.getType() {
-		case TokenInt:
-			panic("redundant int cast")
-		case TokenFloat:
-			return "((int) " + param.code + ")"
-		case TokenString:
+		if param.getType() == TokenString {
 			return "hmlib_string_to_int(" + param.code + ")"
 		}
-		panic("argument for int cast was " + param.string(0))
+		panic("argument for conversion to int was " + param.string(0))
+	}
+	if name == libToInt8 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_int8(" + param.code + ")"
+		}
+		panic("argument for conversion to int8 was " + param.string(0))
+	}
+	if name == libToInt16 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_int16(" + param.code + ")"
+		}
+		panic("argument for conversion to int16 was " + param.string(0))
+	}
+	if name == libToInt32 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_int32(" + param.code + ")"
+		}
+		panic("argument for conversion to int32 was " + param.string(0))
+	}
+	if name == libToInt64 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_int64(" + param.code + ")"
+		}
+		panic("argument for conversion to int64 was " + param.string(0))
+	}
+	if name == libToUInt {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_uint(" + param.code + ")"
+		}
+		panic("argument for conversion to uint was " + param.string(0))
+	}
+	if name == libToUInt8 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_uint8(" + param.code + ")"
+		}
+		panic("argument for conversion to uint8 was " + param.string(0))
+	}
+	if name == libToUInt16 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_uint16(" + param.code + ")"
+		}
+		panic("argument for conversion to uint16 was " + param.string(0))
+	}
+	if name == libToUInt32 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_uint32(" + param.code + ")"
+		}
+		panic("argument for conversion to uint32 was " + param.string(0))
+	}
+	if name == libToUInt64 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_uint64(" + param.code + ")"
+		}
+		panic("argument for conversion to uint64 was " + param.string(0))
 	}
 	if name == libToFloat {
 		param := me.eval(parameters[0])
-		switch param.getType() {
-		case TokenFloat:
-			panic("redundant float cast")
-		case TokenInt:
-			return "((float) " + param.code + ")"
-		case TokenString:
+		if param.getType() == TokenString {
 			return "hmlib_string_to_float(" + param.code + ")"
 		}
-		panic("argument for float cast was " + param.string(0))
+		panic("argument for conversion to float was " + param.string(0))
+	}
+	if name == libToFloat32 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_float32(" + param.code + ")"
+		}
+		panic("argument for conversion to float32 was " + param.string(0))
+	}
+	if name == libToFloat64 {
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return "hmlib_string_to_float64(" + param.code + ")"
+		}
+		panic("argument for conversion to float64 was " + param.string(0))
 	}
 	return ""
 }

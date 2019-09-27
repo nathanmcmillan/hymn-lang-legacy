@@ -65,6 +65,14 @@ func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[strin
 	return data
 }
 
+func (me *hmfile) literalType(typed string) *varData {
+	data := &varData{}
+	data.full = typed
+	data.typed = typed
+	data.module = me
+	return data
+}
+
 func (me *hmfile) typeToVarData(typed string) *varData {
 	data := &varData{}
 	data.full = typed

@@ -846,6 +846,11 @@ func (me *cfile) compileCall(node *node) *cnode {
 }
 
 func (me *cfile) builtin(name string, parameters []*node) string {
+	if name == libOpen {
+		paramA := me.eval(parameters[0])
+		paramB := me.eval(parameters[1])
+		return "fopen(" + paramA.code + ", " + paramB.code + ")"
+	}
 	if name == libEcho {
 		param := me.eval(parameters[0])
 		switch param.getType() {

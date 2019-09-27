@@ -16,6 +16,7 @@ const (
 	libToFloat   = "to_float"
 	libToFloat32 = "to_float32"
 	libToFloat64 = "to_float64"
+	libOpen      = "open"
 )
 
 type hmfile struct {
@@ -110,6 +111,54 @@ func (me *hmfile) mkBuiltIn(name string, ret string) {
 	me.types[name] = ""
 }
 
+func (me *hmfile) libInitOpenFiles() {
+	const LibFileType = "FILE"
+	me.namespace[LibFileType] = "type"
+	me.types[LibFileType] = ""
+	me.defineOrder = append(me.defineOrder, LibFileType+"_type")
+	order := make([]string, 0)
+	dict := make(map[string]bool, 0)
+	classDef := classInit(LibFileType, order, dict)
+	me.classes[LibFileType] = classDef
+
+	fn := funcInit(me, libOpen)
+	fn.typed = me.literalType(LibFileType)
+	fn.args = append(fn.args, me.fnArgInit(TokenString, "path", false, false))
+	fn.args = append(fn.args, me.fnArgInit(TokenString, "mode", false, false))
+	me.functions[libOpen] = fn
+	me.types[libOpen] = ""
+
+	fnName := "read"
+	fn = funcInit(me, fnName)
+	fn.typed = me.literalType(TokenInt)
+	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false, true))
+	fn.forClass = classDef
+	name := nameOfClassFunc(LibFileType, fnName)
+	me.functionOrder = append(me.functionOrder, name)
+	me.functions[name] = fn
+	me.types[name] = ""
+
+	fnName = "read_line"
+	fn = funcInit(me, fnName)
+	fn.typed = me.literalType(TokenString)
+	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false, true))
+	fn.forClass = classDef
+	name = nameOfClassFunc(LibFileType, fnName)
+	me.functionOrder = append(me.functionOrder, name)
+	me.functions[name] = fn
+	me.types[name] = ""
+
+	fnName = "close"
+	fn = funcInit(me, fnName)
+	fn.typed = me.literalType("void")
+	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false, true))
+	fn.forClass = classDef
+	name = nameOfClassFunc(LibFileType, fnName)
+	me.functionOrder = append(me.functionOrder, name)
+	me.functions[name] = fn
+	me.types[name] = ""
+}
+
 func (me *hmfile) libInit() {
 	me.mkBuiltIn(libEcho, "void")
 
@@ -130,6 +179,8 @@ func (me *hmfile) libInit() {
 	me.mkBuiltIn(libToFloat, TokenFloat)
 	me.mkBuiltIn(libToFloat32, TokenFloat32)
 	me.mkBuiltIn(libToFloat64, TokenFloat64)
+
+	me.libInitOpenFiles()
 
 	for primitive := range primitives {
 		me.types[primitive] = ""

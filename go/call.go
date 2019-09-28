@@ -13,7 +13,7 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 			me.eat(")")
 			break
 		} else if ix > 0 {
-			me.eat("delim")
+			me.eat(",")
 		}
 		param := me.calc(0)
 		arg := sig.args[ix]
@@ -38,7 +38,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			me.eat(")")
 			break
 		} else if pix > min || dict {
-			me.eat("delim")
+			me.eat(",")
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
 			argname := me.token.value

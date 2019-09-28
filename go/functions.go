@@ -120,7 +120,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 				if me.token.is == ")" {
 					break
 				} else {
-					me.eat("delim")
+					me.eat(",")
 				}
 			}
 		}

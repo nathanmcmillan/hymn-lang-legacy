@@ -1,12 +1,15 @@
 immutable uint64_max = uint64 2000000
 
-hash_string(key string) int
+int_hashcode(key int) int
+	return key
+
+string_hashcode(key string) int
 	mutable pos = 0
 	mutable value = uint64 0
 	length = key.len
 	for value < uint64_max and pos < length
 		value = (value << 8) + key[pos]
-		pos++
+		pos += 1
 	return value
 
 type dict_element<v>
@@ -29,8 +32,8 @@ dict.hash_element(key k) int
 
 dict.set(key k, value v)
 	bin = self.hash_element(key)
-	next = self.table[bin]
-	last = none<dict_element<v>>
+	mutable next = self.table[bin]
+	mutable last = none<dict_element<v>>
 	for next is some and key != next.key
 		last = next
 		next = next.next
@@ -69,6 +72,10 @@ dict.clear
 
 main
 	m = dict<int, string>
+		size: 10
+		capacity: 10
+		hashing: int_hashcode
+		table: []maybe<dict_element>
 	m.set(0, "cool")
 	out = m.get(0)
 	echo(out)

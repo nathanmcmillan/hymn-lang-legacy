@@ -322,7 +322,7 @@ func (me *parser) iswhile() bool {
 	pos := me.pos
 	token := me.tokens.get(pos)
 	for token.is != "line" && token.is != "eof" {
-		if token.is == "delim" {
+		if token.is == "," {
 			return false
 		}
 		pos++
@@ -341,9 +341,9 @@ func (me *parser) forexpr() *node {
 			n.push(me.calcBool())
 		} else {
 			n.push(me.forceassign(true, true))
-			me.eat("delim")
+			me.eat(",")
 			n.push(me.calcBool())
-			me.eat("delim")
+			me.eat(",")
 			n.push(me.forceassign(true, true))
 		}
 		me.eat("line")

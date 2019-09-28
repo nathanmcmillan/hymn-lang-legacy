@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -25,15 +26,7 @@ func hymnFmt(path string) {
 	skipCurrent["<"] = true
 	skipCurrent[">"] = true
 	skipCurrent["."] = true
-
-	skipCombo := make(map[string]map[string]bool)
-	// skipCombo["("] = make(map[string]bool)
-	// skipCombo["("][TokenInt] = true
-	// skipCombo["("]["id"] = true
-	// skipCombo["id"] = make(map[string]bool)
-	// skipCombo["id"]["("] = true
-	// skipCombo["id"][")"] = true
-	// skipCombo[")"] = make(map[string]bool)
+	skipCurrent[","] = true
 
 	var out strings.Builder
 	var previous *token
@@ -54,7 +47,6 @@ func hymnFmt(path string) {
 			if previous == nil {
 			} else if _, ok := skipPrevious[previous.is]; ok {
 			} else if _, ok := skipCurrent[token.is]; ok {
-			} else if _, ok := skipCombo[previous.is][token.is]; ok {
 			} else {
 				out.WriteString(" ")
 			}
@@ -74,7 +66,16 @@ func hymnFmt(path string) {
 		previous = token
 	}
 
-	fmt.Println(string(out.String()))
+	content := string(out.String())
+	fmt.Println(content)
+
+	n := path + ".fmt"
+	f := create(n)
+	f.WriteString(content)
+	f.Close()
+
+	os.Remove(path)
+	os.Rename(n, path)
 }
 
 func hymnNewLine(depth int) string {
@@ -89,7 +90,7 @@ func hymnFmtToken(t *token) string {
 	if t.value == "" {
 		return t.is
 	}
-	if t.is == TokenString {
+	if t.is == TokenStringLiteral {
 		return "\"" + t.value + "\""
 	}
 	return t.value

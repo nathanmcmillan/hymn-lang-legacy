@@ -309,7 +309,7 @@ func (me *tokenizer) get(pos int) *token {
 		me.push(token)
 		return token
 	}
-	if strings.IndexByte("$).[]'_?", c) >= 0 {
+	if strings.IndexByte("$).[]'_?,", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.push(token)
@@ -422,12 +422,6 @@ func (me *tokenizer) get(pos int) *token {
 		} else {
 			token = me.simpleToken(string(c))
 		}
-		me.push(token)
-		return token
-	}
-	if c == ',' {
-		stream.next()
-		token := me.simpleToken("delim")
 		me.push(token)
 		return token
 	}

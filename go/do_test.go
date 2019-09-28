@@ -29,7 +29,7 @@ func TestCompile(t *testing.T) {
 		path := tests + "/" + info.Name()
 		out := folder + "/out/" + nameNum
 		os.MkdirAll(out, os.ModePerm)
-		stdout := linker(out, path, libDir, false)
+		stdout := execCompile(out, path, libDir, false)
 		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {
 			t.Errorf("assert failed for " + info.Name())

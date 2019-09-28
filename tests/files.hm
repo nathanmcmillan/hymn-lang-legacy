@@ -1,5 +1,5 @@
 main
-  x = open("files.tree", "r")
-  echo(x.read())
-  echo(x.read_line())
-  x.close()
+	x = open("files.tree", "r")
+	echo(x.read())
+	echo(x.read_line())
+	x.close()

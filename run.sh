@@ -1,3 +1,6 @@
+#!/bin/bash -e
+cd "$(dirname "$0")"
+
 if [ -f compiler ]; then
   rm compiler
 fi

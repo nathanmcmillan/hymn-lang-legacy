@@ -96,7 +96,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					head = member
 				}
 			} else {
-				panic(me.fail() + "type \"" + head.vdata.full + "\" does not exist")
+				panic(me.fail() + "non primitive type \"" + head.vdata.full + "\" does not exist")
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {

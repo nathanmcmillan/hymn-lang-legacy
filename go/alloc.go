@@ -84,7 +84,7 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 		gimpl := make(map[string]string)
 		for ix, unionType := range unionDef.types {
 			if ix != 0 {
-				me.eat("delim")
+				me.eat(",")
 			}
 			param := me.calc(0)
 			if param.asVar().notEqual(unionType) {
@@ -162,7 +162,7 @@ func (me *parser) classParams(n *node, typed string) {
 			break
 		}
 		if pix > 0 || dict {
-			me.eat("delim")
+			me.eat(",")
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
 			vname := me.token.value

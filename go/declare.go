@@ -205,7 +205,7 @@ func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 	order := make([]string, 0)
 	for i := 0; i < gsize; i++ {
 		if i != 0 {
-			me.eat("delim")
+			me.eat(",")
 		}
 		gimpl := me.declareType(impl)
 		_, ok := me.hmfile.types[gimpl.full]
@@ -229,8 +229,8 @@ func (me *parser) declareFn() *varData {
 			fn.args = append(fn.args, fnArgInit(typed.asVariable()))
 			if me.token.is == ")" {
 				break
-			} else if me.token.is == "delim" {
-				me.eat("delim")
+			} else if me.token.is == "," {
+				me.eat(",")
 				continue
 			}
 			panic(me.fail() + "unexpected token in function pointer")

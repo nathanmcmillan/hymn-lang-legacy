@@ -24,29 +24,61 @@ func fmc(depth int) string {
 	return space
 }
 
-func main() {
-	args := os.Args
+func help() {
+	fmt.Println("Hymn command line interface.")
+	fmt.Println("")
+	fmt.Println("Usage:")
+	fmt.Println("")
+	fmt.Println("    hymn <command> [arguments]")
+	fmt.Println("")
+	fmt.Println("The commands are:")
+	fmt.Println("")
+	fmt.Println("    fmt      format a file")
+	fmt.Println("    build    compile a program")
+}
+
+func execFmt(args []string) {
 	size := len(args)
-	if size < 3 {
-		fmt.Println("lib? path?")
-		return
-	}
-	libDir := args[1]
-	path := args[2]
-	if size >= 4 && args[3] == "--fmt" {
+	if size <= 2 {
+		fmt.Println("[PATH]")
+	} else {
+		path := args[2]
 		hymnFmt(path)
+	}
+}
+
+func execBuild(args []string) {
+	size := len(args)
+	if size <= 3 {
+		fmt.Println("[LIB PATH] [PATH]")
 		return
 	}
+	libDir := args[2]
+	path := args[3]
 	isLib := false
-	if size >= 4 {
-		if args[3] == "--lib" {
+	if size >= 5 {
+		if args[4] == "--lib" {
 			isLib = true
 		}
 	}
-	linker("out", path, libDir, isLib)
+	execCompile("out", path, libDir, isLib)
 }
 
-func linker(out, path, libDir string, isLib bool) string {
+func main() {
+	args := os.Args
+	size := len(args)
+	if size <= 1 {
+		help()
+	} else if args[1] == "fmt" {
+		execFmt(args)
+	} else if args[1] == "build" {
+		execBuild(args)
+	} else {
+		help()
+	}
+}
+
+func execCompile(out, path, libDir string, isLib bool) string {
 	prog := programInit()
 	prog.out = out
 	prog.libDir = libDir

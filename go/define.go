@@ -10,8 +10,8 @@ func (me *parser) genericHeader() ([]string, map[string]bool) {
 			me.wordOrPrimitive()
 			dict[gname] = true
 			order = append(order, gname)
-			if me.token.is == "delim" {
-				me.eat("delim")
+			if me.token.is == "," {
+				me.eat(",")
 				continue
 			}
 			if me.token.is == ">" {
@@ -123,8 +123,8 @@ func (me *parser) defineEnum() {
 					if me.token.is == ")" {
 						break
 					}
-					if me.token.is == "delim" {
-						me.eat("delim")
+					if me.token.is == "," {
+						me.eat(",")
 						continue
 					}
 					unionArgType := me.token.value

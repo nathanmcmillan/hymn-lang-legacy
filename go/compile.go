@@ -846,6 +846,7 @@ func (me *cfile) compileCall(node *node) *cnode {
 }
 
 func (me *cfile) builtin(name string, parameters []*node) string {
+	fmt.Println("CHECK FOR BUILT IN FN ::", name)
 	if name == libOpen {
 		paramA := me.eval(parameters[0])
 		paramB := me.eval(parameters[1])

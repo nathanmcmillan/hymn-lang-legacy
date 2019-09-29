@@ -15,6 +15,7 @@ type program struct {
 	out       string
 	directory string
 	libDir    string
+	hmlib     *hmlib
 	hmfiles   map[string]*hmfile
 	sources   map[string]string
 }

@@ -8,36 +8,8 @@
     <link rel="manifest" href="web/manifest.json">
     <style>
         @font-face {
-            font-family: 'roboto';
+            font-family: 'Roboto';
             src: url(web/roboto.ttf);
-        }
-
-        :root {
-            --content: 60rem;
-            --space: 1rem;
-            --main-color: rgb(92, 214, 114);
-            --main-color-2: rgb(226, 248, 230);
-            --button-color: rgb(212, 236, 250);
-            --button-color-2: rgb(0, 120, 210);
-            --button-color-3: rgb(50, 146, 220);
-            --font-color: white;
-            --font-color-hover: rgb(230, 230, 230);
-            --font-color-2: rgb(70, 208, 96);
-            --font-color-3: #337ab7;
-            --black-font: rgb(48, 48, 48);
-        }
-
-        html {
-            font-family: 'roboto';
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
         }
     </style>
     <link rel="stylesheet" href="web/index.css">
@@ -45,23 +17,78 @@
 </head>
 
 <body>
-    <div class="head">
-        <a href="index.html" class="head_title">Hymn</a>
-        <div class="nav_list">
-            <a href="web/learn.html" class="head_link">Learn</a>
-            <a href="web/play.html" class="head_link">Play</a>
-            <a href="web/install.html" class="head_link">Install</a>
-            <a href="web/blog.html" class="head_link">Blog</a>
-            <a href="web/community.html" class="head_link">Community</a>
-            <a href="web/docs.html" class="head_link">Documentation</a>
-            <a href="https://github.com/gameinbucket/hymn-lang" class="head_link">Source</a>
-        </div>
-    </div>
-    <h1>Hymn programming language</h1>
-    <p>Compiles to readable C code.</p>
-    <div class="foot">
-        <a href="web/license.html" class="foot_link">License</a>
-    </div>
+    <header>
+        <nav class="head_nav">
+            <div class="head_title"><a href="index.html">Hymn</a></div>
+            <ul class="head_menu">
+                <li class="head_link"><a href="web/learn.html">Learn</a></li>
+                <li class="head_link"><a href="web/playground.html">Play</a></li>
+                <li class="head_link"><a href="web/install.html">Install</a></li>
+                <li class="head_link"><a href="web/documentation.html">Documentation</a></li>
+                <li class="head_link"><a href="web/blog.html">Blog</a></li>
+                <li class="head_link"><a href="web/community.html">Community</a></li>
+                <li class="head_link"><a href="https://github.com/gameinbucket/hymn-lang">Source</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section class="home_section">
+            <h1 class="summary"><span class="bold">Hymn</span> is a programming language designed to make writing simple
+                imperitive programs easy. It compiles to efficient, readable C code.</h1>
+            <div class="big_button"><a href="web/install.html">Download Hymn</a></div>
+        </section>
+        <section class="code_section">
+            <div class="code">
+                <pre>
+type vec&lt;t&gt;
+    x t
+    y t
+    z t
+
+hello(flag bool) maybe&lt;vec&lt;float32&gt;&gt;
+    if flag
+        return vec(1.2, 2.3, 3.4)
+    else
+        return none
+
+main
+    v = hello(true)
+    match v
+        some => echo(v.x)
+        none => _
+                </pre>
+            </div>
+            <div class="align_right">
+                <div class="std_button"><a href="web/playground.html">Run</a></div>
+                <div class="std_button"><a href="web/playground.html">Open in playground</a></div>
+                <div class="std_button"><a href="web/learn.html">Learn more</a></div>
+            </div>
+        </section>
+        <section class="feature_section">
+            <div>Features</div>
+            <div>Simple syntax</div>
+            <div>Static typed</div>
+            <div>Generics</div>
+            <div>No runtime</div>
+            <div>Fully readable C code</div>
+            <div>Compiled binaries</div>
+        </section>
+        <section class="news_section">
+            <div>Recent posts</div>
+            <div>Nothing new yet</div>
+        </section>
+    </main>
+    <footer>
+        <ul class="foot_menu">
+            <li class="foot_item">
+                <a href="web/copyright.html">Copyright</a>
+            </li>
+            |
+            <li class="foot_item">
+                <a href="https://github.com/gameinbucket/hymn-lang">Source Code</a>
+            </li>
+        </ul>
+    </footer>
     <script src="web/index.js"></script>
 </body>
 

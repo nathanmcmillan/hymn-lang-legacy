@@ -1,99 +1,223 @@
-.head {
+:root {
+    --font-name: 'Roboto';
+    --font-name-2: 'Noto Sans';
+    --content: 60rem;
+    --button-color: rgb(126, 214, 234);
+    --button-color-hover: rgb(130, 220, 240);
+    --font-color-hover: rgb(230, 230, 230);
+    --black-font: rgb(48, 48, 48);
+    --black-font-hover: rgb(96, 96, 96);
+    --code-font-color: rgb(48, 48, 48);
+    --code-border-color: rgb(96, 96, 96);
+    --code-background: rgb(246, 248, 250);
+    --blue-font: rgb(50, 146, 220);
+}
+
+html {
+    font-family: var(--font-name);
+    color: var(--black-font);
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
     display: flex;
-    background-color: white;
-    align-items: center;
-    padding: 1rem;
+    flex-direction: column;
 }
 
-.info {
-    background-color: var(--main-color);
-    padding: 1rem;
-    margin-bottom: 0.5rem;
+pre {
+    padding: 0;
+    margin: 0;
 }
 
-.head_title {
-    display: flex;
-    align-items: center;
-    margin-right: var(--space);
-    color: var(---black-font);
+a {
+    text-decoration: none;
+    color: inherit;
 }
 
-.head_title:hover {
+a:visited {
+    color: inherit;
+}
+
+a:hover {
     cursor: pointer;
+    text-decoration: underline;
 }
 
-.infotitle {
-    color: var(--font-color);
+header {
+    padding: 0 1rem;
+    margin-bottom: 2rem;
 }
 
-.content {
-    width: var(--content);
+main {
+    flex: 1;
+    max-width: var(--content);
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.head_nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    max-width: var(--content);
     margin-left: auto;
     margin-right: auto;
 }
 
-.sign {
-    color: black;
-}
-
-.sign:hover {
-    cursor: pointer;
-    color: darkgray;
-}
-
-.in {
-    background-color: white;
-    border: none;
-    outline: none;
-    border-radius: 0.2rem;
-    padding: 0.2rem 0.4rem;
+.head_title {
     font-weight: bold;
-    color: var(--black-font);
-    font-family: 'roboto';
+    color: var(--button-color);
 }
 
-.input-group {
-    background-color: rgb(212, 236, 250);
+.head_menu {
+    display: flex;
+    flex-direction: row;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
-.in-div {
-    padding: 0.5rem;
-    display: inline-block;
+.head_link {
+    display: inline-flex;
 }
 
-.in-label {
-    color: var(--font-color-3);
+.head_link a {
+    padding: 1rem 0.5rem;
 }
 
-.goto {
-    display: inline-block;
-    margin: 0.5rem;
-    padding: var(--space);
-    border: 0;
-    border-radius: 0.25rem;
-    background-color: var(--button-color);
+.head_link:hover {
+    color: var(--black-font-hover);
+}
+
+footer {
+    margin: 5rem auto 0;
+    display: flex;
     text-align: center;
+    padding: 0.5rem;
+    font-size: 0.9rem;
 }
 
-.goto:hover {
-    cursor: pointer;
-    color: var(--font-color);
+.foot_menu {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--black-font);
 }
 
-.do {
-    margin-top: var(--space);
-    min-width: 10rem;
-    background-color: var(--button-color-2);
-    border: none;
-    outline: none;
+.foot_item {
+    display: inline;
+    color: var(--blue-font);
+}
+
+.foot_item a {
+    display: inline;
+    padding: 0 0.5rem;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.home_section {
+    flex: 0 0 27rem;
+}
+
+.code_section {
+    flex: 0 0 27rem;
+}
+
+.feature_section {
+    flex: 0 0 27rem;
+}
+
+.news_section {
+    flex: 0 0 27rem;
+}
+
+.align_right {
+    text-align: right;
+}
+
+.summary {
+    margin: 0;
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    font-weight: normal;
+}
+
+.code {
+    max-width: 30rem;
     border-radius: 0.2rem;
     padding: 0.6rem 0.6rem;
-    font-weight: bold;
-    color: white;
-    font-family: 'roboto';
+    box-sizing: border-box;
+    align-items: flex-start;
+    color: var(--code-font-color);
+    background-color: var(--code-background);
+    border: 1px solid var(--code-border-color);
+    margin-bottom: 0.5rem;
 }
 
-.do:hover {
+.std_button {
+    font-family: var(--font-name-2);
+    font-size: 0.75rem;
+    text-align: center;
+    font-weight: bold;
+    color: var(--black-font);
+    display: inline-block;
+    min-width: 6rem;
+    border: 1px solid var(--button-color);
+    background-color: var(--button-color);
+    outline: none;
+    border-radius: 0.2rem;
+    padding: 0.3rem 0.3rem;
+    box-sizing: border-box;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 5px 0px;
+}
+
+.std_button:hover {
     cursor: pointer;
-    background-color: var(--button-color-3);
+    border-color: var(--button-color-hover);
+    background-color: var(--button-color-hover);
+}
+
+.std_button a:hover {
+    text-decoration: none;
+}
+
+.big_button {
+    font-family: var(--font-name-2);
+    font-size: 1.5rem;
+    text-align: center;
+    font-weight: bold;
+    color: var(--black-font);
+    display: inline-block;
+    border: 1px solid var(--button-color);
+    background-color: var(--button-color);
+    outline: none;
+    border-radius: 0.2rem;
+    box-sizing: border-box;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 5px 0px;
+}
+
+.big_button:hover {
+    cursor: pointer;
+    border-color: var(--button-color-hover);
+    background-color: var(--button-color-hover);
+}
+
+.big_button a {
+    text-decoration: none;
+    display: block;
+    padding: 0.9rem 2.6rem;
 }

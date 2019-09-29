@@ -1,0 +1,19 @@
+(*                                        *)
+(*           The Hymn Compiler            *)
+(* Copyright 2019 Nathan Michael McMillan *)
+(*                                        *)
+
+import tokens
+
+main
+	t = tokens.tokenizer()
+	echo("Hymn command line interface.")
+	echo("")
+	echo("Usage:")
+	echo("")
+	echo("    hymn <command> [arguments]")
+	echo("")
+	echo("The commands are:")
+	echo("")
+	echo("    fmt      format a file")
+	echo("    build    compile a program")

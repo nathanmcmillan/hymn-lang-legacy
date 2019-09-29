@@ -1,7 +1,3 @@
-(*                                            *)
-(*             The Hymn Compiler              *)
-(* (c) Copyright 2019 Nathan Michael McMillan *)
-(*                                            *)
 
 main
 	x = open("files.tree", "r")

@@ -1,27 +1,8 @@
 package main
 
-const (
-	libEcho      = "echo"
-	libToStr     = "to_str"
-	libToInt     = "to_int"
-	libToInt8    = "to_int8"
-	libToInt16   = "to_int16"
-	libToInt32   = "to_int32"
-	libToInt64   = "to_int64"
-	libToUInt    = "to_uint"
-	libToUInt8   = "to_uint8"
-	libToUInt16  = "to_uint16"
-	libToUInt32  = "to_uint32"
-	libToUInt64  = "to_uint64"
-	libToFloat   = "to_float"
-	libToFloat32 = "to_float32"
-	libToFloat64 = "to_float64"
-	libOpen      = "open"
-)
-
 type hmfile struct {
 	program       *program
-	global        *hmlib
+	hmlib         *hmlib
 	name          string
 	rootScope     *scope
 	scope         *scope
@@ -43,10 +24,11 @@ type hmfile struct {
 	varPrefix     string
 }
 
-func (prog *program) hymnFileInit(name string) *hmfile {
+func (program *program) hymnFileInit(name string) *hmfile {
 	hm := &hmfile{}
 	hm.name = name
-	hm.program = prog
+	hm.program = program
+	hm.hmlib = program.hmlib
 	hm.rootScope = scopeInit(nil)
 	hm.scope = hm.rootScope
 	hm.staticScope = make(map[string]*variable)
@@ -60,9 +42,7 @@ func (prog *program) hymnFileInit(name string) *hmfile {
 	hm.defineOrder = make([]string, 0)
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
-	hm.libInit()
 	hm.prefixes(name)
-
 	return hm
 }
 

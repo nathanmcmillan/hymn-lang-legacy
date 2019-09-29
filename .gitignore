@@ -1,7 +1,7 @@
-__pycache__
-.vscode
-c-code
-out
-example
-examples
+.vscode/
+bin/
+out/
+example/
+go/autotest/out
+
 compiler

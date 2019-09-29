@@ -1,5 +1,10 @@
 package main
 
+//
+//           The Hymn Compiler
+// Copyright 2019 Nathan Michael McMillan
+//
+
 import (
 	"fmt"
 	"os"
@@ -37,10 +42,10 @@ func help() {
 	fmt.Println("    build    compile a program")
 }
 
-func execFmt(args []string) {
+func execFormat(args []string) {
 	size := len(args)
 	if size <= 2 {
-		fmt.Println("[PATH]")
+		fmt.Println("[path]")
 	} else {
 		path := args[2]
 		hymnFmt(path)
@@ -50,7 +55,7 @@ func execFmt(args []string) {
 func execBuild(args []string) {
 	size := len(args)
 	if size <= 3 {
-		fmt.Println("[LIB PATH] [PATH]")
+		fmt.Println("[library] [path]")
 		return
 	}
 	libDir := args[2]
@@ -70,7 +75,7 @@ func main() {
 	if size <= 1 {
 		help()
 	} else if args[1] == "fmt" {
-		execFmt(args)
+		execFormat(args)
 	} else if args[1] == "build" {
 		execBuild(args)
 	} else {
@@ -79,19 +84,23 @@ func main() {
 }
 
 func execCompile(out, path, libDir string, isLib bool) string {
-	prog := programInit()
-	prog.out = out
-	prog.libDir = libDir
-	prog.directory = fileDir(path)
+	program := programInit()
+	program.out = out
+	program.libDir = libDir
+	program.directory = fileDir(path)
 
-	prog.compile(out, path, libDir)
+	hmlib := &hmlib{}
+	hmlib.libs()
+	program.hmlib = hmlib
+
+	program.compile(out, path, libDir)
 
 	name := fileName(path)
 	fileOut := out + "/" + name
 	if exists(fileOut) {
 		os.Remove(fileOut)
 	}
-	gcc(prog.sources, fileOut, isLib)
+	gcc(program.sources, fileOut, isLib)
 	return app(fileOut)
 }
 

@@ -1,8 +1,0 @@
-mutable
-  glob = "foo"
-
-init
-  glob = "bar"
-
-main
-  echo(glob)

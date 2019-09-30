@@ -23,6 +23,7 @@ hmlib_string hmlib_string_init_with_length(const char *init, size_t len);
 hmlib_string hmlib_string_init(const char *init);
 hmlib_string hmlib_string_concat(const hmlib_string a, const hmlib_string b);
 size_t hmlib_string_len(const hmlib_string s);
+int hmlib_string_len_int(const hmlib_string s);
 void hmlib_string_free(const hmlib_string s);
 
 char *hmlib_concat(const char *a, const char *b);

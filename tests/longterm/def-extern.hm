@@ -1,0 +1,6 @@
+
+extern foobar(in int) int
+
+main
+  mutable x = foobar(4)
+  echo(x)

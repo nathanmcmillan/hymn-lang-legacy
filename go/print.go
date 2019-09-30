@@ -19,7 +19,7 @@ func (me *node) string(lv int) string {
 		s += ", id:" + me.idata.string()
 	}
 	if me.fn != nil {
-		s += ", call:" + me.fn.module.name + "." + me.fn.name
+		s += ", call:" + me.fn.canonical()
 	}
 	if me.vdata != nil {
 		s += ", var:" + me.vdata.full

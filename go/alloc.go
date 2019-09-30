@@ -25,11 +25,11 @@ func (me *parser) buildAnyType(alloc *allocData) *varData {
 		module = me.hmfile
 	}
 
-	if _, ok := module.classes[typed]; ok {
+	if _, ok := module.getClass(typed); ok {
 		return me.buildClass(nil, module, alloc)
 	}
 
-	if _, ok := module.types[typed]; !ok {
+	if _, ok := module.getType(typed); !ok {
 		panic(me.fail() + "type \"" + typed + "\" for module \"" + module.name + "\" not found")
 	}
 

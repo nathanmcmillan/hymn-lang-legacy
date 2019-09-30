@@ -56,7 +56,7 @@ func (me *parser) expression() *node {
 	}
 	if op == "id" {
 		name := token.value
-		if _, ok := me.hmfile.functions[name]; ok {
+		if _, ok := me.hmfile.getFunction(name); ok {
 			return me.parseFn(me.hmfile)
 		}
 		n := me.eatvar(me.hmfile)

@@ -7,4 +7,9 @@ fi
 cd go
 go build -o hymn
 cd ..
-mv go/hymn bin/hymn
+if [ -f go/hymn ]; then
+  if [ ! -d bin ]; then
+    mkdir -p bin
+  fi
+  mv go/hymn bin/hymn
+fi

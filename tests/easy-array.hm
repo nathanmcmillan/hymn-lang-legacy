@@ -1,0 +1,7 @@
+main
+  mutable x = []int
+  x = push(x, 33)
+  x = push(x, 44)
+  echo(len(x))
+  echo(x[0])
+  echo(x[1])

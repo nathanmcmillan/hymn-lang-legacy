@@ -108,6 +108,7 @@ func (me *program) compile(out, path, libDir string) {
 	name := fileName(path)
 	hymn := me.hymnFileInit(name)
 	me.hmfiles[name] = hymn
+	me.hmorder = append(me.hmorder, hymn)
 	hymn.parse(out, path)
 	source := hymn.generateC(out, name, libDir)
 	me.sources[name] = source

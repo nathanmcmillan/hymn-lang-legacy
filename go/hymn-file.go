@@ -22,6 +22,7 @@ type hmfile struct {
 	enumPrefix    string
 	unionPrefix   string
 	varPrefix     string
+	needInit      bool
 }
 
 func (program *program) hymnFileInit(name string) *hmfile {
@@ -82,4 +83,41 @@ func (me *hmfile) getvar(name string) *variable {
 		}
 		scope = scope.root
 	}
+}
+
+func (me *hmfile) getType(name string) (string, bool) {
+	if x, ok := me.types[name]; ok {
+		return x, true
+	}
+	if x, ok := me.hmlib.types[name]; ok {
+		return x, true
+	}
+	return "", false
+}
+
+func (me *hmfile) getFunction(name string) (*function, bool) {
+	if x, ok := me.functions[name]; ok {
+		return x, true
+	}
+	if x, ok := me.hmlib.functions[name]; ok {
+		return x, true
+	}
+	return nil, false
+}
+
+func (me *hmfile) getClass(name string) (*class, bool) {
+	if x, ok := me.classes[name]; ok {
+		return x, true
+	}
+	if x, ok := me.hmlib.classes[name]; ok {
+		return x, true
+	}
+	return nil, false
+}
+
+func (me *hmfile) getEnum(name string) (*enum, bool) {
+	if x, ok := me.enums[name]; ok {
+		return x, true
+	}
+	return nil, false
 }

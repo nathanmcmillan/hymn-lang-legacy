@@ -1,0 +1,5 @@
+main
+  x = 'a'
+  echo(x)
+  s = "hello worl" + 'd'
+  echo(s)

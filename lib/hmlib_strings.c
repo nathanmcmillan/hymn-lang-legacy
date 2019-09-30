@@ -44,6 +44,11 @@ size_t hmlib_string_len(const hmlib_string s)
   return sh->len;
 }
 
+int hmlib_string_len_int(const hmlib_string s)
+{
+  return (int)hmlib_string_len(s);
+}
+
 void hmlib_string_free(const hmlib_string s)
 {
   free((char *)s - sizeof(hmlib_string_head));

@@ -20,6 +20,14 @@ func funcInit(module *hmfile, name string) *function {
 	return f
 }
 
+func (me *function) canonical() string {
+	name := me.name
+	if me.module != nil {
+		name = me.module.name + "." + name
+	}
+	return name
+}
+
 func (me *function) asSig() *fnSig {
 	sig := fnSigInit(me.module)
 	for _, arg := range me.args {

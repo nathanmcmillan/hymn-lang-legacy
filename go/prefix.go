@@ -29,6 +29,14 @@ func prefixPrimitive(me *parser, op string) *node {
 	return node
 }
 
+func prefixString(me *parser, op string) *node {
+	node := nodeInit(TokenString)
+	node.vdata = me.hmfile.typeToVarData(TokenString)
+	node.value = me.token.value
+	me.eat(TokenStringLiteral)
+	return node
+}
+
 func prefixIdent(me *parser, op string) *node {
 	useStack := false
 	if me.token.is == "$" {
@@ -37,29 +45,31 @@ func prefixIdent(me *parser, op string) *node {
 	}
 
 	name := me.token.value
-	if _, ok := me.hmfile.types[name]; ok {
-		if _, ok := me.hmfile.functions[name]; ok {
-			return me.parseFn(me.hmfile)
+	module := me.hmfile
+
+	if _, ok := module.getType(name); ok {
+		if _, ok := module.getFunction(name); ok {
+			return me.parseFn(module)
 		}
-		if _, ok := me.hmfile.classes[name]; ok {
+		if _, ok := module.getClass(name); ok {
 			data := &allocData{}
 			data.useStack = useStack
-			return me.allocClass(me.hmfile, data)
+			return me.allocClass(module, data)
 		}
-		if _, ok := me.hmfile.enums[name]; ok {
+		if _, ok := module.enums[name]; ok {
 			data := &allocData{}
 			data.useStack = useStack
-			return me.allocEnum(me.hmfile, data)
+			return me.allocEnum(module, data)
 		}
-		if def, ok := me.hmfile.defs[name]; ok {
+		if def, ok := module.defs[name]; ok {
 			return me.exprDef(name, def)
 		}
 		panic(me.fail() + "bad type \"" + name + "\" definition")
 	}
-	if _, ok := me.hmfile.imports[name]; ok {
+	if _, ok := module.imports[name]; ok {
 		return me.extern()
 	}
-	v := me.hmfile.getvar(name)
+	v := module.getvar(name)
 	if me.peek().is == ":=" {
 		if v != nil && v.mutable == false {
 			panic(me.fail() + "variable not mutable")
@@ -67,21 +77,23 @@ func prefixIdent(me *parser, op string) *node {
 	} else if v == nil {
 		panic(me.fail() + "variable out of scope")
 	}
-	return me.eatvar(me.hmfile)
+	return me.eatvar(module)
 }
 
 func prefixArray(me *parser, op string) *node {
 	me.eat("[")
-	size := me.calc(0)
-	if size.getType() != TokenInt {
-		panic(me.fail() + "array size must be integer")
-	}
-	me.eat("]")
 	node := nodeInit("array")
 	alloc := &allocData{}
 	alloc.isArray = true
+	if me.token.is != "]" {
+		size := me.calc(0)
+		if size.getType() != TokenInt {
+			panic(me.fail() + "array size must be integer")
+		}
+		node.push(size)
+	}
+	me.eat("]")
 	node.vdata = me.buildAnyType(alloc)
-	node.push(size)
 	return node
 }
 

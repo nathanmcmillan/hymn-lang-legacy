@@ -45,18 +45,23 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 		}
 	}
 
-	if len(me.statics) > 0 {
+	if len(me.statics) != 0 {
+		me.needInit = true
+	}
+
+	if me.needInit {
 		for _, s := range me.statics {
-			code += cfile.assignStatic(s)
+			code += cfile.declareStatic(s)
 		}
 		cfile.headExternSection += "\n"
 		code += "\n"
-	}
 
-	// TODO init func
-	if len(me.statics) != 0 {
 		cfile.headFuncSection += "void " + me.funcNameSpace("init") + "();\n"
-		code += "void " + me.funcNameSpace("init") + "() {\n\n}\n\n"
+		code += "void " + me.funcNameSpace("init") + "() {\n"
+		for _, s := range me.statics {
+			code += cfile.initStatic(s)
+		}
+		code += "}\n\n"
 	}
 
 	for _, f := range me.functionOrder {
@@ -194,29 +199,19 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return me.block(n)
 	}
 	if op == "break" {
-		cn := codeNode(n, "break")
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, "break")
 	}
 	if op == "continue" {
-		cn := codeNode(n, "continue")
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, "continue")
 	}
 	if op == "goto" {
-		cn := codeNode(n, "goto "+n.value)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, "goto "+n.value)
 	}
 	if op == "label" {
-		cn := codeNode(n, n.value+":")
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, n.value+":")
 	}
 	if op == "pass" {
-		cn := codeNode(n, "")
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, "")
 	}
 	if op == "match" {
 		return me.compileMatch(n)
@@ -230,18 +225,17 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	if op == "if" {
 		return me.compileIf(n)
 	}
+	if op == TokenRawString {
+		return me.compileRawString(n)
+	}
 	if op == TokenString {
-		cn := codeNode(n, "\""+n.value+"\"")
-		fmt.Println(cn.string(0))
-		return cn
+		return me.compileString(n)
 	}
 	if op == "none" {
 		return me.compileNone(n)
 	}
 	if _, ok := primitives[op]; ok {
-		cn := codeNode(n, n.value)
-		fmt.Println(cn.string(0))
-		return cn
+		return codeNode(n, n.value)
 	}
 	panic("eval unknown operation " + n.string(0))
 }
@@ -261,7 +255,7 @@ func (me *cfile) compilePrefixNeg(n *node) *cnode {
 }
 
 func (me *cfile) compileCast(n *node) *cnode {
-	typ := primitiveC(n.vdata.full)
+	typ := getCName(n.vdata.full)
 	code := "(" + typ + ")" + me.eval(n.has[0]).code
 	return codeNode(n, code)
 }
@@ -353,6 +347,15 @@ func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 	} else {
 		code = n.idata.module.varNameSpace(n.idata.name)
 	}
+	return codeNode(n, code)
+}
+
+func (me *cfile) compileRawString(n *node) *cnode {
+	return codeNode(n, "\""+n.value+"\"")
+}
+
+func (me *cfile) compileString(n *node) *cnode {
+	code := "hmlib_string_init(\"" + n.value + "\")"
 	return codeNode(n, code)
 }
 
@@ -614,12 +617,15 @@ func fmtassignspace(s string) string {
 }
 
 func (me *cfile) allocArray(n *node) string {
-	size := me.eval(n.has[0])
+	size := "0"
+	if len(n.has) > 0 {
+		size = me.eval(n.has[0]).code
+	}
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return "[" + size.code + "]"
+		return "[" + size + "]"
 	}
 	mtype := n.asVar().typeSig()
-	return "malloc((" + size.code + ") * sizeof(" + mtype + "))"
+	return "malloc((" + size + ") * sizeof(" + mtype + "))"
 }
 
 func (me *cfile) declare(n *node) string {
@@ -631,7 +637,8 @@ func (me *cfile) declare(n *node) string {
 	}
 	code := ""
 	name := n.idata.name
-	if me.getvar(name) == nil {
+	v := me.getvar(name)
+	if v == nil {
 		malloc := true
 		useStack := false
 		if _, ok := n.attributes["no-malloc"]; ok {
@@ -663,7 +670,7 @@ func (me *cfile) declare(n *node) string {
 			code += newVar.cName
 		}
 	} else {
-		code += name
+		code += v.cName
 	}
 
 	return code
@@ -679,23 +686,42 @@ func (me *cfile) maybeLet(code string, attributes map[string]string) string {
 	return " = "
 }
 
-func (me *cfile) assignStatic(n *node) string {
+func (me *cfile) declareStatic(n *node) string {
 	left := n.has[0]
 	right := n.has[1]
 	right.attributes["no-malloc"] = "true"
 
 	declareCode := me.declare(left)
-	rightCode := me.eval(right).code
-	setSign := me.maybeLet(rightCode, right.attributes)
+	rightCode := me.eval(right)
+	setSign := me.maybeLet(rightCode.code, right.attributes)
 
 	head := "extern " + declareCode
 	if setSign == "" {
-		head += rightCode
+		head += rightCode.code
 	}
 	head += ";\n"
 	me.headExternSection += head
 
-	code := declareCode + setSign + rightCode + ";\n"
+	if setSign == "" {
+		return declareCode + setSign + rightCode.code + ";\n"
+	}
+	return declareCode + ";\n"
+}
+
+func (me *cfile) initStatic(n *node) string {
+	left := n.has[0]
+	right := n.has[1]
+	right.attributes["no-malloc"] = "true"
+
+	declareCode := me.declare(left)
+	rightCode := me.eval(right)
+	setSign := me.maybeLet(rightCode.code, right.attributes)
+
+	if setSign == "" {
+		return ""
+	}
+
+	code := fmc(1) + declareCode + setSign + rightCode.code + ";\n"
 	return code
 }
 
@@ -847,15 +873,38 @@ func (me *cfile) compileCall(node *node) *cnode {
 
 func (me *cfile) builtin(name string, parameters []*node) string {
 	fmt.Println("CHECK FOR BUILT IN FN ::", name)
-	if name == libOpen {
-		paramA := me.eval(parameters[0])
-		paramB := me.eval(parameters[1])
-		return "fopen(" + paramA.code + ", " + paramB.code + ")"
-	}
-	if name == libEcho {
+	switch name {
+	case libPush:
+		param0 := me.eval(parameters[0])
+		p := param0.asVar(me.hmfile)
+		if p.checkIsArray() {
+			param1 := me.eval(parameters[1])
+			return "push(" + param0.code + "," + param1.code + ")"
+		}
+		panic("argument for push was not an array \"" + p.full + "\"")
+	case libLength:
+		param := me.eval(parameters[0])
+		switch param.getType() {
+		case TokenRawString:
+			return "((int) strlen(" + param.code + "))"
+		case TokenString:
+			return "hmlib_string_len_int(" + param.code + ")"
+		}
+		p := param.asVar(me.hmfile)
+		if p.checkIsArray() {
+			return "todo_array_get_len(" + param.code + ")"
+		}
+		panic("argument for echo was " + param.string(0))
+	case libOpen:
+		param0 := me.eval(parameters[0])
+		param1 := me.eval(parameters[1])
+		return "fopen(" + param0.code + ", " + param1.code + ")"
+	case libEcho:
 		param := me.eval(parameters[0])
 		switch param.getType() {
 		case TokenString:
+			return "printf(\"%s\\n\", " + param.code + ")"
+		case TokenRawString:
 			return "printf(\"%s\\n\", " + param.code + ")"
 		case TokenInt:
 			return "printf(\"%d\\n\", " + param.code + ")"
@@ -885,10 +934,11 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 			return "printf(\"%f\\n\", " + param.code + ")"
 		case "bool":
 			return "printf(\"%s\\n\", " + param.code + " ? \"true\" : \"false\")"
+		case TokenLibSize:
+			return "printf(\"%zu\\n\", " + param.code + ")"
 		}
 		panic("argument for echo was " + param.string(0))
-	}
-	if name == libToStr {
+	case libToStr:
 		param := me.eval(parameters[0])
 		switch param.getType() {
 		case TokenString:
@@ -923,97 +973,85 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 			return "(" + param.code + " ? \"true\" : \"false\")"
 		}
 		panic("argument for string cast was " + param.string(0))
-	}
-	if name == libToInt {
+	case libToInt:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_int(" + param.code + ")"
 		}
 		panic("argument for conversion to int was " + param.string(0))
-	}
-	if name == libToInt8 {
+	case libToInt8:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_int8(" + param.code + ")"
 		}
 		panic("argument for conversion to int8 was " + param.string(0))
-	}
-	if name == libToInt16 {
+	case libToInt16:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_int16(" + param.code + ")"
 		}
 		panic("argument for conversion to int16 was " + param.string(0))
-	}
-	if name == libToInt32 {
+	case libToInt32:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_int32(" + param.code + ")"
 		}
 		panic("argument for conversion to int32 was " + param.string(0))
-	}
-	if name == libToInt64 {
+	case libToInt64:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_int64(" + param.code + ")"
 		}
 		panic("argument for conversion to int64 was " + param.string(0))
-	}
-	if name == libToUInt {
+	case libToUInt:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_uint(" + param.code + ")"
 		}
 		panic("argument for conversion to uint was " + param.string(0))
-	}
-	if name == libToUInt8 {
+	case libToUInt8:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_uint8(" + param.code + ")"
 		}
 		panic("argument for conversion to uint8 was " + param.string(0))
-	}
-	if name == libToUInt16 {
+	case libToUInt16:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_uint16(" + param.code + ")"
 		}
 		panic("argument for conversion to uint16 was " + param.string(0))
-	}
-	if name == libToUInt32 {
+	case libToUInt32:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_uint32(" + param.code + ")"
 		}
 		panic("argument for conversion to uint32 was " + param.string(0))
-	}
-	if name == libToUInt64 {
+	case libToUInt64:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_uint64(" + param.code + ")"
 		}
 		panic("argument for conversion to uint64 was " + param.string(0))
-	}
-	if name == libToFloat {
+	case libToFloat:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_float(" + param.code + ")"
 		}
 		panic("argument for conversion to float was " + param.string(0))
-	}
-	if name == libToFloat32 {
+	case libToFloat32:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_float32(" + param.code + ")"
 		}
 		panic("argument for conversion to float32 was " + param.string(0))
-	}
-	if name == libToFloat64 {
+	case libToFloat64:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
 			return "hmlib_string_to_float64(" + param.code + ")"
 		}
 		panic("argument for conversion to float64 was " + param.string(0))
+	default:
+		return ""
 	}
-	return ""
 }

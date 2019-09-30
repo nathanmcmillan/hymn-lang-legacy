@@ -26,6 +26,7 @@ const (
 	TokenFloat32        = "float32"
 	TokenFloat64        = "float64"
 	TokenString         = "string"
+	TokenRawString      = "string-raw"
 	TokenBoolean        = "bool"
 )
 

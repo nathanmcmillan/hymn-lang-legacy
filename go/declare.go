@@ -208,7 +208,7 @@ func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 			me.eat(",")
 		}
 		gimpl := me.declareType(impl)
-		_, ok := me.hmfile.types[gimpl.full]
+		_, ok := me.hmfile.getType(gimpl.full)
 		if !ok {
 			if impl {
 				panic(me.fail() + "generic implementation type \"" + gimpl.full + "\" does not exist")

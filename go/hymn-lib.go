@@ -17,6 +17,14 @@ const (
 	libToFloat32 = "to_float32"
 	libToFloat64 = "to_float64"
 	libOpen      = "open"
+	libLength    = "len"
+	libPush      = "push"
+)
+
+// library tokens
+const (
+	TokenLibSize = "SIZE"
+	TokenLibFile = "FILE"
 )
 
 type hmlib struct {
@@ -27,61 +35,69 @@ type hmlib struct {
 }
 
 func (me *hmlib) simple(name string, ret string) {
-	fn := funcInit(me, name)
-	fn.typed = me.typeToVarData(ret)
+	fn := funcInit(nil, name)
+	fn.typed = me.literalType(ret)
 	fn.args = append(fn.args, me.fnArgInit("?", "s", false, false))
 	me.functions[name] = fn
 	me.types[name] = ""
 }
 
-func (me *hmlib) files() {
-	const LibFileType = "FILE"
-	me.types[LibFileType] = ""
-	me.defineOrder = append(me.defineOrder, LibFileType+"_type")
+func (me *hmlib) initPush() {
+	fn := funcInit(nil, libPush)
+	fn.typed = me.literalType("?")
+	fn.args = append(fn.args, me.fnArgInit("?", "a", false, false))
+	fn.args = append(fn.args, me.fnArgInit("?", "v", false, false))
+	me.functions[libPush] = fn
+	me.types[libPush] = ""
+}
+
+func (me *hmlib) initIO() {
+	me.types[TokenLibFile] = ""
 	order := make([]string, 0)
 	dict := make(map[string]bool, 0)
-	classDef := classInit(LibFileType, order, dict)
-	me.classes[LibFileType] = classDef
+	classDef := classInit(TokenLibFile, order, dict)
+	me.classes[TokenLibFile] = classDef
 
-	fn := funcInit(me, libOpen)
-	fn.typed = me.literalType(LibFileType)
+	fn := funcInit(nil, libOpen)
+	fn.typed = me.literalType(TokenLibFile)
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "path", false, false))
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "mode", false, false))
 	me.functions[libOpen] = fn
 	me.types[libOpen] = ""
 
 	fnName := "read"
-	fn = funcInit(me, fnName)
+	fn = funcInit(nil, fnName)
 	fn.typed = me.literalType(TokenInt)
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false, true))
 	fn.forClass = classDef
-	name := nameOfClassFunc(LibFileType, fnName)
-	me.functionOrder = append(me.functionOrder, name)
+	name := nameOfClassFunc(TokenLibFile, fnName)
 	me.functions[name] = fn
 	me.types[name] = ""
 
 	fnName = "read_line"
-	fn = funcInit(me, fnName)
+	fn = funcInit(nil, fnName)
 	fn.typed = me.literalType(TokenString)
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false, true))
 	fn.forClass = classDef
-	name = nameOfClassFunc(LibFileType, fnName)
-	me.functionOrder = append(me.functionOrder, name)
+	name = nameOfClassFunc(TokenLibFile, fnName)
 	me.functions[name] = fn
 	me.types[name] = ""
 
 	fnName = "close"
-	fn = funcInit(me, fnName)
+	fn = funcInit(nil, fnName)
 	fn.typed = me.literalType("void")
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false, true))
 	fn.forClass = classDef
-	name = nameOfClassFunc(LibFileType, fnName)
-	me.functionOrder = append(me.functionOrder, name)
+	name = nameOfClassFunc(TokenLibFile, fnName)
 	me.functions[name] = fn
 	me.types[name] = ""
 }
 
 func (me *hmlib) libs() {
+	me.types = make(map[string]string)
+	me.classes = make(map[string]*class)
+	me.functions = make(map[string]*function)
+
 	me.simple(libEcho, "void")
 
 	me.simple(libToStr, TokenString)
@@ -102,7 +118,10 @@ func (me *hmlib) libs() {
 	me.simple(libToFloat32, TokenFloat32)
 	me.simple(libToFloat64, TokenFloat64)
 
-	me.files()
+	me.simple(libLength, TokenInt)
+
+	me.initIO()
+	me.initPush()
 
 	for primitive := range primitives {
 		me.types[primitive] = ""

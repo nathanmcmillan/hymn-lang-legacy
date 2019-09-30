@@ -59,6 +59,9 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			panic(me.fail() + "regular paramater found after mapped parameter")
 		} else {
 			param := me.calc(0)
+			if pix >= len(fn.args) {
+				panic(me.fail() + "function \"" + name + "\" argument count exceeds parameter count")
+			}
 			arg := fn.args[pix]
 			if param.asVar().notEqual(arg.vdat) && arg.vdat.full != "?" {
 				err := "parameter \"" + param.getType()
@@ -95,7 +98,7 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 
 func (me *parser) call(module *hmfile) *node {
 	name := me.token.value
-	fn := module.functions[name]
+	fn, _ := module.getFunction(name)
 	me.eat("id")
 	n := nodeInit("call")
 	n.fn = fn

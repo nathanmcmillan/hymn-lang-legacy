@@ -1,0 +1,7 @@
+main
+  x = "foobar"
+  echo(x)
+  s = len(x)
+  echo(s)
+  echo(len("hello world"))
+  echo(s + 1)

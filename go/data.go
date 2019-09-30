@@ -14,6 +14,7 @@ func (me *idData) string() string {
 }
 
 type varData struct {
+	hmlib       *hmlib
 	module      *hmfile
 	typed       string
 	full        string
@@ -65,11 +66,11 @@ func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[strin
 	return data
 }
 
-func (me *hmfile) literalType(typed string) *varData {
+func (me *hmlib) literalType(typed string) *varData {
 	data := &varData{}
 	data.full = typed
 	data.typed = typed
-	data.module = me
+	data.hmlib = me
 	return data
 }
 
@@ -158,11 +159,18 @@ func (me *varData) checkIsFunction() (*fnSig, bool) {
 }
 
 func (me *varData) checkIsClass() (*class, bool) {
+	if me.module == nil {
+		cl, ok := me.hmlib.classes[me.typed]
+		return cl, ok
+	}
 	cl, ok := me.module.classes[me.typed]
 	return cl, ok
 }
 
 func (me *varData) checkIsEnum() (*enum, *union, bool) {
+	if me.module == nil {
+		return nil, nil, false
+	}
 	dot := strings.Split(me.typed, ".")
 	if len(dot) != 1 {
 		en, ok := me.module.enums[dot[0]]
@@ -280,32 +288,9 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 	return code
 }
 
-func primitiveC(primitive string) string {
-	switch primitive {
-	case TokenFloat32:
-		return "float"
-	case TokenFloat64:
-		return "double"
-	case TokenString:
-		return "char *"
-	case TokenInt8:
-		return "int8_t"
-	case TokenInt16:
-		return "int16_t"
-	case TokenInt32:
-		return "int32_t"
-	case TokenInt64:
-		return "int64_t"
-	case TokenUInt:
-		return "unsigned int"
-	case TokenUInt8:
-		return "uint8_t"
-	case TokenUInt16:
-		return "uint16_t"
-	case TokenUInt32:
-		return "uint32_t"
-	case TokenUInt64:
-		return "uint64_t"
+func getCName(primitive string) string {
+	if name, ok := typeToCName[primitive]; ok {
+		return name
 	}
 	return primitive
 }
@@ -329,7 +314,7 @@ func (me *varData) typeSig() string {
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.typeSig()
 	}
-	return primitiveC(me.full)
+	return getCName(me.full)
 }
 
 func (me *varData) noMallocTypeSig() string {
@@ -341,7 +326,7 @@ func (me *varData) noMallocTypeSig() string {
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.noMallocTypeSig()
 	}
-	return primitiveC(me.full)
+	return getCName(me.full)
 }
 
 func (me *varData) memPtr() string {
@@ -349,4 +334,13 @@ func (me *varData) memPtr() string {
 		return "->"
 	}
 	return "."
+}
+
+func (me *varData) getFunction(name string) (*function, bool) {
+	if me.module != nil {
+		f, ok := me.module.getFunction(name)
+		return f, ok
+	}
+	f, ok := me.hmlib.functions[name]
+	return f, ok
 }

@@ -180,7 +180,6 @@ footer {
     background-color: var(--button-color);
     outline: none;
     border-radius: 0.2rem;
-    padding: 0.3rem 0.3rem;
     box-sizing: border-box;
     box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 5px 0px;
 }
@@ -189,6 +188,11 @@ footer {
     cursor: pointer;
     border-color: var(--button-color-hover);
     background-color: var(--button-color-hover);
+}
+
+.std_button a {
+    display: block;
+    padding: 0.3rem 0.3rem;
 }
 
 .std_button a:hover {

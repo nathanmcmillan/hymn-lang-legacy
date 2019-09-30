@@ -54,12 +54,12 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.push(head)
 				} else {
 					nameOfFunc := nameOfClassFunc(rootClass.name, dotName)
-					funcVar, ok := data.module.functions[nameOfFunc]
+					funcVar, ok := data.getFunction(nameOfFunc)
 					if ok {
 						fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed.full + "\"")
 						member = me.callClassFunction(data.module, head, rootClass, funcVar)
 					} else {
-						panic(me.fail() + "class \"" + rootClass.name + "\" variable or function \"" + dotName + "\" does not exist")
+						panic(me.fail() + "class \"" + rootClass.name + "\" does not have variable or function \"" + dotName + "\"")
 					}
 				}
 				head = member

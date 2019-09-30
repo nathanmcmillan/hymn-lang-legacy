@@ -17,6 +17,7 @@ type program struct {
 	libDir    string
 	hmlib     *hmlib
 	hmfiles   map[string]*hmfile
+	hmorder   []*hmfile
 	sources   map[string]string
 }
 
@@ -53,6 +54,22 @@ var (
 		TokenString:  true,
 		TokenBoolean: true,
 	}
+	typeToCName = map[string]string{
+		TokenFloat32:   "float",
+		TokenFloat64:   "double",
+		TokenString:    "hmlib_string",
+		TokenRawString: "char *",
+		TokenInt8:      "int8_t",
+		TokenInt16:     "int16_t",
+		TokenInt32:     "int32_t",
+		TokenInt64:     "int64_t",
+		TokenUInt:      "unsigned int",
+		TokenUInt8:     "uint8_t",
+		TokenUInt16:    "uint16_t",
+		TokenUInt32:    "uint32_t",
+		TokenUInt64:    "uint64_t",
+		TokenLibSize:   "size_t",
+	}
 	literals = map[string]string{
 		TokenIntLiteral:     TokenInt,
 		TokenFloatLiteral:   TokenFloat,
@@ -86,6 +103,7 @@ func scopeInit(root *scope) *scope {
 func programInit() *program {
 	prog := &program{}
 	prog.hmfiles = make(map[string]*hmfile)
+	prog.hmorder = make([]*hmfile, 0)
 	prog.sources = make(map[string]string)
 	return prog
 }

@@ -22,7 +22,7 @@ func init() {
 		TokenIntLiteral:     prefixRule{6, "", prefixPrimitive},
 		TokenFloatLiteral:   prefixRule{6, "", prefixPrimitive},
 		TokenBooleanLiteral: prefixRule{6, "", prefixPrimitive},
-		TokenStringLiteral:  prefixRule{6, "", prefixPrimitive},
+		TokenStringLiteral:  prefixRule{6, "", prefixString},
 		"none":              prefixRule{6, "", prefixNone},
 		"maybe":             prefixRule{6, "", prefixMaybe},
 		"id":                prefixRule{6, "", prefixIdent},

@@ -107,6 +107,13 @@ func (me *cfile) defineMain(fn *function) {
 	returns := false
 	me.pushScope()
 	me.depth = 1
+	list := me.hmfile.program.hmorder
+	for x := len(list) - 1; x >= 0; x-- {
+		file := list[x]
+		if file.needInit {
+			codeblock += fmc(me.depth) + file.funcNameSpace("init") + "();\n"
+		}
+	}
 	for _, expr := range expressions {
 		c := me.eval(expr)
 		if c.is == "return" {

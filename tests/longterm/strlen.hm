@@ -1,4 +1,0 @@
-main
-  x = "foobar"
-  echo(x)
-  echo(x.len)

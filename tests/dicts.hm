@@ -6,7 +6,7 @@ int_hashcode(key int) int
 string_hashcode(key string) int
 	mutable pos = 0
 	mutable value = uint64 0
-	length = key.len
+	length = len(key)
 	for value < uint64_max and pos < length
 		value = (value << 8) + key[pos]
 		pos += 1
@@ -75,7 +75,6 @@ main
 		size: 10
 		capacity: 10
 		hashing: int_hashcode
-		table: []maybe<dict_element>
 	m.set(0, "cool")
 	out = m.get(0)
 	echo(out)

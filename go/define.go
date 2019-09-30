@@ -129,7 +129,7 @@ func (me *parser) defineEnum() {
 					}
 					unionArgType := me.token.value
 					me.wordOrPrimitive()
-					if _, ok := me.hmfile.types[unionArgType]; !ok {
+					if _, ok := me.hmfile.getType(unionArgType); !ok {
 						if _, ok2 := genericsDict[unionArgType]; ok2 {
 							unionGOrder = append(unionGOrder, unionArgType)
 						} else {

@@ -108,7 +108,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head.is = "root-variable"
 			}
 			if !head.asVar().array {
-				panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not array")
+				panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
 			}
 			me.eat("[")
 			member := nodeInit("array-member")

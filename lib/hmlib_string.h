@@ -1,5 +1,5 @@
-#ifndef HMLIB_STRINGS_H
-#define HMLIB_STRINGS_H
+#ifndef HMLIB_STRING_H
+#define HMLIB_STRING_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +30,7 @@ char *hmlib_concat(const char *a, const char *b);
 char *hmlib_concat_list(const char **ls, const int size);
 char *hmlib_concat_varg(const int size, ...);
 
+char *hmlib_char_to_string(const char ch);
 char *hmlib_int_to_string(const int number);
 char *hmlib_int8_to_string(const int8_t number);
 char *hmlib_int16_to_string(const int16_t number);

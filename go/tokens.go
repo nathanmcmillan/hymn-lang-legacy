@@ -11,6 +11,7 @@ const (
 	TokenIntLiteral     = "int-v"
 	TokenFloatLiteral   = "float-v"
 	TokenStringLiteral  = "string-v"
+	TokenCharLiteral    = "char-v"
 	TokenBooleanLiteral = "bool-v"
 	TokenInt            = "int"
 	TokenInt8           = "int8"
@@ -27,6 +28,7 @@ const (
 	TokenFloat64        = "float64"
 	TokenString         = "string"
 	TokenRawString      = "string-raw"
+	TokenChar           = "char"
 	TokenBoolean        = "bool"
 )
 
@@ -310,8 +312,23 @@ func (me *tokenizer) get(pos int) *token {
 		me.push(token)
 		return token
 	}
-	if strings.IndexByte("$).[]'_?,", c) >= 0 {
+	if strings.IndexByte("$).[]_?,", c) >= 0 {
 		stream.next()
+		token := me.simpleToken(string(c))
+		me.push(token)
+		return token
+	}
+	if c == '\'' {
+		stream.next()
+		peek := stream.doublePeek()
+		if peek == '\'' {
+			value := stream.peek()
+			stream.next()
+			stream.next()
+			token := me.valueToken(TokenCharLiteral, string(value))
+			me.push(token)
+			return token
+		}
 		token := me.simpleToken(string(c))
 		me.push(token)
 		return token

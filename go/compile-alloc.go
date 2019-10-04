@@ -109,3 +109,40 @@ func (me *cfile) allocEnum(n *node) string {
 	code += ")"
 	return code
 }
+
+func (me *cfile) allocArray(n *node) string {
+	size := "0"
+	parenthesis := false
+	if len(n.has) > 0 {
+		e := me.eval(n.has[0])
+		size = e.code
+		if e.getType() != "int" {
+			parenthesis = true
+		}
+	}
+	if _, ok := n.attributes["no-malloc"]; ok {
+		return "[" + size + "]"
+	}
+	memberType := n.asVar().typeSig()
+	code := "malloc("
+	if parenthesis {
+		code += "("
+	}
+	code += size
+	if parenthesis {
+		code += ")"
+	}
+	code += " * sizeof(" + memberType + "))"
+	return code
+}
+
+func (me *cfile) allocSlice(n *node) string {
+	size := "0"
+	if len(n.has) > 0 {
+		size = me.eval(n.has[0]).code
+	}
+	if _, ok := n.attributes["no-malloc"]; ok {
+		return "[" + size + "]"
+	}
+	return "hmlib_slice_init(" + size + ", sizeof(" + n.asVar().typeInArray.typeSig() + "));"
+}

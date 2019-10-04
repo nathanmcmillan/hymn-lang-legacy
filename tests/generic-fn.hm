@@ -1,0 +1,16 @@
+
+type foo<k, v>
+	size     k
+	capacity v
+	list     []k
+	total    int
+	weight   char
+
+foo.set(in k, two v)
+	mutable s = none<k>
+	s = in
+	(* list[0] = k *)
+
+main
+	f = foo(size:11, capacity:"cap")
+	f.set(22, "foobar")

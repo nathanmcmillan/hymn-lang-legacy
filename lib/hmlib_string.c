@@ -1,4 +1,4 @@
-#include "hmlib_strings.h"
+#include "hmlib_string.h"
 
 hmlib_string_head *hmlib_string_head_init(size_t len)
 {
@@ -108,6 +108,14 @@ char *hmlib_concat_varg(const int size, ...)
   va_end(ap);
 
   return cat;
+}
+
+char *hmlib_char_to_string(const char ch)
+{
+  char *str = malloc(2);
+  str[0] = ch;
+  str[1] = '\0';
+  return str;
 }
 
 char *hmlib_int_to_string(const int number)

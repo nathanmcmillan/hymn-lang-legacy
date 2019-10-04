@@ -37,6 +37,14 @@ func prefixString(me *parser, op string) *node {
 	return node
 }
 
+func prefixChar(me *parser, op string) *node {
+	node := nodeInit(TokenChar)
+	node.vdata = me.hmfile.typeToVarData(TokenChar)
+	node.value = me.token.value
+	me.eat(TokenCharLiteral)
+	return node
+}
+
 func prefixIdent(me *parser, op string) *node {
 	useStack := false
 	if me.token.is == "$" {
@@ -82,10 +90,13 @@ func prefixIdent(me *parser, op string) *node {
 
 func prefixArray(me *parser, op string) *node {
 	me.eat("[")
-	node := nodeInit("array")
 	alloc := &allocData{}
 	alloc.isArray = true
-	if me.token.is != "]" {
+	var node *node
+	if me.token.is == "]" {
+		node = nodeInit("slice")
+	} else {
+		node = nodeInit("array")
 		size := me.calc(0)
 		if size.getType() != TokenInt {
 			panic(me.fail() + "array size must be integer")
@@ -143,9 +154,9 @@ func prefixCast(me *parser, op string) *node {
 	node.vdata = me.hmfile.typeToVarData(op)
 	calc := me.calc(getPrefixPrecedence(op))
 	value := calc.vdata.full
-	if !isNumber(value) {
-		panic(me.fail() + "invalid cast \"" + value + "\"")
+	if canCastToNumber(value) {
+		node.push(calc)
+		return node
 	}
-	node.push(calc)
-	return node
+	panic(me.fail() + "invalid cast \"" + value + "\"")
 }

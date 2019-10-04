@@ -23,6 +23,7 @@ func init() {
 		TokenFloatLiteral:   prefixRule{6, "", prefixPrimitive},
 		TokenBooleanLiteral: prefixRule{6, "", prefixPrimitive},
 		TokenStringLiteral:  prefixRule{6, "", prefixString},
+		TokenCharLiteral:    prefixRule{6, "", prefixChar},
 		"none":              prefixRule{6, "", prefixNone},
 		"maybe":             prefixRule{6, "", prefixMaybe},
 		"id":                prefixRule{6, "", prefixIdent},

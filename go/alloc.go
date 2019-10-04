@@ -156,6 +156,8 @@ func (me *parser) classParams(n *node, typed string) {
 	params := make([]*node, len(vars))
 	pix := 0
 	dict := false
+	lazyGenerics := false
+	genericsTable := base.genericsDict
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
@@ -171,10 +173,15 @@ func (me *parser) classParams(n *node, typed string) {
 			param := me.calc(0)
 			clsvar := base.variables[vname]
 			if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
-				err := "parameter \"" + param.getType()
-				err += "\" does not match class \"" + base.name + "\" variable \""
-				err += clsvar.name + "\" with type \"" + clsvar.vdat.full + "\""
-				panic(me.fail() + err)
+				if _, ok := genericsTable[clsvar.vdat.full]; ok {
+					lazyGenerics = true
+					fmt.Println("TODO LAZY GENERICS ::", clsvar.vdat.full)
+				} else {
+					err := "parameter \"" + param.getType()
+					err += "\" does not match class \"" + base.name + "\" variable \""
+					err += clsvar.name + "\" with type \"" + clsvar.vdat.full + "\""
+					panic(me.fail() + err)
+				}
 			}
 			for i, v := range vars {
 				if vname == v {
@@ -199,6 +206,16 @@ func (me *parser) classParams(n *node, typed string) {
 			pix++
 		}
 	}
+	//
+	if lazyGenerics {
+		// genericsSize := len(base.generics)
+		gtypes := make([]string, 0)
+		lazy := typed + "<" + strings.Join(gtypes, ",") + ">"
+		if _, ok := me.hmfile.classes[lazy]; !ok {
+			me.defineClassImplGeneric(base, lazy, gtypes)
+		}
+	}
+	//
 	me.pushClassParams(n, base, params)
 }
 

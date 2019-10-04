@@ -1,7 +1,7 @@
 :root {
     --font-name: 'Roboto';
     --font-name-2: 'Noto Sans';
-    --content: 60rem;
+    --content: 64rem;
     --button-color: rgb(126, 214, 234);
     --button-color-hover: rgb(130, 220, 240);
     --font-color-hover: rgb(230, 230, 230);
@@ -93,7 +93,7 @@ main {
 }
 
 .head_link a {
-    padding: 1rem 0.5rem;
+    padding: 2rem 0.5rem;
 }
 
 .head_link:hover {

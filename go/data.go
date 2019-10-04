@@ -80,6 +80,20 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	data.mutable = true
 	data.isptr = true
 	data.heap = true
+	data.module = me
+
+	if checkIsPrimitive(typed) {
+		if typed == TokenString {
+			data.isptr = true
+			data.array = true
+			typed = TokenChar
+			data.typeInArray = me.typeToVarData(typed)
+		} else {
+			data.isptr = false
+		}
+		data.typed = typed
+		return data
+	}
 
 	if strings.HasPrefix(typed, "maybe") {
 		data.maybe = true
@@ -100,7 +114,6 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 		data.typeInArray = me.typeToVarData(typed)
 	}
 
-	data.module = me
 	data.typed = typed
 
 	dot := strings.Split(typed, ".")
@@ -152,6 +165,22 @@ func (me *varData) merge(alloc *allocData) {
 
 func (me *varData) checkIsArray() bool {
 	return strings.HasPrefix(me.full, "[]")
+}
+
+func (me *varData) checkIsPointerInC() bool {
+	if me.checkIsPrimitive() {
+		return false
+	}
+	return me.isptr
+}
+
+func checkIsPrimitive(t string) bool {
+	_, ok := primitives[t]
+	return ok
+}
+
+func (me *varData) checkIsPrimitive() bool {
+	return checkIsPrimitive(me.full)
 }
 
 func (me *varData) checkIsFunction() (*fnSig, bool) {

@@ -52,6 +52,7 @@ var (
 		TokenFloat32: true,
 		TokenFloat64: true,
 		TokenString:  true,
+		TokenChar:    true,
 		TokenBoolean: true,
 	}
 	typeToCName = map[string]string{
@@ -90,6 +91,18 @@ var (
 		TokenFloat:   true,
 		TokenFloat32: true,
 		TokenFloat64: true,
+	}
+	integerTypes = map[string]bool{
+		TokenInt:    true,
+		TokenInt8:   true,
+		TokenInt16:  true,
+		TokenInt32:  true,
+		TokenInt64:  true,
+		TokenUInt:   true,
+		TokenUInt8:  true,
+		TokenUInt16: true,
+		TokenUInt32: true,
+		TokenUInt64: true,
 	}
 )
 
@@ -152,6 +165,19 @@ func (me *cnode) push(n *cnode) {
 
 func isNumber(t string) bool {
 	_, ok := numbers[t]
+	return ok
+}
+
+func canCastToNumber(t string) bool {
+	if t == TokenChar {
+		return true
+	}
+	_, ok := numbers[t]
+	return ok
+}
+
+func isInteger(t string) bool {
+	_, ok := integerTypes[t]
 	return ok
 }
 

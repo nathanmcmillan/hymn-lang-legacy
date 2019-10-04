@@ -23,8 +23,13 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	cfile.headIncludeSection += "#include <stdint.h>\n"
 	cfile.headIncludeSection += "#include <inttypes.h>\n"
 	cfile.headIncludeSection += "#include <stdbool.h>\n"
-	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_strings.h\"\n"
-	cfile.hmfile.program.sources["hmlib_strings.c"] = libDir + "/hmlib_strings.c"
+
+	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_string.h\"\n"
+	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_slice.h\"\n"
+
+	cfile.hmfile.program.sources["hmlib_string.c"] = libDir + "/hmlib_string.c"
+	cfile.hmfile.program.sources["hmlib_slice.c"] = libDir + "/hmlib_slice.c"
+
 	for importName := range me.imports {
 		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"
 	}
@@ -159,6 +164,10 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		code := me.allocArray(n)
 		return codeNode(n, code)
 	}
+	if op == "slice" {
+		code := me.allocSlice(n)
+		return codeNode(n, code)
+	}
 	if op == "return" {
 		in := me.eval(n.has[0])
 		code := "return " + in.code
@@ -230,6 +239,9 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	}
 	if op == TokenString {
 		return me.compileString(n)
+	}
+	if op == TokenChar {
+		return me.compileChar(n)
 	}
 	if op == "none" {
 		return me.compileNone(n)
@@ -356,6 +368,11 @@ func (me *cfile) compileRawString(n *node) *cnode {
 
 func (me *cfile) compileString(n *node) *cnode {
 	code := "hmlib_string_init(\"" + n.value + "\")"
+	return codeNode(n, code)
+}
+
+func (me *cfile) compileChar(n *node) *cnode {
+	code := "'" + n.value + "'"
 	return codeNode(n, code)
 }
 
@@ -616,18 +633,6 @@ func fmtassignspace(s string) string {
 	return s + " "
 }
 
-func (me *cfile) allocArray(n *node) string {
-	size := "0"
-	if len(n.has) > 0 {
-		size = me.eval(n.has[0]).code
-	}
-	if _, ok := n.attributes["no-malloc"]; ok {
-		return "[" + size + "]"
-	}
-	mtype := n.asVar().typeSig()
-	return "malloc((" + size + ") * sizeof(" + mtype + "))"
-}
-
 func (me *cfile) declare(n *node) string {
 	if n.is != "variable" {
 		return me.eval(n).code
@@ -872,14 +877,17 @@ func (me *cfile) compileCall(node *node) *cnode {
 }
 
 func (me *cfile) builtin(name string, parameters []*node) string {
-	fmt.Println("CHECK FOR BUILT IN FN ::", name)
 	switch name {
 	case libPush:
 		param0 := me.eval(parameters[0])
 		p := param0.asVar(me.hmfile)
 		if p.checkIsArray() {
+			uses := p.typeInArray
 			param1 := me.eval(parameters[1])
-			return "push(" + param0.code + "," + param1.code + ")"
+			if uses.checkIsPointerInC() {
+				return "hmlib_slice_push(" + param0.code + ", " + param1.code + ")"
+			}
+			return "hmlib_slice_push_" + uses.typeSig() + "(" + param0.code + ", " + param1.code + ")"
 		}
 		panic("argument for push was not an array \"" + p.full + "\"")
 	case libLength:
@@ -892,7 +900,7 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 		}
 		p := param.asVar(me.hmfile)
 		if p.checkIsArray() {
-			return "todo_array_get_len(" + param.code + ")"
+			return "hmlib_slice_len_int(" + param.code + ")"
 		}
 		panic("argument for echo was " + param.string(0))
 	case libOpen:
@@ -902,6 +910,8 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 	case libEcho:
 		param := me.eval(parameters[0])
 		switch param.getType() {
+		case TokenChar:
+			return "printf(\"%c\\n\", " + param.code + ")"
 		case TokenString:
 			return "printf(\"%s\\n\", " + param.code + ")"
 		case TokenRawString:
@@ -969,6 +979,8 @@ func (me *cfile) builtin(name string, parameters []*node) string {
 			return "hmlib_float32_to_string(" + param.code + ")"
 		case TokenFloat64:
 			return "hmlib_float64_to_string(" + param.code + ")"
+		case TokenChar:
+			return "hmlib_char_to_string(" + param.code + ")"
 		case "bool":
 			return "(" + param.code + " ? \"true\" : \"false\")"
 		}

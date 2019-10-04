@@ -8,9 +8,9 @@ string_hashcode(key string) int
 	mutable value = uint64 0
 	length = len(key)
 	for value < uint64_max and pos < length
-		value = (value << 8) + key[pos]
+		value = (value << uint64 8) + uint64 key[pos]
 		pos += 1
-	return value
+	return int value
 
 type dict_element<v>
 	hash  int
@@ -78,14 +78,3 @@ main
 	m.set(0, "cool")
 	out = m.get(0)
 	echo(out)
-
-(* alias uint64 as hash_size *)
-
-(*
-interfaces
-instead of void pointer for interfaces, can use a union struct of all possible combinations
-
-https://en.wikipedia.org/wiki/Hash_table 
-dictionary takes in hash function that returns key
-hashable objects must implement hash interface 
-*)

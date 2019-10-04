@@ -27,7 +27,7 @@ func infixBinary(me *parser, left *node, op string) *node {
 	right := me.calc(getInfixPrecedence(op))
 	if !isNumber(left.getType()) || !isNumber(right.getType()) {
 		err := me.fail() + "binary operation must be numbers \"" + left.getType() + "\" and \"" + right.getType() + "\""
-		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
+		err += "\n\nleft: " + left.string(0) + "\n\nright: " + right.string(0)
 		panic(err)
 	}
 	if left.asVar().notEqual(right.asVar()) {
@@ -45,8 +45,13 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
-	if left.getType() != TokenInt || right.getType() != TokenInt {
-		err := me.fail() + "operation requires integers \"" + left.getType() + "\" and \"" + right.getType() + "\""
+	if !isInteger(left.getType()) || !isInteger(right.getType()) {
+		err := me.fail() + "operation requires discrete integers \"" + left.getType() + "\" and \"" + right.getType() + "\""
+		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
+		panic(err)
+	}
+	if left.getType() != right.getType() {
+		err := me.fail() + "operation types do not match \"" + left.getType() + "\" and \"" + right.getType() + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
 	}

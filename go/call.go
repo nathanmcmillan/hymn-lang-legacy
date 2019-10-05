@@ -87,7 +87,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 
 func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {
 	n := nodeInit("call")
-	name := nameOfClassFunc(c.name, fn.name)
+	name := fn.nameOfClassFunc()
 	n.fn = fn
 	n.vdata = fn.typed
 	params := make([]*node, len(fn.args))

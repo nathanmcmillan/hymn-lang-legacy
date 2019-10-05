@@ -54,7 +54,7 @@ func (me *hmlib) initPush() {
 func (me *hmlib) initIO() {
 	me.types[TokenLibFile] = ""
 	order := make([]string, 0)
-	dict := make(map[string]bool, 0)
+	dict := make(map[string]int)
 	classDef := classInit(TokenLibFile, order, dict)
 	me.classes[TokenLibFile] = classDef
 

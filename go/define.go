@@ -1,14 +1,14 @@
 package main
 
-func (me *parser) genericHeader() ([]string, map[string]bool) {
+func (me *parser) genericHeader() ([]string, map[string]int) {
 	order := make([]string, 0)
-	dict := make(map[string]bool, 0)
+	dict := make(map[string]int)
 	if me.token.is == "<" {
 		me.eat("<")
 		for {
 			gname := me.token.value
 			me.wordOrPrimitive()
-			dict[gname] = true
+			dict[gname] = len(order)
 			order = append(order, gname)
 			if me.token.is == "," {
 				me.eat(",")

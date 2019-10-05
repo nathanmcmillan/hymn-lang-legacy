@@ -120,51 +120,75 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 	return n
 }
 
-func defaultValue(typed string) string {
-	switch typed {
-	case TokenString:
-		return ""
-	case TokenInt:
-		return "0"
-	case TokenFloat:
-		return "0"
-	case "bool":
-		return "false"
-	default:
-		return ""
+func (me *parser) defaultValue(in *varData) *node {
+	d := nodeInit(in.full)
+	d.vdata = in
+	typed := in.full
+	if typed == TokenString {
+		d.value = ""
+	} else if typed == TokenChar {
+		d.value = "\\0"
+	} else if isNumber(typed) {
+		d.value = "0"
+	} else if typed == TokenBoolean {
+		d.value = "false"
+	} else if checkIsArray(typed) {
+		t := nodeInit("array")
+		t.vdata = d.vdata
+		d = t
+	} else if checkIsSlice(typed) {
+		t := nodeInit("slice")
+		t.vdata = d.vdata
+		s := nodeInit(TokenInt)
+		s.vdata = me.hmfile.typeToVarData(TokenInt)
+		s.value = "0"
+		t.push(s)
+		d = t
+	} else {
+		panic(me.fail() + "no default value for \"" + typed + "\"")
 	}
+	return d
 }
 
 func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	for i, param := range params {
 		if param == nil {
 			clsvar := base.variables[base.variableOrder[i]]
-			dfault := nodeInit(clsvar.vdat.full)
-			dfault.copyTypeFromVar(clsvar)
-			dfault.value = defaultValue(clsvar.vdat.full)
-			n.push(dfault)
+			d := me.defaultValue(clsvar.vdat)
+			n.push(d)
 		} else {
 			n.push(param)
 		}
 	}
 }
 
-func (me *parser) classParams(n *node, typed string) {
-	me.eat("(")
+func (me *parser) classParams(n *node, typed string, special bool, depth int) string {
+	if special {
+		ndepth := me.peek().depth
+		if ndepth != depth+1 {
+			return typed
+		}
+		me.eat("line")
+	} else {
+		me.eat("(")
+	}
 	base := me.hmfile.classes[typed]
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
 	pix := 0
 	dict := false
 	lazyGenerics := false
-	genericsTable := base.genericsDict
+	genericsImpl := make(map[int]*varData)
+	genericsMap := base.genericsDict
 	for {
-		if me.token.is == ")" {
-			me.eat(")")
-			break
-		}
-		if pix > 0 || dict {
-			me.eat(",")
+		if !special {
+			if me.token.is == ")" {
+				me.eat(")")
+				break
+			}
+			if pix > 0 || dict {
+				me.eat(",")
+			}
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
 			vname := me.token.value
@@ -172,11 +196,17 @@ func (me *parser) classParams(n *node, typed string) {
 			me.eat(":")
 			param := me.calc(0)
 			clsvar := base.variables[vname]
-			if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
-				if _, ok := genericsTable[clsvar.vdat.full]; ok {
-					lazyGenerics = true
-					fmt.Println("TODO LAZY GENERICS ::", clsvar.vdat.full)
-				} else {
+
+			if m, ok := genericsMap[clsvar.vdat.full]; ok {
+				lazyGenerics = true
+				if g, ok := genericsImpl[m]; ok {
+					if g.notEqual(param.asVar()) {
+						panic(me.fail() + "lazy generic for base \"" + base.name + "\" is already \"" + g.full + "\" but found \"" + param.asVar().full + "\"")
+					}
+				}
+				genericsImpl[m] = param.asVar()
+			} else {
+				if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
 					err := "parameter \"" + param.getType()
 					err += "\" does not match class \"" + base.name + "\" variable \""
 					err += clsvar.name + "\" with type \"" + clsvar.vdat.full + "\""
@@ -187,6 +217,16 @@ func (me *parser) classParams(n *node, typed string) {
 				if vname == v {
 					params[i] = param
 					break
+				}
+			}
+			if special {
+				if me.token.is == "line" {
+					ndepth := me.peek().depth
+					if ndepth != depth+1 {
+						break
+					}
+					me.eat("line")
+					continue
 				}
 			}
 			dict = true
@@ -206,59 +246,25 @@ func (me *parser) classParams(n *node, typed string) {
 			pix++
 		}
 	}
-	//
 	if lazyGenerics {
-		// genericsSize := len(base.generics)
-		gtypes := make([]string, 0)
+		gsize := len(base.generics)
+		if len(genericsImpl) != gsize {
+			panic(me.fail() + "missing generics for base class \"" + base.name + "\"")
+		}
+		gtypes := make([]string, gsize)
+		for gk, gv := range genericsImpl {
+			gtypes[gk] = gv.full
+		}
 		lazy := typed + "<" + strings.Join(gtypes, ",") + ">"
+		fmt.Println("LAZY TYPE :: ", lazy)
 		if _, ok := me.hmfile.classes[lazy]; !ok {
 			me.defineClassImplGeneric(base, lazy, gtypes)
 		}
-	}
-	//
-	me.pushClassParams(n, base, params)
-}
-
-func (me *parser) specialClassParams(depth int, n *node, typed string) {
-	ndepth := me.peek().depth
-	if ndepth != depth+1 {
-		return
-	}
-	me.eat("line")
-	base := me.hmfile.classes[typed]
-	vars := base.variableOrder
-	params := make([]*node, len(vars))
-	for {
-		if me.token.is == "id" && me.peek().is == ":" {
-			vname := me.token.value
-			me.eat("id")
-			me.eat(":")
-			param := me.calc(0)
-			clsvar := base.variables[vname]
-			if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
-				err := "parameter type \"" + param.getType()
-				err += "\" does not match class \"" + base.name + "\" with member \""
-				err += clsvar.name + "\" and type \"" + clsvar.vdat.full + "\""
-				panic(me.fail() + err)
-			}
-			for i, v := range vars {
-				if vname == v {
-					params[i] = param
-					break
-				}
-			}
-			if me.token.is == "line" {
-				ndepth := me.peek().depth
-				if ndepth != depth+1 {
-					break
-				}
-				me.eat("line")
-				continue
-			}
-		}
-		panic(me.fail() + "missing parameter")
+		base = me.hmfile.classes[lazy]
+		typed = lazy
 	}
 	me.pushClassParams(n, base, params)
+	return typed
 }
 
 func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData {
@@ -280,9 +286,9 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 	}
 	if n != nil {
 		if me.token.is == "(" {
-			me.classParams(n, typed)
+			typed = me.classParams(n, typed, false, depth)
 		} else if me.token.is == "line" {
-			me.specialClassParams(depth, n, typed)
+			typed = me.classParams(n, typed, true, depth)
 		}
 	}
 	if me.hmfile != module {

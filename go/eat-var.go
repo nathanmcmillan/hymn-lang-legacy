@@ -45,7 +45,6 @@ func (me *parser) eatvar(from *hmfile) *node {
 				var member *node
 				classOf, ok := rootClass.variables[dotName]
 				if ok {
-					fmt.Println("member variable \"" + dotName + "\" is type \"" + classOf.vdat.full + "\"")
 					member = nodeInit("member-variable")
 					member.vdata = classOf.vdat
 					member.idata = &idData{}
@@ -107,13 +106,13 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head.copyTypeFromVar(sv)
 				head.is = "root-variable"
 			}
-			if !head.asVar().array {
+			if !head.asVar().checkIsArrayOrSlice() {
 				panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
 			}
 			me.eat("[")
 			member := nodeInit("array-member")
 			index := me.calc(0)
-			member.vdata = head.vdata.typeInArray
+			member.vdata = head.vdata.memberType
 			member.push(index)
 			member.push(head)
 			head = member

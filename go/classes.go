@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -10,10 +9,10 @@ type class struct {
 	variables     map[string]*variable
 	variableOrder []string
 	generics      []string
-	genericsDict  map[string]bool
+	genericsDict  map[string]int
 }
 
-func classInit(name string, generics []string, genericsDict map[string]bool) *class {
+func classInit(name string, generics []string, genericsDict map[string]int) *class {
 	c := &class{}
 	c.name = name
 	c.generics = generics
@@ -29,13 +28,11 @@ func (me *class) initMembers(variableOrder []string, variables map[string]*varia
 func (me *hmfile) getclass(name string) (*class, string) {
 	ix := strings.Index(name, "[")
 	if ix == -1 {
-		fmt.Println("getclass", name)
 		cl, _ := me.classes[name]
 		return cl, ""
 	}
 	get0 := name[0:ix]
 	get1 := name[ix+1 : len(name)-1]
-	fmt.Println("getclass", get0, "->", get1)
 	cl, _ := me.classes[get0]
 	return cl, get1
 }

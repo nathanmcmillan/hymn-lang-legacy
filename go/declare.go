@@ -133,13 +133,13 @@ func (me *parser) mapAnyImpl(mem string, gmapper map[string]string) string {
 }
 
 func (me *parser) genericsReplacer(typed string, gmapper map[string]string) string {
-	fmt.Println("replacer: \""+typed+"\" =>", gmapper)
-	if checkIsArray(typed) {
-		typeOfMem := typeOfArray(typed)
+	fmt.Println("REPLACE :: \""+typed+"\" =>", gmapper)
+	if checkIsArrayOrSlice(typed) {
+		size, typeOfMem := typeOfArrayOrSlice(typed)
 		if checkHasGeneric(typed) {
-			return "[]" + me.buildImplGeneric(typeOfMem, gmapper)
+			return "[" + size + "]" + me.buildImplGeneric(typeOfMem, gmapper)
 		}
-		return "[]" + me.mapAnyImpl(typeOfMem, gmapper)
+		return "[" + size + "]" + me.mapAnyImpl(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
 		return me.buildImplGeneric(typed, gmapper)
 	}
@@ -252,8 +252,16 @@ func (me *parser) declareFnPtr(fn *function) *varData {
 
 func (me *parser) declareType(impl bool) *varData {
 	array := false
+	size := ""
 	if me.token.is == "[" {
 		me.eat("[")
+		if me.token.is != "]" {
+			sizeNode := me.calc(0)
+			if sizeNode.getType() != TokenInt || sizeNode.value == "" {
+				panic(me.fail() + "array size must be constant integer")
+			}
+			size = sizeNode.value
+		}
 		me.eat("]")
 		array = true
 	}
@@ -306,7 +314,6 @@ func (me *parser) declareType(impl bool) *varData {
 			gtypes := me.declareGeneric(impl, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if impl {
-				fmt.Println("declare type: building class \"" + data.typed + "\" with impl \"" + typed + "\"")
 				if _, ok := data.module.classes[typed]; !ok {
 					me.defineClassImplGeneric(base, typed, gtypes)
 				}
@@ -315,7 +322,6 @@ func (me *parser) declareType(impl bool) *varData {
 			gtypes := me.declareGeneric(impl, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if impl {
-				fmt.Println("declare type: building enum \"" + data.typed + "\" with impl \"" + typed + "\"")
 				if _, ok := data.module.enums[typed]; !ok {
 					me.defineEnumImplGeneric(base, typed, gtypes)
 				}
@@ -326,22 +332,46 @@ func (me *parser) declareType(impl bool) *varData {
 	}
 
 	if array {
-		typed = "[]" + typed
+		typed = "[" + size + "]" + typed
 	}
 
 	return me.hmfile.typeToVarData(typed)
 }
 
-func nameOfClassFunc(classname, funcname string) string {
-	return classname + "_" + funcname
+func sizeOfArray(typed string) string {
+	i := strings.Index(typed, "]")
+	return typed[1:i]
 }
 
-func typeOfArray(typed string) string {
-	return typed[2:]
+func typeOfArrayOrSlice(typed string) (string, string) {
+	i := strings.Index(typed, "]")
+	size := ""
+	if i > 1 {
+		size = typed[1:i]
+	}
+	member := typed[i+1:]
+	return size, member
+}
+
+func checkIsArrayOrSlice(typed string) bool {
+	if len(typed) < 2 {
+		return false
+	}
+	return typed[0] == '['
 }
 
 func checkIsArray(typed string) bool {
-	return strings.HasPrefix(typed, "[]")
+	if len(typed) < 2 {
+		return false
+	}
+	return typed[0] == '[' && typed[1] != ']'
+}
+
+func checkIsSlice(typed string) bool {
+	if len(typed) < 2 {
+		return false
+	}
+	return typed[0] == '[' && typed[1] == ']'
 }
 
 func checkHasGeneric(typed string) bool {

@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type blockNode struct {
 	pre     *blockNode
@@ -53,6 +56,7 @@ func (me *cfile) allocClass(n *node) *cnode {
 
 	var ptrCh string
 	if useHeap {
+		fmt.Println("ALLOC CLASS USE HEAP FOR MEMBER ::", typed)
 		code += "malloc(sizeof(" + typed + "))"
 		ptrCh = "->"
 	} else {
@@ -111,14 +115,16 @@ func (me *cfile) allocEnum(n *node) string {
 }
 
 func (me *cfile) allocArray(n *node) string {
-	size := "0"
+	size := ""
 	parenthesis := false
 	if len(n.has) > 0 {
 		e := me.eval(n.has[0])
 		size = e.code
-		if e.getType() != "int" {
+		if e.getType() != TokenInt {
 			parenthesis = true
 		}
+	} else {
+		size = sizeOfArray(n.asVar().full)
 	}
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return "[" + size + "]"
@@ -144,5 +150,5 @@ func (me *cfile) allocSlice(n *node) string {
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return "[" + size + "]"
 	}
-	return "hmlib_slice_init(" + size + ", sizeof(" + n.asVar().typeInArray.typeSig() + "));"
+	return "hmlib_slice_init(" + size + ", sizeof(" + n.asVar().memberType.typeSig() + "))"
 }

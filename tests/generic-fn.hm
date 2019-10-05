@@ -1,16 +1,48 @@
 
 type foo<k, v>
 	size     k
-	capacity v
+	capacity k
+	name     v
 	list     []k
+	im_list  [3]v
 	total    int
 	weight   char
 
-foo.set(in k, two v)
+set_foo(f foo<int, string>, one int, two string)
+	f.size = one
+	f.name = two
+
+(* foo.set(one k, two v)
 	mutable s = none<k>
-	s = in
-	(* list[0] = k *)
+	s = one
+	self.list[0] = s *)
+
+foo.get_size() k
+	return self.size
 
 main
-	f = foo(size:11, capacity:"cap")
-	f.set(22, "foobar")
+	g = foo
+		size:22.33
+		name:"zoob"
+	echo(g.size)
+	echo(g.name)
+	g.im_list[1] = "number one"
+	echo(g.im_list[1])
+	echo("---")
+
+	f = foo(size:11, name:"goob")
+	echo(f.size)
+	echo(f.name)
+	f.im_list[2] = "number 2"
+	echo(f.im_list[2])
+	echo("---")
+
+	set_foo(f, 22, "foobar")
+	echo(f.size)
+	echo(f.name)
+	echo("---")
+
+	(* f.set(22, "foobar") *)
+	echo(f.get_size())
+	echo("---")
+	

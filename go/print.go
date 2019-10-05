@@ -118,7 +118,13 @@ func (me *enum) dump(lv int) string {
 }
 
 func (me *function) dump(lv int) string {
-	s := fmc(lv) + me.name + "{\n"
+	s := fmc(lv)
+	if me.forClass != nil {
+		s += me.nameOfClassFunc()
+	} else {
+		s += me.name
+	}
+	s += "{\n"
 	lv++
 	if len(me.args) > 0 {
 		s += fmc(lv) + "args[\n"

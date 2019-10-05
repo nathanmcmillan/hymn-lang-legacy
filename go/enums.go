@@ -7,7 +7,7 @@ type enum struct {
 	types        map[string]*union
 	typesOrder   []*union
 	generics     []string
-	genericsDict map[string]bool
+	genericsDict map[string]int
 }
 
 type union struct {
@@ -37,7 +37,7 @@ func (me *union) copy() *union {
 	return u
 }
 
-func enumInit(module *hmfile, name string, simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]bool) *enum {
+func enumInit(module *hmfile, name string, simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]int) *enum {
 	e := &enum{}
 	e.module = module
 	e.name = name

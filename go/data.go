@@ -14,24 +14,25 @@ func (me *idData) string() string {
 }
 
 type varData struct {
-	hmlib       *hmlib
-	module      *hmfile
-	typed       string
-	full        string
-	mutable     bool
-	onStack     bool
-	isptr       bool
-	heap        bool
-	array       bool
-	none        bool
-	maybe       bool
-	some        *varData
-	noneType    *varData
-	typeInArray *varData
-	en          *enum
-	un          *union
-	cl          *class
-	fn          *fnSig
+	hmlib      *hmlib
+	module     *hmfile
+	typed      string
+	full       string
+	mutable    bool
+	onStack    bool
+	isptr      bool
+	heap       bool
+	array      bool
+	slice      bool
+	none       bool
+	maybe      bool
+	some       *varData
+	noneType   *varData
+	memberType *varData
+	en         *enum
+	un         *union
+	cl         *class
+	fn         *fnSig
 }
 
 func (me *varData) copy() *varData {
@@ -48,7 +49,7 @@ func (me *varData) copy() *varData {
 	v.maybe = me.maybe
 	v.some = me.some
 	v.noneType = me.noneType
-	v.typeInArray = me.typeInArray
+	v.memberType = me.memberType
 	v.en = me.en
 	v.un = me.un
 	v.cl = me.cl
@@ -87,7 +88,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 			data.isptr = true
 			data.array = true
 			typed = TokenChar
-			data.typeInArray = me.typeToVarData(typed)
+			data.memberType = me.typeToVarData(typed)
 		} else {
 			data.isptr = false
 		}
@@ -109,9 +110,10 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	}
 
 	data.array = checkIsArray(typed)
-	if data.array {
-		typed = typeOfArray(typed)
-		data.typeInArray = me.typeToVarData(typed)
+	data.slice = checkIsSlice(typed)
+	if data.array || data.slice {
+		_, typed = typeOfArrayOrSlice(typed)
+		data.memberType = me.typeToVarData(typed)
 	}
 
 	data.typed = typed
@@ -154,17 +156,26 @@ func (me *varData) merge(alloc *allocData) {
 	me.heap = !alloc.useStack
 
 	if me.array {
-		typeInArray := me.copy()
-		typeInArray.array = false
+		mt := me.copy()
+		mt.array = false
+		mt.slice = false
 
-		me.typeInArray = typeInArray
-		me.full = "[]" + typeInArray.full
-		me.typed = "[]" + typeInArray.typed
+		me.memberType = mt
+		me.full = "[]" + mt.full
+		me.typed = "[]" + mt.typed
 	}
 }
 
 func (me *varData) checkIsArray() bool {
-	return strings.HasPrefix(me.full, "[]")
+	return checkIsArray(me.full)
+}
+
+func (me *varData) checkIsSlice() bool {
+	return checkIsSlice(me.full)
+}
+
+func (me *varData) checkIsArrayOrSlice() bool {
+	return me.array || me.slice
 }
 
 func (me *varData) checkIsPointerInC() bool {
@@ -266,7 +277,7 @@ func (me *varData) notEqual(other *varData) bool {
 }
 
 func (me *varData) postfixConst() bool {
-	if me.array {
+	if me.array || me.slice {
 		return true
 	}
 	if me.maybe {
@@ -325,8 +336,8 @@ func getCName(primitive string) string {
 }
 
 func (me *varData) typeSig() string {
-	if me.array {
-		return fmtptr(me.typeInArray.typeSig())
+	if me.array || me.slice {
+		return fmtptr(me.memberType.typeSig())
 	}
 	if me.maybe {
 		return me.some.typeSig()
@@ -347,8 +358,8 @@ func (me *varData) typeSig() string {
 }
 
 func (me *varData) noMallocTypeSig() string {
-	if me.array {
-		return fmtptr(me.typeInArray.noMallocTypeSig())
+	if me.array || me.slice {
+		return fmtptr(me.memberType.noMallocTypeSig())
 	}
 	if _, ok := me.checkIsClass(); ok {
 		return me.module.classNameSpace(me.typed)

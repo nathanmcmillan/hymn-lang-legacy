@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type function struct {
 	name        string
 	module      *hmfile
@@ -41,6 +43,14 @@ func (me *function) asVar() *varData {
 	return me.asSig().asVar()
 }
 
+func nameOfClassFunc(cl, fn string) string {
+	return cl + "_" + fn
+}
+
+func (me *function) nameOfClassFunc() string {
+	return nameOfClassFunc(me.forClass.name, me.name)
+}
+
 func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	module.functionOrder = append(module.functionOrder, name)
 	module.functions[name] = fn
@@ -53,12 +63,12 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 func (me *parser) defineClassFunction() {
 	module := me.hmfile
 	className := me.token.value
+	class := module.classes[className]
 	me.eat("id")
 	me.eat(".")
 	funcName := me.token.value
-	globalFuncName := nameOfClassFunc(className, funcName)
+	globalFuncName := nameOfClassFunc(class.name, funcName)
 	me.eat("id")
-	class := module.classes[className]
 	if _, ok := module.functions[globalFuncName]; ok {
 		panic(me.fail() + "class \"" + className + "\" with function \"" + funcName + "\" is already defined")
 	}
@@ -136,6 +146,11 @@ func (me *parser) defineFunction(name string, self *class) *function {
 	}
 	if me.token.is != "line" {
 		fn.typed = me.declareType(true)
+		if self != nil {
+			if _, ok := self.genericsDict[fn.typed.full]; ok {
+				fmt.Println("CLASS FUNCTION RETURN TYPE IS GENERIC ::", fn.typed.full)
+			}
+		}
 	} else {
 		fn.typed = me.hmfile.typeToVarData("void")
 	}

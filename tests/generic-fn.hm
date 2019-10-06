@@ -5,6 +5,7 @@ type foo<k, v>
 	name     v
 	list     []k
 	im_list  [3]v
+	mutate   (v) v
 	total    int
 	weight   char
 
@@ -12,25 +13,31 @@ set_foo(f foo<int, string>, one int, two string)
 	f.size = one
 	f.name = two
 
-(* foo.set(one k, two v)
-	mutable s = none<k>
-	s = one
-	self.list[0] = s *)
+transform(in string) string
+	return "transform_" + in
+
+foo.set(one k, two v)
+	self.list[0] = one
+	self.im_list[0] = two
 
 foo.get_size() k
 	return self.size
 
+foo.get_total() int
+	return self.total
+
 main
-	g = foo
+	g = foo(
 		size:22.33
 		name:"zoob"
+		mutate:transform)
 	echo(g.size)
 	echo(g.name)
 	g.im_list[1] = "number one"
 	echo(g.im_list[1])
 	echo("---")
 
-	f = foo(size:11, name:"goob")
+	f = foo(size:11, name:"goob", mutate:transform)
 	echo(f.size)
 	echo(f.name)
 	f.im_list[2] = "number 2"
@@ -42,7 +49,8 @@ main
 	echo(f.name)
 	echo("---")
 
-	(* f.set(22, "foobar") *)
+	(* f.set(22, "foobar")
 	echo(f.get_size())
+	echo(f.get_total()) *)
 	echo("---")
 	

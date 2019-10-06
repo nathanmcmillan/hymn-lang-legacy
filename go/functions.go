@@ -22,6 +22,22 @@ func funcInit(module *hmfile, name string) *function {
 	return f
 }
 
+func (me *function) copy() *function {
+	f := &function{}
+	f.module = me.module
+	f.name = me.name
+	f.args = make([]*funcArg, len(me.args))
+	f.argDict = me.argDict
+	f.expressions = make([]*node, len(me.expressions))
+	for i, a := range me.args {
+		f.args[i] = a.copy()
+	}
+	for i, e := range me.expressions {
+		f.expressions[i] = e.copy()
+	}
+	return f
+}
+
 func (me *function) canonical() string {
 	name := me.name
 	if me.module != nil {
@@ -60,10 +76,40 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	}
 }
 
-func (me *parser) defineClassFunction() {
+func (me *parser) remapNodeRecursive(impl *class, n *node) {
+	if n.vdata != nil {
+		n.vdata.replaceAny(impl.gmapper)
+	}
+	for _, h := range n.has {
+		me.remapNodeRecursive(impl, h)
+	}
+}
+
+func (me *parser) remapClassFunctionImpl(impl *class, original *function) {
+	// if generic defines another new generic, need regular code path to define the derivative generic
+	fmt.Println("IMPL FUNCTION ::", impl.name+"."+original.name)
+	fn := original.copy()
+	fn.forClass = impl
+	for _, e := range fn.expressions {
+		me.remapNodeRecursive(impl, e)
+		fmt.Println(e.string(0))
+	}
+	impl.functions[fn.name] = fn
+	fmt.Println("IMPL FUNCTION GLOBAL NAME ::", fn.nameOfClassFunc())
+	me.pushFunction(fn.nameOfClassFunc(), me.hmfile, fn)
+
+}
+
+func (me *parser) defineClassFunction(impl *class) {
 	module := me.hmfile
 	className := me.token.value
-	class := module.classes[className]
+	var class *class
+	if impl == nil {
+		class = module.classes[className]
+	} else {
+		fmt.Println("REVAL IMPL ::", className, "->", impl.name)
+		class = module.classes[impl.name]
+	}
 	me.eat("id")
 	me.eat(".")
 	funcName := me.token.value
@@ -75,9 +121,15 @@ func (me *parser) defineClassFunction() {
 	if _, ok := class.variables[funcName]; ok {
 		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
 	}
+	fmt.Println("CLASS FUNCTION ::", class.name+"."+funcName)
 	fn := me.defineFunction(funcName, class)
 	fn.forClass = class
+	class.functions[funcName] = fn
 	me.pushFunction(globalFuncName, module, fn)
+
+	for _, impl := range class.impls {
+		me.remapClassFunctionImpl(impl, fn)
+	}
 }
 
 func (me *parser) defineFileFunction() {

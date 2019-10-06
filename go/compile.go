@@ -71,9 +71,9 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
-			cfile.defineMain(me.functions[f])
+			cfile.compileMain(me.functions[f])
 		} else {
-			cfile.defineFunction(f, me.functions[f])
+			cfile.compileFunction(f, me.functions[f])
 		}
 	}
 

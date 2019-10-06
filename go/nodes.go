@@ -18,6 +18,15 @@ func nodeInit(is string) *node {
 	return n
 }
 
+func (me *node) copy() *node {
+	n := &node{}
+	n.is = me.is
+	n.value = me.value
+	// n.idata = me.idata.copy()
+	n.fn = me.fn.copy()
+	return n
+}
+
 func (me *node) push(n *node) {
 	me.has = append(me.has, n)
 }

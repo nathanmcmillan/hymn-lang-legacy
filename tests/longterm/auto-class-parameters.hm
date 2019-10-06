@@ -1,0 +1,21 @@
+
+type foo
+	total  int
+
+foo.convert_to_total(t float)
+	self.total = @total t
+
+foo.set_total(t @total)
+	self.total = t
+
+foo.get_total() @total
+	return self.total
+
+main
+	f = foo
+	f.convert_to_total(22.3)
+	echo(f.get_total())
+	f.set(22)
+	echo(f.get_total())
+	echo("---")
+	

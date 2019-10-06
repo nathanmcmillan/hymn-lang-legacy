@@ -52,8 +52,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.idata.name = dotName
 					member.push(head)
 				} else {
-					nameOfFunc := nameOfClassFunc(rootClass.name, dotName)
-					funcVar, ok := data.getFunction(nameOfFunc)
+					funcVar, ok := data.getFunction(nameOfClassFunc(rootClass.name, dotName))
 					if ok {
 						fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed.full + "\"")
 						member = me.callClassFunction(data.module, head, rootClass, funcVar)

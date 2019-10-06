@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -35,25 +36,29 @@ type varData struct {
 	fn         *fnSig
 }
 
+func (me *varData) set(in *varData) {
+	me.module = in.module
+	me.typed = in.typed
+	me.full = in.full
+	me.mutable = in.mutable
+	me.onStack = in.onStack
+	me.isptr = in.isptr
+	me.heap = in.heap
+	me.array = in.array
+	me.none = in.none
+	me.maybe = in.maybe
+	me.some = in.some
+	me.noneType = in.noneType
+	me.memberType = in.memberType
+	me.en = in.en
+	me.un = in.un
+	me.cl = in.cl
+	me.fn = in.fn
+}
+
 func (me *varData) copy() *varData {
 	v := &varData{}
-	v.module = me.module
-	v.typed = me.typed
-	v.full = me.full
-	v.mutable = me.mutable
-	v.onStack = me.onStack
-	v.isptr = me.isptr
-	v.heap = me.heap
-	v.array = me.array
-	v.none = me.none
-	v.maybe = me.maybe
-	v.some = me.some
-	v.noneType = me.noneType
-	v.memberType = me.memberType
-	v.en = me.en
-	v.un = me.un
-	v.cl = me.cl
-	v.fn = me.fn
+	v.set(me)
 	return v
 }
 
@@ -383,4 +388,24 @@ func (me *varData) getFunction(name string) (*function, bool) {
 	}
 	f, ok := me.hmlib.functions[name]
 	return f, ok
+}
+
+func (me *varData) replaceAny(any map[string]string) {
+	f := me.full
+
+	if m, ok := any[f]; ok {
+		fmt.Println("IMPL FUNCTION REMAP NODE ::", f, "|", m)
+		me.set(me.module.typeToVarData(m))
+	}
+
+	if me.array || me.slice {
+	}
+
+	if me.maybe {
+
+	}
+
+	if me.none {
+
+	}
 }

@@ -5,6 +5,13 @@ type funcArg struct {
 	defaultNode *node
 }
 
+func (me *funcArg) copy() *funcArg {
+	a := &funcArg{}
+	a.variable = me.variable.copy()
+	a.defaultNode = me.defaultNode.copy()
+	return a
+}
+
 func (me *hmfile) fnArgInit(typed, name string, mutable, isptr bool) *funcArg {
 	f := &funcArg{}
 	f.variable = me.varInit(typed, name, mutable, isptr)

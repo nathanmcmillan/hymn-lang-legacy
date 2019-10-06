@@ -144,6 +144,10 @@ func (me *parser) defaultValue(in *varData) *node {
 		s.value = "0"
 		t.push(s)
 		d = t
+	} else if _, ok := d.vdata.checkIsClass(); ok {
+		t := nodeInit("new")
+		t.vdata = d.vdata
+		d = t
 	} else {
 		panic(me.fail() + "no default value for \"" + typed + "\"")
 	}
@@ -162,15 +166,10 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	}
 }
 
-func (me *parser) classParams(n *node, typed string, special bool, depth int) string {
-	if special {
-		ndepth := me.peek().depth
-		if ndepth != depth+1 {
-			return typed
-		}
+func (me *parser) classParams(n *node, typed string, depth int) string {
+	me.eat("(")
+	if me.token.is == "line" {
 		me.eat("line")
-	} else {
-		me.eat("(")
 	}
 	base := me.hmfile.classes[typed]
 	vars := base.variableOrder
@@ -181,12 +180,18 @@ func (me *parser) classParams(n *node, typed string, special bool, depth int) st
 	genericsImpl := make(map[int]*varData)
 	genericsMap := base.genericsDict
 	for {
-		if !special {
-			if me.token.is == ")" {
-				me.eat(")")
-				break
-			}
-			if pix > 0 || dict {
+		if me.token.is == ")" {
+			me.eat(")")
+			break
+		}
+		if pix > 0 || dict {
+			if me.token.is == "line" {
+				ndepth := me.peek().depth
+				if ndepth != depth+1 {
+					panic(me.fail() + "unexpected line / incomplete class allocation")
+				}
+				me.eat("line")
+			} else {
 				me.eat(",")
 			}
 		}
@@ -217,16 +222,6 @@ func (me *parser) classParams(n *node, typed string, special bool, depth int) st
 				if vname == v {
 					params[i] = param
 					break
-				}
-			}
-			if special {
-				if me.token.is == "line" {
-					ndepth := me.peek().depth
-					if ndepth != depth+1 {
-						break
-					}
-					me.eat("line")
-					continue
 				}
 			}
 			dict = true
@@ -285,11 +280,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 		}
 	}
 	if n != nil {
-		if me.token.is == "(" {
-			typed = me.classParams(n, typed, false, depth)
-		} else if me.token.is == "line" {
-			typed = me.classParams(n, typed, true, depth)
-		}
+		typed = me.classParams(n, typed, depth)
 	}
 	if me.hmfile != module {
 		typed = module.name + "." + typed

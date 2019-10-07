@@ -5,22 +5,6 @@ import (
 	"strconv"
 )
 
-type blockNode struct {
-	pre     *blockNode
-	current []*node
-}
-
-func (me *blockNode) flatten() []*node {
-	flat := make([]*node, 0)
-	for _, p := range me.pre.flatten() {
-		flat = append(flat, p)
-	}
-	for _, c := range me.current {
-		flat = append(flat, c)
-	}
-	return flat
-}
-
 func (me *cfile) tempClass(p *node) *cnode {
 	temp := "temp_" + strconv.Itoa(me.scope.temp)
 	me.scope.temp++
@@ -41,9 +25,37 @@ func (me *cfile) tempClass(p *node) *cnode {
 	return cn
 }
 
-func (me *cfile) allocClass(n *node) *cnode {
+type codeblock struct {
+	pre     *codeblock
+	current *cnode
+	post    *codeblock
+}
+
+func codeNodeOne(n *node, code string) *codeblock {
+	me := &codeblock{}
+	me.current = codeNode(n, code)
+	return me
+}
+
+func (me *codeblock) flatten() []*cnode {
+	flat := make([]*cnode, 0)
+	if me.pre != nil {
+		for _, p := range me.pre.flatten() {
+			flat = append(flat, p)
+		}
+	}
+	flat = append(flat, me.current)
+	if me.post != nil {
+		for _, p := range me.post.flatten() {
+			flat = append(flat, p)
+		}
+	}
+	return flat
+}
+
+func (me *cfile) compileAllocClass(n *node) *codeblock {
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return codeNode(n, "")
+		return codeNodeOne(n, "")
 	}
 
 	_, useStack := n.attributes["use-stack"]
@@ -52,6 +64,17 @@ func (me *cfile) allocClass(n *node) *cnode {
 	data := n.asVar()
 	typed := data.module.classNameSpace(data.typed)
 
+	assign, local := n.attributes["assign"]
+
+	if local {
+		fmt.Println("ALLOC CLASS IS LOCAL TO ASSIGNMENT ::")
+	}
+
+	if n.trunk != nil {
+		fmt.Println("ALLOC CLASS TRUNK ::", n.trunk.string(0))
+	}
+
+	cb := &codeblock{}
 	code := ""
 
 	var ptrCh string
@@ -63,7 +86,13 @@ func (me *cfile) allocClass(n *node) *cnode {
 		ptrCh = "."
 	}
 
-	assign, _ := n.attributes["assign"]
+	cb.current = codeNode(n, code)
+	post := codeNode(n, code)
+
+	// temp_0 = malloc
+	// temp_0->a = 0
+	// x[1] = temp_0
+
 	cl, _ := data.checkIsClass()
 	params := n.has
 	for ix, p := range params {
@@ -75,16 +104,17 @@ func (me *cfile) allocClass(n *node) *cnode {
 			code += temp.code
 			code += cassign + temp.value
 		} else {
+
 			code += cassign + me.eval(p).code
 		}
 	}
 
-	return codeNode(n, code)
+	return cb
 }
 
-func (me *cfile) allocEnum(n *node) string {
+func (me *cfile) compileAllocEnum(n *node) *cnode {
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return ""
+		return codeNode(n, "")
 	}
 	data := n.vdata
 	module := data.module
@@ -93,7 +123,7 @@ func (me *cfile) allocEnum(n *node) string {
 	if en.simple {
 		enumBase := module.enumNameSpace(en.name)
 		globalName := module.enumTypeName(enumBase, enumType)
-		return globalName
+		return codeNode(n, globalName)
 	}
 	unionOf := en.types[enumType]
 	code := ""
@@ -111,7 +141,7 @@ func (me *cfile) allocEnum(n *node) string {
 		}
 	}
 	code += ")"
-	return code
+	return codeNode(n, code)
 }
 
 func (me *cfile) allocArray(n *node) string {

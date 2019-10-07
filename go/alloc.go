@@ -120,6 +120,16 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 	return n
 }
 
+func (me *parser) pushAllDefaultClassParams(n *node) {
+	base, ok := n.asVar().checkIsClass()
+	if !ok {
+		panic(me.fail())
+	}
+	vars := base.variableOrder
+	params := make([]*node, len(vars))
+	me.pushClassParams(n, base, params)
+}
+
 func (me *parser) defaultValue(in *varData) *node {
 	d := nodeInit(in.full)
 	d.vdata = in
@@ -147,6 +157,7 @@ func (me *parser) defaultValue(in *varData) *node {
 	} else if _, ok := d.vdata.checkIsClass(); ok {
 		t := nodeInit("new")
 		t.vdata = d.vdata
+		me.pushAllDefaultClassParams(t)
 		d = t
 	} else {
 		panic(me.fail() + "no default value for \"" + typed + "\"")

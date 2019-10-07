@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type node struct {
 	is         string
 	value      string
@@ -8,6 +10,7 @@ type node struct {
 	vdata      *varData
 	attributes map[string]string
 	has        []*node
+	trunk      *node
 }
 
 func nodeInit(is string) *node {
@@ -19,6 +22,7 @@ func nodeInit(is string) *node {
 }
 
 func (me *node) copy() *node {
+	fmt.Println("TODO :: node copy")
 	n := &node{}
 	n.is = me.is
 	n.value = me.value
@@ -27,8 +31,9 @@ func (me *node) copy() *node {
 	return n
 }
 
-func (me *node) push(n *node) {
-	me.has = append(me.has, n)
+func (me *node) push(leaf *node) {
+	me.has = append(me.has, leaf)
+	leaf.trunk = me
 }
 
 func (me *node) copyType(other *node) {

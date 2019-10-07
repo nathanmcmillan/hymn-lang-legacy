@@ -71,10 +71,10 @@ dict.clear
 	self.size = 0
 
 main
-	m = dict<int, string>
+	m = dict<int, string>(
 		size: 10
 		capacity: 10
-		hashing: int_hashcode
+		hashing: int_hashcode)
 	m.set(0, "cool")
 	out = m.get(0)
 	echo(out)

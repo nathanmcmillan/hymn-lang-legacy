@@ -1,15 +1,17 @@
 # hymn-lang
-compiles readable C code
+Hymn is a programming language designed to make writing simple imperitive programs easy.
+It compiles to efficient, readable C code.
 
 ```
-type foo<T>
-  data T
+type foo<t>
+  data t
 
 main
-  f = foo<string>
-    data: "hello world"
+  f = foo(data:"hello world")
   echo(f.data)
 ```
+
+Learn more at https://hymn-lang.org
 
 ### features
 * generics
@@ -23,9 +25,19 @@ main
 
 ### todo
 * slices
-* scope
+* correct scoping for functions
 * references to primitives
 * free heap space
-* interfaces
-* dictionaries
+* borrow / reference checker
+* interfaces (maybe?)
 * threads / async await
+* macros / def
+
+### plan
+* temporary variables for complex initializing
+* always require parameters for classes
+* class functions with generics
+* hash maps
+* file input / output
+* bootstrapping compiler from golang to hymn
+* JSON format tokens and parse tree

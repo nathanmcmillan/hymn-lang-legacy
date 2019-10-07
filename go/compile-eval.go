@@ -13,11 +13,12 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return codeNode(n, code)
 	}
 	if op == "new" {
-		return me.allocClass(n)
+		b := me.compileAllocClass(n)
+		c := b.flatten()[0]
+		return c
 	}
 	if op == "enum" {
-		code := me.allocEnum(n)
-		return codeNode(n, code)
+		return me.compileAllocEnum(n)
 	}
 	if op == "cast" {
 		return me.compileCast(n)

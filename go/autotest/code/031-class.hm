@@ -6,7 +6,7 @@ foo.get(z int) string
   return "stuff did"
 
 main
-  f = foo
+  f = foo()
   f.x = 3
   s = f.get(2)
   echo(f.x)

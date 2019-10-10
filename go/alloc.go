@@ -159,6 +159,8 @@ func (me *parser) defaultValue(in *varData) *node {
 		t.vdata = d.vdata
 		me.pushAllDefaultClassParams(t)
 		d = t
+	} else if d.vdata.maybe {
+		d.value = "NULL"
 	} else {
 		panic(me.fail() + "no default value for \"" + typed + "\"")
 	}
@@ -177,12 +179,12 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	}
 }
 
-func (me *parser) classParams(n *node, typed string, depth int) string {
+func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) string {
 	me.eat("(")
 	if me.token.is == "line" {
 		me.eat("line")
 	}
-	base := me.hmfile.classes[typed]
+	base := module.classes[typed]
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
 	pix := 0
@@ -291,7 +293,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 		}
 	}
 	if n != nil {
-		typed = me.classParams(n, typed, depth)
+		typed = me.classParams(n, module, typed, depth)
 	}
 	if me.hmfile != module {
 		typed = module.name + "." + typed

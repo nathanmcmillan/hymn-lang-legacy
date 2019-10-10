@@ -1,13 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
-func (me *cfile) tempClass(p *node) *cnode {
+func (me *cfile) temp() string {
 	temp := "temp_" + strconv.Itoa(me.scope.temp)
 	me.scope.temp++
+	return temp
+}
+
+func (me *cfile) tempClass(p *node) *cnode {
+	temp := me.temp()
 	p.attributes["assign"] = temp
 
 	d := nodeInit("variable")
@@ -18,44 +22,16 @@ func (me *cfile) tempClass(p *node) *cnode {
 	decl := me.declare(d)
 
 	code := ""
-	code += ";\n" + fmc(me.depth) + decl + " = " + me.eval(p).code
+	code += ";\n" + fmc(me.depth) + decl + " = " + me.eval(p).code()
 
 	cn := codeNode(p, code)
 	cn.value = temp
 	return cn
 }
 
-type codeblock struct {
-	pre     *codeblock
-	current *cnode
-	post    *codeblock
-}
-
-func codeNodeOne(n *node, code string) *codeblock {
-	me := &codeblock{}
-	me.current = codeNode(n, code)
-	return me
-}
-
-func (me *codeblock) flatten() []*cnode {
-	flat := make([]*cnode, 0)
-	if me.pre != nil {
-		for _, p := range me.pre.flatten() {
-			flat = append(flat, p)
-		}
-	}
-	flat = append(flat, me.current)
-	if me.post != nil {
-		for _, p := range me.post.flatten() {
-			flat = append(flat, p)
-		}
-	}
-	return flat
-}
-
 func (me *cfile) compileAllocClass(n *node) *codeblock {
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return codeNodeOne(n, "")
+		return codeBlockOne(n, "")
 	}
 
 	_, useStack := n.attributes["use-stack"]
@@ -66,55 +42,58 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 
 	assign, local := n.attributes["assign"]
 
-	if local {
-		fmt.Println("ALLOC CLASS IS LOCAL TO ASSIGNMENT ::")
-	}
-
-	if n.trunk != nil {
-		fmt.Println("ALLOC CLASS TRUNK ::", n.trunk.string(0))
-	}
-
 	cb := &codeblock{}
-	code := ""
 
-	var ptrCh string
+	var memberRef string
 	if useHeap {
-		fmt.Println("ALLOC CLASS USE HEAP FOR MEMBER ::", typed)
-		code += "malloc(sizeof(" + typed + "))"
-		ptrCh = "->"
+		memberRef = "->"
 	} else {
-		ptrCh = "."
+		memberRef = "."
 	}
 
-	cb.current = codeNode(n, code)
-	post := codeNode(n, code)
-
-	// temp_0 = malloc
-	// temp_0->a = 0
-	// x[1] = temp_0
-
-	cl, _ := data.checkIsClass()
-	params := n.has
-	for ix, p := range params {
-		clv := cl.variables[cl.variableOrder[ix]]
-		cassign := ";\n" + fmc(me.depth) + assign + ptrCh + clv.name + " = "
-
-		if p.is == "new" {
-			temp := me.tempClass(p)
-			code += temp.code
-			code += cassign + temp.value
-		} else {
-
-			code += cassign + me.eval(p).code
+	if local {
+		cl, _ := data.checkIsClass()
+		code := ""
+		if useHeap {
+			code += "malloc(sizeof(" + typed + "))"
 		}
+		params := n.has
+		for i, p := range params {
+			clv := cl.variables[cl.variableOrder[i]]
+			cassign := ";\n" + fmc(me.depth) + assign + memberRef + clv.name + " = "
+			if p.is == "new" {
+				temp := me.tempClass(p)
+				code += temp.code
+				code += cassign + temp.value
+			} else {
+				code += cassign + me.eval(p).code()
+			}
+		}
+		cb.current = codeNode(n, code)
+
+	} else {
+		temp := me.temp()
+		cb.current = codeNode(n, temp)
+		n.attributes["assign"] = temp
+		d := nodeInit("variable")
+		d.idata = &idData{}
+		d.idata.module = me.hmfile
+		d.idata.name = temp
+		d.copyType(n)
+		decl := me.declare(d)
+		value := me.eval(n).code()
+		code := decl + " = " + value + me.maybeColon(value) + "\n"
+		cn := codeNode(n, code)
+		cn.value = temp
+		cb.pre = codeNodeUpgrade(cn)
 	}
 
 	return cb
 }
 
-func (me *cfile) compileAllocEnum(n *node) *cnode {
+func (me *cfile) compileAllocEnum(n *node) *codeblock {
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return codeNode(n, "")
+		return codeBlockOne(n, "")
 	}
 	data := n.vdata
 	module := data.module
@@ -123,33 +102,33 @@ func (me *cfile) compileAllocEnum(n *node) *cnode {
 	if en.simple {
 		enumBase := module.enumNameSpace(en.name)
 		globalName := module.enumTypeName(enumBase, enumType)
-		return codeNode(n, globalName)
+		return codeBlockOne(n, globalName)
 	}
 	unionOf := en.types[enumType]
 	code := ""
 	code += module.unionFnNameSpace(en, unionOf) + "("
 	if len(unionOf.types) == 1 {
 		unionHas := n.has[0]
-		code += me.eval(unionHas).code
+		code += me.eval(unionHas).code()
 	} else {
 		for ix := range unionOf.types {
 			if ix > 0 {
 				code += ", "
 			}
 			unionHas := n.has[ix]
-			code += me.eval(unionHas).code
+			code += me.eval(unionHas).code()
 		}
 	}
 	code += ")"
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) allocArray(n *node) string {
+func (me *cfile) allocArray(n *node) *codeblock {
 	size := ""
 	parenthesis := false
 	if len(n.has) > 0 {
 		e := me.eval(n.has[0])
-		size = e.code
+		size = e.code()
 		if e.getType() != TokenInt {
 			parenthesis = true
 		}
@@ -157,7 +136,7 @@ func (me *cfile) allocArray(n *node) string {
 		size = sizeOfArray(n.asVar().full)
 	}
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return "[" + size + "]"
+		return codeBlockOne(n, "["+size+"]")
 	}
 	memberType := n.asVar().typeSig()
 	code := "malloc("
@@ -169,16 +148,19 @@ func (me *cfile) allocArray(n *node) string {
 		code += ")"
 	}
 	code += " * sizeof(" + memberType + "))"
-	return code
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) allocSlice(n *node) string {
+func (me *cfile) allocSlice(n *node) *codeblock {
 	size := "0"
 	if len(n.has) > 0 {
-		size = me.eval(n.has[0]).code
+		size = me.eval(n.has[0]).code()
 	}
+	code := ""
 	if _, ok := n.attributes["no-malloc"]; ok {
-		return "[" + size + "]"
+		code = "[" + size + "]"
+	} else {
+		code = "hmlib_slice_init(" + size + ", sizeof(" + n.asVar().memberType.typeSig() + "))"
 	}
-	return "hmlib_slice_init(" + size + ", sizeof(" + n.asVar().memberType.typeSig() + "))"
+	return codeBlockOne(n, code)
 }

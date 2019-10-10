@@ -93,8 +93,10 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.push(head)
 					head = member
 				}
+			} else if data.maybe {
+				panic(me.fail() + "unexpected maybe type \"" + head.vdata.full + "\"")
 			} else {
-				panic(me.fail() + "non primitive type \"" + head.vdata.full + "\" does not exist")
+				panic(me.fail() + "unexpected type \"" + head.vdata.full + "\"")
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {

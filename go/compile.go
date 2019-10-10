@@ -89,56 +89,56 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	return fileCode
 }
 
-func (me *cfile) eval(n *node) *cnode {
+func (me *cfile) eval(n *node) *codeblock {
 	return me.hintEval(n, nil)
 }
 
-func (me *cfile) compilePrefixPos(n *node) *cnode {
-	code := me.eval(n.has[0]).code
-	return codeNode(n, code)
+func (me *cfile) compilePrefixPos(n *node) *codeblock {
+	code := me.eval(n.has[0]).code()
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compilePrefixNeg(n *node) *cnode {
-	code := "-" + me.eval(n.has[0]).code
-	return codeNode(n, code)
+func (me *cfile) compilePrefixNeg(n *node) *codeblock {
+	code := "-" + me.eval(n.has[0]).code()
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileCast(n *node) *cnode {
+func (me *cfile) compileCast(n *node) *codeblock {
 	typ := getCName(n.vdata.full)
-	code := "(" + typ + ")" + me.eval(n.has[0]).code
-	return codeNode(n, code)
+	code := "(" + typ + ")" + me.eval(n.has[0]).code()
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileBinaryOp(n *node) *cnode {
+func (me *cfile) compileBinaryOp(n *node) *codeblock {
 	_, paren := n.attributes["parenthesis"]
 	code := ""
 	if paren {
 		code += "("
 	}
-	code += me.eval(n.has[0]).code
+	code += me.eval(n.has[0]).code()
 	code += " " + n.is + " "
-	code += me.eval(n.has[1]).code
+	code += me.eval(n.has[1]).code()
 	if paren {
 		code += ")"
 	}
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileTupleIndex(n *node) *cnode {
+func (me *cfile) compileTupleIndex(n *node) *codeblock {
 	dotIndexStr := n.value
 	root := me.eval(n.has[0])
-	data := root.vdata
+	data := root.data()
 	_, un, _ := data.checkIsEnum()
-	code := root.code + "->"
+	code := root.code() + "->"
 	if len(un.types) == 1 {
 		code += un.name
 	} else {
 		code += un.name + ".var" + dotIndexStr
 	}
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileMemberVariable(n *node) *cnode {
+func (me *cfile) compileMemberVariable(n *node) *codeblock {
 	head := n.has[0]
 	code := n.idata.name
 	for {
@@ -161,7 +161,7 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			break
 		} else if head.is == "array-member" {
 			index := me.eval(head.has[0])
-			code = "[" + index.code + "]" + "->" + code
+			code = "[" + index.code() + "]" + "->" + code
 			head = head.has[1]
 		} else if head.is == "member-variable" {
 			if code[0] == '[' {
@@ -174,17 +174,17 @@ func (me *cfile) compileMemberVariable(n *node) *cnode {
 			panic("missing member variable")
 		}
 	}
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileFnPtr(n *node, hint *varData) *cnode {
+func (me *cfile) compileFnPtr(n *node, hint *varData) *codeblock {
 	code := ""
 	fn := n.fn
 	code += "&" + fn.module.funcNameSpace(fn.name)
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
+func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
 	code := ""
 	if n.idata.module == me.hmfile {
 		v := me.getvar(n.idata.name)
@@ -196,47 +196,47 @@ func (me *cfile) compileVariable(n *node, hint *varData) *cnode {
 	} else {
 		code = n.idata.module.varNameSpace(n.idata.name)
 	}
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileRawString(n *node) *cnode {
-	return codeNode(n, "\""+n.value+"\"")
+func (me *cfile) compileRawString(n *node) *codeblock {
+	return codeBlockOne(n, "\""+n.value+"\"")
 }
 
-func (me *cfile) compileString(n *node) *cnode {
+func (me *cfile) compileString(n *node) *codeblock {
 	code := "hmlib_string_init(\"" + n.value + "\")"
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileChar(n *node) *cnode {
+func (me *cfile) compileChar(n *node) *codeblock {
 	code := "'" + n.value + "'"
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileNone(n *node) *cnode {
+func (me *cfile) compileNone(n *node) *codeblock {
 	code := "NULL"
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileIs(n *node) *cnode {
+func (me *cfile) compileIs(n *node) *codeblock {
 	code := ""
 	code += me.walrusMatch(n)
 	using := n.has[0]
 	match := me.eval(using)
 
-	if match.vdata.maybe {
+	if match.data().maybe {
 		caseOf := n.has[1]
 		if caseOf.is == "some" {
-			code += match.code + " != NULL"
+			code += match.code() + " != NULL"
 		} else if caseOf.is == "none" {
-			code += match.code + " == NULL"
+			code += match.code() + " == NULL"
 		}
-		return codeNode(n, code)
+		return codeBlockOne(n, code)
 	}
 
 	baseEnum, _, _ := using.vdata.checkIsEnum()
 	if baseEnum.simple {
-		code += match.code
+		code += match.code()
 	} else {
 		code += using.idata.name + "->type"
 	}
@@ -250,27 +250,27 @@ func (me *cfile) compileIs(n *node) *cnode {
 		code += me.hmfile.enumTypeName(enumNameSpace, matchBaseUn.name)
 	} else {
 		compare := me.eval(caseOf)
-		compareEnum, _, _ := compare.vdata.checkIsEnum()
-		code += compare.code
+		compareEnum, _, _ := compare.data().checkIsEnum()
+		code += compare.code()
 		if !compareEnum.simple {
 			code += "->type"
 		}
 	}
 
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileMatch(n *node) *cnode {
+func (me *cfile) compileMatch(n *node) *codeblock {
 	code := ""
 	code += me.walrusMatch(n)
 	using := n.has[0]
 	match := me.eval(using)
 
-	if match.vdata.maybe {
+	if match.data().maybe {
 		return me.compileNullCheck(match, n, code)
 	}
 
-	test := match.code
+	test := match.code()
 	isEnum := false
 	var enumNameSpace string
 
@@ -290,7 +290,7 @@ func (me *cfile) compileMatch(n *node) *cnode {
 	for ix < size {
 		caseOf := n.has[ix]
 		thenDo := n.has[ix+1]
-		thenBlock := me.eval(thenDo).code
+		thenBlock := me.eval(thenDo).code()
 		if caseOf.is == "_" {
 			code += fmc(me.depth) + "default:\n"
 		} else {
@@ -311,10 +311,10 @@ func (me *cfile) compileMatch(n *node) *cnode {
 		ix += 2
 	}
 	code += fmc(me.depth) + "}"
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileNullCheck(match *cnode, n *node, code string) *cnode {
+func (me *cfile) compileNullCheck(match *codeblock, n *node, code string) *codeblock {
 	ifNull := ""
 	ifNotNull := ""
 	ix := 1
@@ -322,7 +322,7 @@ func (me *cfile) compileNullCheck(match *cnode, n *node, code string) *cnode {
 	for ix < size {
 		caseOf := n.has[ix]
 		thenDo := n.has[ix+1]
-		thenBlock := me.eval(thenDo).code
+		thenBlock := me.eval(thenDo).code()
 		if caseOf.is == "some" {
 			ifNotNull = thenBlock
 		} else if caseOf.is == "none" {
@@ -332,97 +332,97 @@ func (me *cfile) compileNullCheck(match *cnode, n *node, code string) *cnode {
 	}
 
 	if ifNull != "" && ifNotNull != "" {
-		code += "if (" + match.code + " == NULL) {\n"
+		code += "if (" + match.code() + " == NULL) {\n"
 		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
 		code += "\n" + fmc(me.depth) + "} else {\n"
 		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
 		code += "\n" + fmc(me.depth) + "}"
 
 	} else if ifNull != "" {
-		code += "if (" + match.code + " == NULL) {\n"
+		code += "if (" + match.code() + " == NULL) {\n"
 		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
 		code += "\n" + fmc(me.depth) + "}"
 
 	} else {
-		code += "if (" + match.code + " != NULL) {\n"
+		code += "if (" + match.code() + " != NULL) {\n"
 		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
 		code += "\n" + fmc(me.depth) + "}"
 
 	}
 
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileEqual(n *node) *cnode {
+func (me *cfile) compileEqual(n *node) *codeblock {
 	_, paren := n.attributes["parenthesis"]
 	code := ""
 	if paren {
 		code += "("
 	}
-	code += me.eval(n.has[0]).code
+	code += me.eval(n.has[0]).code()
 	code += " == "
-	code += me.eval(n.has[1]).code
+	code += me.eval(n.has[1]).code()
 	if paren {
 		code += ")"
 	}
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileTernary(n *node) *cnode {
+func (me *cfile) compileTernary(n *node) *codeblock {
 	code := ""
-	code += me.eval(n.has[0]).code
+	code += me.eval(n.has[0]).code()
 	code += " ? "
-	code += me.eval(n.has[1]).code
+	code += me.eval(n.has[1]).code()
 	code += " : "
-	code += me.eval(n.has[2]).code
-	return codeNode(n, code)
+	code += me.eval(n.has[2]).code()
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileAndOr(n *node) *cnode {
+func (me *cfile) compileAndOr(n *node) *codeblock {
 	_, paren := n.attributes["parenthesis"]
 	code := ""
 	if paren {
 		code += "("
 	}
-	code += me.eval(n.has[0]).code
+	code += me.eval(n.has[0]).code()
 	if n.is == "and" {
 		code += " && "
 	} else {
 		code += " || "
 	}
-	code += me.eval(n.has[1]).code
+	code += me.eval(n.has[1]).code()
 	if paren {
 		code += ")"
 	}
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileIf(n *node) *cnode {
+func (me *cfile) compileIf(n *node) *codeblock {
 	hsize := len(n.has)
 	code := ""
 	code += me.walrusIf(n)
-	code += "if (" + me.eval(n.has[0]).code + ") {\n"
-	c := me.eval(n.has[1]).code
+	code += "if (" + me.eval(n.has[0]).code() + ") {\n"
+	c := me.eval(n.has[1]).code()
 	code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 	code += "\n" + fmc(me.depth) + "}"
 	ix := 2
 	for ix < hsize && n.has[ix].is == "elif" {
-		code += " else if (" + me.eval(n.has[ix].has[0]).code + ") {\n"
-		c := me.eval(n.has[ix].has[1]).code
+		code += " else if (" + me.eval(n.has[ix].has[0]).code() + ") {\n"
+		c := me.eval(n.has[ix].has[1]).code()
 		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 		code += "\n" + fmc(me.depth) + "}"
 		ix++
 	}
 	if ix >= 2 && ix < hsize {
 		code += " else {\n"
-		c := me.eval(n.has[ix]).code
+		c := me.eval(n.has[ix]).code()
 		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 		code += "\n" + fmc(me.depth) + "}"
 	}
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileFor(n *node) *cnode {
+func (me *cfile) compileFor(n *node) *codeblock {
 	size := len(n.has)
 	ix := 0
 	code := ""
@@ -440,39 +440,25 @@ func (me *cfile) compileFor(n *node) *cnode {
 		if vexist == nil {
 			code += me.declare(vobj) + ";\n" + fmc(me.depth)
 		}
-		vinit := me.assingment(vset)
-		condition := me.eval(n.has[1]).code
+		vinit := me.assignment(vset)
+		condition := me.eval(n.has[1]).code()
 		inc := me.assignmentUpdate(n.has[2])
 		code += "for (" + vinit + "; " + condition + "; " + inc + ") {\n"
 	} else if size > 1 {
 		ix++
 		code += me.walrusLoop(n)
-		code += "while (" + me.eval(n.has[0]).code + ") {\n"
+		code += "while (" + me.eval(n.has[0]).code() + ") {\n"
 	} else {
 		code += "while (true) {\n"
 	}
-	code += me.eval(n.has[ix]).code
+	code += me.eval(n.has[ix]).code()
 	code += "\n" + fmc(me.depth) + "}"
-	return codeNode(n, code)
-}
-
-func fmtptr(ptr string) string {
-	if strings.HasSuffix(ptr, "*") {
-		return ptr + "*"
-	}
-	return ptr + " *"
-}
-
-func fmtassignspace(s string) string {
-	if strings.HasSuffix(s, "*") {
-		return s
-	}
-	return s + " "
+	return codeBlockOne(n, code)
 }
 
 func (me *cfile) declare(n *node) string {
 	if n.is != "variable" {
-		return me.eval(n).code
+		return me.eval(n).code()
 	}
 	if n.idata == nil {
 		return ""
@@ -518,16 +504,6 @@ func (me *cfile) declare(n *node) string {
 	return code
 }
 
-func (me *cfile) maybeLet(code string, attributes map[string]string) string {
-	if code == "" || strings.HasPrefix(code, "[") {
-		return ""
-	}
-	if _, ok := attributes["use-stack"]; ok {
-		return ""
-	}
-	return " = "
-}
-
 func (me *cfile) declareStatic(n *node) string {
 	left := n.has[0]
 	right := n.has[1]
@@ -535,17 +511,17 @@ func (me *cfile) declareStatic(n *node) string {
 
 	declareCode := me.declare(left)
 	rightCode := me.eval(right)
-	setSign := me.maybeLet(rightCode.code, right.attributes)
+	setSign := me.maybeLet(rightCode.code(), right.attributes)
 
 	head := "extern " + declareCode
 	if setSign == "" {
-		head += rightCode.code
+		head += rightCode.code()
 	}
 	head += ";\n"
 	me.headExternSection += head
 
 	if setSign == "" {
-		return declareCode + setSign + rightCode.code + ";\n"
+		return declareCode + setSign + rightCode.code() + ";\n"
 	}
 	return declareCode + ";\n"
 }
@@ -557,17 +533,17 @@ func (me *cfile) initStatic(n *node) string {
 
 	declareCode := me.declare(left)
 	rightCode := me.eval(right)
-	setSign := me.maybeLet(rightCode.code, right.attributes)
+	setSign := me.maybeLet(rightCode.code(), right.attributes)
 
 	if setSign == "" {
 		return ""
 	}
 
-	code := fmc(1) + declareCode + setSign + rightCode.code + ";\n"
+	code := fmc(1) + declareCode + setSign + rightCode.code() + ";\n"
 	return code
 }
 
-func (me *cfile) assingment(n *node) string {
+func (me *cfile) assignment(n *node) string {
 	left := n.has[0]
 	right := n.has[1]
 	if _, ok := left.attributes["mutable"]; ok {
@@ -578,8 +554,13 @@ func (me *cfile) assingment(n *node) string {
 	if paren {
 		code += "("
 	}
-	rightCode := me.eval(right).code
-	code += me.declare(left) + me.maybeLet(rightCode, right.attributes) + rightCode
+	declare := me.declare(left)
+	value := me.eval(right)
+
+	pre := value.preCode()
+	post := value.current.code
+
+	code += pre + me.maybeFmc(pre, me.depth) + declare + me.maybeLet(post, right.attributes) + post
 	if paren {
 		code += ")"
 	}
@@ -589,7 +570,7 @@ func (me *cfile) assingment(n *node) string {
 func (me *cfile) assignmentUpdate(n *node) string {
 	left := me.eval(n.has[0])
 	right := me.eval(n.has[1])
-	return left.code + " " + n.is + " " + right.code
+	return left.code() + " " + n.is + " " + right.code()
 }
 
 func (me *cfile) free(name string) string {
@@ -634,58 +615,39 @@ func (me *cfile) generateUnionFn(en *enum, un *union) {
 	me.codeFn = append(me.codeFn, code)
 }
 
-func (me *cfile) maybeColon(code string) string {
-	size := len(code)
-	if size == 0 {
-		return ""
-	}
-	last := code[size-1]
-	if last == '}' || last == ':' || last == ';' {
-		return ""
-	}
-	return ";"
-}
-
-func (me *cfile) maybeFmc(code string, depth int) string {
-	if code == "" || code[0] == spaceChar {
-		return ""
-	}
-	return fmc(depth)
-}
-
-func (me *cfile) block(n *node) *cnode {
+func (me *cfile) block(n *node) *codeblock {
 	me.depth++
 	expressions := n.has
 	code := ""
 	for ix, expr := range expressions {
 		c := me.eval(expr)
-		if c.code != "" {
+		if c.code() != "" {
 			if ix > 0 {
 				code += "\n"
 			}
-			code += me.maybeFmc(c.code, me.depth) + c.code + me.maybeColon(c.code)
+			code += me.maybeFmc(c.code(), me.depth) + c.code() + me.maybeColon(c.code())
 		}
 	}
 	me.depth--
-	return codeNode(n, code)
+	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileCall(node *node) *cnode {
+func (me *cfile) compileCall(node *node) *codeblock {
 	fn := node.fn
 	if fn == nil {
 		head := node.has[0]
 		sig := head.vdata.fn
-		code := "(*" + me.eval(head).code + ")("
+		code := "(*" + me.eval(head).code() + ")("
 		parameters := node.has[1:len(node.has)]
 		for ix, parameter := range parameters {
 			if ix > 0 {
 				code += ", "
 			}
 			arg := sig.args[ix]
-			code += me.hintEval(parameter, arg.vdat).code
+			code += me.hintEval(parameter, arg.vdat).code()
 		}
 		code += ")"
-		return codeNode(node, code)
+		return codeBlockOne(node, code)
 	}
 	module := fn.module
 	name := fn.name
@@ -701,10 +663,10 @@ func (me *cfile) compileCall(node *node) *cnode {
 				code += ", "
 			}
 			arg := node.fn.args[ix]
-			code += me.hintEval(parameter, arg.vdat).code
+			code += me.hintEval(parameter, arg.vdat).code()
 		}
 		code += ")"
 	}
 
-	return codeNode(node, code)
+	return codeBlockOne(node, code)
 }

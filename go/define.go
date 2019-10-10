@@ -70,6 +70,11 @@ func (me *parser) defineClass() {
 			}
 
 			mtype := me.declareType(false)
+			if mcl, ok := mtype.checkIsClass(); ok {
+				if mcl == classDef {
+					panic(me.fail() + "recursive type definition for \"" + classDef.name + "\"")
+				}
+			}
 			me.eat("line")
 			memberOrder = append(memberOrder, mname)
 			memberMap[mname] = me.hmfile.varInitFromData(mtype, mname, true, isptr)

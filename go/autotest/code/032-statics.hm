@@ -3,7 +3,7 @@ type foo
 
 immutable name = "foo"
 immutable foo_pool = [3]foo
-immutable foo_single = foo
+immutable foo_single = foo()
 
 mutable next_id = 0
 
@@ -16,7 +16,7 @@ main
   do_update(2)
   echo(next_id)
   echo(name)
-  foo_pool[0] = foo
+  foo_pool[0] = foo()
   foo_pool[0].x = "yo mama"
   foo_single.x = "big boi"
   echo(foo_pool[0].x)

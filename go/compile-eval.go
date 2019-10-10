@@ -2,20 +2,18 @@ package main
 
 import "strconv"
 
-func (me *cfile) hintEval(n *node, hint *varData) *cnode {
+func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	op := n.is
 	if op == "=" || op == ":=" {
-		code := me.assingment(n)
-		return codeNode(n, code)
+		code := me.assignment(n)
+		return codeBlockOne(n, code)
 	}
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
 		code := me.assignmentUpdate(n)
-		return codeNode(n, code)
+		return codeBlockOne(n, code)
 	}
 	if op == "new" {
-		b := me.compileAllocClass(n)
-		c := b.flatten()[0]
-		return c
+		return me.compileAllocClass(n)
 	}
 	if op == "enum" {
 		return me.compileAllocEnum(n)
@@ -28,17 +26,17 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		code := ""
 		if size == 2 {
 			code += "hmlib_concat("
-			code += me.eval(n.has[0]).code
+			code += me.eval(n.has[0]).code()
 			code += ", "
-			code += me.eval(n.has[1]).code
+			code += me.eval(n.has[1]).code()
 		} else {
 			code += "hmlib_concat_varg(" + strconv.Itoa(size)
 			for _, snode := range n.has {
-				code += ", " + me.eval(snode).code
+				code += ", " + me.eval(snode).code()
 			}
 		}
 		code += ")"
-		return codeNode(n, code)
+		return codeBlockOne(n, code)
 	}
 	if op == "+sign" {
 		return me.compilePrefixPos(n)
@@ -57,13 +55,13 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 	}
 	if op == "root-variable" {
 		v := me.getvar(n.idata.name)
-		return codeNode(n, v.cName)
+		return codeBlockOne(n, v.cName)
 	}
 	if op == "array-member" {
 		index := me.eval(n.has[0])
 		root := me.eval(n.has[1])
-		code := root.code + "[" + index.code + "]"
-		return codeNode(n, code)
+		code := root.code() + "[" + index.code() + "]"
+		return codeBlockOne(n, code)
 	}
 	if op == "member-variable" {
 		return me.compileMemberVariable(n)
@@ -75,42 +73,40 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return me.compileCall(n)
 	}
 	if op == "array" {
-		code := me.allocArray(n)
-		return codeNode(n, code)
+		return me.allocArray(n)
 	}
 	if op == "slice" {
-		code := me.allocSlice(n)
-		return codeNode(n, code)
+		return me.allocSlice(n)
 	}
 	if op == "return" {
 		in := me.eval(n.has[0])
-		code := "return " + in.code
+		code := "return " + in.code()
 		cn := codeNode(n, code)
-		cn.push(in)
-		return cn
+		// cn.push(in)
+		return codeNodeUpgrade(cn)
 	}
 	if op == "boolexpr" {
-		code := me.eval(n.has[0]).code
-		return codeNode(n, code)
+		code := me.eval(n.has[0]).code()
+		return codeBlockOne(n, code)
 	}
 	if op == "equal" {
 		return me.compileEqual(n)
 	}
 	if op == "not" {
-		code := "!" + me.eval(n.has[0]).code
-		return codeNode(n, code)
+		code := "!" + me.eval(n.has[0]).code()
+		return codeBlockOne(n, code)
 	}
 	if op == "not-equal" {
-		code := me.eval(n.has[0]).code
+		code := me.eval(n.has[0]).code()
 		code += " != "
-		code += me.eval(n.has[1]).code
-		return codeNode(n, code)
+		code += me.eval(n.has[1]).code()
+		return codeBlockOne(n, code)
 	}
 	if op == ">" || op == ">=" || op == "<" || op == "<=" {
-		code := me.eval(n.has[0]).code
+		code := me.eval(n.has[0]).code()
 		code += " " + op + " "
-		code += me.eval(n.has[1]).code
-		return codeNode(n, code)
+		code += me.eval(n.has[1]).code()
+		return codeBlockOne(n, code)
 	}
 	if op == "?" {
 		return me.compileTernary(n)
@@ -122,19 +118,19 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return me.block(n)
 	}
 	if op == "break" {
-		return codeNode(n, "break")
+		return codeBlockOne(n, "break")
 	}
 	if op == "continue" {
-		return codeNode(n, "continue")
+		return codeBlockOne(n, "continue")
 	}
 	if op == "goto" {
-		return codeNode(n, "goto "+n.value)
+		return codeBlockOne(n, "goto "+n.value)
 	}
 	if op == "label" {
-		return codeNode(n, n.value+":")
+		return codeBlockOne(n, n.value+":")
 	}
 	if op == "pass" {
-		return codeNode(n, "")
+		return codeBlockOne(n, "")
 	}
 	if op == "match" {
 		return me.compileMatch(n)
@@ -161,7 +157,7 @@ func (me *cfile) hintEval(n *node, hint *varData) *cnode {
 		return me.compileNone(n)
 	}
 	if _, ok := primitives[op]; ok {
-		return codeNode(n, n.value)
+		return codeBlockOne(n, n.value)
 	}
 	panic("eval unknown operation " + n.string(0))
 }

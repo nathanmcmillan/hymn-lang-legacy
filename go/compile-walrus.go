@@ -6,19 +6,19 @@ func (me *cfile) walrusIf(n *node) string {
 	code := ""
 	if ifnode.is == ":=" {
 		delete(ifnode.attributes, "parenthesis")
-		code += me.eval(ifnode).code + ";\n" + fmc(me.depth)
+		code += me.eval(ifnode).code() + ";\n" + fmc(me.depth)
 		n.has[0] = ifnode.has[0]
 	} else if has > 0 {
 		ifleft := ifnode.has[0]
 		if ifleft.is == ":=" {
 			delete(ifleft.attributes, "parenthesis")
-			code += me.eval(ifleft).code + ";\n" + fmc(me.depth)
+			code += me.eval(ifleft).code() + ";\n" + fmc(me.depth)
 			ifnode.has[0] = ifleft.has[0]
 		} else if has > 1 {
 			ifright := ifnode.has[1]
 			if ifright.is == ":=" {
 				delete(ifright.attributes, "parenthesis")
-				code += me.eval(ifright).code + ";\n" + fmc(me.depth)
+				code += me.eval(ifright).code() + ";\n" + fmc(me.depth)
 				ifnode.has[1] = ifright.has[0]
 			}
 		}
@@ -56,7 +56,7 @@ func (me *cfile) walrusMatch(n *node) string {
 	code := ""
 	if ifnode.is == ":=" {
 		delete(ifnode.attributes, "parenthesis")
-		code += me.eval(ifnode).code + ";\n" + fmc(me.depth)
+		code += me.eval(ifnode).code() + ";\n" + fmc(me.depth)
 		n.has[0] = ifnode.has[0]
 	}
 	return code

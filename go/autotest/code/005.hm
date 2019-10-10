@@ -6,15 +6,3 @@ main
   x[1] = foo()
   x[1].a = 9
   echo(x[1].a)
-
-(*
-
-  Hm005Foo **const x = malloc(3 * sizeof(Hm005Foo ** ));
-	Hm005Foo *temp_0 = malloc(sizeof(Hm005Foo));
-	temp_0->a = 0;
-	x[1] = temp_0;
-	x[1]->a = 9;
-	printf("%d\n", x[1]->a);
-	return 0;
-
-*)

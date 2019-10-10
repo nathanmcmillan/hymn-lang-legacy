@@ -10,7 +10,6 @@ type node struct {
 	vdata      *varData
 	attributes map[string]string
 	has        []*node
-	trunk      *node
 }
 
 func nodeInit(is string) *node {
@@ -33,7 +32,6 @@ func (me *node) copy() *node {
 
 func (me *node) push(leaf *node) {
 	me.has = append(me.has, leaf)
-	leaf.trunk = me
 }
 
 func (me *node) copyType(other *node) {

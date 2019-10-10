@@ -83,6 +83,18 @@ func (me *cnode) string(lv int) string {
 	return s
 }
 
+func (me *codeblock) string(lv int) string {
+	s := "["
+	for i, n := range me.flatten() {
+		if i != 0 {
+			s += ", "
+		}
+		s += n.string(lv)
+	}
+	s += "]"
+	return s
+}
+
 func (me *class) dump(lv int) string {
 	s := fmc(lv) + me.name + "[\n"
 	lv++

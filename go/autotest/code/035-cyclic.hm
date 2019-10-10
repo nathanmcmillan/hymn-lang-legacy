@@ -1,11 +1,24 @@
 type vec
-  x    float
-  nest vec
+	x    float
+	nest maybe<vec>
 
 main
-  a = vec
-  a.x = 3.1
-  a.nest = vec
-  a.nest.x = 5.1
-  echo(a.x)
-  echo(a.nest.x)
+	a = vec()
+	a.x = 3.1
+	a.nest = vec()
+	echo(a.x)
+	(* match a.nest
+		some =>
+			a.nest.x = 5.1
+			echo(a.nest.x)
+		none => _ *)
+
+	(* redo match and is to use ref values *)
+	match a.nest
+		some(v) =>
+			v.x = 5.1
+			echo(v.x)
+		none => _
+
+	(* if a.nest is some(t)
+		echo(t) *)

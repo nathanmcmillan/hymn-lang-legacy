@@ -14,8 +14,8 @@ func (me *cfile) compileFunction(name string, fn *function) {
 	}
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		if c.code != "" {
-			block += fmc(me.depth) + c.code + me.maybeColon(c.code) + "\n"
+		if c.code() != "" {
+			block += fmc(me.depth) + c.code() + me.maybeColon(c.code()) + "\n"
 		}
 	}
 	me.popScope()
@@ -54,14 +54,14 @@ func (me *cfile) compileMain(fn *function) {
 	}
 	for _, expr := range expressions {
 		c := me.eval(expr)
-		if c.is == "return" {
+		if c.is() == "return" {
 			if c.getType() != TokenInt {
 				panic("main must return int")
 			} else {
 				returns = true
 			}
 		}
-		codeblock += fmc(me.depth) + c.code + me.maybeColon(c.code) + "\n"
+		codeblock += fmc(me.depth) + c.code() + me.maybeColon(c.code()) + "\n"
 	}
 	if !returns {
 		codeblock += fmc(me.depth) + "return 0;\n"

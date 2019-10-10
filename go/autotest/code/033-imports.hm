@@ -18,7 +18,7 @@ main
   x = math.power(3)
   echo(x)
 
-  v = math.vec
+  v = math.vec()
   v.x = 3.0
   v.y = 5.0
   v.z = 7.0
@@ -33,7 +33,7 @@ main
   echo(v.z)
 
   vl = [3]math.vec
-  vl[1] = math.vec
+  vl[1] = math.vec()
   vl[1].init(5.0, 7.0, 9.0)
   echo(vl[1].x)
 

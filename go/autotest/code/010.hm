@@ -3,7 +3,7 @@ type foo
   b string
 
 main
-  x = foo
+  x = foo()
   x.a = 2
   x.b = "hi"
   z = x.a

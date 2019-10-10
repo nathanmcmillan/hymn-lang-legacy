@@ -2,7 +2,7 @@ type foo
   x []int
 
 main
-  f = foo
+  f = foo()
   f.x = [3]int
   f.x[0] = 88
   echo(f.x[0])

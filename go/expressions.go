@@ -275,7 +275,7 @@ func (me *parser) extern() *node {
 		fmt.Println("extern call")
 		return me.parseFn(module)
 	} else if _, ok := module.classes[idname]; ok {
-		fmt.Println("extern class ", extname, idname)
+		fmt.Println("extern class", extname, idname)
 		return me.allocClass(module, nil)
 	} else if _, ok := module.enums[idname]; ok {
 		fmt.Println("extern enum")

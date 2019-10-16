@@ -152,22 +152,21 @@ func (me *varData) asVariable() *variable {
 	return v
 }
 
-func (me *varData) merge(alloc *allocData) {
-	if alloc == nil {
+func (me *varData) merge(hint *allocData) {
+	if hint == nil {
 		return
 	}
-
-	me.array = alloc.isArray
-	me.heap = !alloc.useStack
-
+	me.array = hint.array
+	me.slice = hint.slice
+	me.heap = !hint.stack
 	if me.array {
-		mt := me.copy()
-		mt.array = false
-		mt.slice = false
-
-		me.memberType = mt
-		me.full = "[]" + mt.full
-		me.typed = "[]" + mt.typed
+		member := me.copy()
+		member.array = false
+		member.slice = false
+		me.memberType = member
+		// TODO size loss
+		me.full = "[]" + member.full
+		me.typed = "[]" + member.typed
 	}
 }
 

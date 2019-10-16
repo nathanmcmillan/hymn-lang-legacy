@@ -94,7 +94,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					head = member
 				}
 			} else if data.maybe {
-				panic(me.fail() + "unexpected maybe type \"" + head.vdata.full + "\"")
+				panic(me.fail() + "unexpected maybe type \"" + head.vdata.full + "\" do you need a match statement?")
 			} else {
 				panic(me.fail() + "unexpected type \"" + head.vdata.full + "\"")
 			}

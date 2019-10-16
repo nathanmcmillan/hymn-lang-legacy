@@ -1,28 +1,29 @@
 package main
 
 type hmfile struct {
-	program       *program
-	hmlib         *hmlib
-	name          string
-	rootScope     *scope
-	scope         *scope
-	staticScope   map[string]*variable
-	namespace     map[string]string
-	imports       map[string]bool
-	classes       map[string]*class
-	enums         map[string]*enum
-	defs          map[string]*node
-	statics       []*node
-	defineOrder   []string
-	functions     map[string]*function
-	functionOrder []string
-	types         map[string]string
-	funcPrefix    string
-	classPrefix   string
-	enumPrefix    string
-	unionPrefix   string
-	varPrefix     string
-	needInit      bool
+	program         *program
+	hmlib           *hmlib
+	name            string
+	rootScope       *scope
+	scope           *scope
+	staticScope     map[string]*variable
+	namespace       map[string]string
+	imports         map[string]bool
+	classes         map[string]*class
+	enums           map[string]*enum
+	defs            map[string]*node
+	statics         []*node
+	defineOrder     []string
+	functions       map[string]*function
+	functionOrder   []string
+	types           map[string]string
+	funcPrefix      string
+	classPrefix     string
+	enumPrefix      string
+	unionPrefix     string
+	varPrefix       string
+	needInit        bool
+	assignmentStack []*node
 }
 
 func (program *program) hymnFileInit(name string) *hmfile {
@@ -43,6 +44,7 @@ func (program *program) hymnFileInit(name string) *hmfile {
 	hm.defineOrder = make([]string, 0)
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
+	hm.assignmentStack = make([]*node, 0)
 	hm.prefixes(name)
 	return hm
 }

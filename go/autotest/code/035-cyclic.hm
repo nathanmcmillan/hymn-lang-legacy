@@ -7,18 +7,3 @@ main
 	a.x = 3.1
 	a.nest = vec()
 	echo(a.x)
-	(* match a.nest
-		some =>
-			a.nest.x = 5.1
-			echo(a.nest.x)
-		none => _ *)
-
-	(* redo match and is to use ref values *)
-	match a.nest
-		some(v) =>
-			v.x = 5.1
-			echo(v.x)
-		none => _
-
-	(* if a.nest is some(t)
-		echo(t) *)

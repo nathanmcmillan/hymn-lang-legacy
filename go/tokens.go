@@ -300,10 +300,8 @@ func (me *tokenizer) get(pos int) *token {
 		peek := stream.peek()
 		if peek == '*' {
 			stream.next()
-			// TODO buggy
 			// value := me.forComment()
 			// token := me.valueToken("comment", value)
-			// me.push(token)
 			// return token
 			me.forComment()
 			return me.get(pos)

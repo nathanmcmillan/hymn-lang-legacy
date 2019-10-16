@@ -197,6 +197,7 @@ func (me *cfile) head() string {
 }
 
 type allocData struct {
-	useStack bool
-	isArray  bool
+	stack bool
+	array bool
+	slice bool
 }

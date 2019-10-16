@@ -160,7 +160,10 @@ func (me *parser) defaultValue(in *varData) *node {
 		me.pushAllDefaultClassParams(t)
 		d = t
 	} else if d.vdata.maybe {
-		d.value = "NULL"
+		t := nodeInit("none")
+		t.vdata = d.vdata
+		t.value = "NULL"
+		d = t
 	} else {
 		panic(me.fail() + "no default value for \"" + typed + "\"")
 	}
@@ -184,6 +187,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	if me.token.is == "line" {
 		me.eat("line")
 	}
+	fmt.Println("CLASS PARAMS ::", typed)
 	base := module.classes[typed]
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
@@ -201,7 +205,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			if me.token.is == "line" {
 				ndepth := me.peek().depth
 				if ndepth != depth+1 {
-					panic(me.fail() + "unexpected line / incomplete class allocation")
+					panic(me.fail() + "unexpected line indentation")
 				}
 				me.eat("line")
 			} else {
@@ -285,11 +289,23 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 	}
 	typed := name
 	gsize := len(base.generics)
-	if gsize > 0 && me.token.is == "<" {
-		gtypes := me.declareGeneric(true, base)
-		typed = name + "<" + strings.Join(gtypes, ",") + ">"
-		if _, ok := me.hmfile.classes[typed]; !ok {
-			me.defineClassImplGeneric(base, typed, gtypes)
+	if gsize > 0 {
+		if me.token.is == "<" {
+			gtypes := me.declareGeneric(true, base)
+			typed = name + "<" + strings.Join(gtypes, ",") + ">"
+			if _, ok := me.hmfile.classes[typed]; !ok {
+				me.defineClassImplGeneric(base, typed, gtypes)
+			}
+		} else {
+			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].asVar()
+			if assign.maybe {
+				typed = assign.some.full
+			} else if assign.checkIsArrayOrSlice() {
+				typed = assign.memberType.full
+			} else {
+				typed = assign.full
+			}
+			fmt.Println("LAZY CLASS ::", typed)
 		}
 	}
 	if n != nil {
@@ -308,7 +324,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n := nodeInit("new")
 	n.vdata = me.buildClass(n, module, alloc)
-	if alloc != nil && alloc.useStack {
+	if alloc != nil && alloc.stack {
 		n.attributes["use-stack"] = "true"
 	}
 	return n

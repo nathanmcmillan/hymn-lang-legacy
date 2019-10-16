@@ -61,12 +61,12 @@ func prefixIdent(me *parser, op string) *node {
 		}
 		if _, ok := module.getClass(name); ok {
 			data := &allocData{}
-			data.useStack = useStack
+			data.stack = useStack
 			return me.allocClass(module, data)
 		}
 		if _, ok := module.enums[name]; ok {
 			data := &allocData{}
-			data.useStack = useStack
+			data.stack = useStack
 			return me.allocEnum(module, data)
 		}
 		if def, ok := module.defs[name]; ok {
@@ -91,11 +91,12 @@ func prefixIdent(me *parser, op string) *node {
 func prefixArray(me *parser, op string) *node {
 	me.eat("[")
 	alloc := &allocData{}
-	alloc.isArray = true
 	var node *node
 	if me.token.is == "]" {
+		alloc.slice = true
 		node = nodeInit("slice")
 	} else {
+		alloc.array = true
 		node = nodeInit("array")
 		size := me.calc(0)
 		if size.getType() != TokenInt {

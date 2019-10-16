@@ -1,0 +1,27 @@
+type vec
+	x    float
+	nest maybe<vec>
+
+main
+	a = vec()
+	a.x = 3.1
+	a.nest = vec()
+	echo(a.x)
+	
+	match a.nest
+		some(v) =>
+			v.x = 5.1
+			echo(v.x)
+		none => pass
+
+	(* if a.nest is some(t)
+		echo(t) *)
+
+	(* is a.nest some(t)
+		echo(t) *)
+
+	(* match a.nest
+		some =>
+			a.nest.x = 5.1
+			echo(a.nest.x)
+		none => _ *)

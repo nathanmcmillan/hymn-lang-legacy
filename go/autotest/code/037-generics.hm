@@ -15,24 +15,27 @@ type node<t, w>
   f []t
 
 main
-  f = node<string, int>
+  f = node<string, int>()
   
+  echo("---")
   f.a = [3]attribute
-  f.a[1] = attribute
+  echo("---")
+  f.a[1] = attribute()
+  echo("---")
   f.a[1].has = "a"
   echo(f.a[1].has)
   
-  f.b = tuple
-  f.b.x = attribute
+  f.b = tuple()
+  f.b.x = attribute()
   f.b.x.has = 5
   f.b.y = "b"
   echo(f.b.x.has)
   echo(f.b.y)
 
   f.c = [3]tuple
-  f.c[1] = tuple
+  f.c[1] = tuple()
   f.c[1].x = 7
-  f.c[1].y = tuple
+  f.c[1].y = tuple()
   f.c[1].y.x = 9
   f.c[1].y.y = 11
   echo(f.c[1].x)
@@ -40,8 +43,8 @@ main
   echo(f.c[1].y.y)
 
   f.d = [3]tuple
-  f.d[1] = tuple
-  f.d[1].x = tuple
+  f.d[1] = tuple()
+  f.d[1].x = tuple()
   f.d[1].x.x = 13
   f.d[1].x.y = 15
   f.d[1].y = 17
@@ -49,8 +52,8 @@ main
   echo(f.d[1].x.y)
   echo(f.d[1].y)
 
-  f.e = tuple
-  f.e.x = tuple
+  f.e = tuple()
+  f.e.x = tuple()
   f.e.x.x = "c"
   echo(f.e.x.x)
 
@@ -58,9 +61,9 @@ main
   f.f[1] = "d"
   echo(f.f[1])
 
-  h = tuple<tuple<int, int>, tuple<string, string>>
-  h.x = tuple
-  h.y = tuple
+  h = tuple<tuple<int, int>, tuple<string, string>>()
+  h.x = tuple()
+  h.y = tuple()
   h.x.x = 1
   h.x.y = 2
   h.y.x = "e"
@@ -70,7 +73,7 @@ main
   echo(h.y.x)
   echo(h.y.y)
 
-  g = attribute<attribute<string>>
-  g.has = attribute
+  g = attribute<attribute<string>>()
+  g.has = attribute()
   g.has.has = "g"
   echo(g.has.has)

@@ -5,7 +5,7 @@ import "strconv"
 func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	op := n.is
 	if op == "=" || op == ":=" {
-		code := me.assignment(n)
+		code := me.compileAssign(n)
 		return codeBlockOne(n, code)
 	}
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {

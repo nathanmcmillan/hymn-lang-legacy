@@ -13,11 +13,22 @@ func hymnFmt(path string) {
 	tokens := tokenize(stream, nil)
 	pos := 0
 
+	skipWhitelist := make(map[string]map[string]bool)
+	skipWhitelist["id"] = make(map[string]bool)
+	skipWhitelist["id"]["["] = true
+	skipWhitelist["["] = make(map[string]bool)
+	skipWhitelist["["]["]"] = true
+
+	// skipBlacklist := make(map[string]map[string]bool)
+	// skipBlacklist["]"] = make(map[string]bool)
+	// skipBlacklist["]"]["asd"] = true
+
 	skipPrevious := make(map[string]bool)
 	skipPrevious["line"] = true
 	skipPrevious["("] = true
 	skipPrevious["<"] = true
 	skipPrevious["."] = true
+	// skipPrevious["["] = true
 
 	skipCurrent := make(map[string]bool)
 	skipCurrent["line"] = true
@@ -27,6 +38,7 @@ func hymnFmt(path string) {
 	skipCurrent[">"] = true
 	skipCurrent["."] = true
 	skipCurrent[","] = true
+	// skipCurrent["["] = true
 
 	var out strings.Builder
 	var previous *token
@@ -38,16 +50,25 @@ func hymnFmt(path string) {
 		if token.is == "eof" {
 			break
 		}
-
 		if newline {
 			out.WriteString("\n")
 			out.WriteString(hymnNewLine(token.depth))
 			newline = false
 		} else {
+			ok := false
 			if previous == nil {
-			} else if _, ok := skipPrevious[previous.is]; ok {
-			} else if _, ok := skipCurrent[token.is]; ok {
+				ok = true
+			} else if _, ok = skipPrevious[previous.is]; ok {
+			} else if _, ok = skipCurrent[token.is]; ok {
 			} else {
+				if _, ok2 := skipWhitelist[previous.is]; ok2 {
+					_, ok = skipWhitelist[token.is]
+				}
+				// if _, ok2 := skipBlacklist[previous.is]; ok2 {
+				// 	_, ok = skipBlacklist[token.is]
+				// }
+			}
+			if !ok {
 				out.WriteString(" ")
 			}
 		}
@@ -92,6 +113,9 @@ func hymnFmtToken(t *token) string {
 	}
 	if t.is == TokenStringLiteral {
 		return "\"" + t.value + "\""
+	}
+	if t.is == "comment" {
+		return "(*" + t.value + "*)"
 	}
 	return t.value
 }

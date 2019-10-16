@@ -10,7 +10,7 @@ vec.dot(x:5 int, z:7 int)
   echo(self.b)
 
 main
-  v = vec
+  v = vec()
   v.dot()
   v.dot(x:9)
   v.dot(z:11)

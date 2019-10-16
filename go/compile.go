@@ -440,7 +440,7 @@ func (me *cfile) compileFor(n *node) *codeblock {
 		if vexist == nil {
 			code += me.declare(vobj) + ";\n" + fmc(me.depth)
 		}
-		vinit := me.assignment(vset)
+		vinit := me.compileAssign(vset)
 		condition := me.eval(n.has[1]).code()
 		inc := me.assignmentUpdate(n.has[2])
 		code += "for (" + vinit + "; " + condition + "; " + inc + ") {\n"
@@ -543,7 +543,7 @@ func (me *cfile) initStatic(n *node) string {
 	return code
 }
 
-func (me *cfile) assignment(n *node) string {
+func (me *cfile) compileAssign(n *node) string {
 	left := n.has[0]
 	right := n.has[1]
 	if _, ok := left.attributes["mutable"]; ok {

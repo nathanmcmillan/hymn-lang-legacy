@@ -18,31 +18,30 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
 }
 
 func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
-	fmt.Println("^ build impl generic: \""+typed+"\" with gmapper =>", gmapper)
+	fmt.Println("BUILDING IMPL GENERIC :: \""+typed+"\" WITH MAP =>", gmapper)
 
 	base := typed[0:strings.Index(typed, "<")]
 
 	var baseEnum *enum
 	baseClass, okc := me.hmfile.classes[base]
+	baseEnum, oke := me.hmfile.enums[base]
 
-	if !okc {
-		var oke bool
-		baseEnum, oke = me.hmfile.enums[base]
-		if !oke {
-			panic(me.fail() + "type \"" + base + "\" does not exist")
-		}
+	if !okc && !oke && base != "maybe" {
+		panic(me.fail() + "type \"" + base + "\" does not exist")
 	}
 
 	order := me.mapGenerics(typed, gmapper)
 	impl := base + "<" + strings.Join(order, ",") + ">"
-	fmt.Println("$ build impl generic: impl := \"" + impl + "\"")
+	fmt.Println("FINAL IMPL GENERIC :: \"" + impl + "\"")
 
 	if okc {
 		if _, ok := me.hmfile.classes[impl]; !ok {
 			me.defineClassImplGeneric(baseClass, impl, order)
 		}
-	} else if _, ok := me.hmfile.enums[impl]; !ok {
-		me.defineEnumImplGeneric(baseEnum, impl, order)
+	} else if oke {
+		if _, ok := me.hmfile.enums[impl]; !ok {
+			me.defineEnumImplGeneric(baseEnum, impl, order)
+		}
 	}
 
 	return impl
@@ -120,7 +119,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 		}
 	}
 
-	fmt.Println("map generics: \"" + strings.Join(order, "|") + "\"")
+	fmt.Println("MAP GENERICS :: \"" + strings.Join(order, "|") + "\"")
 	return order
 }
 

@@ -188,7 +188,9 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		panic(me.fail() + "unknown assign operation \"" + op + "\"")
 	}
 	me.eat(op)
+	me.hmfile.assignmentStack = append(me.hmfile.assignmentStack, left)
 	right := me.calc(0)
+	me.hmfile.assignmentStack = me.hmfile.assignmentStack[0 : len(me.hmfile.assignmentStack)-1]
 	if mustBeInt {
 		if right.getType() != TokenInt {
 			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
@@ -227,7 +229,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	} else {
 		panic(me.fail() + "bad assignment \"" + left.is + "\"")
 	}
-	if left.idata != nil {
+	if left.idata != nil && left.is == "variable" {
 		right.attributes["assign"] = left.idata.name
 	}
 	if _, useStack := right.attributes["use-stack"]; useStack {
@@ -390,7 +392,7 @@ func (me *parser) match() *node {
 				me.eat("line")
 			}
 			if matchVar != nil {
-				matchVar.update(me.hmfile, matchType.full)
+				// matchVar.update(me.hmfile, matchType.full)
 			}
 		} else if me.token.is == "_" {
 			me.eat("_")
@@ -405,13 +407,27 @@ func (me *parser) match() *node {
 			}
 		} else if me.token.is == "some" {
 			me.eat("some")
+			temp := ""
+			if me.token.is == "(" {
+				me.eat("(")
+				temp = me.token.value
+				me.eat("id")
+				me.eat(")")
+			}
 			me.eat("=>")
 			n.push(nodeInit("some"))
+			//
+			// also needs to be updated for compile-match
+			if temp != "" {
+				tv := me.hmfile.varInitFromData(matchType.some, temp, false, true)
+				me.hmfile.scope.variables[temp] = tv
+			}
+			//
 			if matchVar != nil {
 				if !matchType.maybe {
 					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
 				}
-				matchVar.updateFromVar(me.hmfile, matchType.some)
+				// matchVar.updateFromVar(me.hmfile, matchType.some)
 			}
 			if me.token.is == "line" {
 				me.eat("line")
@@ -420,9 +436,13 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-			if matchVar != nil {
-				matchVar.update(me.hmfile, matchType.full)
+			// if matchVar != nil {
+			// 	matchVar.update(me.hmfile, matchType.full)
+			// }
+			if temp != "" {
+				delete(me.hmfile.scope.variables, temp)
 			}
+			//
 		} else if me.token.is == "none" {
 			me.eat("none")
 			me.eat("=>")

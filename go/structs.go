@@ -131,12 +131,7 @@ func (me *cfile) popScope() {
 }
 
 func (me *cfile) getvar(name string) *variable {
-	// TODO fix me
-	// if v, ok := me.scope.variables[name]; ok {
-	// 	return v
-	// }
-	// return me.hmfile.getStatic(name)
-
+	// TODO fix scoping rules
 	scope := me.scope
 	for {
 		if v, ok := scope.variables[name]; ok {

@@ -48,3 +48,8 @@ main
 	match f
 		none => echo("oh no")
 		some => pass
+	
+	h.ge = vec(5, 6, 7)
+	match h.ge
+		some(s) => echo("some " + to_str(s.x))
+		none => echo("none")

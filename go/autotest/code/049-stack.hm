@@ -19,7 +19,7 @@ main
   echo(f.data)
   echo(hello(f))
 
-  p = poo
+  p = poo()
   p.z.data = 24
   p.w.y = 25
   echo(p.z.data)

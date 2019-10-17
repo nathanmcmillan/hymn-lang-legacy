@@ -320,13 +320,28 @@ func (me *cfile) compileNullCheck(match *codeblock, n *node, code string) *codeb
 	ix := 1
 	size := len(n.has)
 	for ix < size {
+		block := ""
+		tempname := ""
 		caseOf := n.has[ix]
-		thenDo := n.has[ix+1]
-		thenBlock := me.eval(thenDo).code()
 		if caseOf.is == "some" {
-			ifNotNull = thenBlock
+			if len(caseOf.has) > 0 {
+				temp := caseOf.has[0]
+				tempname = temp.idata.name
+				tempv := me.hmfile.varInitFromData(temp.vdata, tempname, false, true)
+				me.scope.variables[tempname] = tempv
+				ref := me.eval(n.has[0]).code()
+				block += fmtassignspace(temp.vdata.typeSig()) + tempname + " = " + ref + ";\n"
+			}
+		}
+		c := me.eval(n.has[ix+1]).code()
+		block += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
+		if tempname != "" {
+			delete(me.scope.variables, tempname)
+		}
+		if caseOf.is == "some" {
+			ifNotNull = block
 		} else if caseOf.is == "none" {
-			ifNull = thenBlock
+			ifNull = block
 		}
 		ix += 2
 	}

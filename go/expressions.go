@@ -68,7 +68,7 @@ func (me *parser) expression() *node {
 		me.verify("line")
 		return n
 	} else if op == "match" {
-		return me.match()
+		return me.parseMatch()
 	} else if op == "if" {
 		return me.ifexpr()
 	} else if op == "break" {
@@ -354,7 +354,7 @@ func (me *parser) forexpr() *node {
 	return n
 }
 
-func (me *parser) match() *node {
+func (me *parser) parseMatch() *node {
 	depth := me.token.depth
 	me.eat("match")
 	n := nodeInit("match")
@@ -407,6 +407,11 @@ func (me *parser) match() *node {
 			}
 		} else if me.token.is == "some" {
 			me.eat("some")
+			if matchVar != nil {
+				if !matchType.maybe {
+					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
+				}
+			}
 			temp := ""
 			if me.token.is == "(" {
 				me.eat("(")
@@ -415,19 +420,17 @@ func (me *parser) match() *node {
 				me.eat(")")
 			}
 			me.eat("=>")
-			n.push(nodeInit("some"))
-			//
-			// also needs to be updated for compile-match
+			some := nodeInit("some")
+			n.push(some)
 			if temp != "" {
-				tv := me.hmfile.varInitFromData(matchType.some, temp, false, true)
-				me.hmfile.scope.variables[temp] = tv
-			}
-			//
-			if matchVar != nil {
-				if !matchType.maybe {
-					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
-				}
-				// matchVar.updateFromVar(me.hmfile, matchType.some)
+				tempd := me.hmfile.varInitFromData(matchType.some, temp, false, true)
+				me.hmfile.scope.variables[temp] = tempd
+				tempv := nodeInit("variable")
+				tempv.idata = &idData{}
+				tempv.idata.module = me.hmfile
+				tempv.idata.name = temp
+				tempv.vdata = tempd.vdat
+				some.push(tempv)
 			}
 			if me.token.is == "line" {
 				me.eat("line")
@@ -436,13 +439,9 @@ func (me *parser) match() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-			// if matchVar != nil {
-			// 	matchVar.update(me.hmfile, matchType.full)
-			// }
 			if temp != "" {
 				delete(me.hmfile.scope.variables, temp)
 			}
-			//
 		} else if me.token.is == "none" {
 			me.eat("none")
 			me.eat("=>")

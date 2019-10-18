@@ -232,8 +232,8 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	if left.idata != nil && left.is == "variable" {
 		right.attributes["assign"] = left.idata.name
 	}
-	if _, useStack := right.attributes["use-stack"]; useStack {
-		left.attributes["use-stack"] = "true"
+	if _, useStack := right.attributes["stack"]; useStack {
+		left.attributes["stack"] = "true"
 	}
 	n := nodeInit(op)
 	if op == ":=" {

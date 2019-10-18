@@ -65,7 +65,7 @@ func (me *varData) copy() *varData {
 func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[string]string) *varData {
 	data := me.typeToVarData(typed)
 
-	if _, ok := attributes["use-stack"]; ok {
+	if _, ok := attributes["stack"]; ok {
 		data.onStack = true
 	}
 

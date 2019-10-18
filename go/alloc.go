@@ -325,7 +325,7 @@ func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n := nodeInit("new")
 	n.vdata = me.buildClass(n, module, alloc)
 	if alloc != nil && alloc.stack {
-		n.attributes["use-stack"] = "true"
+		n.attributes["stack"] = "true"
 	}
 	return n
 }

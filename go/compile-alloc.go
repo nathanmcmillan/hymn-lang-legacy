@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -10,32 +11,12 @@ func (me *cfile) temp() string {
 	return temp
 }
 
-func (me *cfile) tempClass(p *node) *cnode {
-	temp := me.temp()
-	p.attributes["assign"] = temp
-
-	d := nodeInit("variable")
-	d.idata = &idData{}
-	d.idata.module = me.hmfile
-	d.idata.name = temp
-	d.copyType(p)
-	decl := me.declare(d)
-
-	code := ""
-	code += ";\n" + fmc(me.depth) + decl + " = " + me.eval(p).code()
-
-	cn := codeNode(p, code)
-	cn.value = temp
-	return cn
-}
-
 func (me *cfile) compileAllocClass(n *node) *codeblock {
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return codeBlockOne(n, "")
 	}
 
-	_, useStack := n.attributes["use-stack"]
-	useHeap := !useStack
+	_, useStack := n.attributes["stack"]
 
 	data := n.asVar()
 	typed := data.module.classNameSpace(data.typed)
@@ -45,26 +26,47 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 	cb := &codeblock{}
 
 	var memberRef string
-	if useHeap {
-		memberRef = "->"
-	} else {
+	if useStack {
 		memberRef = "."
+	} else {
+		memberRef = "->"
 	}
 
 	if local {
 		cl, _ := data.checkIsClass()
 		code := ""
-		if useHeap {
+		if !useStack {
 			code += "malloc(sizeof(" + typed + "))"
 		}
 		params := n.has
 		for i, p := range params {
 			clv := cl.variables[cl.variableOrder[i]]
+			if !clv.isptr {
+				p.attributes["stack"] = "true"
+			}
 			cassign := ";\n" + fmc(me.depth) + assign + memberRef + clv.name + " = "
 			if p.is == "new" {
-				temp := me.tempClass(p)
-				code += temp.code
-				code += cassign + temp.value
+				temp := me.temp()
+				p.attributes["assign"] = temp
+				d := nodeInit("variable")
+				d.idata = &idData{}
+				d.idata.module = me.hmfile
+				d.idata.name = temp
+				d.copyType(p)
+				fmt.Println("D ::", d.string(0))
+				fmt.Println("D ::", d.vdata.isptr)
+				fmt.Println("C ::", clv.isptr)
+				decl := me.declare(d)
+				value := me.eval(p).code()
+				code2 := ";\n" + fmc(me.depth) + decl
+				if clv.isptr {
+					code2 += " = "
+				}
+				code2 += value
+				cn := codeNode(p, code2)
+				cn.value = temp
+				code += cn.code
+				code += cassign + cn.value
 			} else {
 				code += cassign + me.eval(p).code()
 			}

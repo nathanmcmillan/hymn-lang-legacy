@@ -20,7 +20,7 @@ func (me *cfile) maybeLet(code string, attributes map[string]string) string {
 	if code == "" || strings.HasPrefix(code, "[") {
 		return ""
 	}
-	if _, ok := attributes["use-stack"]; ok {
+	if _, ok := attributes["stack"]; ok {
 		return ""
 	}
 	return " = "

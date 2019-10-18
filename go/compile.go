@@ -487,7 +487,7 @@ func (me *cfile) declare(n *node) string {
 		if _, ok := n.attributes["no-malloc"]; ok {
 			malloc = false
 		}
-		if _, ok := n.attributes["use-stack"]; ok {
+		if _, ok := n.attributes["stack"]; ok {
 			useStack = true
 			malloc = false
 		}

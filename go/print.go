@@ -100,7 +100,11 @@ func (me *class) dump(lv int) string {
 	lv++
 	for _, cls := range me.variableOrder {
 		classVar := me.variables[cls]
-		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.vdat.full + "}\n"
+		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.vdat.full
+		if !classVar.isptr {
+			s += ", pointer:false"
+		}
+		s += "}\n"
 	}
 	lv--
 	s += fmc(lv) + "]\n"

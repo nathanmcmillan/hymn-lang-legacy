@@ -1,36 +1,48 @@
 package main
 
 type cnode struct {
-	is    string
-	value string
-	has   []*cnode
-	typed string
-	vdata *varData
-	code  string
+	is     string
+	value  string
+	has    []*cnode
+	typed  string
+	_vdata *varData
+	code   string
+}
+
+func (me *cnode) data() *varData {
+	return me._vdata
+}
+
+func (me *cnode) copyData(data *varData) {
+	if data == nil {
+		me._vdata = nil
+	} else {
+		me._vdata = data.copy()
+	}
 }
 
 func (me *cnode) copyType(other *cnode) {
 	me.typed = other.typed
-	me.vdata = other.vdata
+	me._vdata = other.data().copy()
 }
 
 func (me *cnode) copyTypeFromVar(other *variable) {
-	me.vdata = other.vdat
+	me._vdata = other.data().copy()
 }
 
 func (me *cnode) getType() string {
-	if me.vdata != nil {
-		return me.vdata.full
+	if me.data() != nil {
+		return me.data().full
 	}
 	return me.typed
 }
 
 func (me *cnode) asVar(module *hmfile) *varData {
-	if me.vdata != nil {
-		return me.vdata
+	if me.data() != nil {
+		return me.data()
 	}
-	me.vdata = module.typeToVarData(me.typed)
-	return me.vdata
+	me.copyData(module.typeToVarData(me.typed))
+	return me.data()
 }
 
 type codeblock struct {
@@ -65,7 +77,7 @@ func (me *codeblock) code() string {
 }
 
 func (me *codeblock) data() *varData {
-	return me.current.vdata
+	return me.current.data()
 }
 
 func (me *codeblock) getType() string {

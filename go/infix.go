@@ -30,7 +30,7 @@ func infixBinary(me *parser, left *node, op string) *node {
 		err += "\n\nleft: " + left.string(0) + "\n\nright: " + right.string(0)
 		panic(err)
 	}
-	if left.asVar().notEqual(right.asVar()) {
+	if left.data().notEqual(right.data()) {
 		err := me.fail() + "number types do not match \"" + left.getType() + "\" and \"" + right.getType() + "\""
 		panic(err)
 	}
@@ -68,16 +68,16 @@ func infixCompare(me *parser, left *node, op string) *node {
 	right := me.calc(getInfixPrecedence(op))
 	node.push(left)
 	node.push(right)
-	node.vdata = me.hmfile.typeToVarData("bool")
+	node.copyData(me.hmfile.typeToVarData("bool"))
 	return node
 }
 
 func infixCompareEnumIs(me *parser, left *node, op string) *node {
 	n := nodeInit(getInfixName(op))
-	n.vdata = me.hmfile.typeToVarData("bool")
+	n.copyData(me.hmfile.typeToVarData("bool"))
 	me.eat(op)
 	var right *node
-	if left.vdata.none || left.vdata.maybe {
+	if left.data().none || left.data().maybe {
 		if me.token.is == "some" {
 			right = nodeInit("some")
 			me.eat("some")
@@ -88,16 +88,16 @@ func infixCompareEnumIs(me *parser, left *node, op string) *node {
 			panic(me.fail() + "right side of \"is\" was \"" + me.token.is + "\"")
 		}
 	} else {
-		if _, _, ok := left.vdata.checkIsEnum(); !ok {
-			panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.vdata.full + "\"")
+		if _, _, ok := left.data().checkIsEnum(); !ok {
+			panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.data().full + "\"")
 		}
 		if me.token.is == "id" {
 			name := me.token.value
-			baseEnum, _, _ := left.vdata.checkIsEnum()
+			baseEnum, _, _ := left.data().checkIsEnum()
 			if un, ok := baseEnum.types[name]; ok {
 				me.eat("id")
 				right = nodeInit("match-enum")
-				right.vdata = me.hmfile.typeToVarData(baseEnum.name + "." + un.name)
+				right.copyData(me.hmfile.typeToVarData(baseEnum.name + "." + un.name))
 			} else {
 				right = me.calc(getInfixPrecedence(op))
 			}

@@ -55,8 +55,8 @@ func (me *function) asSig() *fnSig {
 	return sig
 }
 
-func (me *function) asVar() *varData {
-	return me.asSig().asVar()
+func (me *function) data() *varData {
+	return me.asSig().data()
 }
 
 func nameOfClassFunc(cl, fn string) string {
@@ -77,8 +77,8 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 }
 
 func (me *parser) remapNodeRecursive(impl *class, n *node) {
-	if n.vdata != nil {
-		n.vdata.replaceAny(impl.gmapper)
+	if n.data() != nil {
+		n.data().replaceAny(impl.gmapper)
 	}
 	for _, h := range n.has {
 		me.remapNodeRecursive(impl, h)
@@ -182,7 +182,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.full + "\" do not match")
 					}
 					defaultNode := nodeInit(defaultTypeVarData.full)
-					defaultNode.vdata = defaultTypeVarData
+					defaultNode.copyData(defaultTypeVarData)
 					defaultNode.value = defaultValue
 					fnArg.defaultNode = defaultNode
 				}
@@ -231,7 +231,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)
 		if expr.is == "return" {
-			ret := expr.asVar()
+			ret := expr.data()
 			if ret.none {
 				if !fn.typed.maybe {
 					panic(me.fail() + "return type was \"" + ret.full + "\" but function is \"" + fn.typed.full + "\"")

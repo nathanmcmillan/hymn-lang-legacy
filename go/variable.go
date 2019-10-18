@@ -5,17 +5,25 @@ type variable struct {
 	mutable bool
 	isptr   bool
 	cName   string
-	vdat    *varData
+	_vdata  *varData
 }
 
-func (me *hmfile) varInitFromData(vdat *varData, name string, mutable, isptr bool) *variable {
+func (me *variable) data() *varData {
+	return me._vdata
+}
+
+func (me *variable) copyData(data *varData) {
+	me._vdata = data.copy()
+}
+
+func (me *hmfile) varInitFromData(data *varData, name string, mutable, isptr bool) *variable {
 	v := &variable{}
-	v.vdat = vdat
+	v.copyData(data)
 	v.name = name
 	v.cName = name
 	v.mutable = mutable
 	v.isptr = isptr
-	v.vdat.isptr = v.isptr
+	v.data().isptr = v.isptr
 	return v
 }
 
@@ -30,13 +38,13 @@ func (me *hmfile) varInit(typed, name string, mutable, isptr bool) *variable {
 }
 
 func (me *variable) update(module *hmfile, typed string) {
-	me.vdat = module.typeToVarData(typed)
-	me.vdat.isptr = me.isptr
+	me.copyData(module.typeToVarData(typed))
+	me.data().isptr = me.isptr
 }
 
 func (me *variable) updateFromVar(module *hmfile, data *varData) {
-	me.vdat = data
-	me.vdat.isptr = me.isptr
+	me.copyData(data)
+	me.data().isptr = me.isptr
 }
 
 func (me *variable) copy() *variable {
@@ -45,6 +53,6 @@ func (me *variable) copy() *variable {
 	v.cName = me.name
 	v.mutable = me.mutable
 	v.isptr = me.isptr
-	v.vdat = me.vdat
+	v.copyData(me.data())
 	return v
 }

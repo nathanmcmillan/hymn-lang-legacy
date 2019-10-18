@@ -23,7 +23,7 @@ func prefixPrimitive(me *parser, op string) *node {
 		panic(me.fail() + "unknown primitive \"" + op + "\"")
 	}
 	node := nodeInit(t)
-	node.vdata = me.hmfile.typeToVarData(t)
+	node.copyData(me.hmfile.typeToVarData(t))
 	node.value = me.token.value
 	me.eat(op)
 	return node
@@ -31,7 +31,7 @@ func prefixPrimitive(me *parser, op string) *node {
 
 func prefixString(me *parser, op string) *node {
 	node := nodeInit(TokenString)
-	node.vdata = me.hmfile.typeToVarData(TokenString)
+	node.copyData(me.hmfile.typeToVarData(TokenString))
 	node.value = me.token.value
 	me.eat(TokenStringLiteral)
 	return node
@@ -39,7 +39,7 @@ func prefixString(me *parser, op string) *node {
 
 func prefixChar(me *parser, op string) *node {
 	node := nodeInit(TokenChar)
-	node.vdata = me.hmfile.typeToVarData(TokenChar)
+	node.copyData(me.hmfile.typeToVarData(TokenChar))
 	node.value = me.token.value
 	me.eat(TokenCharLiteral)
 	return node
@@ -105,7 +105,7 @@ func prefixArray(me *parser, op string) *node {
 		node.push(size)
 	}
 	me.eat("]")
-	node.vdata = me.buildAnyType(alloc)
+	node.copyData(me.buildAnyType(alloc))
 	return node
 }
 
@@ -116,7 +116,7 @@ func prefixNot(me *parser, op string) *node {
 		me.eat("not")
 	}
 	node := nodeInit("not")
-	node.vdata = me.hmfile.typeToVarData("bool")
+	node.copyData(me.hmfile.typeToVarData("bool"))
 	node.push(me.calcBool())
 	return node
 }
@@ -129,9 +129,9 @@ func prefixNone(me *parser, op string) *node {
 		option := me.declareType(true)
 		me.eat(">")
 		typed := "none<" + option.typed + ">"
-		node.vdata = me.hmfile.typeToVarData(typed)
+		node.copyData(me.hmfile.typeToVarData(typed))
 	} else {
-		node.vdata = me.hmfile.typeToVarData("none")
+		node.copyData(me.hmfile.typeToVarData("none"))
 	}
 	return node
 }
@@ -145,16 +145,16 @@ func prefixMaybe(me *parser, op string) *node {
 	data := me.hmfile.typeToVarData(typed)
 
 	n := nodeInit("maybe")
-	n.vdata = data
+	n.copyData(data)
 	return n
 }
 
 func prefixCast(me *parser, op string) *node {
 	me.eat(op)
 	node := nodeInit("cast")
-	node.vdata = me.hmfile.typeToVarData(op)
+	node.copyData(me.hmfile.typeToVarData(op))
 	calc := me.calc(getPrefixPrecedence(op))
-	value := calc.vdata.full
+	value := calc.data().full
 	if canCastToNumber(value) {
 		node.push(calc)
 		return node

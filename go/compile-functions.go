@@ -25,7 +25,7 @@ func (me *cfile) compileFunction(name string, fn *function) {
 		if ix > 0 {
 			code += ", "
 		}
-		code += arg.vdat.typeSigOf(arg.name, false)
+		code += arg.data().typeSigOf(arg.name, false)
 	}
 	head := code + ");\n"
 	code += ") {\n"

@@ -19,7 +19,7 @@ func (me *fnSig) print() string {
 		if ix > 0 {
 			sig += ", "
 		}
-		sig += arg.vdat.full
+		sig += arg.data().full
 	}
 	sig += ")"
 	if me.typed.full != "void" {
@@ -29,7 +29,7 @@ func (me *fnSig) print() string {
 	return sig
 }
 
-func (me *fnSig) asVar() *varData {
+func (me *fnSig) data() *varData {
 	sig := me.print()
 	d := &varData{}
 	d.fn = me

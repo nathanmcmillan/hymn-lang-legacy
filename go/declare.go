@@ -59,7 +59,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem.update(me.hmfile, me.genericsReplacer(mem.vdat.full, gmapper))
+		mem.update(me.hmfile, me.genericsReplacer(mem.data().full, gmapper))
 	}
 }
 
@@ -107,7 +107,7 @@ func (me *parser) declareFn() *varData {
 		fn.typed = me.hmfile.typeToVarData("void")
 	}
 
-	return fn.asVar()
+	return fn.data()
 }
 
 func (me *parser) declareFnPtr(fn *function) *varData {

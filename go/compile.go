@@ -104,7 +104,7 @@ func (me *cfile) compilePrefixNeg(n *node) *codeblock {
 }
 
 func (me *cfile) compileCast(n *node) *codeblock {
-	typ := getCName(n.vdata.full)
+	typ := getCName(n.data().full)
 	code := "(" + typ + ")" + me.eval(n.has[0]).code()
 	return codeBlockOne(n, code)
 }
@@ -143,7 +143,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 	code := n.idata.name
 	for {
 		if head.is == "root-variable" {
-			data := head.asVar()
+			data := head.data()
 			var vr *variable
 			var cname string
 			if head.idata.module == me.hmfile {
@@ -167,7 +167,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 			if code[0] == '[' {
 				code = head.idata.name + code
 			} else {
-				code = head.idata.name + head.asVar().memPtr() + code
+				code = head.idata.name + head.data().memPtr() + code
 			}
 			head = head.has[0]
 		} else {
@@ -188,7 +188,7 @@ func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
 	code := ""
 	if n.idata.module == me.hmfile {
 		v := me.getvar(n.idata.name)
-		vd := v.vdat
+		vd := v.data()
 		code = v.cName
 		if hint != nil && hint.isptr && !vd.isptr {
 			code = "&" + code
@@ -234,7 +234,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		return codeBlockOne(n, code)
 	}
 
-	baseEnum, _, _ := using.vdata.checkIsEnum()
+	baseEnum, _, _ := using.data().checkIsEnum()
 	if baseEnum.simple {
 		code += match.code()
 	} else {
@@ -245,7 +245,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 
 	caseOf := n.has[1]
 	if caseOf.is == "match-enum" {
-		matchBaseEnum, matchBaseUn, _ := caseOf.vdata.checkIsEnum()
+		matchBaseEnum, matchBaseUn, _ := caseOf.data().checkIsEnum()
 		enumNameSpace := me.hmfile.enumNameSpace(matchBaseEnum.name)
 		code += me.hmfile.enumTypeName(enumNameSpace, matchBaseUn.name)
 	} else {
@@ -275,7 +275,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	var enumNameSpace string
 
 	if using.is == "variable" {
-		if baseEnum, _, ok := using.vdata.checkIsEnum(); ok {
+		if baseEnum, _, ok := using.data().checkIsEnum(); ok {
 			isEnum = true
 			enumNameSpace = me.hmfile.enumNameSpace(baseEnum.name)
 			if !baseEnum.simple {
@@ -327,10 +327,10 @@ func (me *cfile) compileNullCheck(match *codeblock, n *node, code string) *codeb
 			if len(caseOf.has) > 0 {
 				temp := caseOf.has[0]
 				tempname = temp.idata.name
-				tempv := me.hmfile.varInitFromData(temp.vdata, tempname, false, true)
+				tempv := me.hmfile.varInitFromData(temp.data(), tempname, false, true)
 				me.scope.variables[tempname] = tempv
 				ref := me.eval(n.has[0]).code()
-				block += fmtassignspace(temp.vdata.typeSig()) + tempname + " = " + ref + ";\n"
+				block += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
 			}
 		}
 		c := me.eval(n.has[ix+1]).code()
@@ -495,7 +495,7 @@ func (me *cfile) declare(n *node) string {
 		if _, ok := n.attributes["mutable"]; ok {
 			mutable = true
 		}
-		data := n.vdata
+		data := n.data()
 		newVar := me.hmfile.varInitFromData(data, name, mutable, malloc)
 		if useStack {
 			me.scope.variables[name] = newVar
@@ -651,7 +651,7 @@ func (me *cfile) compileCall(node *node) *codeblock {
 	fn := node.fn
 	if fn == nil {
 		head := node.has[0]
-		sig := head.vdata.fn
+		sig := head.data().fn
 		code := "(*" + me.eval(head).code() + ")("
 		parameters := node.has[1:len(node.has)]
 		for ix, parameter := range parameters {
@@ -659,7 +659,7 @@ func (me *cfile) compileCall(node *node) *codeblock {
 				code += ", "
 			}
 			arg := sig.args[ix]
-			code += me.hintEval(parameter, arg.vdat).code()
+			code += me.hintEval(parameter, arg.data()).code()
 		}
 		code += ")"
 		return codeBlockOne(node, code)
@@ -678,7 +678,7 @@ func (me *cfile) compileCall(node *node) *codeblock {
 				code += ", "
 			}
 			arg := node.fn.args[ix]
-			code += me.hintEval(parameter, arg.vdat).code()
+			code += me.hintEval(parameter, arg.data()).code()
 		}
 		code += ")"
 	}

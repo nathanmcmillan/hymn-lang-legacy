@@ -6,7 +6,7 @@ import (
 )
 
 func (me *variable) string() string {
-	return "{var:" + me.vdat.full + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
+	return "{var:" + me.data().full + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
 }
 
 func (me *node) string(lv int) string {
@@ -21,8 +21,8 @@ func (me *node) string(lv int) string {
 	if me.fn != nil {
 		s += ", call:" + me.fn.canonical()
 	}
-	if me.vdata != nil {
-		s += ", var:" + me.vdata.full
+	if me.data() != nil {
+		s += ", var:" + me.data().full
 	}
 	if len(me.attributes) > 0 {
 		s += ", attributes["
@@ -62,8 +62,8 @@ func (me *cnode) string(lv int) string {
 	if me.typed != "" {
 		s += ", typed:" + me.typed
 	}
-	if me.vdata != nil {
-		s += ", var:" + me.vdata.full
+	if me.data() != nil {
+		s += ", var:" + me.data().full
 	}
 	s += ", code:" + me.code
 	if len(me.has) > 0 {
@@ -100,7 +100,7 @@ func (me *class) dump(lv int) string {
 	lv++
 	for _, cls := range me.variableOrder {
 		classVar := me.variables[cls]
-		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.vdat.full
+		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.data().full
 		if !classVar.isptr {
 			s += ", pointer:false"
 		}

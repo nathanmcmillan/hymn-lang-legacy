@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -18,7 +17,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 
 	_, useStack := n.attributes["stack"]
 
-	data := n.asVar()
+	data := n.data()
 	typed := data.module.classNameSpace(data.typed)
 
 	assign, local := n.attributes["assign"]
@@ -53,9 +52,6 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 				d.idata.module = me.hmfile
 				d.idata.name = temp
 				d.copyType(p)
-				fmt.Println("D ::", d.string(0))
-				fmt.Println("D ::", d.vdata.isptr)
-				fmt.Println("C ::", clv.isptr)
 				decl := me.declare(d)
 				value := me.eval(p).code()
 				code2 := ";\n" + fmc(me.depth) + decl
@@ -97,7 +93,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return codeBlockOne(n, "")
 	}
-	data := n.vdata
+	data := n.data()
 	module := data.module
 	en, un, _ := data.checkIsEnum()
 	enumType := un.name
@@ -135,12 +131,12 @@ func (me *cfile) allocArray(n *node) *codeblock {
 			parenthesis = true
 		}
 	} else {
-		size = sizeOfArray(n.asVar().full)
+		size = sizeOfArray(n.data().full)
 	}
 	if _, ok := n.attributes["no-malloc"]; ok {
 		return codeBlockOne(n, "["+size+"]")
 	}
-	memberType := n.asVar().typeSig()
+	memberType := n.data().typeSig()
 	code := "malloc("
 	if parenthesis {
 		code += "("
@@ -162,7 +158,7 @@ func (me *cfile) allocSlice(n *node) *codeblock {
 	if _, ok := n.attributes["no-malloc"]; ok {
 		code = "[" + size + "]"
 	} else {
-		code = "hmlib_slice_init(" + size + ", sizeof(" + n.asVar().memberType.typeSig() + "))"
+		code = "hmlib_slice_init(" + size + ", sizeof(" + n.data().memberType.typeSig() + "))"
 	}
 	return codeBlockOne(n, code)
 }

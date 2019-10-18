@@ -78,7 +78,7 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 	typeSize := len(unionDef.types)
 	if typeSize > 0 {
 		if me.token.is != "(" {
-			panic(me.fail() + "enum \"" + n.vdata.full + "\" requires parameters")
+			panic(me.fail() + "enum \"" + n.data().full + "\" requires parameters")
 		}
 		me.eat("(")
 		gimpl := make(map[string]string)
@@ -87,7 +87,7 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 				me.eat(",")
 			}
 			param := me.calc(0)
-			if param.asVar().notEqual(unionType) {
+			if param.data().notEqual(unionType) {
 				if _, gok := gdict[unionType.full]; gok {
 					gimpl[unionType.full] = param.getType()
 				} else {
@@ -115,13 +115,13 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 		}
 	}
 
-	n.vdata = module.typeToVarData(enumName + "." + unionName)
+	n.copyData(module.typeToVarData(enumName + "." + unionName))
 
 	return n
 }
 
 func (me *parser) pushAllDefaultClassParams(n *node) {
-	base, ok := n.asVar().checkIsClass()
+	base, ok := n.data().checkIsClass()
 	if !ok {
 		panic(me.fail())
 	}
@@ -132,7 +132,7 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 
 func (me *parser) defaultValue(in *varData) *node {
 	d := nodeInit(in.full)
-	d.vdata = in
+	d.copyData(in)
 	typed := in.full
 	if typed == TokenString {
 		d.value = ""
@@ -144,24 +144,24 @@ func (me *parser) defaultValue(in *varData) *node {
 		d.value = "false"
 	} else if checkIsArray(typed) {
 		t := nodeInit("array")
-		t.vdata = d.vdata
+		t.copyData(d.data())
 		d = t
 	} else if checkIsSlice(typed) {
 		t := nodeInit("slice")
-		t.vdata = d.vdata
+		t.copyData(d.data())
 		s := nodeInit(TokenInt)
-		s.vdata = me.hmfile.typeToVarData(TokenInt)
+		s.copyData(me.hmfile.typeToVarData(TokenInt))
 		s.value = "0"
 		t.push(s)
 		d = t
-	} else if _, ok := d.vdata.checkIsClass(); ok {
+	} else if _, ok := d.data().checkIsClass(); ok {
 		t := nodeInit("new")
-		t.vdata = d.vdata
+		t.copyData(d.data())
 		me.pushAllDefaultClassParams(t)
 		d = t
-	} else if d.vdata.maybe {
+	} else if d.data().maybe {
 		t := nodeInit("none")
-		t.vdata = d.vdata
+		t.copyData(d.data())
 		t.value = "NULL"
 		d = t
 	} else {
@@ -174,7 +174,7 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	for i, param := range params {
 		if param == nil {
 			clsvar := base.variables[base.variableOrder[i]]
-			d := me.defaultValue(clsvar.vdat)
+			d := me.defaultValue(clsvar.data())
 			n.push(d)
 		} else {
 			n.push(param)
@@ -219,19 +219,19 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			param := me.calc(0)
 			clsvar := base.variables[vname]
 
-			if m, ok := genericsMap[clsvar.vdat.full]; ok {
+			if m, ok := genericsMap[clsvar.data().full]; ok {
 				lazyGenerics = true
 				if g, ok := genericsImpl[m]; ok {
-					if g.notEqual(param.asVar()) {
-						panic(me.fail() + "lazy generic for base \"" + base.name + "\" is already \"" + g.full + "\" but found \"" + param.asVar().full + "\"")
+					if g.notEqual(param.data()) {
+						panic(me.fail() + "lazy generic for base \"" + base.name + "\" is already \"" + g.full + "\" but found \"" + param.data().full + "\"")
 					}
 				}
-				genericsImpl[m] = param.asVar()
+				genericsImpl[m] = param.data()
 			} else {
-				if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
+				if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
 					err := "parameter \"" + param.getType()
 					err += "\" does not match class \"" + base.name + "\" variable \""
-					err += clsvar.name + "\" with type \"" + clsvar.vdat.full + "\""
+					err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
 					panic(me.fail() + err)
 				}
 			}
@@ -248,10 +248,10 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 		} else {
 			param := me.calc(0)
 			clsvar := base.variables[vars[pix]]
-			if param.asVar().notEqual(clsvar.vdat) && clsvar.vdat.full != "?" {
+			if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
 				err := "parameter \"" + param.getType()
 				err += "\" does not match class \"" + base.name + "\" variable \""
-				err += clsvar.name + "\" with type \"" + clsvar.vdat.full + "\""
+				err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
 				panic(me.fail() + err)
 			}
 			params[pix] = param
@@ -297,7 +297,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 				me.defineClassImplGeneric(base, typed, gtypes)
 			}
 		} else {
-			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].asVar()
+			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
 			if assign.maybe {
 				typed = assign.some.full
 			} else if assign.checkIsArrayOrSlice() {
@@ -323,7 +323,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 
 func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n := nodeInit("new")
-	n.vdata = me.buildClass(n, module, alloc)
+	n.copyData(me.buildClass(n, module, alloc))
 	if alloc != nil && alloc.stack {
 		n.attributes["stack"] = "true"
 	}

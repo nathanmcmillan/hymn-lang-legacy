@@ -148,7 +148,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 
 func (me *varData) asVariable() *variable {
 	v := &variable{}
-	v.vdat = me
+	v.copyData(me)
 	return v
 }
 
@@ -314,7 +314,7 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 			if ix > 0 {
 				code += ", "
 			}
-			code += arg.vdat.typeSig()
+			code += arg.data().typeSig()
 		}
 		code += ")"
 

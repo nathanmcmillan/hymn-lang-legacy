@@ -31,8 +31,8 @@ func (me *hmlib) fnArgInit(typed, name string, mutable, isptr bool) *funcArg {
 	v.cName = name
 	v.mutable = mutable
 	v.isptr = isptr
-	v.vdat = me.literalType(typed)
-	v.vdat.isptr = isptr
+	v.copyData(me.literalType(typed))
+	v.data().isptr = isptr
 	f.variable = v
 	return f
 }

@@ -216,10 +216,10 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if !malloc {
 				left.attributes["no-malloc"] = "true"
 			}
-			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.asVar(), left.idata.name, mutable, malloc)
+			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable, malloc)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
-		if left.asVar().notEqual(right.asVar()) {
+		if left.data().notEqual(right.data()) {
 			if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
 				right.copyType(left)
 			} else {
@@ -310,7 +310,7 @@ func (me *parser) block() *node {
 		block.push(expr)
 		if expr.is == "return" {
 			fn := me.hmfile.scope.fn
-			if fn.typed.notEqual(expr.asVar()) {
+			if fn.typed.notEqual(expr.data()) {
 				panic(me.fail() + "function " + fn.name + " returns " + fn.typed.full + " but found " + expr.getType())
 			}
 			goto blockEnd
@@ -360,7 +360,7 @@ func (me *parser) parseMatch() *node {
 	n := nodeInit("match")
 
 	matching := me.calc(0)
-	matchType := matching.asVar()
+	matchType := matching.data()
 	var matchVar *variable
 	if matching.is == "variable" {
 		matchVar = me.hmfile.getvar(matching.idata.name)
@@ -381,7 +381,7 @@ func (me *parser) parseMatch() *node {
 			me.eat("=>")
 			n.push(caseNode)
 			if matchVar != nil {
-				fullUnion := me.hmfile.typeToVarData(matching.vdata.full + "." + name)
+				fullUnion := me.hmfile.typeToVarData(matching.data().full + "." + name)
 				matchVar.updateFromVar(me.hmfile, fullUnion)
 			}
 			if me.token.is == "line" {
@@ -429,7 +429,7 @@ func (me *parser) parseMatch() *node {
 				tempv.idata = &idData{}
 				tempv.idata.module = me.hmfile
 				tempv.idata.name = temp
-				tempv.vdata = tempd.vdat
+				tempv.copyData(tempd.data())
 				some.push(tempv)
 			}
 			if me.token.is == "line" {
@@ -538,11 +538,11 @@ func (me *parser) comparison(left *node, op string) *node {
 		panic(me.fail() + "unknown token for boolean expression")
 	}
 	right := me.calc(0)
-	if left.asVar().notEqual(right.asVar()) {
+	if left.data().notEqual(right.data()) {
 		panic(me.fail() + "comparison types \"" + left.getType() + "\" and \"" + right.getType() + "\" do not match")
 	}
 	n := nodeInit(opType)
-	n.vdata = me.hmfile.typeToVarData("bool")
+	n.copyData(me.hmfile.typeToVarData("bool"))
 	n.push(left)
 	n.push(right)
 	fmt.Println("> compare using", opType)

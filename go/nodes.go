@@ -7,7 +7,7 @@ type node struct {
 	value      string
 	idata      *idData
 	fn         *function
-	vdata      *varData
+	_vdata     *varData
 	attributes map[string]string
 	has        []*node
 }
@@ -35,17 +35,21 @@ func (me *node) push(leaf *node) {
 }
 
 func (me *node) copyType(other *node) {
-	me.vdata = other.vdata
+	me._vdata = other.data().copy()
 }
 
 func (me *node) copyTypeFromVar(other *variable) {
-	me.vdata = other.vdat
+	me._vdata = other.data().copy()
 }
 
 func (me *node) getType() string {
-	return me.vdata.full
+	return me.data().full
 }
 
-func (me *node) asVar() *varData {
-	return me.vdata
+func (me *node) data() *varData {
+	return me._vdata
+}
+
+func (me *node) copyData(data *varData) {
+	me._vdata = data.copy()
 }

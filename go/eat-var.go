@@ -14,16 +14,16 @@ func (me *parser) eatvar(from *hmfile) *node {
 	if from == me.hmfile {
 		sv := from.getvar(localvarname)
 		if sv == nil {
-			head.vdata = me.hmfile.typeToVarData("?")
+			head.copyData(me.hmfile.typeToVarData("?"))
 		} else {
-			head.vdata = sv.vdat
+			head.copyData(sv.data())
 		}
 	} else {
 		sv := from.getStatic(localvarname)
 		if sv == nil {
 			panic(me.fail() + "static variable \"" + localvarname + "\" in module \"" + from.name + "\" not found")
 		} else {
-			head.vdata = sv.vdat
+			head.copyData(sv.data())
 		}
 	}
 	me.eat("id")
@@ -34,10 +34,10 @@ func (me *parser) eatvar(from *hmfile) *node {
 				if sv == nil {
 					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
 				}
-				head.vdata = sv.vdat
+				head.copyData(sv.data())
 				head.is = "root-variable"
 			}
-			data := head.vdata
+			data := head.data()
 			if rootClass, ok := data.checkIsClass(); ok {
 				me.eat(".")
 				dotName := me.token.value
@@ -46,7 +46,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				classOf, ok := rootClass.variables[dotName]
 				if ok {
 					member = nodeInit("member-variable")
-					member.vdata = classOf.vdat
+					member.copyData(classOf.data())
 					member.idata = &idData{}
 					member.idata.module = from
 					member.idata.name = dotName
@@ -69,7 +69,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 						me.eat(".")
 						me.eat("id")
 						member := nodeInit("member-variable")
-						member.vdata = me.hmfile.typeToVarData(TokenInt)
+						member.copyData(me.hmfile.typeToVarData(TokenInt))
 						member.idata = &idData{}
 						member.idata.module = from
 						member.idata.name = "type"
@@ -88,15 +88,15 @@ func (me *parser) eatvar(from *hmfile) *node {
 					}
 					typeInUnion := rootUnion.types[dotIndex]
 					member := nodeInit("tuple-index")
-					member.vdata = typeInUnion
+					member.copyData(typeInUnion)
 					member.value = dotIndexStr
 					member.push(head)
 					head = member
 				}
 			} else if data.maybe {
-				panic(me.fail() + "unexpected maybe type \"" + head.vdata.full + "\" do you need a match statement?")
+				panic(me.fail() + "unexpected maybe type \"" + head.data().full + "\" do you need a match statement?")
 			} else {
-				panic(me.fail() + "unexpected type \"" + head.vdata.full + "\"")
+				panic(me.fail() + "unexpected type \"" + head.data().full + "\"")
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {
@@ -107,13 +107,13 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head.copyTypeFromVar(sv)
 				head.is = "root-variable"
 			}
-			if !head.asVar().checkIsArrayOrSlice() {
+			if !head.data().checkIsArrayOrSlice() {
 				panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
 			}
 			me.eat("[")
 			member := nodeInit("array-member")
 			index := me.calc(0)
-			member.vdata = head.vdata.memberType
+			member.copyData(head.data().memberType)
 			member.push(index)
 			member.push(head)
 			head = member
@@ -125,13 +125,13 @@ func (me *parser) eatvar(from *hmfile) *node {
 				if sv == nil {
 					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
 				}
-				sig = sv.vdat.fn
+				sig = sv.data().fn
 
 			} else if head.is == "member-variable" {
-				sig = head.vdata.fn
+				sig = head.data().fn
 			}
 			member := nodeInit("call")
-			member.vdata = sig.typed
+			member.copyData(sig.typed)
 			member.push(head)
 			me.pushSigParams(member, sig)
 			head = member

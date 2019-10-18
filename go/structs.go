@@ -148,7 +148,7 @@ func codeNode(node *node, code string) *cnode {
 	c := &cnode{}
 	c.is = node.is
 	c.value = node.value
-	c.vdata = node.vdata
+	c.copyData(node.data())
 	c.code = code
 	c.has = make([]*cnode, 0)
 	return c

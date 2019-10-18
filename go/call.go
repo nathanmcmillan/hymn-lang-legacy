@@ -17,9 +17,9 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 		}
 		param := me.calc(0)
 		arg := sig.args[ix]
-		if param.asVar().notEqual(arg.vdat) && arg.vdat.full != "?" {
+		if param.data().notEqual(arg.data()) && arg.data().full != "?" {
 			err := "parameter \"" + param.getType()
-			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.vdat.full + "\" for function"
+			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().full + "\" for function"
 			panic(me.fail() + err)
 		}
 		params = append(params, param)
@@ -47,9 +47,9 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			param := me.calc(0)
 			aix := fn.argDict[argname]
 			arg := fn.args[aix]
-			if param.asVar().notEqual(arg.vdat) && arg.vdat.full != "?" {
+			if param.data().notEqual(arg.data()) && arg.data().full != "?" {
 				err := "parameter \"" + param.getType()
-				err += "\" does not match argument \"" + argname + "\" typed \"" + arg.vdat.full + "\" for function \"" + name + "\""
+				err += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().full + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
 			}
 			params[aix] = param
@@ -63,9 +63,9 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 				panic(me.fail() + "function \"" + name + "\" argument count exceeds parameter count")
 			}
 			arg := fn.args[pix]
-			if param.asVar().notEqual(arg.vdat) && arg.vdat.full != "?" {
+			if param.data().notEqual(arg.data()) && arg.data().full != "?" {
 				err := "parameter \"" + param.getType()
-				err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.vdat.full + "\" for function \"" + name + "\""
+				err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.data().full + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
 			}
 			params[pix] = param
@@ -89,7 +89,7 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	n := nodeInit("call")
 	name := fn.nameOfClassFunc()
 	n.fn = fn
-	n.vdata = fn.typed
+	n.copyData(fn.typed)
 	params := make([]*node, len(fn.args))
 	params[0] = root
 	me.pushParams(name, n, 1, params, fn)
@@ -102,7 +102,7 @@ func (me *parser) call(module *hmfile) *node {
 	me.eat("id")
 	n := nodeInit("call")
 	n.fn = fn
-	n.vdata = fn.typed
+	n.copyData(fn.typed)
 	params := make([]*node, len(fn.args))
 	me.pushParams(name, n, 0, params, fn)
 	return n
@@ -117,7 +117,7 @@ func (me *parser) parseFn(module *hmfile) *node {
 	fn := module.functions[name]
 	me.eat("id")
 	n := nodeInit("fn-ptr")
-	n.vdata = fn.asVar()
+	n.copyData(fn.data())
 	n.fn = fn
 
 	return n

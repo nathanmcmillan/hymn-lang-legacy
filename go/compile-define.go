@@ -59,7 +59,7 @@ func (me *cfile) defineClass(class *class) {
 	code := "struct " + hmName + " {\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
-		code += fmc(1) + field.vdat.typeSigOf(field.name, true) + ";\n"
+		code += fmc(1) + field.data().typeSigOf(field.name, true) + ";\n"
 	}
 	code += "};\n\n"
 	me.headTypesSection += code

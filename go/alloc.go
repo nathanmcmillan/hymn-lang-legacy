@@ -187,7 +187,6 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	if me.token.is == "line" {
 		me.eat("line")
 	}
-	fmt.Println("CLASS PARAMS ::", typed)
 	base := module.classes[typed]
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
@@ -326,6 +325,8 @@ func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n.copyData(me.buildClass(n, module, alloc))
 	if alloc != nil && alloc.stack {
 		n.attributes["stack"] = "true"
+		n.data().isptr = false
+		n.data().onStack = true
 	}
 	return n
 }

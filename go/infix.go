@@ -2,7 +2,7 @@ package main
 
 func (me *parser) infixConcat(left *node) *node {
 	node := nodeInit("concat")
-	node.copyType(left)
+	node.copyDataOfNode(left)
 	node.push(left)
 	for me.token.is == "+" {
 		me.eat("+")
@@ -36,7 +36,7 @@ func infixBinary(me *parser, left *node, op string) *node {
 	}
 	node.push(left)
 	node.push(right)
-	node.copyType(left)
+	node.copyDataOfNode(left)
 	return node
 }
 
@@ -57,7 +57,7 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	}
 	node.push(left)
 	node.push(right)
-	node.copyType(left)
+	node.copyDataOfNode(left)
 	return node
 }
 
@@ -126,7 +126,7 @@ func infixTernary(me *parser, condition *node, op string) *node {
 		panic(me.fail() + "left \"" + one.getType() + "\" and right \"" + two.getType() + "\" types do not match")
 	}
 	node.push(two)
-	node.copyType(one)
+	node.copyDataOfNode(one)
 	return node
 }
 

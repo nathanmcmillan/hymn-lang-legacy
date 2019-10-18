@@ -5,7 +5,7 @@ func prefixSign(me *parser, op string) *node {
 	me.eat(op)
 	right := me.calc(getPrefixPrecedence(op))
 	node.push(right)
-	node.copyType(right)
+	node.copyDataOfNode(right)
 	return node
 }
 

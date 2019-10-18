@@ -12,9 +12,9 @@ func (me *funcArg) copy() *funcArg {
 	return a
 }
 
-func (me *hmfile) fnArgInit(typed, name string, mutable, isptr bool) *funcArg {
+func (me *hmfile) fnArgInit(typed, name string, mutable bool) *funcArg {
 	f := &funcArg{}
-	f.variable = me.varInit(typed, name, mutable, isptr)
+	f.variable = me.varInit(typed, name, mutable)
 	return f
 }
 
@@ -24,15 +24,13 @@ func fnArgInit(v *variable) *funcArg {
 	return f
 }
 
-func (me *hmlib) fnArgInit(typed, name string, mutable, isptr bool) *funcArg {
+func (me *hmlib) fnArgInit(typed, name string, mutable bool) *funcArg {
 	f := &funcArg{}
 	v := &variable{}
 	v.name = name
 	v.cName = name
 	v.mutable = mutable
-	v.isptr = isptr
 	v.copyData(me.literalType(typed))
-	v.data().isptr = isptr
 	f.variable = v
 	return f
 }

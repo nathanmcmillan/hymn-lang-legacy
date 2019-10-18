@@ -45,6 +45,7 @@ func (me *varData) set(in *varData) {
 	me.isptr = in.isptr
 	me.heap = in.heap
 	me.array = in.array
+	me.slice = in.slice
 	me.none = in.none
 	me.maybe = in.maybe
 	me.some = in.some
@@ -320,7 +321,7 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 
 	} else {
 		sig := fmtassignspace(me.typeSig())
-		if mutable {
+		if mutable || me.onStack || !me.isptr {
 			code += sig
 		} else if me.postfixConst() {
 			code += sig + "const "

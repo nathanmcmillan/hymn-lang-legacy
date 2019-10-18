@@ -156,6 +156,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 			if data.array {
 				code = cname + code
 			} else {
+				fmt.Println("MEM ROOT HEAD ::", head.idata.name, "::", data.full, "?", data.isptr, data.onStack)
 				code = cname + data.memPtr() + code
 			}
 			break
@@ -327,7 +328,7 @@ func (me *cfile) compileNullCheck(match *codeblock, n *node, code string) *codeb
 			if len(caseOf.has) > 0 {
 				temp := caseOf.has[0]
 				tempname = temp.idata.name
-				tempv := me.hmfile.varInitFromData(temp.data(), tempname, false, true)
+				tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
 				me.scope.variables[tempname] = tempv
 				ref := me.eval(n.has[0]).code()
 				block += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
@@ -472,6 +473,7 @@ func (me *cfile) compileFor(n *node) *codeblock {
 }
 
 func (me *cfile) declare(n *node) string {
+	fmt.Println("FOOBAR ::", n.string(0))
 	if n.is != "variable" {
 		return me.eval(n).code()
 	}
@@ -487,7 +489,7 @@ func (me *cfile) declare(n *node) string {
 		if _, ok := n.attributes["no-malloc"]; ok {
 			malloc = false
 		}
-		if _, ok := n.attributes["stack"]; ok {
+		if _, ok := n.attributes["stack"]; ok || n.data().onStack {
 			useStack = true
 			malloc = false
 		}
@@ -496,13 +498,14 @@ func (me *cfile) declare(n *node) string {
 			mutable = true
 		}
 		data := n.data()
-		newVar := me.hmfile.varInitFromData(data, name, mutable, malloc)
+		newVar := me.hmfile.varInitFromData(data, name, mutable)
 		if useStack {
 			me.scope.variables[name] = newVar
 			code += fmtassignspace(data.typeSig())
 			code += name
 
 		} else if malloc {
+			fmt.Println("MALLOC ::", name)
 			me.scope.variables[name] = newVar
 			code += data.typeSigOf(name, mutable)
 

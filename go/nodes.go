@@ -34,7 +34,7 @@ func (me *node) push(leaf *node) {
 	me.has = append(me.has, leaf)
 }
 
-func (me *node) copyType(other *node) {
+func (me *node) copyDataOfNode(other *node) {
 	me._vdata = other.data().copy()
 }
 

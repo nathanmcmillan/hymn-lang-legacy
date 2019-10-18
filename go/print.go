@@ -5,8 +5,12 @@ import (
 	"strings"
 )
 
+func (me *varData) string() string {
+	return me.full + "(ptr:" + strconv.FormatBool(me.isptr) + ", stk:" + strconv.FormatBool(me.onStack) + ")"
+}
+
 func (me *variable) string() string {
-	return "{var:" + me.data().full + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
+	return "{var:" + me.data().string() + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
 }
 
 func (me *node) string(lv int) string {
@@ -22,7 +26,7 @@ func (me *node) string(lv int) string {
 		s += ", call:" + me.fn.canonical()
 	}
 	if me.data() != nil {
-		s += ", var:" + me.data().full
+		s += ", var:" + me.data().string()
 	}
 	if len(me.attributes) > 0 {
 		s += ", attributes["
@@ -63,7 +67,7 @@ func (me *cnode) string(lv int) string {
 		s += ", typed:" + me.typed
 	}
 	if me.data() != nil {
-		s += ", var:" + me.data().full
+		s += ", var:" + me.data().string()
 	}
 	s += ", code:" + me.code
 	if len(me.has) > 0 {
@@ -100,10 +104,7 @@ func (me *class) dump(lv int) string {
 	lv++
 	for _, cls := range me.variableOrder {
 		classVar := me.variables[cls]
-		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.data().full
-		if !classVar.isptr {
-			s += ", pointer:false"
-		}
+		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.data().string()
 		s += "}\n"
 	}
 	lv--
@@ -121,7 +122,7 @@ func (me *enum) dump(lv int) string {
 				if ix > 0 {
 					types += ", "
 				}
-				types += typ.full
+				types += typ.string()
 			}
 			s += fmc(lv) + "{name:" + unionType.name + ", union:<" + types + ">}\n"
 		} else {

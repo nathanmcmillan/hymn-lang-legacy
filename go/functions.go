@@ -147,7 +147,7 @@ func (me *parser) defineFileFunction() {
 func (me *parser) defineFunction(name string, self *class) *function {
 	fn := funcInit(me.hmfile, name)
 	if self != nil {
-		ref := me.hmfile.fnArgInit(self.name, "self", false, true)
+		ref := me.hmfile.fnArgInit(self.name, "self", false)
 		fn.args = append(fn.args, ref)
 	}
 	if me.token.is == "(" {
@@ -175,7 +175,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 				typed := me.declareType(true)
 				fn.argDict[argname] = len(fn.args)
 				fnArg := &funcArg{}
-				fnArg.variable = me.hmfile.varInitFromData(typed, argname, false, true)
+				fnArg.variable = me.hmfile.varInitFromData(typed, argname, false)
 				if defaultValue != "" {
 					defaultTypeVarData := me.hmfile.typeToVarData(defaultType)
 					if typed.notEqual(defaultTypeVarData) {

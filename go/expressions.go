@@ -162,7 +162,7 @@ func (me *parser) returning() *node {
 	me.eat("return")
 	calc := me.calc(0)
 	n := nodeInit("return")
-	n.copyType(calc)
+	n.copyDataOfNode(calc)
 	n.push(calc)
 	me.verify("line")
 	return n
@@ -209,19 +209,20 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		} else if mustBeInt || mustBeNumber {
 			panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.idata.name + "\" does not exist")
 		} else {
-			left.copyType(right)
+			left.copyDataOfNode(right)
 			if mutable {
 				left.attributes["mutable"] = "true"
 			}
 			if !malloc {
 				left.attributes["no-malloc"] = "true"
+				right.data().isptr = false
 			}
-			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable, malloc)
+			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
 		if left.data().notEqual(right.data()) {
 			if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
-				right.copyType(left)
+				right.copyDataOfNode(left)
 			} else {
 				panic(me.fail() + "member variable type \"" + left.getType() + "\" does not match expression type \"" + right.getType() + "\"")
 			}
@@ -237,7 +238,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	}
 	n := nodeInit(op)
 	if op == ":=" {
-		n.copyType(right)
+		n.copyDataOfNode(right)
 	}
 	n.push(left)
 	n.push(right)
@@ -423,7 +424,7 @@ func (me *parser) parseMatch() *node {
 			some := nodeInit("some")
 			n.push(some)
 			if temp != "" {
-				tempd := me.hmfile.varInitFromData(matchType.some, temp, false, true)
+				tempd := me.hmfile.varInitFromData(matchType.some, temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}

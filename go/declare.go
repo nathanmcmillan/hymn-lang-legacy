@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -20,6 +19,8 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_enum")
 
 	enumDef := enumInit(base.module, impl, false, unionList, unionDict, nil, nil)
+	enumDef.base = base
+	base.impls = append(base.impls, enumDef)
 	me.hmfile.enums[impl] = enumDef
 
 	gmapper := make(map[string]string)
@@ -47,7 +48,6 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef := classInit(impl, nil, nil)
 	classDef.base = base
 	base.impls = append(base.impls, classDef)
-	fmt.Println("CLASS IMPL PUSH ::", classDef.name)
 	classDef.initMembers(base.variableOrder, memberMap)
 	me.hmfile.classes[impl] = classDef
 

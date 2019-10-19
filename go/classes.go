@@ -4,11 +4,11 @@ type class struct {
 	name          string
 	variables     map[string]*variable
 	variableOrder []string
-	base          *class
 	generics      []string
 	genericsDict  map[string]int
 	gmapper       map[string]string
 	functions     map[string]*function
+	base          *class
 	impls         []*class
 }
 

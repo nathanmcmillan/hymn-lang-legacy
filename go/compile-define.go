@@ -6,7 +6,9 @@ import (
 
 func (me *cfile) defineEnum(enum *enum) {
 
-	impl, hmBaseEnumName := me.hmfile.enumMaybeImplNameSpace(enum.name)
+	impl := enum.baseEnum() != enum
+	hmBaseEnumName := enum.module.enumNameSpace(enum.baseEnum().name)
+
 	if !impl {
 		me.headTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
 		code := "enum " + hmBaseEnumName + " {\n"
@@ -32,7 +34,6 @@ func (me *cfile) defineEnum(enum *enum) {
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
 	for _, enumUnion := range enum.typesOrder {
-		me.generateUnionFn(enum, enumUnion)
 		num := len(enumUnion.types)
 		if num == 1 {
 			typed := enumUnion.types[0]

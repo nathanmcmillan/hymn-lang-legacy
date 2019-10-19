@@ -6,7 +6,7 @@ import (
 )
 
 func (me *varData) string() string {
-	return me.full + "(ptr:" + strconv.FormatBool(me.isptr) + ", stk:" + strconv.FormatBool(me.onStack) + ")"
+	return me.full + "(pointer:" + strconv.FormatBool(me.isptr) + ", stack:" + strconv.FormatBool(me.onStack) + ")"
 }
 
 func (me *variable) string() string {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -473,7 +472,6 @@ func (me *cfile) compileFor(n *node) *codeblock {
 }
 
 func (me *cfile) declare(n *node) string {
-	fmt.Println("FOOBAR ::", n.string(0))
 	if n.is != "variable" {
 		return me.eval(n).code()
 	}
@@ -505,7 +503,6 @@ func (me *cfile) declare(n *node) string {
 			code += name
 
 		} else if malloc {
-			fmt.Println("MALLOC ::", name)
 			me.scope.variables[name] = newVar
 			code += data.typeSigOf(name, mutable)
 
@@ -593,44 +590,6 @@ func (me *cfile) assignmentUpdate(n *node) string {
 
 func (me *cfile) free(name string) string {
 	return "free(" + name + ");"
-}
-
-func (me *cfile) generateUnionFn(en *enum, un *union) {
-	_, enumName := me.hmfile.enumMaybeImplNameSpace(en.name)
-	unionName := me.hmfile.unionNameSpace(en.name)
-	fnName := me.hmfile.unionFnNameSpace(en, un)
-	typeOf := fmtassignspace(en.typeSig())
-	head := ""
-	head += typeOf + fnName + "("
-	if len(un.types) == 1 {
-		unionHas := un.types[0]
-		head += fmtassignspace(unionHas.typeSig()) + un.name
-	} else {
-		for ix := range un.types {
-			if ix > 0 {
-				head += ", "
-			}
-			unionHas := un.types[ix]
-			head += fmtassignspace(unionHas.typeSig()) + un.name + strconv.Itoa(ix)
-		}
-	}
-	head += ")"
-	code := head
-	head += ";\n"
-	code += " {\n"
-	code += fmc(1) + typeOf + "const var = malloc(sizeof(" + unionName + "));\n"
-	code += fmc(1) + "var->type = " + me.hmfile.enumTypeName(enumName, un.name)
-	if len(un.types) == 1 {
-		code += ";\n" + fmc(1) + "var->" + un.name + " = " + un.name
-	} else {
-		for ix := range un.types {
-			code += ";\n" + fmc(1) + "var->" + un.name + ".var" + strconv.Itoa(ix) + " = " + un.name + strconv.Itoa(ix)
-		}
-	}
-	code += ";\n" + fmc(1) + "return var;\n"
-	code += "}\n\n"
-	me.headFuncSection += head
-	me.codeFn = append(me.codeFn, code)
 }
 
 func (me *cfile) block(n *node) *codeblock {

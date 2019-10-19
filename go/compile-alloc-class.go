@@ -15,11 +15,10 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 		return codeBlockOne(n, "")
 	}
 
-	_, useStack := n.attributes["stack"]
-
 	data := n.data()
 	typed := data.module.classNameSpace(data.typed)
 
+	_, useStack := n.attributes["stack"]
 	assign, local := n.attributes["assign"]
 
 	cb := &codeblock{}
@@ -87,78 +86,4 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 	}
 
 	return cb
-}
-
-func (me *cfile) compileAllocEnum(n *node) *codeblock {
-	if _, ok := n.attributes["no-malloc"]; ok {
-		return codeBlockOne(n, "")
-	}
-	data := n.data()
-	module := data.module
-	en, un, _ := data.checkIsEnum()
-	enumType := un.name
-	if en.simple {
-		enumBase := module.enumNameSpace(en.name)
-		globalName := module.enumTypeName(enumBase, enumType)
-		return codeBlockOne(n, globalName)
-	}
-	unionOf := en.types[enumType]
-	code := ""
-	code += module.unionFnNameSpace(en, unionOf) + "("
-	if len(unionOf.types) == 1 {
-		unionHas := n.has[0]
-		code += me.eval(unionHas).code()
-	} else {
-		for ix := range unionOf.types {
-			if ix > 0 {
-				code += ", "
-			}
-			unionHas := n.has[ix]
-			code += me.eval(unionHas).code()
-		}
-	}
-	code += ")"
-	return codeBlockOne(n, code)
-}
-
-func (me *cfile) allocArray(n *node) *codeblock {
-	size := ""
-	parenthesis := false
-	if len(n.has) > 0 {
-		e := me.eval(n.has[0])
-		size = e.code()
-		if e.getType() != TokenInt {
-			parenthesis = true
-		}
-	} else {
-		size = sizeOfArray(n.data().full)
-	}
-	if _, ok := n.attributes["no-malloc"]; ok {
-		return codeBlockOne(n, "["+size+"]")
-	}
-	memberType := n.data().typeSig()
-	code := "malloc("
-	if parenthesis {
-		code += "("
-	}
-	code += size
-	if parenthesis {
-		code += ")"
-	}
-	code += " * sizeof(" + memberType + "))"
-	return codeBlockOne(n, code)
-}
-
-func (me *cfile) allocSlice(n *node) *codeblock {
-	size := "0"
-	if len(n.has) > 0 {
-		size = me.eval(n.has[0]).code()
-	}
-	code := ""
-	if _, ok := n.attributes["no-malloc"]; ok {
-		code = "[" + size + "]"
-	} else {
-		code = "hmlib_slice_init(" + size + ", sizeof(" + n.data().memberType.typeSig() + "))"
-	}
-	return codeBlockOne(n, code)
 }

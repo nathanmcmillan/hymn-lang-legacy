@@ -8,6 +8,8 @@ type enum struct {
 	typesOrder   []*union
 	generics     []string
 	genericsDict map[string]int
+	base         *enum
+	impls        []*enum
 }
 
 type union struct {
@@ -46,7 +48,17 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 	e.typesOrder = order
 	e.generics = generics
 	e.genericsDict = genericsDict
+	if len(generics) > 0 {
+		e.impls = make([]*enum, 0)
+	}
 	return e
+}
+
+func (me *enum) baseEnum() *enum {
+	if me.base == nil {
+		return me
+	}
+	return me.base.baseEnum()
 }
 
 func (me *enum) typeSig() string {

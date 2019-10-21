@@ -14,9 +14,9 @@ do_things(f foo)
 	match f
 		hello =>
 			echo("hello!")
-		world =>
+		world(w) =>
 			echo("world!")
-			echo(f.0)
+			echo(w.0)
 
 main()
 	mutable e = foo.hello(2)
@@ -37,14 +37,14 @@ main()
 
 	match b := fun(2)
 		none => echo("no")
-		some =>
+		some(s) =>
 			echo("yes")
-			do_things(b)
-			match b
-				hello =>
-					echo("#2 hello " + to_str(b.0))
-				world =>
-					echo("#2 world " + b.0)
+			do_things(s)
+			match s
+				hello(h) =>
+					echo("#2 hello " + to_str(h.0))
+				world(w) =>
+					echo("#2 world " + w.0)
 	
 	match c := foo.hello(8)
 		hello =>

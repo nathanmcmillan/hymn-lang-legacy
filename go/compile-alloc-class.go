@@ -82,7 +82,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 		code := decl + " = " + value + me.maybeColon(value) + "\n"
 		cn := codeNode(n, code)
 		cn.value = temp
-		cb.pre = codeNodeUpgrade(cn)
+		cb.prepend(codeNodeUpgrade(cn))
 	}
 
 	return cb

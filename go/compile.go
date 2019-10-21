@@ -290,16 +290,29 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	for ix < size {
 		caseOf := n.has[ix]
 		thenDo := n.has[ix+1]
-		thenBlock := me.eval(thenDo).code()
 		if caseOf.is == "_" {
 			code += fmc(me.depth) + "default:\n"
 		} else {
 			if isEnum {
+				///////////////////////////////////////////
+				tempname := ""
+				fmt.Println("TEMP ?? ::")
+				if len(caseOf.has) > 0 {
+					temp := caseOf.has[0]
+					tempname = temp.idata.name
+					fmt.Println("TEMP NAME::", tempname)
+					tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
+					me.scope.variables[tempname] = tempv
+					ref := me.eval(n.has[0]).code()
+					code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
+				}
+				///////////////////////////////////////////
 				code += fmc(me.depth) + "case " + me.hmfile.enumTypeName(enumNameSpace, caseOf.is) + ":\n"
 			} else {
 				code += fmc(me.depth) + "case " + caseOf.is + ":\n"
 			}
 		}
+		thenBlock := me.eval(thenDo).code()
 		me.depth++
 		if thenBlock != "" {
 			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock) + "\n"
@@ -573,7 +586,7 @@ func (me *cfile) compileAssign(n *node) string {
 	value := me.eval(right)
 
 	pre := value.preCode()
-	post := value.current.code
+	post := value.pop()
 
 	code += pre + me.maybeFmc(pre, me.depth) + declare + me.maybeLet(post, right.attributes) + post
 	if paren {
@@ -607,43 +620,4 @@ func (me *cfile) block(n *node) *codeblock {
 	}
 	me.depth--
 	return codeBlockOne(n, code)
-}
-
-func (me *cfile) compileCall(node *node) *codeblock {
-	fn := node.fn
-	if fn == nil {
-		head := node.has[0]
-		sig := head.data().fn
-		code := "(*" + me.eval(head).code() + ")("
-		parameters := node.has[1:len(node.has)]
-		for ix, parameter := range parameters {
-			if ix > 0 {
-				code += ", "
-			}
-			arg := sig.args[ix]
-			code += me.hintEval(parameter, arg.data()).code()
-		}
-		code += ")"
-		return codeBlockOne(node, code)
-	}
-	module := fn.module
-	name := fn.name
-	parameters := node.has
-	code := me.builtin(name, parameters)
-	if code == "" {
-		if fn.forClass != nil {
-			name = fn.nameOfClassFunc()
-		}
-		code = module.funcNameSpace(name) + "("
-		for ix, parameter := range parameters {
-			if ix > 0 {
-				code += ", "
-			}
-			arg := node.fn.args[ix]
-			code += me.hintEval(parameter, arg.data()).code()
-		}
-		code += ")"
-	}
-
-	return codeBlockOne(node, code)
 }

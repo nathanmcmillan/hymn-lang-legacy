@@ -379,11 +379,28 @@ func (me *parser) parseMatch() *node {
 			name := me.token.value
 			me.eat("id")
 			caseNode := nodeInit(name)
+			temp := ""
+			if me.token.is == "(" {
+				me.eat("(")
+				temp = me.token.value
+				me.eat("id")
+				me.eat(")")
+			}
 			me.eat("=>")
 			n.push(caseNode)
-			if matchVar != nil {
-				fullUnion := me.hmfile.typeToVarData(matching.data().full + "." + name)
-				matchVar.updateFromVar(me.hmfile, fullUnion)
+			if temp != "" {
+				en, _, ok := matchType.checkIsEnum()
+				if !ok {
+					panic(me.fail() + "only enums supported for matching")
+				}
+				tempd := me.hmfile.varInit(en.name+"."+name, temp, false)
+				me.hmfile.scope.variables[temp] = tempd
+				tempv := nodeInit("variable")
+				tempv.idata = &idData{}
+				tempv.idata.module = me.hmfile
+				tempv.idata.name = temp
+				tempv.copyData(tempd.data())
+				caseNode.push(tempv)
 			}
 			if me.token.is == "line" {
 				me.eat("line")
@@ -392,19 +409,8 @@ func (me *parser) parseMatch() *node {
 				n.push(me.expression())
 				me.eat("line")
 			}
-			if matchVar != nil {
-				// matchVar.update(me.hmfile, matchType.full)
-			}
-		} else if me.token.is == "_" {
-			me.eat("_")
-			me.eat("=>")
-			n.push(nodeInit("_"))
-			if me.token.is == "line" {
-				me.eat("line")
-				n.push(me.block())
-			} else {
-				n.push(me.expression())
-				me.eat("line")
+			if temp != "" {
+				delete(me.hmfile.scope.variables, temp)
 			}
 		} else if me.token.is == "some" {
 			me.eat("some")
@@ -442,6 +448,17 @@ func (me *parser) parseMatch() *node {
 			}
 			if temp != "" {
 				delete(me.hmfile.scope.variables, temp)
+			}
+		} else if me.token.is == "_" {
+			me.eat("_")
+			me.eat("=>")
+			n.push(nodeInit("_"))
+			if me.token.is == "line" {
+				me.eat("line")
+				n.push(me.block())
+			} else {
+				n.push(me.expression())
+				me.eat("line")
 			}
 		} else if me.token.is == "none" {
 			me.eat("none")

@@ -1,6 +1,8 @@
 package main
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	op := n.is
@@ -80,10 +82,15 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	}
 	if op == "return" {
 		in := me.eval(n.has[0])
-		code := "return " + in.code()
-		cn := codeNode(n, code)
-		// cn.push(in)
-		return codeNodeUpgrade(cn)
+		code := ""
+		if in.pre != nil {
+			code += fmc(me.depth)
+		}
+		code += "return " + in.pop()
+		cb := &codeblock{}
+		cb.prepend(in.pre)
+		cb.current = codeNode(n, code)
+		return cb
 	}
 	if op == "boolexpr" {
 		code := me.eval(n.has[0]).code()

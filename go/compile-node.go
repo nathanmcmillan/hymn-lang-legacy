@@ -37,17 +37,20 @@ func (me *cnode) getType() string {
 	return me.typed
 }
 
-func (me *cnode) asVar(module *hmfile) *varData {
-	if me.data() != nil {
-		return me.data()
-	}
-	me.copyData(module.typeToVarData(me.typed))
-	return me.data()
-}
-
 type codeblock struct {
 	pre     *codeblock
 	current *cnode
+}
+
+func (me *codeblock) prepend(cb *codeblock) {
+	if cb == nil {
+		return
+	}
+	if me.pre == nil {
+		me.pre = cb
+	} else {
+		me.pre.prepend(cb)
+	}
 }
 
 func (me *codeblock) flatten() []*cnode {
@@ -67,6 +70,10 @@ func (me *codeblock) preCode() string {
 	return ""
 }
 
+func (me *codeblock) pop() string {
+	return me.current.code
+}
+
 func (me *codeblock) code() string {
 	ls := me.flatten()
 	code := ""
@@ -84,10 +91,6 @@ func (me *codeblock) getType() string {
 	return me.current.getType()
 }
 
-func (me *codeblock) asVar(module *hmfile) *varData {
-	return me.current.asVar(module)
-}
-
 func (me *codeblock) is() string {
 	return me.current.is
 }
@@ -95,6 +98,13 @@ func (me *codeblock) is() string {
 func codeBlockOne(n *node, code string) *codeblock {
 	me := &codeblock{}
 	me.current = codeNode(n, code)
+	return me
+}
+
+func codeBlockMerge(n *node, code string, pre *codeblock) *codeblock {
+	me := &codeblock{}
+	me.current = codeNode(n, code)
+	me.prepend(pre)
 	return me
 }
 

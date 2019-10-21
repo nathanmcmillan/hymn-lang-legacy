@@ -37,10 +37,6 @@ func (me *variable) update(module *hmfile, typed string) {
 	me.copyData(module.typeToVarData(typed))
 }
 
-func (me *variable) updateFromVar(module *hmfile, data *varData) {
-	me.copyData(data)
-}
-
 func (me *variable) copy() *variable {
 	v := &variable{}
 	v.name = me.name

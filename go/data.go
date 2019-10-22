@@ -97,6 +97,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 			data.memberType = me.typeToVarData(typed)
 		} else {
 			data.isptr = false
+			data.onStack = true
 		}
 		data.typed = typed
 		return data
@@ -205,6 +206,9 @@ func (me *varData) checkIsFunction() (*fnSig, bool) {
 
 func (me *varData) checkIsClass() (*class, bool) {
 	if me.module == nil {
+		if me.hmlib == nil {
+			return nil, false
+		}
 		cl, ok := me.hmlib.classes[me.typed]
 		return cl, ok
 	}
@@ -300,6 +304,15 @@ func (me *varData) postfixConst() bool {
 	return false
 }
 
+func (me *varData) noConst() bool {
+	if !me.checkIsPrimitive() {
+		if me.onStack || !me.isptr {
+			return true
+		}
+	}
+	return false
+}
+
 func (me *varData) typeSigOf(name string, mutable bool) string {
 	code := ""
 	if _, ok := me.checkIsFunction(); ok {
@@ -321,7 +334,7 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 
 	} else {
 		sig := fmtassignspace(me.typeSig())
-		if mutable || me.onStack || !me.isptr {
+		if mutable || me.noConst() {
 			code += sig
 		} else if me.postfixConst() {
 			code += sig + "const "

@@ -12,7 +12,7 @@ func (me *cfile) allocArray(n *node) *codeblock {
 	} else {
 		size = sizeOfArray(n.data().full)
 	}
-	if _, ok := n.attributes["no-malloc"]; ok {
+	if _, ok := n.attributes["global"]; ok {
 		return codeBlockOne(n, "["+size+"]")
 	}
 	memberType := n.data().typeSig()
@@ -34,7 +34,7 @@ func (me *cfile) allocSlice(n *node) *codeblock {
 		size = me.eval(n.has[0]).code()
 	}
 	code := ""
-	if _, ok := n.attributes["no-malloc"]; ok {
+	if _, ok := n.attributes["global"]; ok {
 		code = "[" + size + "]"
 	} else {
 		code = "hmlib_slice_init(" + size + ", sizeof(" + n.data().memberType.typeSig() + "))"

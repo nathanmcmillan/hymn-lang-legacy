@@ -1,12 +1,12 @@
-printme(a []int) []int
-  for i = 0, i < 3, i += 1
-    echo(a[i])
-  a[2] = 777
-  return a
+foo(a []int) []int
+	for i = 0, i < 3, i += 1
+		echo(a[i])
+	a[2] = 777
+	return a
 
 main
-  a = [3]int
-  for i = 0, i < 3, i += 1
-    a[i] = (i + 1) * 9
-  printme(a)
-  echo(a[2])
+	a = [3]int
+	for i = 0, i < 3, i += 1
+		a[i] = (i + 1) * 9
+	foo(a)
+	echo(a[2])

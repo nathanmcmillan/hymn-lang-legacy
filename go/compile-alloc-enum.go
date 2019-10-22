@@ -3,7 +3,7 @@ package main
 import "strconv"
 
 func (me *cfile) compileAllocEnum(n *node) *codeblock {
-	if _, ok := n.attributes["no-malloc"]; ok {
+	if _, ok := n.attributes["global"]; ok {
 		return codeBlockOne(n, "")
 	}
 	data := n.data()

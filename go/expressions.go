@@ -214,7 +214,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 				left.attributes["mutable"] = "true"
 			}
 			if !malloc {
-				left.attributes["no-malloc"] = "true"
+				left.attributes["global"] = "true"
 				right.data().isptr = false
 			}
 			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)

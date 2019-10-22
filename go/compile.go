@@ -155,7 +155,6 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 			if data.array {
 				code = cname + code
 			} else {
-				fmt.Println("MEM ROOT HEAD ::", head.idata.name, "::", data.full, "?", data.isptr, data.onStack)
 				code = cname + data.memPtr() + code
 			}
 			break
@@ -291,23 +290,20 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 		caseOf := n.has[ix]
 		thenDo := n.has[ix+1]
 		if caseOf.is == "_" {
-			code += fmc(me.depth) + "default:\n"
+			code += fmc(me.depth) + "default: {\n"
 		} else {
 			if isEnum {
-				///////////////////////////////////////////
+				code += fmc(me.depth) + "case " + me.hmfile.enumTypeName(enumNameSpace, caseOf.is) + ": {\n"
 				tempname := ""
-				fmt.Println("TEMP ?? ::")
 				if len(caseOf.has) > 0 {
 					temp := caseOf.has[0]
 					tempname = temp.idata.name
-					fmt.Println("TEMP NAME::", tempname)
 					tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
 					me.scope.variables[tempname] = tempv
 					ref := me.eval(n.has[0]).code()
+					code += fmc(me.depth + 1)
 					code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
 				}
-				///////////////////////////////////////////
-				code += fmc(me.depth) + "case " + me.hmfile.enumTypeName(enumNameSpace, caseOf.is) + ":\n"
 			} else {
 				code += fmc(me.depth) + "case " + caseOf.is + ":\n"
 			}
@@ -318,8 +314,9 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock) + "\n"
 		}
 		if !strings.Contains(thenBlock, "return") {
-			code += fmc(me.depth) + "break;\n"
+			code += fmc(me.depth) + "break;"
 		}
+		code += " }\n"
 		me.depth--
 		ix += 2
 	}
@@ -484,80 +481,10 @@ func (me *cfile) compileFor(n *node) *codeblock {
 	return codeBlockOne(n, code)
 }
 
-func (me *cfile) declare(n *node) string {
-	if n.is != "variable" {
-		return me.eval(n).code()
-	}
-	if n.idata == nil {
-		return ""
-	}
-	code := ""
-	name := n.idata.name
-	v := me.getvar(name)
-	if v == nil {
-		malloc := true
-		useStack := false
-		if _, ok := n.attributes["no-malloc"]; ok {
-			malloc = false
-		}
-		if _, ok := n.attributes["stack"]; ok || n.data().onStack {
-			useStack = true
-			malloc = false
-		}
-		mutable := false
-		if _, ok := n.attributes["mutable"]; ok {
-			mutable = true
-		}
-		data := n.data()
-		newVar := me.hmfile.varInitFromData(data, name, mutable)
-		if useStack {
-			me.scope.variables[name] = newVar
-			code += fmtassignspace(data.typeSig())
-			code += name
-
-		} else if malloc {
-			me.scope.variables[name] = newVar
-			code += data.typeSigOf(name, mutable)
-
-		} else {
-			newVar.cName = data.module.varNameSpace(name)
-			me.scope.variables[name] = newVar
-			code += fmtassignspace(data.noMallocTypeSig())
-			code += newVar.cName
-		}
-	} else {
-		code += v.cName
-	}
-
-	return code
-}
-
-func (me *cfile) declareStatic(n *node) string {
-	left := n.has[0]
-	right := n.has[1]
-	right.attributes["no-malloc"] = "true"
-
-	declareCode := me.declare(left)
-	rightCode := me.eval(right)
-	setSign := me.maybeLet(rightCode.code(), right.attributes)
-
-	head := "extern " + declareCode
-	if setSign == "" {
-		head += rightCode.code()
-	}
-	head += ";\n"
-	me.headExternSection += head
-
-	if setSign == "" {
-		return declareCode + setSign + rightCode.code() + ";\n"
-	}
-	return declareCode + ";\n"
-}
-
 func (me *cfile) initStatic(n *node) string {
 	left := n.has[0]
 	right := n.has[1]
-	right.attributes["no-malloc"] = "true"
+	right.attributes["global"] = "true"
 
 	declareCode := me.declare(left)
 	rightCode := me.eval(right)

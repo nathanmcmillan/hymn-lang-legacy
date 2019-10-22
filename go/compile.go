@@ -187,9 +187,8 @@ func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
 	code := ""
 	if n.idata.module == me.hmfile {
 		v := me.getvar(n.idata.name)
-		vd := v.data()
 		code = v.cName
-		if hint != nil && hint.isptr && !vd.isptr {
+		if hint != nil && hint.isptr && !v.data().isptr {
 			code = "&" + code
 		}
 	} else {

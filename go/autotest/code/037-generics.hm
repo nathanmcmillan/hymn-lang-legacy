@@ -17,11 +17,8 @@ type node<t, w>
 main
   f = node<string, int>()
   
-  echo("---")
   f.a = [3]attribute
-  echo("---")
   f.a[1] = attribute()
-  echo("---")
   f.a[1].has = "a"
   echo(f.a[1].has)
   

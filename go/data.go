@@ -91,8 +91,8 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 
 	if checkIsPrimitive(typed) {
 		if typed == TokenString {
-			data.isptr = true
 			data.array = true
+			data.isptr = true
 			typed = TokenChar
 			data.memberType = me.typeToVarData(typed)
 		} else {
@@ -119,6 +119,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	data.array = checkIsArray(typed)
 	data.slice = checkIsSlice(typed)
 	if data.array || data.slice {
+		data.isptr = true
 		_, typed = typeOfArrayOrSlice(typed)
 		data.memberType = me.typeToVarData(typed)
 	}
@@ -160,6 +161,9 @@ func (me *varData) merge(hint *allocData) {
 	}
 	me.array = hint.array
 	me.slice = hint.slice
+	if me.array || me.slice {
+		me.isptr = true
+	}
 	me.heap = !hint.stack
 	if me.array {
 		member := me.copy()

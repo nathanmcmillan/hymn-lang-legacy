@@ -33,7 +33,7 @@ Learn more at https://hymn-lang.org
 * threads / async await
 * macros / def
 
-### plan
+### timeline
 * temporary variables for complex initializing
 * always require parameters for classes
 * class functions with generics
@@ -41,6 +41,10 @@ Learn more at https://hymn-lang.org
 * file input / output
 * bootstrapping compiler from golang to hymn
 * JSON format tokens and parse tree
+
+### testing
+* need negative tests
+* need regex matching C code
 
 ### ideas
 * "transfer" keyword replaces "return" when giving a strong pointer is desired

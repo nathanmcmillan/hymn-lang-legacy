@@ -75,10 +75,10 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 		return me.compileCall(n)
 	}
 	if op == "array" {
-		return me.allocArray(n)
+		return me.compileAllocArray(n)
 	}
 	if op == "slice" {
-		return me.allocSlice(n)
+		return me.compileAllocSlice(n)
 	}
 	if op == "return" {
 		in := me.eval(n.has[0])

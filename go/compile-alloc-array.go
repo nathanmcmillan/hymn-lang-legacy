@@ -1,6 +1,6 @@
 package main
 
-func (me *cfile) allocArray(n *node) *codeblock {
+func (me *cfile) compileAllocArray(n *node) *codeblock {
 	size := ""
 	parenthesis := false
 	if len(n.has) > 0 {
@@ -15,7 +15,7 @@ func (me *cfile) allocArray(n *node) *codeblock {
 	if _, ok := n.attributes["global"]; ok {
 		return codeBlockOne(n, "["+size+"]")
 	}
-	memberType := n.data().typeSig()
+	memberType := n.data().memberType.typeSig()
 	code := "malloc("
 	if parenthesis {
 		code += "("
@@ -28,7 +28,7 @@ func (me *cfile) allocArray(n *node) *codeblock {
 	return codeBlockOne(n, code)
 }
 
-func (me *cfile) allocSlice(n *node) *codeblock {
+func (me *cfile) compileAllocSlice(n *node) *codeblock {
 	size := "0"
 	if len(n.has) > 0 {
 		size = me.eval(n.has[0]).code()

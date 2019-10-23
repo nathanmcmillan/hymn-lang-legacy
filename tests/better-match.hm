@@ -14,8 +14,8 @@ main
 			echo(v.x)
 		none => pass
 
-	(* if a.nest is some(t)
-		echo(t) *)
+	if a.nest is some(t)
+		echo(t)
 
 	(* is a.nest some(t)
 		echo(t) *)

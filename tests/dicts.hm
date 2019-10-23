@@ -34,10 +34,10 @@ dict.set(key k, value v)
 	bin = self.hash_element(key)
 	mutable next = self.table[bin]
 	mutable last = none<dict_element<v>>
-	for next is some and key != next.key
+	for next is some(n) and key != n.key
 		last = next
 		next = next.next
-	if next is some : if key == next.key : return
+	if next is some(n) : if key == n.key : return
 	element = dict_element<v>(hash:bin, value:value)
 	if next == self.table[bin]
 		element.next = next

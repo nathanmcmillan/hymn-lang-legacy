@@ -15,13 +15,4 @@ main
 		none => pass
 
 	if a.nest is some(t)
-		echo(t)
-
-	(* is a.nest some(t)
-		echo(t) *)
-
-	(* match a.nest
-		some =>
-			a.nest.x = 5.1
-			echo(a.nest.x)
-		none => _ *)
+		echo("foo")

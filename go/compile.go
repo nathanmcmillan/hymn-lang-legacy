@@ -216,6 +216,55 @@ func (me *cfile) compileNone(n *node) *codeblock {
 	return codeBlockOne(n, code)
 }
 
+func (me *cfile) compileIf(n *node) *codeblock {
+	hsize := len(n.has)
+	code := ""
+	code += me.walrusIf(n)
+	code += "if (" + me.eval(n.has[0]).code() + ") {\n"
+	ix := 1
+	for ix < hsize && n.has[ix].is == "variable" {
+		temp := n.has[ix]
+		tempname := temp.idata.name
+		tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
+		me.scope.variables[tempname] = tempv
+		ref := me.eval(n.has[ix].has[0]).code()
+		code += fmc(me.depth + 1)
+		code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
+		ix++
+	}
+	thenCode := me.eval(n.has[ix]).code()
+	code += me.maybeFmc(thenCode, me.depth+1) + thenCode + me.maybeColon(thenCode)
+	code += "\n" + fmc(me.depth) + "}"
+	ix++
+	for ix < hsize && n.has[ix].is == "elif" {
+		elif := n.has[ix]
+		code += " else if (" + me.eval(elif.has[0]).code() + ") {\n"
+		elsize := len(elif.has)
+		ixo := 1
+		for ixo < elsize && elif.has[ixo].is == "variable" {
+			temp := elif.has[ixo]
+			tempname := temp.idata.name
+			tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
+			me.scope.variables[tempname] = tempv
+			ref := me.eval(elif.has[ixo].has[0]).code()
+			code += fmc(me.depth + 1)
+			code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
+			ixo++
+		}
+		thenBlock := me.eval(elif.has[ixo]).code()
+		code += me.maybeFmc(thenBlock, me.depth+1) + thenBlock + me.maybeColon(thenBlock)
+		code += "\n" + fmc(me.depth) + "}"
+		ix++
+	}
+	if ix >= 2 && ix < hsize {
+		code += " else {\n"
+		c := me.eval(n.has[ix]).code()
+		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
+		code += "\n" + fmc(me.depth) + "}"
+	}
+	return codeBlockOne(n, code)
+}
+
 func (me *cfile) compileIs(n *node) *codeblock {
 	code := ""
 	code += me.walrusMatch(n)
@@ -417,31 +466,6 @@ func (me *cfile) compileAndOr(n *node) *codeblock {
 	code += me.eval(n.has[1]).code()
 	if paren {
 		code += ")"
-	}
-	return codeBlockOne(n, code)
-}
-
-func (me *cfile) compileIf(n *node) *codeblock {
-	hsize := len(n.has)
-	code := ""
-	code += me.walrusIf(n)
-	code += "if (" + me.eval(n.has[0]).code() + ") {\n"
-	c := me.eval(n.has[1]).code()
-	code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
-	code += "\n" + fmc(me.depth) + "}"
-	ix := 2
-	for ix < hsize && n.has[ix].is == "elif" {
-		code += " else if (" + me.eval(n.has[ix].has[0]).code() + ") {\n"
-		c := me.eval(n.has[ix].has[1]).code()
-		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
-		code += "\n" + fmc(me.depth) + "}"
-		ix++
-	}
-	if ix >= 2 && ix < hsize {
-		code += " else {\n"
-		c := me.eval(n.has[ix]).code()
-		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
-		code += "\n" + fmc(me.depth) + "}"
 	}
 	return codeBlockOne(n, code)
 }

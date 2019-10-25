@@ -24,6 +24,7 @@ type hmfile struct {
 	varPrefix       string
 	needInit        bool
 	assignmentStack []*node
+	enumIsStack     []*variableNode
 }
 
 func (program *program) hymnFileInit(name string) *hmfile {
@@ -45,6 +46,7 @@ func (program *program) hymnFileInit(name string) *hmfile {
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
 	hm.assignmentStack = make([]*node, 0)
+	hm.enumIsStack = make([]*variableNode, 0)
 	hm.prefixes(name)
 	return hm
 }

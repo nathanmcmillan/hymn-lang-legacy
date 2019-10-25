@@ -7,6 +7,11 @@ type variable struct {
 	_vdata  *varData
 }
 
+type variableNode struct {
+	n *node
+	v *variable
+}
+
 func (me *variable) data() *varData {
 	return me._vdata
 }

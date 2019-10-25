@@ -30,6 +30,10 @@ func (me *node) copy() *node {
 	return n
 }
 
+func (me *node) prepend(leaf *node) {
+	me.has = append([]*node{leaf}, me.has...)
+}
+
 func (me *node) push(leaf *node) {
 	me.has = append(me.has, leaf)
 }

@@ -2,6 +2,14 @@ type vec
 	x    float
 	nest maybe<vec>
 
+enum dog
+  bark
+  woof
+
+enum cat
+  meow(int)
+  hiss(float)
+
 main
 	a = vec()
 	a.x = 3.1
@@ -15,4 +23,19 @@ main
 		none => pass
 
 	if a.nest is some(t)
-		echo("foo")
+		echo("foo " + to_str(t.x))
+
+	if a.nest is none
+		echo("no zoob")
+	elif a.nest is some(z)
+		echo("foob " + to_str(z.x))
+	elif a.nest is some(w)
+		echo("not possible " + to_str(w.x))
+
+	d = dog.bark
+	if d is bark
+		echo("woof!")
+
+	g = cat.meow(288)
+	if g is meow(e)
+		echo("meow! " + to_str(g.0))

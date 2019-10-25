@@ -15,13 +15,14 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				me.eat("id")
 				me.eat(")")
 				tempd := me.hmfile.varInitFromData(left.data().some, temp, false)
-				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}
 				tempv.idata.module = me.hmfile
-				tempv.idata.name = temp
+				tempv.idata.name = tempd.name
 				tempv.copyData(tempd.data())
-				right.push(tempv)
+				tempv.push(left)
+				varnode := &variableNode{tempv, tempd}
+				me.hmfile.enumIsStack = append(me.hmfile.enumIsStack, varnode)
 			}
 		} else if me.token.is == "none" {
 			right = nodeInit("none")

@@ -355,55 +355,6 @@ func (me *parser) forexpr() *node {
 	return n
 }
 
-func (me *parser) ifexpr() *node {
-	me.eat("if")
-	n := nodeInit("if")
-	n.push(me.calcBool())
-	if me.token.is == ":" {
-		me.eat(":")
-		exp := me.expression()
-		block := nodeInit("block")
-		block.push(exp)
-		n.push(block)
-		me.eat("line")
-	} else {
-		me.eat("line")
-		n.push(me.block())
-	}
-	for me.token.is == "elif" {
-		me.eat("elif")
-		other := nodeInit("elif")
-		other.push(me.calcBool())
-		if me.token.is == ":" {
-			me.eat(":")
-			exp := me.expression()
-			block := nodeInit("block")
-			block.push(exp)
-			n.push(block)
-			me.eat("line")
-		} else {
-			me.eat("line")
-			other.push(me.block())
-		}
-		n.push(other)
-	}
-	if me.token.is == "else" {
-		me.eat("else")
-		if me.token.is == ":" {
-			me.eat(":")
-			exp := me.expression()
-			block := nodeInit("block")
-			block.push(exp)
-			n.push(block)
-			me.eat("line")
-		} else {
-			me.eat("line")
-			n.push(me.block())
-		}
-	}
-	return n
-}
-
 func (me *parser) comparison(left *node, op string) *node {
 	fmt.Println("> comparison " + left.string(0) + "")
 	var opType string

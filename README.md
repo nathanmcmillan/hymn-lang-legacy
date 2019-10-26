@@ -22,9 +22,9 @@ Learn more at https://hymn-lang.org
 * walrus operator
 * stack variables
 * function pointers
+* slices and arrays
 
 ### todo
-* slices
 * correct scoping for functions
 * references to primitives
 * free heap space
@@ -34,8 +34,6 @@ Learn more at https://hymn-lang.org
 * macros / def
 
 ### timeline
-* temporary variables for complex initializing
-* always require parameters for classes
 * class functions with generics
 * hash maps
 * file input / output

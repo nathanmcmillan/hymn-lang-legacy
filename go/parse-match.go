@@ -8,10 +8,9 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 		if me.token.is == "some" {
 			right = nodeInit("some")
 			me.eat("some")
-			temp := ""
 			if me.token.is == "(" {
 				me.eat("(")
-				temp = me.token.value
+				temp := me.token.value
 				me.eat("id")
 				me.eat(")")
 				tempd := me.hmfile.varInitFromData(left.data().some, temp, false)
@@ -41,6 +40,21 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				me.eat("id")
 				right = nodeInit("match-enum")
 				right.copyData(me.hmfile.typeToVarData(baseEnum.name + "." + un.name))
+				if me.token.is == "(" {
+					me.eat("(")
+					temp := me.token.value
+					me.eat("id")
+					me.eat(")")
+					tempd := me.hmfile.varInitFromData(right.data(), temp, false)
+					tempv := nodeInit("variable")
+					tempv.idata = &idData{}
+					tempv.idata.module = me.hmfile
+					tempv.idata.name = tempd.name
+					tempv.copyData(tempd.data())
+					tempv.push(left)
+					varnode := &variableNode{tempv, tempd}
+					me.hmfile.enumIsStack = append(me.hmfile.enumIsStack, varnode)
+				}
 			} else {
 				right = me.calc(getInfixPrecedence(op))
 			}

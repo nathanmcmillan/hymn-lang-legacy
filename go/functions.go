@@ -145,7 +145,6 @@ func (me *parser) defineFileFunction() {
 }
 
 func (me *parser) defineFunction(name string, self *class) *function {
-	fmt.Println("FUNCTION ::", name)
 	fn := funcInit(me.hmfile, name)
 	if self != nil {
 		ref := me.hmfile.fnArgInit(self.name, "self", false)

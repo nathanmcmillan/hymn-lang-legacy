@@ -24,21 +24,19 @@ Learn more at https://hymn-lang.org
 * function pointers
 * slices and arrays
 
-### todo
-* correct scoping for functions
-* references to primitives
-* free heap space
-* borrow / reference checker
-* interfaces (maybe?)
-* threads / async await
-* macros / def
-
 ### timeline
 * class functions with generics
 * hash maps
 * file input / output
 * bootstrapping compiler from golang to hymn
 * JSON format tokens and parse tree
+* correct scoping for functions
+* references to primitives
+* borrow checker
+* free heap space
+* interfaces (maybe?)
+* threads / async await
+* macros / def
 
 ### testing
 * need negative tests

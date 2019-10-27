@@ -267,7 +267,6 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			gtypes[gk] = gv.full
 		}
 		lazy := typed + "<" + strings.Join(gtypes, ",") + ">"
-		fmt.Println("LAZY TYPE :: ", lazy)
 		if _, ok := me.hmfile.classes[lazy]; !ok {
 			me.defineClassImplGeneric(base, lazy, gtypes)
 		}
@@ -304,7 +303,6 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 			} else {
 				typed = assign.full
 			}
-			fmt.Println("LAZY CLASS ::", typed)
 		}
 	}
 	if n != nil {

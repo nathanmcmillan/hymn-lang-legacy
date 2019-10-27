@@ -195,4 +195,5 @@ type allocData struct {
 	stack bool
 	array bool
 	slice bool
+	size  int
 }

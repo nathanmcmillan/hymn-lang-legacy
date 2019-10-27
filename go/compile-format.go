@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 func fmtptr(ptr string) string {
 	if strings.HasSuffix(ptr, "*") {
@@ -32,10 +34,19 @@ func (me *cfile) maybeColon(code string) string {
 		return ""
 	}
 	last := code[size-1]
-	if last == '}' || last == ':' || last == ';' {
+	if last == '}' || last == ':' || last == ';' || last == '\n' {
 		return ""
 	}
 	return ";"
+}
+
+func (me *cfile) maybeNewLine(code string) string {
+	size := len(code)
+	last := code[size-1]
+	if last == '\n' {
+		return ""
+	}
+	return "\n"
 }
 
 func (me *cfile) maybeFmc(code string, depth int) string {

@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strconv"
+)
+
 func prefixSign(me *parser, op string) *node {
 	node := nodeInit(getPrefixName(op))
 	me.eat(op)
@@ -102,6 +106,7 @@ func prefixArray(me *parser, op string) *node {
 		if size.getType() != TokenInt {
 			panic(me.fail() + "array size must be integer")
 		}
+		alloc.size, _ = strconv.Atoi(size.value)
 		node.push(size)
 	}
 	me.eat("]")

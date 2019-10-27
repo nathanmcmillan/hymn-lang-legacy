@@ -13,9 +13,11 @@ func (me *cfile) compileFunction(name string, fn *function) {
 		me.scope.variables[arg.name] = arg.variable
 	}
 	for _, expr := range expressions {
-		c := me.eval(expr)
-		if c.code() != "" {
-			block += fmc(me.depth) + c.code() + me.maybeColon(c.code()) + "\n"
+		e := me.eval(expr)
+		for _, c := range e.flatten() {
+			if c.code != "" {
+				block += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
+			}
 		}
 	}
 	me.popScope()
@@ -41,7 +43,7 @@ func (me *cfile) compileMain(fn *function) {
 		panic("main can not have arguments")
 	}
 	expressions := fn.expressions
-	codeblock := ""
+	block := ""
 	returns := false
 	me.pushScope()
 	me.depth = 1
@@ -49,27 +51,31 @@ func (me *cfile) compileMain(fn *function) {
 	for x := len(list) - 1; x >= 0; x-- {
 		file := list[x]
 		if file.needInit {
-			codeblock += fmc(me.depth) + file.funcNameSpace("init") + "();\n"
+			block += fmc(me.depth) + file.funcNameSpace("init") + "();\n"
 		}
 	}
 	for _, expr := range expressions {
-		c := me.eval(expr)
-		if c.is() == "return" {
-			if c.getType() != TokenInt {
+		e := me.eval(expr)
+		if e.is() == "return" {
+			if e.getType() != TokenInt {
 				panic("main must return int")
 			} else {
 				returns = true
 			}
 		}
-		codeblock += fmc(me.depth) + c.code() + me.maybeColon(c.code()) + "\n"
+		for _, c := range e.flatten() {
+			if c.code != "" {
+				block += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
+			}
+		}
 	}
 	if !returns {
-		codeblock += fmc(me.depth) + "return 0;\n"
+		block += fmc(me.depth) + "return 0;\n"
 	}
 	me.popScope()
 	code := ""
 	code += "int main() {\n"
-	code += codeblock
+	code += block
 	code += "}\n"
 
 	me.headFuncSection += "int main();\n"

@@ -80,6 +80,9 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	if op == "slice" {
 		return me.compileAllocSlice(n)
 	}
+	if op == "array-to-slice" {
+		return me.compileArrayToSlice(n)
+	}
 	if op == "return" {
 		in := me.eval(n.has[0])
 		code := ""

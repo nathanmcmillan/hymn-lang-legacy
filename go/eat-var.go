@@ -107,19 +107,28 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head.copyTypeFromVar(sv)
 				head.is = "root-variable"
 			}
-			if !head.data().checkIsArrayOrSlice() {
-				panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
-			}
 			me.eat("[")
-			member := nodeInit("array-member")
-			index := me.calc(0)
-			fmt.Println(head.string(0))
-			fmt.Println(index.string(0))
-			fmt.Println(":: ------------------ ::")
-			member.copyData(head.data().memberType)
-			member.push(index)
-			member.push(head)
-			head = member
+			if me.token.is == ":" {
+				if !head.data().array {
+					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
+				}
+				me.eat(":")
+				member := nodeInit("array-to-slice")
+				member.copyData(head.data())
+				member.data().arrayToSlice()
+				member.push(head)
+				head = member
+			} else {
+				if !head.data().checkIsArrayOrSlice() {
+					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
+				}
+				member := nodeInit("array-member")
+				index := me.calc(0)
+				member.copyData(head.data().memberType)
+				member.push(index)
+				member.push(head)
+				head = member
+			}
 			me.eat("]")
 		} else if me.token.is == "(" {
 			var sig *fnSig

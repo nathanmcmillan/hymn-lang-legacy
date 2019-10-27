@@ -25,13 +25,15 @@ test_b
 	echo("---")
 
 test_c
-	(* mutable x = []foo
+	mutable x = []foo
 	x = push(x, foo(1.0, 2.0))
 	x = push(x, foo(3.0, 4.0))
 	echo(len(x))
 	echo(x[0].x)
-	echo(x[1].y) *)
-	pass
+	echo(x[1].y)
+
+	mutable d = []foo
+	push(d, foo(1.0, 2.0))
 
 test_d
 	plain = [3]foo

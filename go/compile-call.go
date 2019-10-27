@@ -39,8 +39,5 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		code += ")"
 		cb.current = codeNode(node, code)
 	}
-	if cb.pre != nil {
-		cb.current.code = fmc(me.depth) + cb.current.code
-	}
 	return cb
 }

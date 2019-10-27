@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -165,15 +165,33 @@ func (me *varData) merge(hint *allocData) {
 		me.isptr = true
 	}
 	me.heap = !hint.stack
-	if me.array {
+	if me.array || me.slice {
 		member := me.copy()
 		member.array = false
 		member.slice = false
 		me.memberType = member
-		// TODO size loss
-		me.full = "[]" + member.full
-		me.typed = "[]" + member.typed
+		if me.array {
+			size := "[" + strconv.Itoa(hint.size) + "]"
+			me.full = size + member.full
+			me.typed = size + member.typed
+		} else {
+			me.full = "[]" + member.full
+			me.typed = "[]" + member.typed
+		}
 	}
+}
+
+func (me *varData) sizeOfArray() string {
+	i := strings.Index(me.full, "]")
+	return me.full[1:i]
+}
+
+func (me *varData) arrayToSlice() {
+	me.array = false
+	me.slice = true
+	index := strings.Index(me.full, "]")
+	me.full = "[]" + me.full[index+1:]
+	me.typed = me.full
 }
 
 func (me *varData) checkIsArray() bool {
@@ -290,7 +308,7 @@ func (me *varData) notEqual(other *varData) bool {
 }
 
 func (me *varData) postfixConst() bool {
-	if me.array || me.slice {
+	if me.checkIsArrayOrSlice() {
 		return true
 	}
 	if me.maybe {
@@ -411,7 +429,6 @@ func (me *varData) replaceAny(any map[string]string) {
 	f := me.full
 
 	if m, ok := any[f]; ok {
-		fmt.Println("IMPL FUNCTION REMAP NODE ::", f, "|", m)
 		me.set(me.module.typeToVarData(m))
 	}
 

@@ -30,7 +30,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		}
 		p := param.data()
 		if p.checkIsArray() {
-			panic("TODO SIZE OF ARRAY")
+			return codeBlockMerge(n, p.sizeOfArray(), param.pre)
 		} else if p.checkIsSlice() {
 			return codeBlockMerge(n, "hmlib_slice_len_int("+param.pop()+")", param.pre)
 		}

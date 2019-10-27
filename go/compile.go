@@ -152,7 +152,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 				vr = data.module.getStatic(head.idata.name)
 				cname = data.module.varNameSpace(head.idata.name)
 			}
-			if data.array {
+			if data.checkIsArrayOrSlice() {
 				code = cname + code
 			} else {
 				code = cname + data.memPtr() + code
@@ -535,10 +535,10 @@ func (me *cfile) compileAssign(n *node) string {
 	declare := me.declare(left)
 	value := me.eval(right)
 
-	pre := value.preCode()
-	post := value.pop()
+	preCode := value.preCode()
+	postCode := value.pop()
 
-	code += pre + me.maybeFmc(pre, me.depth) + declare + me.maybeLet(post, right.attributes) + post
+	code += preCode + me.maybeFmc(preCode, me.depth) + declare + me.maybeLet(postCode, right.attributes) + postCode
 	if paren {
 		code += ")"
 	}

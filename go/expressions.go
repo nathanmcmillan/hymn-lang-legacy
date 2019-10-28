@@ -220,7 +220,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
-		if left.data().notEqual(right.data()) {
+		if right.data().full != "?" && left.data().notEqual(right.data()) {
 			if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {

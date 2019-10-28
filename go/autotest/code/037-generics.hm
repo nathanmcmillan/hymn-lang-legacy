@@ -17,7 +17,7 @@ type node<t, w>
 main
   f = node<string, int>()
   
-  f.a = [3]attribute
+  f.a = [3:]attribute
   f.a[1] = attribute()
   f.a[1].has = "a"
   echo(f.a[1].has)
@@ -29,7 +29,7 @@ main
   echo(f.b.x.has)
   echo(f.b.y)
 
-  f.c = [3]tuple
+  f.c = [3:]tuple
   f.c[1] = tuple()
   f.c[1].x = 7
   f.c[1].y = tuple()
@@ -39,7 +39,7 @@ main
   echo(f.c[1].y.x)
   echo(f.c[1].y.y)
 
-  f.d = [3]tuple
+  f.d = [3:]tuple
   f.d[1] = tuple()
   f.d[1].x = tuple()
   f.d[1].x.x = 13
@@ -54,7 +54,7 @@ main
   f.e.x.x = "c"
   echo(f.e.x.x)
 
-  f.f = [3]string
+  f.f = [3:]string
   f.f[1] = "d"
   echo(f.f[1])
 

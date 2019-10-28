@@ -100,11 +100,19 @@ func prefixArray(me *parser, op string) *node {
 		alloc.slice = true
 		node = nodeInit("slice")
 	} else {
-		alloc.array = true
-		node = nodeInit("array")
 		size := me.calc(0)
-		if size.getType() != TokenInt {
-			panic(me.fail() + "array size must be integer")
+		if me.token.is == ":" {
+			me.eat(":")
+			alloc.slice = true
+			node = nodeInit("slice")
+			// TODO capacity
+			// TODO allow hinting to not need this for member variables
+		} else {
+			if size.getType() != TokenInt {
+				panic(me.fail() + "array size must be integer")
+			}
+			alloc.array = true
+			node = nodeInit("array")
 		}
 		alloc.size, _ = strconv.Atoi(size.value)
 		node.push(size)

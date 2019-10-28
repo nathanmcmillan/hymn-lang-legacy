@@ -3,6 +3,10 @@ type foo
 
 main
   f = foo()
-  f.x = [3]int
+  f.x = [3:]int
   f.x[0] = 88
+  f.x[1] = 99
+  f.x[2] = 121
   echo(f.x[0])
+  echo(f.x[1])
+  echo(f.x[2])

@@ -39,7 +39,7 @@ main
 	echo(f.nest.has)
 
 	d = array<vec>()
-	d.data = [5]vec
+	d.data = [5:]vec
 	d.size = 5
 	d.data[0] = vec()
 	d.data[0].x = 64.8

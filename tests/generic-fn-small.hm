@@ -1,0 +1,16 @@
+type foo<k, v>
+	size k
+	name v
+
+foo.set_name(name v)
+	self.name = name
+
+foo.get_size() k
+	return self.size
+
+main
+	f = foo(
+		size:22.33
+		name:"zoob")
+	echo(f.size)
+	echo(f.name)

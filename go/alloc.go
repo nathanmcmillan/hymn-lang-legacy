@@ -296,12 +296,14 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 			}
 		} else {
 			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
-			if assign.maybe {
-				typed = assign.some.full
-			} else if assign.checkIsArrayOrSlice() {
-				typed = assign.memberType.full
-			} else {
-				typed = assign.full
+			if assign.full != "?" {
+				if assign.maybe {
+					typed = assign.some.full
+				} else if assign.checkIsArrayOrSlice() {
+					typed = assign.memberType.full
+				} else {
+					typed = assign.full
+				}
 			}
 		}
 	}

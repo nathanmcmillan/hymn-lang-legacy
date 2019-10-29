@@ -8,7 +8,9 @@ type funcArg struct {
 func (me *funcArg) copy() *funcArg {
 	a := &funcArg{}
 	a.variable = me.variable.copy()
-	a.defaultNode = me.defaultNode.copy()
+	if me.defaultNode != nil {
+		a.defaultNode = me.defaultNode.copy()
+	}
 	return a
 }
 

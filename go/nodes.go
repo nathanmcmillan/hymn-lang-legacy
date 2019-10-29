@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type node struct {
 	is         string
 	value      string
@@ -21,12 +19,26 @@ func nodeInit(is string) *node {
 }
 
 func (me *node) copy() *node {
-	fmt.Println("TODO :: node copy")
 	n := &node{}
 	n.is = me.is
 	n.value = me.value
-	// n.idata = me.idata.copy()
-	n.fn = me.fn.copy()
+	if me.idata != nil {
+		n.idata = me.idata.copy()
+	}
+	if me.fn != nil {
+		n.fn = me.fn.copy()
+	}
+	if me.data() != nil {
+		n._vdata = me.data().copy()
+	}
+	n.attributes = make(map[string]string)
+	for k, v := range me.attributes {
+		n.attributes[k] = v
+	}
+	n.has = make([]*node, len(me.has))
+	for i, h := range me.has {
+		n.has[i] = h.copy()
+	}
 	return n
 }
 

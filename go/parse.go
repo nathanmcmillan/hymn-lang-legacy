@@ -71,7 +71,7 @@ func (me *hmfile) parse(out, path string) {
 
 	treeFile.Truncate(0)
 	treeFile.Seek(0, 0)
-	treeFile.WriteString(me.dump())
+	treeFile.WriteString(me.string())
 	treeFile.WriteString("\n")
 }
 

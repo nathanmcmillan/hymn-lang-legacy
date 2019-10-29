@@ -99,7 +99,7 @@ func (me *codeblock) string(lv int) string {
 	return s
 }
 
-func (me *class) dump(lv int) string {
+func (me *class) string(lv int) string {
 	s := fmc(lv) + me.name + "[\n"
 	lv++
 	for _, cls := range me.variableOrder {
@@ -112,7 +112,7 @@ func (me *class) dump(lv int) string {
 	return s
 }
 
-func (me *enum) dump(lv int) string {
+func (me *enum) string(lv int) string {
 	s := fmc(lv) + me.name + "[\n"
 	lv++
 	for _, unionType := range me.typesOrder {
@@ -134,7 +134,7 @@ func (me *enum) dump(lv int) string {
 	return s
 }
 
-func (me *function) dump(lv int) string {
+func (me *function) string(lv int) string {
 	s := fmc(lv)
 	if me.forClass != nil {
 		s += me.nameOfClassFunc()
@@ -166,7 +166,7 @@ func (me *function) dump(lv int) string {
 	return s
 }
 
-func (me *hmfile) dump() string {
+func (me *hmfile) string() string {
 	s := ""
 	lv := 0
 	if len(me.defineOrder) > 0 {
@@ -178,10 +178,10 @@ func (me *hmfile) dump() string {
 			typed := def[1]
 			if typed == "type" {
 				cl := me.classes[name]
-				s += cl.dump(lv)
+				s += cl.string(lv)
 			} else if typed == "enum" {
 				en := me.enums[name]
-				s += en.dump(lv)
+				s += en.string(lv)
 			}
 		}
 		lv--
@@ -200,7 +200,7 @@ func (me *hmfile) dump() string {
 	lv++
 	for _, name := range me.functionOrder {
 		fn := me.functions[name]
-		s += fn.dump(lv)
+		s += fn.string(lv)
 	}
 	lv--
 	s += fmc(lv) + "]\n"

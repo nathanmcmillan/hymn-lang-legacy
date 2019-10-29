@@ -61,6 +61,10 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	for _, mem := range memberMap {
 		mem.update(me.hmfile, me.genericsReplacer(mem.data().full, gmapper))
 	}
+
+	for _, fn := range base.functions {
+		me.remapClassFunctionImpl(classDef, fn)
+	}
 }
 
 func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {

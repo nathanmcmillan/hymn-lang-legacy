@@ -33,9 +33,13 @@ func (me *union) copy() *union {
 	u := &union{}
 	u.name = me.name
 	u.types = make([]*varData, len(me.types))
+	for i, t := range me.types {
+		u.types[i] = t.copy()
+	}
 	u.generics = make([]string, len(me.generics))
-	copy(u.types, me.types)
-	copy(u.generics, me.generics)
+	for i, g := range me.generics {
+		u.generics[i] = g
+	}
 	return u
 }
 

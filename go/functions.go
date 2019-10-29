@@ -27,11 +27,11 @@ func (me *function) copy() *function {
 	f.module = me.module
 	f.name = me.name
 	f.args = make([]*funcArg, len(me.args))
-	f.argDict = me.argDict
-	f.expressions = make([]*node, len(me.expressions))
 	for i, a := range me.args {
 		f.args[i] = a.copy()
 	}
+	f.argDict = me.argDict
+	f.expressions = make([]*node, len(me.expressions))
 	for i, e := range me.expressions {
 		f.expressions[i] = e.copy()
 	}
@@ -72,7 +72,7 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	module.functions[name] = fn
 	module.types[name] = ""
 	if me.file != nil {
-		me.file.WriteString(fn.dump(0))
+		me.file.WriteString(fn.string(0))
 	}
 }
 
@@ -86,7 +86,6 @@ func (me *parser) remapNodeRecursive(impl *class, n *node) {
 }
 
 func (me *parser) remapClassFunctionImpl(impl *class, original *function) {
-	// if generic defines another new generic, need regular code path to define the derivative generic
 	fmt.Println("IMPL FUNCTION ::", impl.name+"."+original.name)
 	fn := original.copy()
 	fn.forClass = impl

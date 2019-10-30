@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -18,8 +17,6 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
 }
 
 func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
-	fmt.Println("BUILDING IMPL GENERIC :: \""+typed+"\" WITH MAP =>", gmapper)
-
 	base := typed[0:strings.Index(typed, "<")]
 
 	var baseEnum *enum
@@ -32,7 +29,6 @@ func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) stri
 
 	order := me.mapGenerics(typed, gmapper)
 	impl := base + "<" + strings.Join(order, ",") + ">"
-	fmt.Println("FINAL IMPL GENERIC :: \"" + impl + "\"")
 
 	if okc {
 		if _, ok := me.hmfile.classes[impl]; !ok {
@@ -119,7 +115,6 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 		}
 	}
 
-	fmt.Println("MAP GENERICS :: \"" + strings.Join(order, "|") + "\"")
 	return order
 }
 
@@ -132,7 +127,6 @@ func (me *parser) mapAnyImpl(mem string, gmapper map[string]string) string {
 }
 
 func (me *parser) genericsReplacer(typed string, gmapper map[string]string) string {
-	fmt.Println("REPLACE :: \""+typed+"\" =>", gmapper)
 	if checkIsArrayOrSlice(typed) {
 		size, typeOfMem := typeOfArrayOrSlice(typed)
 		if checkHasGeneric(typed) {

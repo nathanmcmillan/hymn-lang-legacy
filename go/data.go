@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -432,21 +433,25 @@ func (me *varData) getFunction(name string) (*function, bool) {
 	return f, ok
 }
 
-func (me *varData) replaceAny(any map[string]string) {
+func (me *varData) genericReplace(any map[string]string) {
 	f := me.full
+
+	fmt.Println("DATA TYPE REPLACE ::", me.string())
 
 	if m, ok := any[f]; ok {
 		me.set(me.module.typeToVarData(m))
 	}
 
-	if me.array || me.slice {
+	if me.checkIsArrayOrSlice() {
 	}
 
 	if me.maybe {
-
 	}
 
 	if me.none {
+	}
 
+	if me.fn != nil {
+		fmt.Println("REPLACE FUNCTION DATA TYPE ::", me.fn.print())
 	}
 }

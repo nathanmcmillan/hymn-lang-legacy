@@ -13,4 +13,7 @@ main
 		size:22.33
 		name:"zoob")
 	echo(f.size)
+	echo(f.get_size())
+	echo(f.name)
+	f.set_name("goob")
 	echo(f.name)

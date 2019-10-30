@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -54,7 +53,6 @@ func (me *parser) eatvar(from *hmfile) *node {
 				} else {
 					funcVar, ok := data.getFunction(nameOfClassFunc(rootClass.name, dotName))
 					if ok {
-						fmt.Println("class function \"" + dotName + "\" returns \"" + funcVar.typed.full + "\"")
 						member = me.callClassFunction(data.module, head, rootClass, funcVar)
 					} else {
 						panic(me.fail() + "class \"" + rootClass.name + "\" does not have variable or function \"" + dotName + "\"")

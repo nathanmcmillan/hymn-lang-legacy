@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type function struct {
 	name        string
 	module      *hmfile
@@ -35,6 +33,7 @@ func (me *function) copy() *function {
 	for i, e := range me.expressions {
 		f.expressions[i] = e.copy()
 	}
+	f.typed = me.typed.copy()
 	return f
 }
 
@@ -78,7 +77,7 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 
 func (me *parser) remapNodeRecursive(impl *class, n *node) {
 	if n.data() != nil {
-		n.data().replaceAny(impl.gmapper)
+		n.data().genericReplace(impl.gmapper)
 	}
 	for _, h := range n.has {
 		me.remapNodeRecursive(impl, h)
@@ -86,29 +85,27 @@ func (me *parser) remapNodeRecursive(impl *class, n *node) {
 }
 
 func (me *parser) remapClassFunctionImpl(impl *class, original *function) {
-	fmt.Println("IMPL FUNCTION ::", impl.name+"."+original.name)
 	fn := original.copy()
 	fn.forClass = impl
+	for i, a := range fn.args {
+		if i == 0 {
+			fn.args[0] = me.hmfile.fnArgInit(impl.name, "self", false)
+		} else {
+			a.data().genericReplace(impl.gmapper)
+		}
+	}
+	fn.typed.genericReplace(impl.gmapper)
 	for _, e := range fn.expressions {
 		me.remapNodeRecursive(impl, e)
-		fmt.Println(e.string(0))
 	}
 	impl.functions[fn.name] = fn
-	fmt.Println("IMPL FUNCTION GLOBAL NAME ::", fn.nameOfClassFunc())
 	me.pushFunction(fn.nameOfClassFunc(), me.hmfile, fn)
-
 }
 
-func (me *parser) defineClassFunction(impl *class) {
+func (me *parser) defineClassFunction() {
 	module := me.hmfile
 	className := me.token.value
-	var class *class
-	if impl == nil {
-		class = module.classes[className]
-	} else {
-		fmt.Println("REVAL IMPL ::", className, "->", impl.name)
-		class = module.classes[impl.name]
-	}
+	class := module.classes[className]
 	me.eat("id")
 	me.eat(".")
 	funcName := me.token.value
@@ -120,7 +117,6 @@ func (me *parser) defineClassFunction(impl *class) {
 	if _, ok := class.variables[funcName]; ok {
 		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
 	}
-	fmt.Println("CLASS FUNCTION ::", class.name+"."+funcName)
 	fn := me.defineFunction(funcName, class)
 	fn.forClass = class
 	class.functions[funcName] = fn
@@ -197,11 +193,6 @@ func (me *parser) defineFunction(name string, self *class) *function {
 	}
 	if me.token.is != "line" {
 		fn.typed = me.declareType(true)
-		if self != nil {
-			if _, ok := self.genericsDict[fn.typed.full]; ok {
-				fmt.Println("CLASS FUNCTION RETURN TYPE IS GENERIC ::", fn.typed.full)
-			}
-		}
 	} else {
 		fn.typed = me.hmfile.typeToVarData("void")
 	}

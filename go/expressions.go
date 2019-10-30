@@ -20,7 +20,7 @@ func (me *parser) fileExpression() {
 	} else if op == "id" {
 		name := token.value
 		if _, ok := me.hmfile.classes[name]; ok {
-			me.defineClassFunction(nil)
+			me.defineClassFunction()
 		} else {
 			me.defineFileFunction()
 		}

@@ -49,7 +49,7 @@ func (me *hmfile) varNameSpace(id string) string {
 }
 
 func (me *hmfile) funcNameSpace(name string) string {
-	return globalFuncPrefix + me.funcPrefix + name
+	return globalFuncPrefix + me.funcPrefix + flatten(name)
 }
 
 func (me *hmfile) classNameSpace(name string) string {

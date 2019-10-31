@@ -13,7 +13,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				temp := me.token.value
 				me.eat("id")
 				me.eat(")")
-				tempd := me.hmfile.varInitFromData(left.data().some, temp, false)
+				tempd := me.hmfile.varInitFromData(left.data().someType, temp, false)
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}
 				tempv.idata.module = me.hmfile
@@ -142,7 +142,7 @@ func (me *parser) parseMatch() *node {
 			some := nodeInit("some")
 			n.push(some)
 			if temp != "" {
-				tempd := me.hmfile.varInitFromData(matchType.some, temp, false)
+				tempd := me.hmfile.varInitFromData(matchType.someType, temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}

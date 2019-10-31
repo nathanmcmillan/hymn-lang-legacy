@@ -126,6 +126,19 @@ func (me *parser) mapAnyImpl(mem string, gmapper map[string]string) string {
 	return mem
 }
 
+func (me *parser) mapGenericFunctionSig(typed string, gmapper map[string]string) string {
+	args, ret := functionSigType(typed)
+	sig := "("
+	for i, a := range args {
+		if i > 0 {
+			sig += ", "
+		}
+		sig += me.mapAnyImpl(a, gmapper)
+	}
+	sig += ") " + me.mapAnyImpl(ret, gmapper)
+	return sig
+}
+
 func (me *parser) genericsReplacer(typed string, gmapper map[string]string) string {
 	if checkIsArrayOrSlice(typed) {
 		size, typeOfMem := typeOfArrayOrSlice(typed)
@@ -135,6 +148,8 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 		return "[" + size + "]" + me.mapAnyImpl(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
 		return me.buildImplGeneric(typed, gmapper)
+	} else if checkIsFunction(typed) {
+		return me.mapGenericFunctionSig(typed, gmapper)
 	}
 	return me.mapAnyImpl(typed, gmapper)
 }

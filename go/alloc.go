@@ -298,7 +298,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
 			if assign.full != "?" {
 				if assign.maybe {
-					typed = assign.some.full
+					typed = assign.someType.full
 				} else if assign.checkIsArrayOrSlice() {
 					typed = assign.memberType.full
 				} else {

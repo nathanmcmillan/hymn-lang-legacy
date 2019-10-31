@@ -28,5 +28,6 @@ hmlib_slice_head *hmlib_slice_resize(const hmlib_slice head, const size_t member
 hmlib_slice hmlib_slice_expand(const hmlib_slice a, const hmlib_slice b);
 hmlib_slice hmlib_slice_push(const hmlib_slice a, void *const b);
 hmlib_slice hmlib_slice_push_int(const hmlib_slice a, const int b);
+hmlib_slice hmlib_slice_push_float(const hmlib_slice a, const float b);
 
 #endif

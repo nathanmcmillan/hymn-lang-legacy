@@ -35,7 +35,7 @@ type varData struct {
 	slice      bool
 	none       bool
 	maybe      bool
-	some       *varData
+	someType   *varData
 	noneType   *varData
 	memberType *varData
 	en         *enum
@@ -56,7 +56,7 @@ func (me *varData) set(in *varData) {
 	me.slice = in.slice
 	me.none = in.none
 	me.maybe = in.maybe
-	me.some = in.some
+	me.someType = in.someType
 	me.noneType = in.noneType
 	me.memberType = in.memberType
 	me.en = in.en
@@ -113,7 +113,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 
 	if strings.HasPrefix(typed, "maybe") {
 		data.maybe = true
-		data.some = me.typeToVarData(typed[6 : len(typed)-1])
+		data.someType = me.typeToVarData(typed[6 : len(typed)-1])
 
 	} else if strings.HasPrefix(typed, "none") {
 		data.none = true
@@ -130,6 +130,17 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 		data.isptr = true
 		_, typed = typeOfArrayOrSlice(typed)
 		data.memberType = me.typeToVarData(typed)
+	}
+
+	if checkIsFunction(typed) {
+		args, ret := functionSigType(typed)
+		fn := fnSigInit(me)
+		for _, a := range args {
+			t := me.typeToVarData(a)
+			fn.args = append(fn.args, fnArgInit(t.asVariable()))
+		}
+		fn.typed = me.typeToVarData(ret)
+		data.fn = fn
 	}
 
 	data.typed = typed
@@ -230,10 +241,6 @@ func (me *varData) checkIsPrimitive() bool {
 	return checkIsPrimitive(me.full)
 }
 
-func (me *varData) checkIsFunction() (*fnSig, bool) {
-	return me.fn, me.fn != nil
-}
-
 func (me *varData) checkIsClass() (*class, bool) {
 	if me.module == nil {
 		if me.hmlib == nil {
@@ -274,20 +281,20 @@ func (me *varData) equal(other *varData) bool {
 
 	} else if me.maybe {
 		if other.maybe {
-			if me.some.equal(other.some) {
+			if me.someType.equal(other.someType) {
 				return true
 			}
 		} else if other.none {
-			if me.some.equal(other.noneType) {
+			if me.someType.equal(other.noneType) {
 				return true
 			}
-		} else if me.some.equal(other) {
+		} else if me.someType.equal(other) {
 			return true
 		}
 
 	} else if me.none {
 		if other.maybe {
-			if me.noneType.equal(other.some) {
+			if me.noneType.equal(other.someType) {
 				return true
 			}
 		} else if other.none {
@@ -299,7 +306,7 @@ func (me *varData) equal(other *varData) bool {
 		}
 
 	} else if other.maybe {
-		if other.some.equal(me) {
+		if other.someType.equal(me) {
 			return true
 		}
 	} else if other.none {
@@ -320,7 +327,7 @@ func (me *varData) postfixConst() bool {
 		return true
 	}
 	if me.maybe {
-		return me.some.postfixConst()
+		return me.someType.postfixConst()
 	}
 	if me.none {
 		return me.noneType.postfixConst()
@@ -345,7 +352,7 @@ func (me *varData) noConst() bool {
 
 func (me *varData) typeSigOf(name string, mutable bool) string {
 	code := ""
-	if _, ok := me.checkIsFunction(); ok {
+	if me.fn != nil {
 		sig := me.fn
 		code += fmtassignspace(sig.typed.typeSig())
 		code += "(*"
@@ -388,7 +395,7 @@ func (me *varData) typeSig() string {
 		return fmtptr(me.memberType.typeSig())
 	}
 	if me.maybe {
-		return me.some.typeSig()
+		return me.someType.typeSig()
 	}
 	if me.none {
 		return me.noneType.typeSig()
@@ -435,23 +442,33 @@ func (me *varData) getFunction(name string) (*function, bool) {
 
 func (me *varData) genericReplace(any map[string]string) {
 	f := me.full
-
 	fmt.Println("DATA TYPE REPLACE ::", me.string())
 
 	if m, ok := any[f]; ok {
 		me.set(me.module.typeToVarData(m))
+		return
 	}
 
 	if me.checkIsArrayOrSlice() {
+		me.memberType.genericReplace(any)
+		return
 	}
 
 	if me.maybe {
+		me.someType.genericReplace(any)
+		return
 	}
 
 	if me.none {
+		me.noneType.genericReplace(any)
+		return
 	}
 
 	if me.fn != nil {
-		fmt.Println("REPLACE FUNCTION DATA TYPE ::", me.fn.print())
+		for _, a := range me.fn.args {
+			a.data().genericReplace(any)
+		}
+		me.fn.typed.genericReplace(any)
+		return
 	}
 }

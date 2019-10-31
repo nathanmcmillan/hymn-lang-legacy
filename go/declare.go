@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -246,6 +247,30 @@ func checkHasGeneric(typed string) bool {
 	return strings.HasSuffix(typed, ">")
 }
 
+func checkIsFunction(typed string) bool {
+	if len(typed) < 2 {
+		return false
+	}
+	return typed[0] == '('
+}
+
 func (me *parser) assignable(n *node) bool {
 	return n.is == "variable" || n.is == "member-variable" || n.is == "array-member"
+}
+
+func functionSigType(typed string) ([]string, string) {
+	end := strings.Index(typed, ")")
+
+	ret := typed[end+1:]
+	ret = strings.TrimSpace(ret)
+
+	argd := typed[1:end]
+	args := make([]string, 0)
+
+	for _, a := range strings.Split(argd, ",") {
+		args = append(args, strings.TrimSpace(a))
+	}
+
+	fmt.Println("FUNCTION SIG TYPE ::", args, "::", ret)
+	return args, ret
 }

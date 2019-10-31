@@ -81,6 +81,16 @@ hmlib_slice hmlib_slice_push_int(const hmlib_slice a, const int b)
   return data;
 }
 
+hmlib_slice hmlib_slice_push_float(const hmlib_slice a, const float b)
+{
+  hmlib_slice_head *head = hmlib_slice_get_head(a);
+  size_t length = head->length + 1;
+  hmlib_slice_head *new_head = hmlib_slice_resize(head, sizeof(b), length);
+  hmlib_slice data = (void *)new_head + sizeof(hmlib_slice_head);
+  ((float *)data)[length - 1] = b;
+  return data;
+}
+
 hmlib_slice hmlib_slice_expand(const hmlib_slice a, const hmlib_slice b)
 {
   hmlib_slice_head *head_a = hmlib_slice_get_head(a);

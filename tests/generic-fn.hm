@@ -8,16 +8,12 @@ type foo<k, v>
 	total    int
 	weight   char
 
-set_foo(f foo<int, string>, one int, two string)
-	f.size = one
-	f.name = two
-
 transform(in string) string
 	return "transform_" + in
 
 foo.set(one k, two v)
 	self.list[0] = one
-	self.im_list[0] = two
+	self.im_list[1] = two
 
 foo.get_size() k
 	return self.size
@@ -30,26 +26,13 @@ main
 		size:22.33
 		name:"zoob"
 		mutate:transform)
-	echo(g.size)
+
 	echo(g.name)
-	g.im_list[1] = "number one"
+	echo(g.get_size())
+	echo(g.get_total())
+	g.list = push(g.list, 44.66)
+	g.set(77.88, "number one")
+	echo(g.list[0])
 	echo(g.im_list[1])
+	echo(g.mutate("hotdog"))
 	echo("---")
-
-	f = foo(size:11, name:"goob", mutate:transform)
-	echo(f.size)
-	echo(f.name)
-	f.im_list[2] = "number 2"
-	echo(f.im_list[2])
-	echo("---")
-
-	set_foo(f, 22, "foobar")
-	echo(f.size)
-	echo(f.name)
-	echo("---")
-
-	(* f.set(22, "foobar")
-	echo(f.get_size())
-	echo(f.get_total()) *)
-	echo("---")
-	

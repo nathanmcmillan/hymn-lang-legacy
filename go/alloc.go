@@ -159,7 +159,7 @@ func (me *parser) defaultValue(in *varData) *node {
 		t.copyData(d.data())
 		me.pushAllDefaultClassParams(t)
 		d = t
-	} else if d.data().maybe {
+	} else if d.data().checkIsSomeOrNone() {
 		t := nodeInit("none")
 		t.copyData(d.data())
 		t.value = "NULL"
@@ -193,8 +193,8 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	pix := 0
 	dict := false
 	lazyGenerics := false
-	genericsImpl := make(map[int]*varData)
-	genericsMap := base.genericsDict
+	gtypes := make(map[string]string)
+	gindex := base.genericsDict
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
@@ -218,21 +218,34 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			param := me.calc(0)
 			clsvar := base.variables[vname]
 
-			if m, ok := genericsMap[clsvar.data().full]; ok {
+			ok, update := me.hintGeneric(param.data(), clsvar.data(), gindex)
+			fmt.Println("HINT GENERIC RESULT ::", ok, "|", update)
+			fmt.Println("----------------------")
+
+			// if index, ok := gindex[clsvar.data().full]; ok {
+			if ok {
 				lazyGenerics = true
-				if g, ok := genericsImpl[m]; ok {
-					if g.notEqual(param.data()) {
-						panic(me.fail() + "lazy generic for base \"" + base.name + "\" is already \"" + g.full + "\" but found \"" + param.data().full + "\"")
-					}
+				good, newtypes := mergeMaps(update, gtypes)
+				if !good {
+					f := fmt.Sprint("lazy generic for base \""+base.name+"\" is", gtypes, "but found", newtypes)
+					panic(me.fail() + f)
 				}
-				genericsImpl[m] = param.data()
-			} else {
-				if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
-					err := "parameter \"" + param.getType()
-					err += "\" does not match class \"" + base.name + "\" variable \""
-					err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
-					panic(me.fail() + err)
-				}
+				gtypes = newtypes
+
+				// g := gtypes[index]
+				// if g != "" {
+				// 	if !typeEqual(g, param.data().full) {
+				// 		panic(me.fail() + "lazy generic for base \"" + base.name + "\" is already \"" + g + "\" but found \"" + param.data().full + "\"")
+				// 	}
+				// }
+				// fmt.Println("LAZY GEN ::", index, "|", param.data().string())
+				// gtypes[index] = param.data().full
+
+			} else if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
+				err := "parameter \"" + param.getType()
+				err += "\" does not match class variable \"" + base.name + "."
+				err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
+				panic(me.fail() + err)
 			}
 			for i, v := range vars {
 				if vname == v {
@@ -249,7 +262,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			clsvar := base.variables[vars[pix]]
 			if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
 				err := "parameter \"" + param.getType()
-				err += "\" does not match class \"" + base.name + "\" variable \""
+				err += "\" does not match class variable \"" + base.name + "."
 				err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
 				panic(me.fail() + err)
 			}
@@ -259,16 +272,17 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	}
 	if lazyGenerics {
 		gsize := len(base.generics)
-		if len(genericsImpl) != gsize {
-			panic(me.fail() + "missing generics for base class \"" + base.name + "\"")
+		if len(gtypes) != gsize {
+			panic(me.fail() + "missing generic for base class \"" + base.name + "\"")
 		}
-		gtypes := make([]string, gsize)
-		for gk, gv := range genericsImpl {
-			gtypes[gk] = gv.full
+		glist := make([]string, gsize)
+		for k, v := range gtypes {
+			i, _ := gindex[k]
+			glist[i] = v
 		}
-		lazy := typed + "<" + strings.Join(gtypes, ",") + ">"
+		lazy := typed + "<" + strings.Join(glist, ",") + ">"
 		if _, ok := me.hmfile.classes[lazy]; !ok {
-			me.defineClassImplGeneric(base, lazy, gtypes)
+			me.defineClassImplGeneric(base, lazy, glist)
 		}
 		base = me.hmfile.classes[lazy]
 		typed = lazy
@@ -298,7 +312,7 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
 			if assign.full != "?" {
 				if assign.maybe {
-					typed = assign.someType.full
+					typed = assign.memberType.full
 				} else if assign.checkIsArrayOrSlice() {
 					typed = assign.memberType.full
 				} else {

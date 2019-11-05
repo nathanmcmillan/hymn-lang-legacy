@@ -4,7 +4,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 	n.copyData(me.hmfile.typeToVarData("bool"))
 	me.eat(op)
 	var right *node
-	if left.data().none || left.data().maybe {
+	if left.data().checkIsSomeOrNone() {
 		if me.token.is == "some" {
 			right = nodeInit("some")
 			me.eat("some")
@@ -13,7 +13,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				temp := me.token.value
 				me.eat("id")
 				me.eat(")")
-				tempd := me.hmfile.varInitFromData(left.data().someType, temp, false)
+				tempd := me.hmfile.varInitFromData(left.data().memberType, temp, false)
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}
 				tempv.idata.module = me.hmfile
@@ -37,9 +37,13 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			name := me.token.value
 			baseEnum, _, _ := left.data().checkIsEnum()
 			if un, ok := baseEnum.types[name]; ok {
+				prefix := ""
+				if me.hmfile != left.data().module {
+					prefix = left.data().module.name + "."
+				}
 				me.eat("id")
 				right = nodeInit("match-enum")
-				right.copyData(me.hmfile.typeToVarData(baseEnum.name + "." + un.name))
+				right.copyData(me.hmfile.typeToVarData(prefix + baseEnum.name + "." + un.name))
 				if me.token.is == "(" {
 					me.eat("(")
 					temp := me.token.value
@@ -119,6 +123,8 @@ func (me *parser) parseMatch() *node {
 				n.push(me.block())
 			} else {
 				n.push(me.expression())
+			}
+			if me.token.is == "line" {
 				me.eat("line")
 			}
 			if temp != "" {
@@ -127,7 +133,7 @@ func (me *parser) parseMatch() *node {
 		} else if me.token.is == "some" {
 			me.eat("some")
 			if matchVar != nil {
-				if !matchType.maybe {
+				if !matchType.checkIsSomeOrNone() {
 					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
 				}
 			}
@@ -142,7 +148,7 @@ func (me *parser) parseMatch() *node {
 			some := nodeInit("some")
 			n.push(some)
 			if temp != "" {
-				tempd := me.hmfile.varInitFromData(matchType.someType, temp, false)
+				tempd := me.hmfile.varInitFromData(matchType.memberType, temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}
@@ -156,21 +162,12 @@ func (me *parser) parseMatch() *node {
 				n.push(me.block())
 			} else {
 				n.push(me.expression())
+			}
+			if me.token.is == "line" {
 				me.eat("line")
 			}
 			if temp != "" {
 				delete(me.hmfile.scope.variables, temp)
-			}
-		} else if me.token.is == "_" {
-			me.eat("_")
-			me.eat("=>")
-			n.push(nodeInit("_"))
-			if me.token.is == "line" {
-				me.eat("line")
-				n.push(me.block())
-			} else {
-				n.push(me.expression())
-				me.eat("line")
 			}
 		} else if me.token.is == "none" {
 			me.eat("none")
@@ -181,6 +178,21 @@ func (me *parser) parseMatch() *node {
 				n.push(me.block())
 			} else {
 				n.push(me.expression())
+			}
+			if me.token.is == "line" {
+				me.eat("line")
+			}
+		} else if me.token.is == "_" {
+			me.eat("_")
+			me.eat("=>")
+			n.push(nodeInit("_"))
+			if me.token.is == "line" {
+				me.eat("line")
+				n.push(me.block())
+			} else {
+				n.push(me.expression())
+			}
+			if me.token.is == "line" {
 				me.eat("line")
 			}
 		} else {

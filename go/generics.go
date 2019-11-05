@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -72,7 +73,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 			if end == 0 {
 			} else {
 				sub := rest[:end]
-				current.order = append(current.order, me.mapAnyImpl(sub, gmapper))
+				current.order = append(current.order, me.mapGenericSingle(sub, gmapper))
 			}
 			stack = stack[:size]
 			if size == 0 {
@@ -107,7 +108,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 				continue
 			}
 			sub := rest[:comma]
-			current.order = append(current.order, me.mapAnyImpl(sub, gmapper))
+			current.order = append(current.order, me.mapGenericSingle(sub, gmapper))
 			rest = rest[comma+1:]
 
 		} else {
@@ -118,7 +119,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 	return order
 }
 
-func (me *parser) mapAnyImpl(mem string, gmapper map[string]string) string {
+func (me *parser) mapGenericSingle(mem string, gmapper map[string]string) string {
 	impl, ok := gmapper[mem]
 	if ok {
 		return impl
@@ -133,9 +134,9 @@ func (me *parser) mapGenericFunctionSig(typed string, gmapper map[string]string)
 		if i > 0 {
 			sig += ", "
 		}
-		sig += me.mapAnyImpl(a, gmapper)
+		sig += me.mapGenericSingle(a, gmapper)
 	}
-	sig += ") " + me.mapAnyImpl(ret, gmapper)
+	sig += ") " + me.mapGenericSingle(ret, gmapper)
 	return sig
 }
 
@@ -145,11 +146,132 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 		if checkHasGeneric(typed) {
 			return "[" + size + "]" + me.buildImplGeneric(typeOfMem, gmapper)
 		}
-		return "[" + size + "]" + me.mapAnyImpl(typeOfMem, gmapper)
+		return "[" + size + "]" + me.mapGenericSingle(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
 		return me.buildImplGeneric(typed, gmapper)
 	} else if checkIsFunction(typed) {
 		return me.mapGenericFunctionSig(typed, gmapper)
 	}
-	return me.mapAnyImpl(typed, gmapper)
+	return me.mapGenericSingle(typed, gmapper)
+}
+
+func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]string) bool {
+	switch a.is {
+	case dataTypePrimitive:
+		{
+			if b.is == dataTypePrimitive {
+				return true
+			}
+		}
+	case dataTypeMaybe:
+		{
+			return hintRecursiveReplace(a.member, b, gindex, update)
+		}
+	case dataTypeArray:
+		{
+		}
+	case dataTypeFunction:
+		{
+		}
+	case dataTypeClass:
+		{
+		}
+	case dataTypeEnum:
+		{
+		}
+	default:
+		panic("missing data type")
+	}
+	return false
+}
+
+func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) (bool, map[string]string) {
+
+	fmt.Println("HINT GENERIC INGEST ::", data.full, "|", gdata.full, "|", gindex)
+
+	a := me.hmfile.getdatatype(data.full)
+	b := me.hmfile.getdatatype(gdata.full)
+
+	fmt.Println("TYPE SIMPLIFY ::", data.full, "->", a.print())
+	fmt.Println("TYPE SIMPLIFY ::", gdata.full, "->", b.print())
+
+	update := make(map[string]string)
+
+	ok := hintRecursiveReplace(a, b, gindex, update)
+
+	return ok, update
+
+	// length := len(w)
+
+	// if length != len(u) || len(t) != len(v) {
+	// 	return false, nil
+	// }
+
+	// update := make(map[string]string)
+
+	// i := 0
+	// for i < length {
+	// 	if w[i] != u[i] {
+	// 		return false, nil
+	// 	}
+	// 	i++
+	// }
+	// i = 0
+	// length = len(t)
+	// for i < length {
+	// 	g := v[i]
+	// 	if _, ok := gindex[g]; ok {
+	// 		if e, exist := update[g]; exist {
+	// 			if e != t[i] {
+	// 				return false, nil
+	// 			}
+	// 		}
+	// 		update[g] = t[i]
+	// 	} else if t[i] != g {
+	// 		return false, nil
+	// 	}
+	// 	i++
+	// }
+
+	// parse out full type string
+	// generate list ordering of types plus the in between strings
+	// combine to generate full type implementation plus list of individual types
+
+	// do this for impl and base
+	// generate varData using reconstructed signature
+	// compare varData types
+
+	// (v) v
+	// (string) string
+
+	// [3]v
+	// [3]string
+
+	// maybe<v>
+	// string
+
+	// [3]maybe<v>
+	// [3]string
+
+	// [3]data.hashmap<animals, maybe<math.bigint>>
+}
+
+func mergeMaps(one, two map[string]string) (bool, map[string]string) {
+	merge := make(map[string]string)
+	for k, v := range one {
+		w, exist := two[k]
+		if exist {
+			if v == w {
+				continue
+			}
+			return false, nil
+		}
+		merge[k] = v
+	}
+	for k, v := range two {
+		if _, exist := merge[k]; exist {
+			merge[k] = v
+		}
+	}
+	return true, merge
 }

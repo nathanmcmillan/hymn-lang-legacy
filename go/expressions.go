@@ -78,7 +78,7 @@ func (me *parser) expression() *node {
 	} else if op == "for" {
 		return me.forexpr()
 	} else if op == "return" {
-		return me.returning()
+		return me.parseReturn()
 	} else if op == "goto" {
 		return me.gotoLabel()
 	} else if op == "label" {
@@ -158,12 +158,27 @@ func (me *parser) breaking() *node {
 	return n
 }
 
-func (me *parser) returning() *node {
+func (me *parser) parseReturn() *node {
 	me.eat("return")
-	calc := me.calc(0)
 	n := nodeInit("return")
-	n.copyDataOfNode(calc)
-	n.push(calc)
+	if me.token.is != "line" {
+		calc := me.calc(0)
+		n.copyDataOfNode(calc)
+		n.push(calc)
+		fn := me.hmfile.scope.fn
+		ret := calc.data()
+		if ret.none {
+			if !fn.typed.maybe {
+				panic(me.fail() + "return type was \"" + ret.full + "\" but function is \"" + fn.typed.full + "\"")
+			} else if ret.memberType.full != "" {
+				if calc.is == "none" {
+					panic(me.fail() + "unnecessary none definition for return " + calc.string(0))
+				}
+			}
+		} else if fn.typed.notEqual(ret) {
+			panic(me.fail() + "function \"" + fn.name + "\" returns \"" + fn.typed.full + "\" but found \"" + calc.getType() + "\"")
+		}
+	}
 	me.verify("line")
 	return n
 }
@@ -205,6 +220,13 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		if sv != nil {
 			if !sv.mutable {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
+			}
+			if right.data().full != "?" && left.data().notEqual(right.data()) {
+				if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
+					right.copyDataOfNode(left)
+				} else {
+					panic(me.fail() + "variable type \"" + left.getType() + "\" does not match expression type \"" + right.getType() + "\"")
+				}
 			}
 		} else if mustBeInt || mustBeNumber {
 			panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.idata.name + "\" does not exist")

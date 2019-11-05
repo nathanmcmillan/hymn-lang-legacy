@@ -8,9 +8,15 @@ type vec
 	z int
 
 main
-	z = attribute<attribute<vec>>(
+	(* z = attribute<attribute<vec>>(
 		on: true
 		has: attribute<vec>(
+			on: true
+			has: vec(2*5, 2*6, 2*7))) *)
+
+	z = attribute(
+		on: true
+		has: attribute(
 			on: true
 			has: vec(2*5, 2*6, 2*7)))
   

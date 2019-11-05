@@ -1,6 +1,5 @@
 type foo<k, v>
 	size     k
-	capacity k
 	name     v
 	list     []k
 	im_list  [3]v
@@ -11,21 +10,38 @@ type foo<k, v>
 transform(in string) string
 	return "transform_" + in
 
-foo.set(one k, two v)
+foo set(one k, two v)
 	self.list[0] = one
 	self.im_list[1] = two
 
-foo.get_size() k
+foo get_size() k
 	return self.size
 
-foo.get_total() int
+foo get_total() int
 	return self.total
+
+foo do_special(in v, in_two v) v
+	mutable x = none<v>
+	x = in
+	match x
+		some(s) =>
+			echo(s)
+			return s
+		none => pass
+	return in_two
 
 main
 	g = foo(
 		size:22.33
 		name:"zoob"
 		mutate:transform)
+
+	(* ./run.sh ./go/autotest/code/045-construct.hm *)
+
+	(* g = foo<float, string>(
+		size:22.33
+		name:"zoob"
+		mutate:transform) *)
 
 	echo(g.name)
 	echo(g.get_size())
@@ -35,4 +51,5 @@ main
 	echo(g.list[0])
 	echo(g.im_list[1])
 	echo(g.mutate("hotdog"))
+	echo(g.do_special("cheeseburger", "chicken"))
 	echo("---")

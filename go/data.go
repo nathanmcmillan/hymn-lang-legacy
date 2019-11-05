@@ -35,8 +35,6 @@ type varData struct {
 	slice      bool
 	none       bool
 	maybe      bool
-	someType   *varData
-	noneType   *varData
 	memberType *varData
 	en         *enum
 	un         *union
@@ -56,8 +54,6 @@ func (me *varData) set(in *varData) {
 	me.slice = in.slice
 	me.none = in.none
 	me.maybe = in.maybe
-	me.someType = in.someType
-	me.noneType = in.noneType
 	me.memberType = in.memberType
 	me.en = in.en
 	me.un = in.un
@@ -97,6 +93,9 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	data.heap = true
 	data.module = me
 
+	dtype := me.getdatatype(typed)
+	fmt.Println("\"" + typed + "\" USE INSTEAD OF FULL :: \"" + dtype.print() + "\"")
+
 	if checkIsPrimitive(typed) {
 		if typed == TokenString {
 			data.array = true
@@ -113,14 +112,14 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 
 	if strings.HasPrefix(typed, "maybe") {
 		data.maybe = true
-		data.someType = me.typeToVarData(typed[6 : len(typed)-1])
+		data.memberType = me.typeToVarData(typed[6 : len(typed)-1])
 
 	} else if strings.HasPrefix(typed, "none") {
 		data.none = true
 		if len(typed) > 4 {
-			data.noneType = me.typeToVarData(typed[5 : len(typed)-1])
+			data.memberType = me.typeToVarData(typed[5 : len(typed)-1])
 		} else {
-			data.noneType = me.typeToVarData("")
+			data.memberType = me.typeToVarData("")
 		}
 	}
 
@@ -150,7 +149,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 		if module, ok := me.program.hmfiles[dot[0]]; ok {
 			data.module = module
 			if len(dot) > 2 {
-				if _, ok := me.enums[dot[1]]; ok {
+				if _, ok := module.enums[dot[1]]; ok {
 					data.typed = dot[1] + "." + dot[2]
 				} else {
 					panic("unknown type \"" + typed + "\"")
@@ -213,6 +212,10 @@ func (me *varData) arrayToSlice() {
 	me.typed = me.full
 }
 
+func (me *varData) checkIsSomeOrNone() bool {
+	return me.maybe || me.none
+}
+
 func (me *varData) checkIsArray() bool {
 	return checkIsArray(me.full)
 }
@@ -267,70 +270,12 @@ func (me *varData) checkIsEnum() (*enum, *union, bool) {
 	return en, nil, ok
 }
 
-func (me *varData) equal(other *varData) bool {
-	if me.full == other.full {
-		return true
-	}
-
-	if en, _, ok := me.checkIsEnum(); ok {
-		if en2, _, ok2 := other.checkIsEnum(); ok2 {
-			if en.name == en2.name {
-				return true
-			}
-		}
-
-	} else if me.maybe {
-		if other.maybe {
-			if me.someType.equal(other.someType) {
-				return true
-			}
-		} else if other.none {
-			if me.someType.equal(other.noneType) {
-				return true
-			}
-		} else if me.someType.equal(other) {
-			return true
-		}
-
-	} else if me.none {
-		if other.maybe {
-			if me.noneType.equal(other.someType) {
-				return true
-			}
-		} else if other.none {
-			if me.noneType == other.noneType {
-				return true
-			}
-		} else if me.noneType.equal(other) {
-			return true
-		}
-
-	} else if other.maybe {
-		if other.someType.equal(me) {
-			return true
-		}
-	} else if other.none {
-		if other.noneType.equal(me) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (me *varData) notEqual(other *varData) bool {
-	return !me.equal(other)
-}
-
 func (me *varData) postfixConst() bool {
 	if me.checkIsArrayOrSlice() {
 		return true
 	}
-	if me.maybe {
-		return me.someType.postfixConst()
-	}
-	if me.none {
-		return me.noneType.postfixConst()
+	if me.checkIsSomeOrNone() {
+		return me.memberType.postfixConst()
 	}
 	if _, ok := me.checkIsClass(); ok {
 		return true
@@ -391,14 +336,11 @@ func getCName(primitive string) string {
 }
 
 func (me *varData) typeSig() string {
-	if me.array || me.slice {
+	if me.checkIsArrayOrSlice() {
 		return fmtptr(me.memberType.typeSig())
 	}
-	if me.maybe {
-		return me.someType.typeSig()
-	}
-	if me.none {
-		return me.noneType.typeSig()
+	if me.checkIsSomeOrNone() {
+		return me.memberType.typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {
 		sig := me.module.classNameSpace(me.typed)
@@ -442,7 +384,6 @@ func (me *varData) getFunction(name string) (*function, bool) {
 
 func (me *varData) genericReplace(any map[string]string) {
 	f := me.full
-	fmt.Println("DATA TYPE REPLACE ::", me.string())
 
 	if m, ok := any[f]; ok {
 		me.set(me.module.typeToVarData(m))
@@ -454,13 +395,8 @@ func (me *varData) genericReplace(any map[string]string) {
 		return
 	}
 
-	if me.maybe {
-		me.someType.genericReplace(any)
-		return
-	}
-
-	if me.none {
-		me.noneType.genericReplace(any)
+	if me.checkIsSomeOrNone() {
+		me.memberType.genericReplace(any)
 		return
 	}
 
@@ -471,4 +407,130 @@ func (me *varData) genericReplace(any map[string]string) {
 		me.fn.typed.genericReplace(any)
 		return
 	}
+}
+
+func (me *varData) typeEqual(other *varData) bool {
+	if me.full == other.full {
+		return true
+	}
+	a := me.module.typeStandard(me.full)
+	b := other.module.typeStandard(other.full)
+	return a == b
+}
+
+func (me *varData) notEqual(other *varData) bool {
+	return !me.typeEqual(other)
+}
+
+func (me *parser) typeEqual(one, two string) bool {
+	if one == two {
+		return true
+	}
+	return me.typeStandard(one) == me.typeStandard(two)
+}
+
+func (me *parser) typeStandard(typed string) string {
+	return me.hmfile.typeStandard(typed)
+}
+
+func (me *hmfile) typeStandard(typed string) string {
+
+	if checkIsPrimitive(typed) {
+		return typed
+	}
+
+	if strings.HasPrefix(typed, "maybe") {
+		return me.typeStandard(typed[6 : len(typed)-1])
+	} else if strings.HasPrefix(typed, "none") {
+		return me.typeStandard(typed[5 : len(typed)-1])
+	}
+
+	if checkIsArray(typed) || checkIsSlice(typed) {
+		size, member := typeOfArrayOrSlice(typed)
+		return "[" + size + "]" + me.typeStandard(member)
+	}
+
+	if checkIsFunction(typed) {
+		args, ret := functionSigType(typed)
+		for i, a := range args {
+			args[i] = me.typeStandard(a)
+		}
+		return "(" + strings.Join(args, ", ") + ") " + me.typeStandard(ret)
+	}
+
+	dot := strings.Split(typed, ".")
+	if len(dot) != 1 {
+		if _, ok := me.imports[dot[0]]; ok {
+			fmt.Println("FIRST DOT IS FROM A CLASS")
+		} else {
+			fmt.Println("FIRST DOT IS FOR AN ENUM")
+		}
+	}
+
+	g := strings.Index(typed, "<")
+	if g != -1 {
+		return me.typeStandardBrackets(typed)
+	}
+
+	// baseClass, okc := me.hmfile.classes[base]
+	// baseEnum, oke := me.hmfile.enums[base]
+
+	return typed
+}
+
+func (me *hmfile) typeStandardBrackets(typed string) string {
+
+	var order []string
+	stack := make([]*gstack, 0)
+	rest := typed
+
+	for {
+		begin := strings.Index(rest, "<")
+		end := strings.Index(rest, ">")
+		comma := strings.Index(rest, ",")
+
+		if begin != -1 && (begin < end || end == -1) && (begin < comma || comma == -1) {
+			name := rest[:begin]
+			current := &gstack{}
+			current.name = name
+			stack = append(stack, current)
+			rest = rest[begin+1:]
+
+		} else if end != -1 && (end < begin || begin == -1) && (end < comma || comma == -1) {
+			size := len(stack) - 1
+			current := stack[size]
+			if end == 0 {
+			} else {
+				sub := rest[:end]
+				current.order = append(current.order, sub)
+			}
+			stack = stack[:size]
+			if size == 0 {
+				order = current.order
+				break
+			} else {
+				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
+				next := stack[len(stack)-1]
+				next.order = append(next.order, pop)
+			}
+			if end == 0 {
+				rest = rest[1:]
+			} else {
+				rest = rest[end+1:]
+			}
+
+		} else if comma != -1 && (comma < begin || begin == -1) && (comma < end || end == -1) {
+			current := stack[len(stack)-1]
+			if comma == 0 {
+				rest = rest[1:]
+				continue
+			}
+			sub := rest[:comma]
+			current.order = append(current.order, sub)
+			rest = rest[comma+1:]
+		}
+	}
+
+	fmt.Println("BRACKETS ::", order)
+	return ""
 }

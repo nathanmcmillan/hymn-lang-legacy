@@ -1,3 +1,5 @@
+import "math"
+
 type vec
 	x int
 	y int
@@ -65,3 +67,9 @@ main
 	h = bug.ant(true)
 	i = bug.ant(vec())
 	j = bug.ant("buggie")
+
+	omega = math.operation.add
+	match omega
+		add => echo("omega: good")
+		_ => echo("omega: not good")
+	if omega is add : echo("omega: extra good")

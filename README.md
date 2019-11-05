@@ -37,6 +37,8 @@ Learn more at https://hymn-lang.org
 * interfaces (maybe?)
 * threads / async await
 * macros / def
+* better error output
+* language server protocol
 
 ### testing
 * need negative tests

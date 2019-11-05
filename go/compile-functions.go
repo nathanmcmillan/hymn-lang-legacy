@@ -1,7 +1,8 @@
 package main
 
 func (me *cfile) compileFunction(name string, fn *function) {
-	if fn.forClass != nil && len(fn.forClass.impls) > 0 {
+	cls := fn.forClass
+	if cls != nil && len(cls.generics) > 0 {
 		return
 	}
 	args := fn.args

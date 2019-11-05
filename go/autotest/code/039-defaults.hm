@@ -2,7 +2,7 @@ type vec
   a int
   b int
 
-vec.dot(x:5 int, z:7 int)
+vec dot(x:5 int, z:7 int)
   echo("dot")
   self.a = x
   self.b = z

@@ -107,7 +107,6 @@ func (me *parser) defineClassFunction() {
 	className := me.token.value
 	class := module.classes[className]
 	me.eat("id")
-	me.eat(".")
 	funcName := me.token.value
 	globalFuncName := nameOfClassFunc(class.name, funcName)
 	me.eat("id")
@@ -220,22 +219,6 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		}
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)
-		if expr.is == "return" {
-			ret := expr.data()
-			if ret.none {
-				if !fn.typed.maybe {
-					panic(me.fail() + "return type was \"" + ret.full + "\" but function is \"" + fn.typed.full + "\"")
-				} else if ret.noneType.full != "" {
-					src := expr.has[0]
-					if src.is == "none" {
-						panic(me.fail() + "unnecessary none definition for return " + expr.string(0))
-					}
-				}
-			} else if fn.typed.notEqual(ret) {
-				panic(me.fail() + "function \"" + name + "\" returns \"" + fn.typed.full + "\" but found \"" + expr.getType() + "\"")
-			}
-			goto fnEnd
-		}
 	}
 fnEnd:
 	me.hmfile.popScope()

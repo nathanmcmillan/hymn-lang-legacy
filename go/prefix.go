@@ -141,7 +141,7 @@ func prefixNone(me *parser, op string) *node {
 		me.eat("<")
 		option := me.declareType(true)
 		me.eat(">")
-		typed := "none<" + option.typed + ">"
+		typed := "none<" + option.full + ">"
 		node.copyData(me.hmfile.typeToVarData(typed))
 	} else {
 		node.copyData(me.hmfile.typeToVarData("none"))
@@ -154,7 +154,7 @@ func prefixMaybe(me *parser, op string) *node {
 	me.eat("<")
 	option := me.declareType(true)
 	me.eat(">")
-	typed := "maybe<" + option.typed + ">"
+	typed := "maybe<" + option.full + ">"
 	data := me.hmfile.typeToVarData(typed)
 
 	n := nodeInit("maybe")

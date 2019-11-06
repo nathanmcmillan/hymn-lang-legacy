@@ -36,13 +36,6 @@ main
 		name:"zoob"
 		mutate:transform)
 
-	(* ./run.sh ./go/autotest/code/045-construct.hm *)
-
-	(* g = foo<float, string>(
-		size:22.33
-		name:"zoob"
-		mutate:transform) *)
-
 	echo(g.name)
 	echo(g.get_size())
 	echo(g.get_total())
@@ -52,4 +45,8 @@ main
 	echo(g.im_list[1])
 	echo(g.mutate("hotdog"))
 	echo(g.do_special("cheeseburger", "chicken"))
+	echo("---")
+
+	f = foo(22.33, "zoob", _, _, _, transform, 0, '0')
+	echo(f.mutate("bacon"))
 	echo("---")

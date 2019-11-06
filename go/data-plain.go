@@ -12,6 +12,7 @@ const (
 	dataTypeFunction  = 3
 	dataTypeClass     = 4
 	dataTypeEnum      = 5
+	dataTypeUnknown   = 6
 )
 
 type datatype struct {
@@ -34,6 +35,8 @@ func (me *datatype) print() string {
 
 func (me *datatype) string(expand bool) string {
 	switch me.is {
+	case dataTypeUnknown:
+		fallthrough
 	case dataTypePrimitive:
 		{
 			return me.canonical
@@ -126,5 +129,8 @@ func (me *hmfile) getdatatype(typed string) *datatype {
 		return &datatype{}
 	}
 
-	return &datatype{is: dataTypeClass, canonical: typed}
+	// enums
+	// classes
+
+	return &datatype{is: dataTypeUnknown, canonical: typed}
 }

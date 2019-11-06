@@ -39,6 +39,7 @@ Learn more at https://hymn-lang.org
 * macros / def
 * better error output
 * language server protocol
+* use "_" for default parameters during class allocation
 
 ### testing
 * need negative tests

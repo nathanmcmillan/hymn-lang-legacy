@@ -155,12 +155,19 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 	return me.mapGenericSingle(typed, gmapper)
 }
 
-func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]string) bool {
+func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]*datatype) bool {
+	if b.is == dataTypeMaybe {
+		return hintRecursiveReplace(a, b.member, gindex, update)
+	}
 	switch a.is {
+	case dataTypeUnknown:
+		fallthrough
 	case dataTypePrimitive:
 		{
-			if b.is == dataTypePrimitive {
-				return true
+			if b.is == dataTypeUnknown {
+				if _, ok := gindex[b.canonical]; ok {
+					update[b.canonical] = a
+				}
 			}
 		}
 	case dataTypeMaybe:
@@ -172,6 +179,23 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 		}
 	case dataTypeFunction:
 		{
+			if b.is != dataTypeFunction {
+				return false
+			}
+			if len(a.parameters) != len(b.parameters) {
+				return false
+			}
+			ok := hintRecursiveReplace(a.returns, b.returns, gindex, update)
+			if !ok {
+				return false
+			}
+			for i, p := range a.parameters {
+				b := b.parameters[i]
+				ok = hintRecursiveReplace(p, b, gindex, update)
+				if !ok {
+					return false
+				}
+			}
 		}
 	case dataTypeClass:
 		{
@@ -182,10 +206,10 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 	default:
 		panic("missing data type")
 	}
-	return false
+	return true
 }
 
-func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) (bool, map[string]string) {
+func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) map[string]*datatype {
 
 	fmt.Println("HINT GENERIC INGEST ::", data.full, "|", gdata.full, "|", gindex)
 
@@ -195,81 +219,33 @@ func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]i
 	fmt.Println("TYPE SIMPLIFY ::", data.full, "->", a.print())
 	fmt.Println("TYPE SIMPLIFY ::", gdata.full, "->", b.print())
 
-	update := make(map[string]string)
+	update := make(map[string]*datatype)
 
 	ok := hintRecursiveReplace(a, b, gindex, update)
 
-	return ok, update
+	fmt.Println("HINT RECURSIVE REPLACE (", ok, ") -------")
+	for k, v := range update {
+		fmt.Println(k, "--->", v.print())
+	}
+	fmt.Println("-----------------------------------------")
 
-	// length := len(w)
-
-	// if length != len(u) || len(t) != len(v) {
-	// 	return false, nil
-	// }
-
-	// update := make(map[string]string)
-
-	// i := 0
-	// for i < length {
-	// 	if w[i] != u[i] {
-	// 		return false, nil
-	// 	}
-	// 	i++
-	// }
-	// i = 0
-	// length = len(t)
-	// for i < length {
-	// 	g := v[i]
-	// 	if _, ok := gindex[g]; ok {
-	// 		if e, exist := update[g]; exist {
-	// 			if e != t[i] {
-	// 				return false, nil
-	// 			}
-	// 		}
-	// 		update[g] = t[i]
-	// 	} else if t[i] != g {
-	// 		return false, nil
-	// 	}
-	// 	i++
-	// }
-
-	// parse out full type string
-	// generate list ordering of types plus the in between strings
-	// combine to generate full type implementation plus list of individual types
-
-	// do this for impl and base
-	// generate varData using reconstructed signature
-	// compare varData types
-
-	// (v) v
-	// (string) string
-
-	// [3]v
-	// [3]string
-
-	// maybe<v>
-	// string
-
-	// [3]maybe<v>
-	// [3]string
-
-	// [3]data.hashmap<animals, maybe<math.bigint>>
+	if !ok {
+		return nil
+	}
+	return update
 }
 
-func mergeMaps(one, two map[string]string) (bool, map[string]string) {
-	merge := make(map[string]string)
+func mergeMaps(one, two map[string]*datatype) (bool, map[string]*datatype) {
+	merge := make(map[string]*datatype)
 	for k, v := range one {
-		w, exist := two[k]
-		if exist {
-			if v == w {
-				continue
-			}
+		w, ok := two[k]
+		if ok && v.standard() != w.standard() {
 			return false, nil
 		}
 		merge[k] = v
 	}
 	for k, v := range two {
-		if _, exist := merge[k]; exist {
+		if _, ok := merge[k]; !ok {
 			merge[k] = v
 		}
 	}

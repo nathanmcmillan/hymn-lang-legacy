@@ -93,8 +93,8 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	data.heap = true
 	data.module = me
 
-	dtype := me.getdatatype(typed)
-	fmt.Println("\"" + typed + "\" USE INSTEAD OF FULL :: \"" + dtype.print() + "\"")
+	// TODO use instead of string
+	// dtype := me.getdatatype(typed)
 
 	if checkIsPrimitive(typed) {
 		if typed == TokenString {

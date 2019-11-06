@@ -193,7 +193,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	pix := 0
 	dict := false
 	lazyGenerics := false
-	gtypes := make(map[string]string)
+	gtypes := make(map[string]*datatype)
 	gindex := base.genericsDict
 	for {
 		if me.token.is == ")" {
@@ -218,28 +218,19 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			param := me.calc(0)
 			clsvar := base.variables[vname]
 
-			ok, update := me.hintGeneric(param.data(), clsvar.data(), gindex)
-			fmt.Println("HINT GENERIC RESULT ::", ok, "|", update)
-			fmt.Println("----------------------")
+			var update map[string]*datatype
+			if len(gindex) > 0 {
+				update = me.hintGeneric(param.data(), clsvar.data(), gindex)
+			}
 
-			// if index, ok := gindex[clsvar.data().full]; ok {
-			if ok {
+			if update != nil && len(update) > 0 {
 				lazyGenerics = true
 				good, newtypes := mergeMaps(update, gtypes)
 				if !good {
-					f := fmt.Sprint("lazy generic for base \""+base.name+"\" is", gtypes, "but found", newtypes)
+					f := fmt.Sprint("lazy generic for class \""+base.name+"\" is ", gtypes, " but found ", update)
 					panic(me.fail() + f)
 				}
 				gtypes = newtypes
-
-				// g := gtypes[index]
-				// if g != "" {
-				// 	if !typeEqual(g, param.data().full) {
-				// 		panic(me.fail() + "lazy generic for base \"" + base.name + "\" is already \"" + g + "\" but found \"" + param.data().full + "\"")
-				// 	}
-				// }
-				// fmt.Println("LAZY GEN ::", index, "|", param.data().string())
-				// gtypes[index] = param.data().full
 
 			} else if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
 				err := "parameter \"" + param.getType()
@@ -258,27 +249,34 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 		} else if dict {
 			panic(me.fail() + "regular paramater found after mapped parameter")
 		} else {
-			param := me.calc(0)
 			clsvar := base.variables[vars[pix]]
-			if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
-				err := "parameter \"" + param.getType()
-				err += "\" does not match class variable \"" + base.name + "."
-				err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
-				panic(me.fail() + err)
+			if me.token.is == "_" {
+				fmt.Println("CALC CLASS PARAM IS UNDERSCORE")
+				me.eat("_")
+				params[pix] = nil
+			} else {
+				fmt.Println("CALC CLASS PARAM")
+				param := me.calc(0)
+				if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
+					err := "parameter \"" + param.getType()
+					err += "\" does not match class variable \"" + base.name + "."
+					err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
+					panic(me.fail() + err)
+				}
+				params[pix] = param
 			}
-			params[pix] = param
 			pix++
 		}
 	}
 	if lazyGenerics {
-		gsize := len(base.generics)
-		if len(gtypes) != gsize {
-			panic(me.fail() + "missing generic for base class \"" + base.name + "\"")
-		}
-		glist := make([]string, gsize)
+		glist := make([]string, len(gtypes))
 		for k, v := range gtypes {
 			i, _ := gindex[k]
-			glist[i] = v
+			glist[i] = v.print()
+		}
+		if len(glist) != len(base.generics) {
+			f := fmt.Sprint("missing generic for base class \""+base.name+"\"\nimplementation list was ", glist)
+			panic(me.fail() + f)
 		}
 		lazy := typed + "<" + strings.Join(glist, ",") + ">"
 		if _, ok := me.hmfile.classes[lazy]; !ok {

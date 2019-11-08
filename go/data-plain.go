@@ -113,24 +113,97 @@ func (me *hmfile) getdatatype(typed string) *datatype {
 		return &datatype{is: dataTypeFunction, parameters: list, returns: me.getdatatype(returns)}
 	}
 
+	g := strings.Index(typed, "<")
+	if g != -1 {
+		base := typed[0:g]
+		var is int
+		if _, ok := me.classes[typed]; ok {
+			is = dataTypeClass
+		} else if _, ok := me.enums[typed]; ok {
+			is = dataTypeEnum
+		} else {
+			is = dataTypeUnknown
+		}
+		generics := typed[g+1:]
+		fmt.Println("GET DATA TYPE GENERIC ::", base, "|", generics, "| is:", is)
+		graw := me.getdatatypegenerics(typed)
+		glist := make([]*datatype, len(graw))
+		for i, r := range graw {
+			glist[i] = me.getdatatype(r)
+			fmt.Println("GET DATA TYPE GENERIC ITEM ::", r, "->", glist[i].print())
+		}
+		return &datatype{is: is, canonical: base, generics: glist}
+	}
+
 	dot := strings.Split(typed, ".")
 	if len(dot) != 1 {
 		if _, ok := me.imports[dot[0]]; ok {
-			fmt.Println("FIRST DOT IS FROM AN IMPORT")
+			fmt.Println(":: FIRST DOT IS FROM AN IMPORT")
 			return &datatype{}
 		}
-
-		fmt.Println("FIRST DOT IS FOR AN ENUM")
+		fmt.Println(":: FIRST DOT IS FOR AN ENUM")
 		return &datatype{}
 	}
 
-	g := strings.Index(typed, "<")
-	if g != -1 {
-		return &datatype{}
+	var is int
+	if _, ok := me.classes[typed]; ok {
+		is = dataTypeClass
+	} else if _, ok := me.enums[typed]; ok {
+		is = dataTypeEnum
+	} else {
+		is = dataTypeUnknown
 	}
 
-	// enums
-	// classes
+	return &datatype{is: is, canonical: typed}
+}
 
-	return &datatype{is: dataTypeUnknown, canonical: typed}
+func (me *hmfile) getdatatypegenerics(typed string) []string {
+	fmt.Println("getdatatypegenerics in ::", typed)
+	var order []string
+	stack := make([]*gstack, 0)
+	rest := typed
+	for {
+		begin := strings.Index(rest, "<")
+		end := strings.Index(rest, ">")
+		comma := strings.Index(rest, ",")
+		if begin != -1 && (begin < end || end == -1) && (begin < comma || comma == -1) {
+			name := rest[:begin]
+			current := &gstack{}
+			current.name = name
+			stack = append(stack, current)
+			rest = rest[begin+1:]
+		} else if end != -1 && (end < begin || begin == -1) && (end < comma || comma == -1) {
+			size := len(stack) - 1
+			current := stack[size]
+			if end == 0 {
+			} else {
+				sub := rest[:end]
+				current.order = append(current.order, sub)
+			}
+			stack = stack[:size]
+			if size == 0 {
+				order = current.order
+				break
+			} else {
+				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
+				next := stack[len(stack)-1]
+				next.order = append(next.order, pop)
+			}
+			if end == 0 {
+				rest = rest[1:]
+			} else {
+				rest = rest[end+1:]
+			}
+		} else if comma != -1 && (comma < begin || begin == -1) && (comma < end || end == -1) {
+			current := stack[len(stack)-1]
+			if comma == 0 {
+				rest = rest[1:]
+				continue
+			}
+			sub := rest[:comma]
+			current.order = append(current.order, sub)
+			rest = rest[comma+1:]
+		}
+	}
+	return order
 }

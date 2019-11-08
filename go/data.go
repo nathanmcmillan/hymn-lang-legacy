@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -409,13 +408,15 @@ func (me *varData) genericReplace(any map[string]string) {
 	}
 }
 
-func (me *varData) typeEqual(other *varData) bool {
-	if me.full == other.full {
+func (me *varData) typeEqual(b *varData) bool {
+	if me.full == b.full {
 		return true
 	}
-	a := me.module.typeStandard(me.full)
-	b := other.module.typeStandard(other.full)
-	return a == b
+	if me.module == nil || b.module == nil {
+		// TODO
+		return false
+	}
+	return me.module.getdatatype(me.full).standard() == b.module.getdatatype(b.full).standard()
 }
 
 func (me *varData) notEqual(other *varData) bool {
@@ -426,111 +427,5 @@ func (me *parser) typeEqual(one, two string) bool {
 	if one == two {
 		return true
 	}
-	return me.typeStandard(one) == me.typeStandard(two)
-}
-
-func (me *parser) typeStandard(typed string) string {
-	return me.hmfile.typeStandard(typed)
-}
-
-func (me *hmfile) typeStandard(typed string) string {
-
-	if checkIsPrimitive(typed) {
-		return typed
-	}
-
-	if strings.HasPrefix(typed, "maybe") {
-		return me.typeStandard(typed[6 : len(typed)-1])
-	} else if strings.HasPrefix(typed, "none") {
-		return me.typeStandard(typed[5 : len(typed)-1])
-	}
-
-	if checkIsArray(typed) || checkIsSlice(typed) {
-		size, member := typeOfArrayOrSlice(typed)
-		return "[" + size + "]" + me.typeStandard(member)
-	}
-
-	if checkIsFunction(typed) {
-		args, ret := functionSigType(typed)
-		for i, a := range args {
-			args[i] = me.typeStandard(a)
-		}
-		return "(" + strings.Join(args, ", ") + ") " + me.typeStandard(ret)
-	}
-
-	dot := strings.Split(typed, ".")
-	if len(dot) != 1 {
-		if _, ok := me.imports[dot[0]]; ok {
-			fmt.Println("FIRST DOT IS FROM A CLASS")
-		} else {
-			fmt.Println("FIRST DOT IS FOR AN ENUM")
-		}
-	}
-
-	g := strings.Index(typed, "<")
-	if g != -1 {
-		return me.typeStandardBrackets(typed)
-	}
-
-	// baseClass, okc := me.hmfile.classes[base]
-	// baseEnum, oke := me.hmfile.enums[base]
-
-	return typed
-}
-
-func (me *hmfile) typeStandardBrackets(typed string) string {
-
-	var order []string
-	stack := make([]*gstack, 0)
-	rest := typed
-
-	for {
-		begin := strings.Index(rest, "<")
-		end := strings.Index(rest, ">")
-		comma := strings.Index(rest, ",")
-
-		if begin != -1 && (begin < end || end == -1) && (begin < comma || comma == -1) {
-			name := rest[:begin]
-			current := &gstack{}
-			current.name = name
-			stack = append(stack, current)
-			rest = rest[begin+1:]
-
-		} else if end != -1 && (end < begin || begin == -1) && (end < comma || comma == -1) {
-			size := len(stack) - 1
-			current := stack[size]
-			if end == 0 {
-			} else {
-				sub := rest[:end]
-				current.order = append(current.order, sub)
-			}
-			stack = stack[:size]
-			if size == 0 {
-				order = current.order
-				break
-			} else {
-				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
-				next := stack[len(stack)-1]
-				next.order = append(next.order, pop)
-			}
-			if end == 0 {
-				rest = rest[1:]
-			} else {
-				rest = rest[end+1:]
-			}
-
-		} else if comma != -1 && (comma < begin || begin == -1) && (comma < end || end == -1) {
-			current := stack[len(stack)-1]
-			if comma == 0 {
-				rest = rest[1:]
-				continue
-			}
-			sub := rest[:comma]
-			current.order = append(current.order, sub)
-			rest = rest[comma+1:]
-		}
-	}
-
-	fmt.Println("BRACKETS ::", order)
-	return ""
+	return me.hmfile.getdatatype(one).standard() == me.hmfile.getdatatype(two).standard()
 }

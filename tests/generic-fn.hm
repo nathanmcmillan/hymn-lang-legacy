@@ -47,6 +47,6 @@ main
 	echo(g.do_special("cheeseburger", "chicken"))
 	echo("---")
 
-	f = foo(22.33, "zoob", _, _, _, transform, 0, '0')
+	f = foo(22.33, "zoob", _, _, transform, _, _)
 	echo(f.mutate("bacon"))
 	echo("---")

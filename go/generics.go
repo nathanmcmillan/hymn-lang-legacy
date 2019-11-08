@@ -160,6 +160,10 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 		return hintRecursiveReplace(a, b.member, gindex, update)
 	}
 	switch a.is {
+	case dataTypeClass:
+		fallthrough
+	case dataTypeEnum:
+		fallthrough
 	case dataTypeUnknown:
 		fallthrough
 	case dataTypePrimitive:
@@ -197,12 +201,6 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 				}
 			}
 		}
-	case dataTypeClass:
-		{
-		}
-	case dataTypeEnum:
-		{
-		}
 	default:
 		panic("missing data type")
 	}
@@ -223,7 +221,7 @@ func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]i
 
 	ok := hintRecursiveReplace(a, b, gindex, update)
 
-	fmt.Println("HINT RECURSIVE REPLACE (", ok, ") -------")
+	fmt.Println("HINT RECURSIVE REPLACE (", ok, ") ---------")
 	for k, v := range update {
 		fmt.Println(k, "--->", v.print())
 	}

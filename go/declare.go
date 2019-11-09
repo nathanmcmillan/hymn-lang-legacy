@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -71,14 +70,14 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 	me.eat("<")
 	gsize := len(base.getGenerics())
-	fmt.Println("DECLARE GENERICS ::", base.getGenerics())
 	order := make([]string, 0)
 	for i := 0; i < gsize; i++ {
 		if i != 0 {
 			me.eat(",")
 		}
 		gimpl := me.declareType(impl)
-		// TODO uncomment this and make impl = false for class functions including generics
+		// TODO
+		// uncomment this and make impl = false for class functions including generics
 		// _, ok := me.hmfile.getType(gimpl.full)
 		// if !ok {
 		// 	if impl {

@@ -329,15 +329,7 @@ func (me *parser) block() *node {
 		if me.token.is == "eof" || me.token.is == "comment" {
 			goto blockEnd
 		}
-		expr := me.expression()
-		block.push(expr)
-		if expr.is == "return" {
-			fn := me.hmfile.scope.fn
-			if fn.typed.notEqual(expr.data()) {
-				panic(me.fail() + "function " + fn.name + " returns " + fn.typed.full + " but found " + expr.getType())
-			}
-			goto blockEnd
-		}
+		block.push(me.expression())
 	}
 blockEnd:
 	return block

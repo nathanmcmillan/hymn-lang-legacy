@@ -31,10 +31,12 @@ func (me *parser) ifexpr() *node {
 		block := nodeInit("block")
 		block.push(me.expression())
 		n.push(block)
-		me.eat("line")
 	} else {
 		me.eat("line")
 		n.push(me.block())
+	}
+	if me.peek().is == "elif" && me.token.is == "line" {
+		me.eat("line")
 	}
 	me.enumstackclr(templs)
 	for me.token.is == "elif" {
@@ -47,13 +49,15 @@ func (me *parser) ifexpr() *node {
 			block := nodeInit("block")
 			block.push(me.expression())
 			n.push(block)
-			me.eat("line")
 		} else {
 			me.eat("line")
 			other.push(me.block())
 		}
 		me.enumstackclr(templs)
 		n.push(other)
+		if (me.peek().is == "elif" || me.peek().is == "else") && me.token.is == "line" {
+			me.eat("line")
+		}
 	}
 	if me.token.is == "else" {
 		me.eat("else")
@@ -63,10 +67,12 @@ func (me *parser) ifexpr() *node {
 			block := nodeInit("block")
 			block.push(exp)
 			n.push(block)
-			me.eat("line")
 		} else {
 			me.eat("line")
 			n.push(me.block())
+		}
+		if me.token.is == "line" {
+			me.eat("line")
 		}
 	}
 	return n

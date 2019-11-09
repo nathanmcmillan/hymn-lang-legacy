@@ -217,7 +217,10 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			me.eat("id")
 			me.eat(":")
 			param := me.calc(0)
-			clsvar := base.variables[vname]
+			clsvar, ok := base.variables[vname]
+			if !ok {
+				panic(me.fail() + "member variable \"" + vname + "\" does not exist for class \"" + base.name + "\"")
+			}
 
 			var update map[string]*datatype
 			if len(gindex) > 0 {

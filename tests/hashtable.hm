@@ -12,45 +12,45 @@ string_hashcode(key string) int
 		pos += 1
 	return int value
 
-type dict_element<v>
+type hashtable_item<v>
 	key  int
 	value v
-	next  maybe<dict_element<v>>
+	next  maybe<hashtable_item<v>>
 
-type dict<k, v>
+type hashtable<k, v>
 	size     int
 	capacity int
 	get_code (k) int
-	table    []maybe<dict_element<v>>
+	table    []maybe<hashtable_item<v>>
 
-dict hash_int(code int) int
+hashtable hash_int(code int) int
 	return code % self.capacity
 
-dict hash_element(key k) int
+hashtable hash_element(key k) int
 	code = self.get_code(key)
 	return self.hash_int(code)
 
-dict set(key k, value v)
+hashtable set(key k, value v)
 	bin = self.hash_element(key)
 	mutable next = self.table[bin]
-	mutable last = none<dict_element<v>>
+	mutable last = none<hashtable_item<v>>
 	for next is some(n)
 		if key != n.key : break
 		last = next
-		next = next.next
+		next = n.next
 	if next is some(n) : if key == n.key : return
-	element = dict_element<v>(hash:bin, value:value)
+	element = hashtable_item<v>(key:bin, value:value)
 	if next == self.table[bin]
 		element.next = next
 		self.table[bin] = element
 	elif next is none
-		last.next = element
+		if last is some(s) : s.next = element
 	else
 		element.next = next
-		last.next = element
+		if last is some(s) : s.next = element
 	self.size += 1
 
-dict get(key k) maybe<v>
+hashtable get(key k) maybe<v>
 	bin = self.hash_element(key)
 	match element := self.table[bin]
 		some(e) =>
@@ -59,18 +59,18 @@ dict get(key k) maybe<v>
 			return e.value
 		none => return none
 
-dict has(key k) bool
+hashtable has(key k) bool
 	return self.get(key) is some
 
-dict delete
+hashtable delete
 	(* todo *)
 	self.size -= 1
 
-dict clear
+hashtable clear
 	self.size = 0
 
 main
-	m = dict<int, string>(
+	m = hashtable<int, string>(
 		size: 10
 		capacity: 10
 		get_code: int_hashcode)

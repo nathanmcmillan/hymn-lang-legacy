@@ -144,8 +144,10 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		ref := me.hmfile.fnArgInit(self.name, "self", false)
 		fn.args = append(fn.args, ref)
 	}
+	parenthesis := false
 	if me.token.is == "(" {
 		me.eat("(")
+		parenthesis = true
 		if me.token.is != ")" {
 			for {
 				if me.token.is != "id" {
@@ -191,6 +193,9 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		me.eat(")")
 	}
 	if me.token.is != "line" {
+		if !parenthesis {
+			panic(me.fail() + "functions that return must include parenthesis")
+		}
 		fn.typed = me.declareType(true)
 	} else {
 		fn.typed = me.hmfile.typeToVarData("void")

@@ -2,10 +2,10 @@ type foo<k, v>
 	size k
 	name v
 
-foo.set_name(name v)
+foo set_name(name v)
 	self.name = name
 
-foo.get_size() k
+foo get_size() k
 	return self.size
 
 main

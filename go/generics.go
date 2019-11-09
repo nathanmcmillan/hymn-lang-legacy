@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -208,25 +207,10 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 }
 
 func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) map[string]*datatype {
-
-	fmt.Println("HINT GENERIC INGEST ::", data.full, "|", gdata.full, "|", gindex)
-
 	a := me.hmfile.getdatatype(data.full)
 	b := me.hmfile.getdatatype(gdata.full)
-
-	fmt.Println("TYPE SIMPLIFY ::", data.full, "->", a.print())
-	fmt.Println("TYPE SIMPLIFY ::", gdata.full, "->", b.print())
-
 	update := make(map[string]*datatype)
-
 	ok := hintRecursiveReplace(a, b, gindex, update)
-
-	fmt.Println("HINT RECURSIVE REPLACE (", ok, ") ---------")
-	for k, v := range update {
-		fmt.Println(k, "--->", v.print())
-	}
-	fmt.Println("-----------------------------------------")
-
 	if !ok {
 		return nil
 	}

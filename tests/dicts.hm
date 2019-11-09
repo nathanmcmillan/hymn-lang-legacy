@@ -13,28 +13,29 @@ string_hashcode(key string) int
 	return int value
 
 type dict_element<v>
-	hash  int
+	key  int
 	value v
 	next  maybe<dict_element<v>>
 
 type dict<k, v>
 	size     int
 	capacity int
-	hashing  (k) int
+	get_code (k) int
 	table    []maybe<dict_element<v>>
 
-dict.hash_int(code int) int
+dict hash_int(code int) int
 	return code % self.capacity
 
-dict.hash_element(key k) int
-	code = self.hashing(key)
+dict hash_element(key k) int
+	code = self.get_code(key)
 	return self.hash_int(code)
 
-dict.set(key k, value v)
+dict set(key k, value v)
 	bin = self.hash_element(key)
 	mutable next = self.table[bin]
 	mutable last = none<dict_element<v>>
-	for next is some(n) and key != n.key
+	for next is some(n)
+		if key != n.key : break
 		last = next
 		next = next.next
 	if next is some(n) : if key == n.key : return
@@ -49,32 +50,30 @@ dict.set(key k, value v)
 		last.next = element
 	self.size += 1
 
-dict.get(key k) maybe<v>
+dict get(key k) maybe<v>
 	bin = self.hash_element(key)
 	match element := self.table[bin]
-		some =>
-			if key != element.key
+		some(e) =>
+			if key != e.key
 				return none
-			return element.value
+			return e.value
 		none => return none
 
-dict.has(key k) bool
-	match self.get(key)
-		some => return true
-		none => return false
+dict has(key k) bool
+	return self.get(key) is some
 
-dict.delete
+dict delete
 	(* todo *)
 	self.size -= 1
 
-dict.clear
+dict clear
 	self.size = 0
 
 main
 	m = dict<int, string>(
 		size: 10
 		capacity: 10
-		hashing: int_hashcode)
+		get_code: int_hashcode)
 	m.set(0, "cool")
 	out = m.get(0)
 	echo(out)

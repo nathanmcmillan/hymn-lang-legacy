@@ -2,7 +2,7 @@ import "math"
 
 immutable pi = "tasty"
 
-power string
+power() string
   return "pow"
 
 extra(fl float, mv math.vec) math.vec

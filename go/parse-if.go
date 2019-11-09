@@ -71,3 +71,42 @@ func (me *parser) ifexpr() *node {
 	}
 	return n
 }
+
+func (me *parser) iswhile() bool {
+	pos := me.pos
+	token := me.tokens.get(pos)
+	for token.is != "line" && token.is != "eof" {
+		if token.is == "," {
+			return false
+		}
+		pos++
+		token = me.tokens.get(pos)
+	}
+	return true
+}
+
+func (me *parser) forexpr() *node {
+	me.eat("for")
+	n := nodeInit("for")
+	var templs []*variableNode
+	if me.token.is == "line" {
+		me.eat("line")
+	} else {
+		if me.iswhile() {
+			n.push(me.calcBool())
+			templs = me.getenumstack(n)
+		} else {
+			n.push(me.forceassign(true, true))
+			me.eat(",")
+			n.push(me.calcBool())
+			me.eat(",")
+			n.push(me.forceassign(true, true))
+		}
+		me.eat("line")
+	}
+	n.push(me.block())
+	if templs != nil {
+		me.enumstackclr(templs)
+	}
+	return n
+}

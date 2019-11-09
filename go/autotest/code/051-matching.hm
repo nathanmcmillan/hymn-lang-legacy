@@ -30,13 +30,13 @@ zoob(b bug.ant) string
 moob(b liquid.soda) string
   return "moob " + b.2 + "!"
 
-foob bug.ant
+foob() bug.ant
   return bug.ant(5)
 
-noob liquid
+noob() liquid
   return liquid.soda("1", "2", "3")
 
-numby int
+numby() int
   return 2
 
 main

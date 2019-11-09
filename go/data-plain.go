@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -16,6 +15,7 @@ const (
 )
 
 type datatype struct {
+	module     *hmfile
 	is         int
 	canonical  string
 	size       string
@@ -88,20 +88,30 @@ func (me *datatype) string(expand bool) string {
 
 func (me *hmfile) getdatatype(typed string) *datatype {
 
+	module := me
+	d := strings.Index(typed, ".")
+	if d != -1 {
+		base := typed[0:d]
+		if _, ok := me.imports[base]; ok {
+			module = me.program.hmfiles[base]
+			typed = typed[d+1:]
+		}
+	}
+
 	if checkIsPrimitive(typed) {
-		return &datatype{is: dataTypePrimitive, canonical: typed}
+		return &datatype{module: module, is: dataTypePrimitive, canonical: typed}
 	}
 
 	if strings.HasPrefix(typed, "maybe") {
-		return &datatype{is: dataTypeMaybe, member: me.getdatatype(typed[6 : len(typed)-1])}
+		return &datatype{module: module, is: dataTypeMaybe, member: me.getdatatype(typed[6 : len(typed)-1])}
 
 	} else if strings.HasPrefix(typed, "none") {
-		return &datatype{is: dataTypeMaybe, member: me.getdatatype(typed[5 : len(typed)-1])}
+		return &datatype{module: module, is: dataTypeMaybe, member: me.getdatatype(typed[5 : len(typed)-1])}
 	}
 
 	if checkIsArray(typed) || checkIsSlice(typed) {
 		size, member := typeOfArrayOrSlice(typed)
-		return &datatype{is: dataTypeArray, size: size, member: me.getdatatype(member)}
+		return &datatype{module: module, is: dataTypeArray, size: size, member: me.getdatatype(member)}
 	}
 
 	if checkIsFunction(typed) {
@@ -110,39 +120,38 @@ func (me *hmfile) getdatatype(typed string) *datatype {
 		for i, p := range parameters {
 			list[i] = me.getdatatype(p)
 		}
-		return &datatype{is: dataTypeFunction, parameters: list, returns: me.getdatatype(returns)}
+		return &datatype{module: module, is: dataTypeFunction, parameters: list, returns: me.getdatatype(returns)}
 	}
 
 	g := strings.Index(typed, "<")
 	if g != -1 {
 		base := typed[0:g]
 		var is int
-		if _, ok := me.classes[typed]; ok {
+		if _, ok := me.classes[base]; ok {
 			is = dataTypeClass
-		} else if _, ok := me.enums[typed]; ok {
+		} else if _, ok := me.enums[base]; ok {
 			is = dataTypeEnum
 		} else {
 			is = dataTypeUnknown
 		}
-		generics := typed[g+1:]
-		fmt.Println("GET DATA TYPE GENERIC ::", base, "|", generics, "| is:", is)
 		graw := me.getdatatypegenerics(typed)
 		glist := make([]*datatype, len(graw))
 		for i, r := range graw {
 			glist[i] = me.getdatatype(r)
-			fmt.Println("GET DATA TYPE GENERIC ITEM ::", r, "->", glist[i].print())
 		}
-		return &datatype{is: is, canonical: base, generics: glist}
+		return &datatype{module: module, is: is, canonical: base, generics: glist}
 	}
 
-	dot := strings.Split(typed, ".")
-	if len(dot) != 1 {
-		if _, ok := me.imports[dot[0]]; ok {
-			fmt.Println(":: FIRST DOT IS FROM AN IMPORT")
-			return &datatype{}
+	d = strings.Index(typed, ".")
+	if d != -1 {
+		base := typed[0:d]
+		var is int
+		if _, ok := me.enums[base]; ok {
+			is = dataTypeEnum
+		} else {
+			is = dataTypeUnknown
 		}
-		fmt.Println(":: FIRST DOT IS FOR AN ENUM")
-		return &datatype{}
+		return &datatype{module: module, is: is, canonical: base}
 	}
 
 	var is int
@@ -154,11 +163,10 @@ func (me *hmfile) getdatatype(typed string) *datatype {
 		is = dataTypeUnknown
 	}
 
-	return &datatype{is: is, canonical: typed}
+	return &datatype{module: module, is: is, canonical: typed}
 }
 
 func (me *hmfile) getdatatypegenerics(typed string) []string {
-	fmt.Println("getdatatypegenerics in ::", typed)
 	var order []string
 	stack := make([]*gstack, 0)
 	rest := typed

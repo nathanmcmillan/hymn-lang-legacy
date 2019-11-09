@@ -343,40 +343,6 @@ blockEnd:
 	return block
 }
 
-func (me *parser) iswhile() bool {
-	pos := me.pos
-	token := me.tokens.get(pos)
-	for token.is != "line" && token.is != "eof" {
-		if token.is == "," {
-			return false
-		}
-		pos++
-		token = me.tokens.get(pos)
-	}
-	return true
-}
-
-func (me *parser) forexpr() *node {
-	me.eat("for")
-	n := nodeInit("for")
-	if me.token.is == "line" {
-		me.eat("line")
-	} else {
-		if me.iswhile() {
-			n.push(me.calcBool())
-		} else {
-			n.push(me.forceassign(true, true))
-			me.eat(",")
-			n.push(me.calcBool())
-			me.eat(",")
-			n.push(me.forceassign(true, true))
-		}
-		me.eat("line")
-	}
-	n.push(me.block())
-	return n
-}
-
 func (me *parser) comparison(left *node, op string) *node {
 	fmt.Println("> comparison " + left.string(0) + "")
 	var opType string
@@ -445,7 +411,6 @@ func (me *parser) include() {
 func (me *parser) immutable() {
 	n := me.forceassign(false, false)
 	av := n.has[0]
-	fmt.Println("static immutable", n.string(0))
 	if n.is != "=" || av.is != "variable" {
 		panic(me.fail() + "invalid static variable")
 	}

@@ -26,15 +26,30 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		case TokenRawString:
 			return codeBlockMerge(n, "((int) strlen("+param.pop()+"))", param.pre)
 		case TokenString:
-			return codeBlockMerge(n, "hmlib_string_len_int("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_len("+param.pop()+")", param.pre)
 		}
 		p := param.data()
 		if p.checkIsArray() {
 			return codeBlockMerge(n, p.sizeOfArray(), param.pre)
 		} else if p.checkIsSlice() {
-			return codeBlockMerge(n, "hmlib_slice_len_int("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_slice_len("+param.pop()+")", param.pre)
 		}
-		panic("argument for echo was " + param.string(0))
+		panic("argument for len() was " + param.string(0))
+	case libCapacity:
+		param := me.eval(parameters[0])
+		switch param.getType() {
+		case TokenRawString:
+			return codeBlockMerge(n, "((int) strlen("+param.pop()+"))", param.pre)
+		case TokenString:
+			return codeBlockMerge(n, "hmlib_string_cap("+param.pop()+")", param.pre)
+		}
+		p := param.data()
+		if p.checkIsArray() {
+			return codeBlockMerge(n, p.sizeOfArray(), param.pre)
+		} else if p.checkIsSlice() {
+			return codeBlockMerge(n, "hmlib_slice_cap("+param.pop()+")", param.pre)
+		}
+		panic("argument for cap() was " + param.string(0))
 	case libOpen:
 		param0 := me.eval(parameters[0])
 		param1 := me.eval(parameters[1])

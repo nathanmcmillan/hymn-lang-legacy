@@ -6,10 +6,9 @@ import (
 	"strings"
 )
 
-func (me *parser) buildAnyType(alloc *allocData) *varData {
+func (me *parser) allocType(alloc *allocData) *varData {
 
 	var module *hmfile
-
 	if me.token.is == "id" {
 		name := me.token.value
 		if _, ok := me.hmfile.imports[name]; ok {
@@ -18,12 +17,21 @@ func (me *parser) buildAnyType(alloc *allocData) *varData {
 			me.eat(".")
 		}
 	}
-
-	typed := me.token.value
-	me.verifyWordOrPrimitive()
-
 	if module == nil {
 		module = me.hmfile
+	}
+
+	typed := ""
+
+	if me.token.is == "maybe" {
+		me.eat("maybe")
+		me.eat("<")
+		option := me.allocType(alloc).typed
+		me.eat(">")
+		typed += "maybe<" + option + ">"
+	} else {
+		typed += me.token.value
+		me.verifyWordOrPrimitive()
 	}
 
 	if _, ok := module.getClass(typed); ok {
@@ -110,10 +118,8 @@ func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
 				}
 			}
 		}
-	} else {
-		if len(gdict) != 0 && len(order) == 0 {
-			panic(me.fail() + "generic enum \"" + enumName + "\" has no impl for " + fmt.Sprint(enumDef.generics))
-		}
+	} else if len(gdict) != 0 && len(order) == 0 {
+		panic(me.fail() + "generic enum \"" + enumName + "\" has no impl for " + fmt.Sprint(enumDef.generics))
 	}
 
 	n.copyData(module.typeToVarData(enumName + "." + unionName))

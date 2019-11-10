@@ -192,9 +192,9 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 			if !ok {
 				return false
 			}
-			for i, p := range a.parameters {
-				b := b.parameters[i]
-				ok = hintRecursiveReplace(p, b, gindex, update)
+			for i, pa := range a.parameters {
+				pb := b.parameters[i]
+				ok = hintRecursiveReplace(pa, pb, gindex, update)
 				if !ok {
 					return false
 				}

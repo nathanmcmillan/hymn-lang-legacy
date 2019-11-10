@@ -18,6 +18,7 @@ const (
 	libToFloat64 = "to_float64"
 	libOpen      = "open"
 	libLength    = "len"
+	libCapacity  = "cap"
 	libPush      = "push"
 )
 
@@ -119,6 +120,7 @@ func (me *hmlib) libs() {
 	me.simple(libToFloat64, TokenFloat64)
 
 	me.simple(libLength, TokenInt)
+	me.simple(libCapacity, TokenInt)
 
 	me.initIO()
 	me.initPush()

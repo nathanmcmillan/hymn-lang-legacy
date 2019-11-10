@@ -1,16 +1,15 @@
 #ifndef HMLIB_STRING_H
 #define HMLIB_STRING_H
 
+#include <inttypes.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <inttypes.h>
 
-struct __attribute__((__packed__)) hmlib_string_head
-{
+struct __attribute__((__packed__)) hmlib_string_head {
     size_t len;
     size_t cap;
     char **chars;
@@ -22,8 +21,10 @@ typedef struct hmlib_string_head hmlib_string_head;
 hmlib_string hmlib_string_init_with_length(const char *init, size_t len);
 hmlib_string hmlib_string_init(const char *init);
 hmlib_string hmlib_string_concat(const hmlib_string a, const hmlib_string b);
-size_t hmlib_string_len(const hmlib_string s);
-int hmlib_string_len_int(const hmlib_string s);
+size_t hmlib_string_len_size(const hmlib_string s);
+int hmlib_string_len(const hmlib_string s);
+size_t hmlib_string_cap_size(const hmlib_string s);
+int hmlib_string_cap(const hmlib_string s);
 void hmlib_string_free(const hmlib_string s);
 
 char *hmlib_concat(const char *a, const char *b);

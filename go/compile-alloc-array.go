@@ -30,14 +30,23 @@ func (me *cfile) compileAllocArray(n *node) *codeblock {
 
 func (me *cfile) compileAllocSlice(n *node) *codeblock {
 	size := "0"
-	if len(n.has) > 0 {
+	capacity := ""
+	has := len(n.has)
+	if has > 0 {
 		size = me.eval(n.has[0]).code()
+		if has > 1 {
+			capacity = me.eval(n.has[1]).code()
+		}
 	}
 	code := ""
 	if _, ok := n.attributes["global"]; ok {
 		code = "[" + size + "]"
 	} else {
-		code = "hmlib_slice_init(sizeof(" + n.data().memberType.typeSig() + "), " + size + ")"
+		if capacity != "" {
+			code = "hmlib_slice_init(sizeof(" + n.data().memberType.typeSig() + "), " + size + ", " + capacity + ")"
+		} else {
+			code = "hmlib_slice_simple_init(sizeof(" + n.data().memberType.typeSig() + "), " + size + ")"
+		}
 	}
 	return codeBlockOne(n, code)
 }

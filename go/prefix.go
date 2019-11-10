@@ -95,31 +95,44 @@ func prefixIdent(me *parser, op string) *node {
 func prefixArray(me *parser, op string) *node {
 	me.eat("[")
 	alloc := &allocData{}
-	var node *node
+	var no *node
 	if me.token.is == "]" {
 		alloc.slice = true
-		node = nodeInit("slice")
+		no = nodeInit("slice")
 	} else {
 		size := me.calc(0)
+		if size.getType() != TokenInt {
+			panic(me.fail() + "array or slice size " + size.string(0) + " is not an integer")
+		}
+		slice := false
+		var capacity *node
 		if me.token.is == ":" {
 			me.eat(":")
-			alloc.slice = true
-			node = nodeInit("slice")
-			// TODO capacity
-			// TODO allow hinting to not need this for member variables
-		} else {
-			if size.getType() != TokenInt {
-				panic(me.fail() + "array size must be integer")
+			slice = true
+			if me.token.is != "]" {
+				capacity = me.calc(0)
+				if capacity.getType() != TokenInt {
+					panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
+				}
 			}
-			alloc.array = true
-			node = nodeInit("array")
 		}
-		alloc.size, _ = strconv.Atoi(size.value)
-		node.push(size)
+		if slice || size.is != TokenInt {
+			alloc.slice = true
+			no = nodeInit("slice")
+		} else {
+			alloc.array = true
+			alloc.size, _ = strconv.Atoi(size.value)
+			no = nodeInit("array")
+		}
+		no.push(size)
+		if capacity != nil {
+			no.push(capacity)
+		}
 	}
 	me.eat("]")
-	node.copyData(me.buildAnyType(alloc))
-	return node
+	no.copyData(me.allocType(alloc))
+
+	return no
 }
 
 func prefixNot(me *parser, op string) *node {
@@ -150,6 +163,8 @@ func prefixNone(me *parser, op string) *node {
 }
 
 func prefixMaybe(me *parser, op string) *node {
+	// TODO
+	// decaretype does all of this
 	me.eat("maybe")
 	me.eat("<")
 	option := me.declareType(true)

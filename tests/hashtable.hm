@@ -77,3 +77,10 @@ main
 	m.set(0, "cool")
 	out = m.get(0)
 	echo(out)
+
+	o = []maybe<hashtable_item<string>>
+	z = hashtable(
+		size: 10
+		capacity: 10
+		get_code: int_hashcode
+		table: o)

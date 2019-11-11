@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -44,6 +45,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	me.hmfile.namespace[impl] = "type"
 	me.hmfile.types[impl] = ""
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_type")
+	fmt.Println("DEFINE IMPL GENERIC ::", me.hmfile.defineOrder)
 
 	classDef := classInit(impl, nil, nil)
 	classDef.base = base
@@ -62,12 +64,12 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 		mem.update(me.hmfile, me.genericsReplacer(mem.data().full, gmapper))
 	}
 
-	for _, fn := range base.functions {
+	for _, fn := range base.functionOrder {
 		me.remapClassFunctionImpl(classDef, fn)
 	}
 }
 
-func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
+func (me *parser) declareGeneric(implementation bool, base hasGenerics) []string {
 	me.eat("<")
 	gsize := len(base.getGenerics())
 	order := make([]string, 0)
@@ -75,7 +77,7 @@ func (me *parser) declareGeneric(impl bool, base hasGenerics) []string {
 		if i != 0 {
 			me.eat(",")
 		}
-		gimpl := me.declareType(impl)
+		gimpl := me.declareType(implementation)
 		// TODO
 		// uncomment this and make impl = false for class functions including generics
 		// _, ok := me.hmfile.getType(gimpl.full)
@@ -120,7 +122,7 @@ func (me *parser) declareFnPtr(fn *function) *varData {
 	return me.hmfile.typeToVarData(fn.name)
 }
 
-func (me *parser) declareType(impl bool) *varData {
+func (me *parser) declareType(implementation bool) *varData {
 	array := false
 	size := ""
 	if me.token.is == "[" {
@@ -144,17 +146,19 @@ func (me *parser) declareType(impl bool) *varData {
 	} else if me.token.is == "maybe" {
 		me.eat("maybe")
 		me.eat("<")
-		option := me.declareType(impl).typed
+		option := me.declareType(implementation).typed
 		me.eat(">")
 		typed += "maybe<" + option + ">"
 
 	} else if me.token.is == "none" {
 		me.eat("none")
-		me.eat("<")
-		option := me.declareType(impl).typed
-		me.eat(">")
-		typed += "none<" + option + ">"
-
+		typed += "none"
+		if me.token.is == "<" {
+			me.eat("<")
+			option := me.declareType(implementation).typed
+			me.eat(">")
+			typed += "<" + option + ">"
+		}
 	} else {
 		typed += me.token.value
 		me.wordOrPrimitive()
@@ -181,17 +185,17 @@ func (me *parser) declareType(impl bool) *varData {
 	if me.token.is == "<" {
 		data := me.hmfile.typeToVarData(typed)
 		if base, ok := data.module.classes[data.typed]; ok {
-			gtypes := me.declareGeneric(impl, base)
+			gtypes := me.declareGeneric(implementation, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
-			if impl {
+			if implementation {
 				if _, ok := data.module.classes[typed]; !ok {
 					me.defineClassImplGeneric(base, typed, gtypes)
 				}
 			}
 		} else if base, ok := data.module.enums[data.typed]; ok {
-			gtypes := me.declareGeneric(impl, base)
+			gtypes := me.declareGeneric(implementation, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
-			if impl {
+			if implementation {
 				if _, ok := data.module.enums[typed]; !ok {
 					me.defineEnumImplGeneric(base, typed, gtypes)
 				}

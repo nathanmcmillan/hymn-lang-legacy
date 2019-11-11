@@ -12,6 +12,7 @@ const (
 	dataTypeClass     = 4
 	dataTypeEnum      = 5
 	dataTypeUnknown   = 6
+	dataTypeNone      = 7
 )
 
 type datatype struct {
@@ -47,6 +48,10 @@ func (me *datatype) string(expand bool) string {
 				return "maybe<" + me.member.print() + ">"
 			}
 			return me.member.print()
+		}
+	case dataTypeNone:
+		{
+			return "none"
 		}
 	case dataTypeArray:
 		{
@@ -86,7 +91,11 @@ func (me *datatype) string(expand bool) string {
 	}
 }
 
-func (me *hmfile) getdatatype(typed string) *datatype {
+func getdatatype(me *hmfile, typed string) *datatype {
+
+	if me == nil {
+		return &datatype{module: me, is: dataTypeUnknown, canonical: typed}
+	}
 
 	module := me
 	d := strings.Index(typed, ".")
@@ -103,24 +112,27 @@ func (me *hmfile) getdatatype(typed string) *datatype {
 	}
 
 	if strings.HasPrefix(typed, "maybe") {
-		return &datatype{module: module, is: dataTypeMaybe, member: me.getdatatype(typed[6 : len(typed)-1])}
+		return &datatype{module: module, is: dataTypeMaybe, member: getdatatype(me, typed[6:len(typed)-1])}
+
+	} else if typed == "none" {
+		return &datatype{module: module, is: dataTypeNone}
 
 	} else if strings.HasPrefix(typed, "none") {
-		return &datatype{module: module, is: dataTypeMaybe, member: me.getdatatype(typed[5 : len(typed)-1])}
+		return &datatype{module: module, is: dataTypeMaybe, member: getdatatype(me, typed[5:len(typed)-1])}
 	}
 
 	if checkIsArray(typed) || checkIsSlice(typed) {
 		size, member := typeOfArrayOrSlice(typed)
-		return &datatype{module: module, is: dataTypeArray, size: size, member: me.getdatatype(member)}
+		return &datatype{module: module, is: dataTypeArray, size: size, member: getdatatype(me, member)}
 	}
 
 	if checkIsFunction(typed) {
 		parameters, returns := functionSigType(typed)
 		list := make([]*datatype, len(parameters))
 		for i, p := range parameters {
-			list[i] = me.getdatatype(p)
+			list[i] = getdatatype(me, p)
 		}
-		return &datatype{module: module, is: dataTypeFunction, parameters: list, returns: me.getdatatype(returns)}
+		return &datatype{module: module, is: dataTypeFunction, parameters: list, returns: getdatatype(me, returns)}
 	}
 
 	g := strings.Index(typed, "<")
@@ -137,7 +149,7 @@ func (me *hmfile) getdatatype(typed string) *datatype {
 		graw := me.getdatatypegenerics(typed)
 		glist := make([]*datatype, len(graw))
 		for i, r := range graw {
-			glist[i] = me.getdatatype(r)
+			glist[i] = getdatatype(me, r)
 		}
 		return &datatype{module: module, is: is, canonical: base, generics: glist}
 	}

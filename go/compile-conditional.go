@@ -49,11 +49,27 @@ func (me *cfile) compileIf(n *node) *codeblock {
 	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileFor(n *node) *codeblock {
-	size := len(n.has)
+func (me *cfile) compileLoop(op string, n *node) *codeblock {
 	ix := 0
 	code := ""
-	if size > 2 {
+	if op == "loop" {
+		code += "while (true) {\n"
+	} else if op == "while" {
+		ix++
+		code += me.walrusLoop(n)
+		code += "while (" + me.eval(n.has[0]).code() + ") {\n"
+		size := len(n.has)
+		for ix < size && n.has[ix].is == "variable" {
+			temp := n.has[ix]
+			tempname := temp.idata.name
+			tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
+			me.scope.variables[tempname] = tempv
+			ref := me.eval(n.has[ix].has[0]).code()
+			code += fmc(me.depth + 1)
+			code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
+			ix++
+		}
+	} else {
 		ix += 3
 		vset := n.has[0]
 		if vset.is != "=" {
@@ -71,12 +87,6 @@ func (me *cfile) compileFor(n *node) *codeblock {
 		condition := me.eval(n.has[1]).code()
 		inc := me.assignmentUpdate(n.has[2])
 		code += "for (" + vinit + "; " + condition + "; " + inc + ") {\n"
-	} else if size > 1 {
-		ix++
-		code += me.walrusLoop(n)
-		code += "while (" + me.eval(n.has[0]).code() + ") {\n"
-	} else {
-		code += "while (true) {\n"
 	}
 	code += me.eval(n.has[ix]).code()
 	code += "\n" + fmc(me.depth) + "}"

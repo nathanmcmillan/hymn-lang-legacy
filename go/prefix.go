@@ -49,6 +49,31 @@ func prefixChar(me *parser, op string) *node {
 	return node
 }
 
+func prefixNot(me *parser, op string) *node {
+	if me.token.is == "!" {
+		me.eat("!")
+	} else {
+		me.eat("not")
+	}
+	node := nodeInit("not")
+	node.copyData(me.hmfile.typeToVarData("bool"))
+	node.push(me.calcBool())
+	return node
+}
+
+func prefixCast(me *parser, op string) *node {
+	me.eat(op)
+	node := nodeInit("cast")
+	node.copyData(me.hmfile.typeToVarData(op))
+	calc := me.calc(getPrefixPrecedence(op))
+	value := calc.data().full
+	if canCastToNumber(value) {
+		node.push(calc)
+		return node
+	}
+	panic(me.fail() + "invalid cast \"" + value + "\"")
+}
+
 func prefixIdent(me *parser, op string) *node {
 	useStack := false
 	if me.token.is == "$" {
@@ -69,16 +94,17 @@ func prefixIdent(me *parser, op string) *node {
 			return me.allocClass(module, data)
 		}
 		if _, ok := module.enums[name]; ok {
-			data := &allocData{}
-			data.stack = useStack
-			return me.allocEnum(module, data)
+			alloc := &allocData{}
+			alloc.stack = useStack
+			no := me.allocEnum(module)
+			no._vdata.merge(alloc)
+			return no
 		}
 		if def, ok := module.defs[name]; ok {
 			return me.exprDef(name, def)
 		}
 		panic(me.fail() + "bad type \"" + name + "\" definition")
-	}
-	if _, ok := module.imports[name]; ok {
+	} else if _, ok := module.imports[name]; ok {
 		return me.extern()
 	}
 	v := module.getvar(name)
@@ -130,62 +156,23 @@ func prefixArray(me *parser, op string) *node {
 		}
 	}
 	me.eat("]")
-	no.copyData(me.allocType(alloc))
+	data := me.declareType(true)
+	data.merge(alloc)
+	no._vdata = data
 
 	return no
 }
 
-func prefixNot(me *parser, op string) *node {
-	if me.token.is == "!" {
-		me.eat("!")
-	} else {
-		me.eat("not")
-	}
-	node := nodeInit("not")
-	node.copyData(me.hmfile.typeToVarData("bool"))
-	node.push(me.calcBool())
-	return node
-}
-
 func prefixNone(me *parser, op string) *node {
-	me.eat("none")
-	node := nodeInit("none")
-	if me.token.is == "<" {
-		me.eat("<")
-		option := me.declareType(true)
-		me.eat(">")
-		typed := "none<" + option.full + ">"
-		node.copyData(me.hmfile.typeToVarData(typed))
-	} else {
-		node.copyData(me.hmfile.typeToVarData("none"))
-	}
-	return node
-}
-
-func prefixMaybe(me *parser, op string) *node {
-	// TODO
-	// decaretype does all of this
-	me.eat("maybe")
-	me.eat("<")
-	option := me.declareType(true)
-	me.eat(">")
-	typed := "maybe<" + option.full + ">"
-	data := me.hmfile.typeToVarData(typed)
-
-	n := nodeInit("maybe")
-	n.copyData(data)
+	me.verify("none")
+	n := nodeInit("none")
+	n._vdata = me.declareType(true)
 	return n
 }
 
-func prefixCast(me *parser, op string) *node {
-	me.eat(op)
-	node := nodeInit("cast")
-	node.copyData(me.hmfile.typeToVarData(op))
-	calc := me.calc(getPrefixPrecedence(op))
-	value := calc.data().full
-	if canCastToNumber(value) {
-		node.push(calc)
-		return node
-	}
-	panic(me.fail() + "invalid cast \"" + value + "\"")
+func prefixMaybe(me *parser, op string) *node {
+	me.verify("maybe")
+	n := nodeInit("maybe")
+	n._vdata = me.declareType(true)
+	return n
 }

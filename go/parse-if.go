@@ -93,26 +93,29 @@ func (me *parser) iswhile() bool {
 
 func (me *parser) forexpr() *node {
 	me.eat("for")
-	n := nodeInit("for")
+	var no *node
 	var templs []*variableNode
 	if me.token.is == "line" {
 		me.eat("line")
+		no = nodeInit("loop")
 	} else {
 		if me.iswhile() {
-			n.push(me.calcBool())
-			templs = me.getenumstack(n)
+			no = nodeInit("while")
+			no.push(me.calcBool())
+			templs = me.getenumstack(no)
 		} else {
-			n.push(me.forceassign(true, true))
+			no = nodeInit("for")
+			no.push(me.forceassign(true, true))
 			me.eat(",")
-			n.push(me.calcBool())
+			no.push(me.calcBool())
 			me.eat(",")
-			n.push(me.forceassign(true, true))
+			no.push(me.forceassign(true, true))
 		}
 		me.eat("line")
 	}
-	n.push(me.block())
+	no.push(me.block())
 	if templs != nil {
 		me.enumstackclr(templs)
 	}
-	return n
+	return no
 }

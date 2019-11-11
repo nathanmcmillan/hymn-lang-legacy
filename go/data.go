@@ -26,6 +26,7 @@ type varData struct {
 	module     *hmfile
 	typed      string
 	full       string
+	dtype      *datatype
 	mutable    bool
 	onStack    bool
 	isptr      bool
@@ -45,6 +46,7 @@ func (me *varData) set(in *varData) {
 	me.module = in.module
 	me.typed = in.typed
 	me.full = in.full
+	me.dtype = in.dtype
 	me.mutable = in.mutable
 	me.onStack = in.onStack
 	me.isptr = in.isptr
@@ -53,7 +55,9 @@ func (me *varData) set(in *varData) {
 	me.slice = in.slice
 	me.none = in.none
 	me.maybe = in.maybe
-	me.memberType = in.memberType
+	if in.memberType != nil {
+		me.memberType = in.memberType.copy()
+	}
 	me.en = in.en
 	me.un = in.un
 	me.cl = in.cl
@@ -81,6 +85,7 @@ func (me *hmlib) literalType(typed string) *varData {
 	data.full = typed
 	data.typed = typed
 	data.hmlib = me
+	data.dtype = getdatatype(nil, typed)
 	return data
 }
 
@@ -92,8 +97,8 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	data.heap = true
 	data.module = me
 
-	// TODO use instead of string
-	// dtype := me.getdatatype(typed)
+	dtype := getdatatype(me, typed)
+	data.dtype = dtype
 
 	if checkIsPrimitive(typed) {
 		if typed == TokenString {
@@ -381,42 +386,16 @@ func (me *varData) getFunction(name string) (*function, bool) {
 	return f, ok
 }
 
-func (me *varData) genericReplace(any map[string]string) {
-	f := me.full
-
-	if m, ok := any[f]; ok {
-		me.set(me.module.typeToVarData(m))
-		return
-	}
-
-	if me.checkIsArrayOrSlice() {
-		me.memberType.genericReplace(any)
-		return
-	}
-
-	if me.checkIsSomeOrNone() {
-		me.memberType.genericReplace(any)
-		return
-	}
-
-	if me.fn != nil {
-		for _, a := range me.fn.args {
-			a.data().genericReplace(any)
-		}
-		me.fn.typed.genericReplace(any)
-		return
-	}
+func (me *varData) genericReplace(gmap map[string]string) {
+	me.dtype.doRecursiveReplace(gmap)
+	me.set(me.module.typeToVarData(me.dtype.print()))
 }
 
 func (me *varData) typeEqual(b *varData) bool {
 	if me.full == b.full {
 		return true
 	}
-	if me.module == nil || b.module == nil {
-		// TODO
-		return false
-	}
-	return me.module.getdatatype(me.full).standard() == b.module.getdatatype(b.full).standard()
+	return me.dtype.standard() == b.dtype.standard()
 }
 
 func (me *varData) notEqual(other *varData) bool {
@@ -427,5 +406,5 @@ func (me *parser) typeEqual(one, two string) bool {
 	if one == two {
 		return true
 	}
-	return me.hmfile.getdatatype(one).standard() == me.hmfile.getdatatype(two).standard()
+	return getdatatype(me.hmfile, one).standard() == getdatatype(me.hmfile, two).standard()
 }

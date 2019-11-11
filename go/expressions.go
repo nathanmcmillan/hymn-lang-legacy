@@ -304,7 +304,7 @@ func (me *parser) extern() *node {
 		return me.allocClass(module, nil)
 	} else if _, ok := module.enums[idname]; ok {
 		fmt.Println("extern enum")
-		return me.allocEnum(module, nil)
+		return me.allocEnum(module)
 	} else if module.getStatic(idname) != nil {
 		fmt.Println("extern var")
 		return me.eatvar(module)
@@ -392,6 +392,7 @@ func (me *parser) include() {
 	_, ok := me.hmfile.imports[name]
 	if !ok {
 		me.hmfile.imports[name] = true
+		me.hmfile.importOrder = append(me.hmfile.importOrder, name)
 		path := me.hmfile.program.directory + "/" + name + ".hm"
 		me.hmfile.program.compile(me.hmfile.program.out, path, me.hmfile.program.libDir)
 		fmt.Println("finished compiling " + name)

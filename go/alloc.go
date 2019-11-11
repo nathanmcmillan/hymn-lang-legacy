@@ -6,54 +6,7 @@ import (
 	"strings"
 )
 
-func (me *parser) allocType(alloc *allocData) *varData {
-
-	var module *hmfile
-	if me.token.is == "id" {
-		name := me.token.value
-		if _, ok := me.hmfile.imports[name]; ok {
-			module = me.hmfile.program.hmfiles[name]
-			me.eat("id")
-			me.eat(".")
-		}
-	}
-	if module == nil {
-		module = me.hmfile
-	}
-
-	typed := ""
-
-	if me.token.is == "maybe" {
-		me.eat("maybe")
-		me.eat("<")
-		option := me.allocType(alloc).typed
-		me.eat(">")
-		typed += "maybe<" + option + ">"
-	} else {
-		typed += me.token.value
-		me.verifyWordOrPrimitive()
-	}
-
-	if _, ok := module.getClass(typed); ok {
-		return me.buildClass(nil, module, alloc)
-	}
-
-	if _, ok := module.getType(typed); !ok {
-		panic(me.fail() + "type \"" + typed + "\" for module \"" + module.name + "\" not found")
-	}
-
-	me.wordOrPrimitive()
-	if me.hmfile != module {
-		typed = module.name + "." + typed
-	}
-
-	vdata := me.hmfile.typeToVarData(typed)
-	vdata.merge(alloc)
-
-	return vdata
-}
-
-func (me *parser) allocEnum(module *hmfile, alloc *allocData) *node {
+func (me *parser) allocEnum(module *hmfile) *node {
 	enumName := me.token.value
 	me.eat("id")
 	enumDef, ok := module.enums[enumName]
@@ -312,7 +265,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	return typed
 }
 
-func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData {
+func (me *parser) buildClass(n *node, module *hmfile) *varData {
 	name := me.token.value
 	depth := me.token.depth
 	me.eat("id")
@@ -349,15 +302,15 @@ func (me *parser) buildClass(n *node, module *hmfile, alloc *allocData) *varData
 		typed = module.name + "." + typed
 	}
 
-	vdata := me.hmfile.typeToVarData(typed)
-	vdata.merge(alloc)
-
-	return vdata
+	data := me.hmfile.typeToVarData(typed)
+	return data
 }
 
 func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n := nodeInit("new")
-	n.copyData(me.buildClass(n, module, alloc))
+	data := me.buildClass(n, module)
+	data.merge(alloc)
+	n.copyData(data)
 	if alloc != nil && alloc.stack {
 		n.attributes["stack"] = "true"
 		n.data().isptr = false

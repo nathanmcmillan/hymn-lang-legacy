@@ -39,7 +39,7 @@ hashtable set(key k, value v)
 		last = next
 		next = n.next
 	if next is some(n) : if key == n.key : return
-	element = hashtable_item<v>(key:bin, value:value)
+	element = hashtable_item(bin, value, _)
 	if next == self.table[bin]
 		element.next = next
 		self.table[bin] = element
@@ -70,17 +70,17 @@ hashtable clear
 	self.size = 0
 
 main
-	m = hashtable<int, string>(
-		size: 10
-		capacity: 10
-		get_code: int_hashcode)
-	m.set(0, "cool")
-	out = m.get(0)
-	echo(out)
-
-	o = []maybe<hashtable_item<string>>
-	z = hashtable(
+	m = hashtable(
 		size: 10
 		capacity: 10
 		get_code: int_hashcode
-		table: o)
+		table: [0:10]maybe<hashtable_item<string>>)
+	m.set(0, "cool")
+	match m.get(0)
+		some(out) => echo(out)
+		none => echo("m.get() was null")
+
+	o = hashtable<int, string>(
+		size: 10
+		capacity: 10
+		get_code: int_hashcode)

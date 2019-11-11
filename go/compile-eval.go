@@ -84,16 +84,20 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 		return me.compileArrayToSlice(n)
 	}
 	if op == "return" {
-		in := me.eval(n.has[0])
-		code := ""
-		if in.pre != nil {
-			code += fmc(me.depth)
+		if len(n.has) > 0 {
+			in := me.eval(n.has[0])
+			code := ""
+			if in.pre != nil {
+				code += fmc(me.depth)
+			}
+			code += "return " + in.pop()
+			cb := &codeblock{}
+			cb.prepend(in.pre)
+			cb.current = codeNode(n, code)
+			return cb
+		} else {
+			return codeBlockOne(n, "return")
 		}
-		code += "return " + in.pop()
-		cb := &codeblock{}
-		cb.prepend(in.pre)
-		cb.current = codeNode(n, code)
-		return cb
 	}
 	if op == "boolexpr" {
 		code := me.eval(n.has[0]).code()
@@ -148,8 +152,8 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	if op == "is" {
 		return me.compileIs(n)
 	}
-	if op == "for" {
-		return me.compileFor(n)
+	if op == "loop" || op == "while" || op == "for" {
+		return me.compileLoop(op, n)
 	}
 	if op == "if" {
 		return me.compileIf(n)

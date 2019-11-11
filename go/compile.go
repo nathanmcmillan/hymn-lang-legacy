@@ -29,7 +29,7 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	cfile.hmfile.program.sources["hmlib_string.c"] = libDir + "/hmlib_string.c"
 	cfile.hmfile.program.sources["hmlib_slice.c"] = libDir + "/hmlib_slice.c"
 
-	for importName := range me.imports {
+	for _, importName := range me.importOrder {
 		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"
 	}
 	cfile.headIncludeSection += "\n"
@@ -39,9 +39,9 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	code += "\n"
 
 	for _, c := range me.defineOrder {
-		def := strings.Split(c, "_")
-		name := def[0]
-		typed := def[1]
+		underscore := strings.LastIndex(c, "_")
+		name := c[0:underscore]
+		typed := c[underscore+1:]
 		if typed == "type" {
 			cfile.defineClass(me.classes[name])
 		} else if typed == "enum" {

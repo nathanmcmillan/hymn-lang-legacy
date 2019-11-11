@@ -172,10 +172,10 @@ func (me *hmfile) string() string {
 	if len(me.defineOrder) > 0 {
 		s += fmc(lv) + "define[\n"
 		lv++
-		for _, name := range me.defineOrder {
-			def := strings.Split(name, "_")
-			name := def[0]
-			typed := def[1]
+		for _, c := range me.defineOrder {
+			underscore := strings.LastIndex(c, "_")
+			name := c[0:underscore]
+			typed := c[underscore+1:]
 			if typed == "type" {
 				cl := me.classes[name]
 				s += cl.string(lv)

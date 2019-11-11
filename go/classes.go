@@ -8,6 +8,7 @@ type class struct {
 	genericsDict  map[string]int
 	gmapper       map[string]string
 	functions     map[string]*function
+	functionOrder []*function
 	base          *class
 	impls         []*class
 }
@@ -18,6 +19,7 @@ func classInit(name string, generics []string, genericsDict map[string]int) *cla
 	c.generics = generics
 	c.genericsDict = genericsDict
 	c.functions = make(map[string]*function)
+	c.functionOrder = make([]*function, 0)
 	if len(generics) > 0 {
 		c.impls = make([]*class, 0)
 	}

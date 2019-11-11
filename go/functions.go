@@ -84,21 +84,22 @@ func (me *parser) remapNodeRecursive(impl *class, n *node) {
 	}
 }
 
-func (me *parser) remapClassFunctionImpl(impl *class, original *function) {
+func (me *parser) remapClassFunctionImpl(classImpl *class, original *function) {
 	fn := original.copy()
-	fn.forClass = impl
+	fn.forClass = classImpl
 	for i, a := range fn.args {
 		if i == 0 {
-			fn.args[0] = me.hmfile.fnArgInit(impl.name, "self", false)
+			fn.args[0] = me.hmfile.fnArgInit(classImpl.name, "self", false)
 		} else {
-			a.data().genericReplace(impl.gmapper)
+			a.data().genericReplace(classImpl.gmapper)
 		}
 	}
-	fn.typed.genericReplace(impl.gmapper)
+	fn.typed.genericReplace(classImpl.gmapper)
 	for _, e := range fn.expressions {
-		me.remapNodeRecursive(impl, e)
+		me.remapNodeRecursive(classImpl, e)
 	}
-	impl.functions[fn.name] = fn
+	classImpl.functions[fn.name] = fn
+	classImpl.functionOrder = append(classImpl.functionOrder, fn)
 	me.pushFunction(fn.nameOfClassFunc(), me.hmfile, fn)
 }
 
@@ -119,6 +120,7 @@ func (me *parser) defineClassFunction() {
 	fn := me.defineFunction(funcName, class)
 	fn.forClass = class
 	class.functions[funcName] = fn
+	class.functionOrder = append(class.functionOrder, fn)
 	me.pushFunction(globalFuncName, module, fn)
 
 	for _, impl := range class.impls {

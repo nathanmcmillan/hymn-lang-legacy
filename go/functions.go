@@ -2,12 +2,14 @@ package main
 
 type function struct {
 	name        string
+	start       *parsepoint
 	module      *hmfile
 	forClass    *class
 	args        []*funcArg
 	argDict     map[string]int
+	aliasing    map[string]string
 	expressions []*node
-	typed       *varData
+	returns     *varData
 }
 
 func funcInit(module *hmfile, name string) *function {
@@ -17,6 +19,7 @@ func funcInit(module *hmfile, name string) *function {
 	f.args = make([]*funcArg, 0)
 	f.argDict = make(map[string]int)
 	f.expressions = make([]*node, 0)
+	f.aliasing = make(map[string]string)
 	return f
 }
 
@@ -33,12 +36,17 @@ func (me *function) copy() *function {
 	for i, e := range me.expressions {
 		f.expressions[i] = e.copy()
 	}
-	f.typed = me.typed.copy()
+	f.returns = me.returns.copy()
 	return f
 }
 
 func (me *function) canonical() string {
-	name := me.name
+	name := ""
+	if me.forClass != nil {
+		name = me.nameOfClassFunc()
+	} else {
+		name = me.name
+	}
 	if me.module != nil {
 		name = me.module.name + "." + name
 	}
@@ -50,7 +58,7 @@ func (me *function) asSig() *fnSig {
 	for _, arg := range me.args {
 		sig.args = append(sig.args, arg)
 	}
-	sig.typed = me.typed
+	sig.returns = me.returns
 	return sig
 }
 
@@ -75,31 +83,16 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	}
 }
 
-func (me *parser) remapNodeRecursive(impl *class, n *node) {
-	if n.data() != nil {
-		n.data().genericReplace(impl.gmapper)
-	}
-	for _, h := range n.has {
-		me.remapNodeRecursive(impl, h)
-	}
-}
-
-func (me *parser) remapClassFunctionImpl(classImpl *class, original *function) {
-	fn := original.copy()
-	fn.forClass = classImpl
-	for i, a := range fn.args {
-		if i == 0 {
-			fn.args[0] = me.hmfile.fnArgInit(classImpl.name, "self", false)
-		} else {
-			a.data().genericReplace(classImpl.gmapper)
-		}
-	}
-	fn.typed.genericReplace(classImpl.gmapper)
-	for _, e := range fn.expressions {
-		me.remapNodeRecursive(classImpl, e)
-	}
-	classImpl.functions[fn.name] = fn
-	classImpl.functionOrder = append(classImpl.functionOrder, fn)
+func (me *parser) remapClassFunctionImpl(class *class, original *function) {
+	funcName := original.name
+	pos := me.save()
+	me.jump(original.start)
+	fn := me.defineFunction(funcName, class)
+	me.jump(pos)
+	fn.start = original.start
+	fn.forClass = class
+	class.functions[fn.name] = fn
+	class.functionOrder = append(class.functionOrder, fn)
 	me.pushFunction(fn.nameOfClassFunc(), me.hmfile, fn)
 }
 
@@ -117,12 +110,13 @@ func (me *parser) defineClassFunction() {
 	if _, ok := class.variables[funcName]; ok {
 		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
 	}
+	start := me.save()
 	fn := me.defineFunction(funcName, class)
+	fn.start = start
 	fn.forClass = class
 	class.functions[funcName] = fn
 	class.functionOrder = append(class.functionOrder, fn)
 	me.pushFunction(globalFuncName, module, fn)
-
 	for _, impl := range class.impls {
 		me.remapClassFunctionImpl(impl, fn)
 	}
@@ -142,9 +136,12 @@ func (me *parser) defineFileFunction() {
 
 func (me *parser) defineFunction(name string, self *class) *function {
 	fn := funcInit(me.hmfile, name)
+	me.hmfile.pushScope()
+	me.hmfile.scope.fn = fn
 	if self != nil {
 		ref := me.hmfile.fnArgInit(self.name, "self", false)
 		fn.args = append(fn.args, ref)
+		fn.aliasing = self.gmapper
 	}
 	parenthesis := false
 	if me.token.is == "(" {
@@ -198,13 +195,11 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		if !parenthesis {
 			panic(me.fail() + "functions that return must include parenthesis")
 		}
-		fn.typed = me.declareType(true)
+		fn.returns = me.declareType(true)
 	} else {
-		fn.typed = me.hmfile.typeToVarData("void")
+		fn.returns = me.hmfile.typeToVarData("void")
 	}
 	me.eat("line")
-	me.hmfile.pushScope()
-	me.hmfile.scope.fn = fn
 	for _, arg := range fn.args {
 		me.hmfile.scope.variables[arg.name] = arg.variable
 	}

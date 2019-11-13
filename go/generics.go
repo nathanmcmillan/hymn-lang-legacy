@@ -154,47 +154,6 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 	return me.mapGenericSingle(typed, gmapper)
 }
 
-func (a *datatype) doRecursiveReplace(gmap map[string]string) {
-	switch a.is {
-	case dataTypeClass:
-		fallthrough
-	case dataTypeEnum:
-		fallthrough
-	case dataTypeUnknown:
-		fallthrough
-	case dataTypePrimitive:
-		{
-			if a.is == dataTypeUnknown {
-				if f, ok := gmap[a.canonical]; ok {
-					a.canonical = f
-				}
-			}
-			if a.generics != nil {
-				for _, ga := range a.generics {
-					ga.doRecursiveReplace(gmap)
-				}
-			}
-		}
-	case dataTypeNone:
-		break
-	case dataTypeMaybe:
-		fallthrough
-	case dataTypeArray:
-		{
-			a.member.doRecursiveReplace(gmap)
-		}
-	case dataTypeFunction:
-		{
-			a.returns.doRecursiveReplace(gmap)
-			for _, pa := range a.parameters {
-				pa.doRecursiveReplace(gmap)
-			}
-		}
-	default:
-		panic("missing data type")
-	}
-}
-
 func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]*datatype) bool {
 	if b.is == dataTypeMaybe {
 		return hintRecursiveReplace(a, b.member, gindex, update)

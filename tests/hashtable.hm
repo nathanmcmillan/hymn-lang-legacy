@@ -77,7 +77,7 @@ main
 		table: [0:10]maybe<hashtable_item<string>>)
 	m.set(0, "cool")
 	match m.get(0)
-		some(out) => echo(out)
+		some(out) => echo("got: " + out)
 		none => echo("m.get() was null")
 
 	o = hashtable<int, string>(

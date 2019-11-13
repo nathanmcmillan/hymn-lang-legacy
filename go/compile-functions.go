@@ -23,7 +23,7 @@ func (me *cfile) compileFunction(name string, fn *function) {
 	}
 	me.popScope()
 	code := ""
-	code += fmtassignspace(fn.typed.typeSig()) + me.hmfile.funcNameSpace(name) + "("
+	code += fmtassignspace(fn.returns.typeSig()) + me.hmfile.funcNameSpace(name) + "("
 	for ix, arg := range args {
 		if ix > 0 {
 			code += ", "

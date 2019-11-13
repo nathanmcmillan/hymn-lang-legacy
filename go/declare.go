@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -45,7 +44,6 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	me.hmfile.namespace[impl] = "type"
 	me.hmfile.types[impl] = ""
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_type")
-	fmt.Println("DEFINE IMPL GENERIC ::", me.hmfile.defineOrder)
 
 	classDef := classInit(impl, nil, nil)
 	classDef.base = base
@@ -110,9 +108,9 @@ func (me *parser) declareFn() *varData {
 	}
 	me.eat(")")
 	if me.token.is != "line" && me.token.is != "," {
-		fn.typed = me.declareType(true)
+		fn.returns = me.declareType(true)
 	} else {
-		fn.typed = me.hmfile.typeToVarData("void")
+		fn.returns = me.hmfile.typeToVarData("void")
 	}
 
 	return fn.data()
@@ -146,7 +144,7 @@ func (me *parser) declareType(implementation bool) *varData {
 	} else if me.token.is == "maybe" {
 		me.eat("maybe")
 		me.eat("<")
-		option := me.declareType(implementation).typed
+		option := me.declareType(implementation).full
 		me.eat(">")
 		typed += "maybe<" + option + ">"
 
@@ -155,7 +153,7 @@ func (me *parser) declareType(implementation bool) *varData {
 		typed += "none"
 		if me.token.is == "<" {
 			me.eat("<")
-			option := me.declareType(implementation).typed
+			option := me.declareType(implementation).full
 			me.eat(">")
 			typed += "<" + option + ">"
 		}

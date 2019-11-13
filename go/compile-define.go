@@ -55,6 +55,11 @@ func (me *cfile) defineClass(class *class) {
 	if len(class.generics) > 0 {
 		return
 	}
+	for k, v := range class.gmapper {
+		if k == v {
+			return
+		}
+	}
 	hmName := me.hmfile.classNameSpace(class.name)
 	me.headTypeDefSection += "typedef struct " + hmName + " " + hmName + ";\n"
 	code := "struct " + hmName + " {\n"

@@ -19,7 +19,7 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 		arg := sig.args[ix]
 		if param.data().notEqual(arg.data()) && arg.data().full != "?" {
 			err := "parameter \"" + param.getType()
-			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().full + "\" for function"
+			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().full + "\" of function signature \"" + sig.print() + "\""
 			panic(me.fail() + err)
 		}
 		params = append(params, param)
@@ -89,7 +89,7 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	n := nodeInit("call")
 	name := fn.nameOfClassFunc()
 	n.fn = fn
-	n.copyData(fn.typed)
+	n.copyData(fn.returns)
 	params := make([]*node, len(fn.args))
 	params[0] = root
 	me.pushParams(name, n, 1, params, fn)
@@ -102,7 +102,7 @@ func (me *parser) call(module *hmfile) *node {
 	me.eat("id")
 	n := nodeInit("call")
 	n.fn = fn
-	n.copyData(fn.typed)
+	n.copyData(fn.returns)
 	params := make([]*node, len(fn.args))
 	me.pushParams(name, n, 0, params, fn)
 	return n

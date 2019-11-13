@@ -90,6 +90,13 @@ func (me *hmlib) literalType(typed string) *varData {
 }
 
 func (me *hmfile) typeToVarData(typed string) *varData {
+
+	if me.scope.fn != nil && me.scope.fn.aliasing != nil {
+		if alias, ok := me.scope.fn.aliasing[typed]; ok {
+			typed = alias
+		}
+	}
+
 	data := &varData{}
 	data.full = typed
 	data.mutable = true
@@ -116,6 +123,9 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 
 	if strings.HasPrefix(typed, "maybe") {
 		data.maybe = true
+		if typed == "maybe<char>" {
+			panic("")
+		}
 		data.memberType = me.typeToVarData(typed[6 : len(typed)-1])
 
 	} else if strings.HasPrefix(typed, "none") {
@@ -142,7 +152,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 			t := me.typeToVarData(a)
 			fn.args = append(fn.args, fnArgInit(t.asVariable()))
 		}
-		fn.typed = me.typeToVarData(ret)
+		fn.returns = me.typeToVarData(ret)
 		data.fn = fn
 	}
 
@@ -303,7 +313,7 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 	code := ""
 	if me.fn != nil {
 		sig := me.fn
-		code += fmtassignspace(sig.typed.typeSig())
+		code += fmtassignspace(sig.returns.typeSig())
 		code += "(*"
 		if !mutable {
 			code += "const "
@@ -384,11 +394,6 @@ func (me *varData) getFunction(name string) (*function, bool) {
 	}
 	f, ok := me.hmlib.functions[name]
 	return f, ok
-}
-
-func (me *varData) genericReplace(gmap map[string]string) {
-	me.dtype.doRecursiveReplace(gmap)
-	me.set(me.module.typeToVarData(me.dtype.print()))
 }
 
 func (me *varData) typeEqual(b *varData) bool {

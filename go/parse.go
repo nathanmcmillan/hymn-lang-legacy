@@ -14,6 +14,11 @@ type parser struct {
 	file   *os.File
 }
 
+type parsepoint struct {
+	pos  int
+	line int
+}
+
 func (me *parser) fail() string {
 	return fmt.Sprintf("line %d, token %s\n\n", me.line, me.tokens.get(me.pos).string())
 }
@@ -97,6 +102,16 @@ func (me *parser) verify(want string) {
 func (me *parser) eat(want string) {
 	me.verify(want)
 	me.next()
+}
+
+func (me *parser) save() *parsepoint {
+	return &parsepoint{pos: me.pos, line: me.line}
+}
+
+func (me *parser) jump(p *parsepoint) {
+	me.pos = p.pos
+	me.token = me.tokens.get(me.pos)
+	me.line = p.line
 }
 
 func (me *parser) replace(want, is string) {

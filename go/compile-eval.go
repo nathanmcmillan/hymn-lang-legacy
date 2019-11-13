@@ -95,9 +95,8 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 			cb.prepend(in.pre)
 			cb.current = codeNode(n, code)
 			return cb
-		} else {
-			return codeBlockOne(n, "return")
 		}
+		return codeBlockOne(n, "return")
 	}
 	if op == "boolexpr" {
 		code := me.eval(n.has[0]).code()

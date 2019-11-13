@@ -131,7 +131,7 @@
 			}
 		},
 		{
-			"match": "(\\w+)\\(",
+			"match": "(\\w+)(\\(|<)",
 			"captures": {
 				"1": {
 					"name": "support.function.hymn"

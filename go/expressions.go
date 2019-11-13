@@ -168,15 +168,15 @@ func (me *parser) parseReturn() *node {
 		fn := me.hmfile.scope.fn
 		ret := calc.data()
 		if ret.none {
-			if !fn.typed.maybe {
-				panic(me.fail() + "return type was \"" + ret.full + "\" but function is \"" + fn.typed.full + "\"")
+			if !fn.returns.maybe {
+				panic(me.fail() + "return type was \"" + ret.full + "\" but function is \"" + fn.returns.full + "\"")
 			} else if ret.memberType.full != "" {
 				if calc.is == "none" {
 					panic(me.fail() + "unnecessary none definition for return " + calc.string(0))
 				}
 			}
-		} else if fn.typed.notEqual(ret) {
-			panic(me.fail() + "function \"" + fn.name + "\" returns \"" + fn.typed.full + "\" but found \"" + calc.getType() + "\"")
+		} else if fn.returns.notEqual(ret) {
+			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.full + "\" but found \"" + calc.getType() + "\"")
 		}
 	}
 	me.verify("line")

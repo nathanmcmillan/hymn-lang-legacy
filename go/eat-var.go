@@ -141,7 +141,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				sig = head.data().fn
 			}
 			member := nodeInit("call")
-			member.copyData(sig.typed)
+			member.copyData(sig.returns)
 			member.push(head)
 			me.pushSigParams(member, sig)
 			head = member

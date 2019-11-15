@@ -189,7 +189,6 @@ func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
 		v := me.getvar(n.idata.name)
 		code = v.cName
 		if hint != nil && hint.isptr && !v.data().isptr {
-			fmt.Println("C VARIABLE ::", hint.string(), "+++", v.string())
 			code = "&" + code
 		}
 	} else {
@@ -292,7 +291,7 @@ func (me *cfile) compileAssign(n *node) string {
 	declare := me.declare(left)
 	value := me.eval(right)
 
-	preCode := value.preCode()
+	preCode := value.precode()
 	postCode := value.pop()
 
 	code += preCode + me.maybeFmc(preCode, me.depth) + declare + me.maybeLet(postCode, right.attributes) + postCode

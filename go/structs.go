@@ -5,6 +5,7 @@ type scope struct {
 	temp      int
 	fn        *function
 	variables map[string]*variable
+	renaming  map[string]string
 }
 
 type hasGenerics interface {
@@ -110,6 +111,7 @@ func scopeInit(root *scope) *scope {
 	s := &scope{}
 	s.root = root
 	s.variables = make(map[string]*variable)
+	s.renaming = make(map[string]string)
 	return s
 }
 
@@ -132,6 +134,11 @@ func (me *cfile) popScope() {
 
 func (me *cfile) getvar(name string) *variable {
 	// TODO fix scoping rules
+
+	if alias, ok := me.scope.renaming[name]; ok {
+		name = alias
+	}
+
 	scope := me.scope
 	for {
 		if v, ok := scope.variables[name]; ok {

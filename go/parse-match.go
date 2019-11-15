@@ -22,6 +22,15 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				tempv.push(left)
 				varnode := &variableNode{tempv, tempd}
 				me.hmfile.enumIsStack = append(me.hmfile.enumIsStack, varnode)
+
+				// TODO :: cleanup the above enumIsStack
+				tempvv := nodeInit("variable")
+				tempvv.idata = &idData{}
+				tempvv.idata.module = me.hmfile
+				tempvv.idata.name = tempd.name
+				tempvv.copyData(tempd.data())
+				right.push(tempvv)
+				//
 			}
 		} else if me.token.is == "none" {
 			right = nodeInit("none")

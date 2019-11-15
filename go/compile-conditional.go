@@ -4,16 +4,15 @@ func (me *cfile) compileIf(n *node) *codeblock {
 	hsize := len(n.has)
 	code := ""
 	code += me.walrusIf(n)
-	code += "if (" + me.eval(n.has[0]).code() + ") {\n"
+	ifval := me.eval(n.has[0])
+	code += ifval.precode()
+	code += "if (" + ifval.pop() + ") {\n"
 	ix := 1
 	for ix < hsize && n.has[ix].is == "variable" {
 		temp := n.has[ix]
 		tempname := temp.idata.name
 		tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
 		me.scope.variables[tempname] = tempv
-		ref := me.eval(n.has[ix].has[0]).code()
-		code += fmc(me.depth + 1)
-		code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
 		ix++
 	}
 	thenCode := me.eval(n.has[ix]).code()
@@ -22,7 +21,9 @@ func (me *cfile) compileIf(n *node) *codeblock {
 	ix++
 	for ix < hsize && n.has[ix].is == "elif" {
 		elif := n.has[ix]
-		code += " else if (" + me.eval(elif.has[0]).code() + ") {\n"
+		elifval := me.eval(elif.has[0])
+		code += elifval.precode()
+		code += " else if (" + elifval.pop() + ") {\n"
 		elsize := len(elif.has)
 		ixo := 1
 		for ixo < elsize && elif.has[ixo].is == "variable" {
@@ -30,9 +31,6 @@ func (me *cfile) compileIf(n *node) *codeblock {
 			tempname := temp.idata.name
 			tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
 			me.scope.variables[tempname] = tempv
-			ref := me.eval(elif.has[ixo].has[0]).code()
-			code += fmc(me.depth + 1)
-			code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
 			ixo++
 		}
 		thenBlock := me.eval(elif.has[ixo]).code()
@@ -57,16 +55,15 @@ func (me *cfile) compileLoop(op string, n *node) *codeblock {
 	} else if op == "while" {
 		ix++
 		code += me.walrusLoop(n)
-		code += "while (" + me.eval(n.has[0]).code() + ") {\n"
+		whileval := me.eval(n.has[0])
+		code += whileval.precode()
+		code += "while (" + whileval.pop() + ") {\n"
 		size := len(n.has)
 		for ix < size && n.has[ix].is == "variable" {
 			temp := n.has[ix]
 			tempname := temp.idata.name
 			tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
 			me.scope.variables[tempname] = tempv
-			ref := me.eval(n.has[ix].has[0]).code()
-			code += fmc(me.depth + 1)
-			code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
 			ix++
 		}
 	} else {

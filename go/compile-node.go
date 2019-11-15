@@ -63,7 +63,7 @@ func (me *codeblock) flatten() []*cnode {
 	return append(flat, me.current)
 }
 
-func (me *codeblock) preCode() string {
+func (me *codeblock) precode() string {
 	if me.pre != nil {
 		return me.pre.code()
 	}

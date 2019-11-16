@@ -186,6 +186,8 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 				update = me.hintGeneric(param.data(), clsvar.data(), gindex)
 			}
 
+			fmt.Println("UPDATE ::", vname, "|", param.string(0), "|", update)
+
 			if update != nil && len(update) > 0 {
 				lazyGenerics = true
 				good, newtypes := mergeMaps(update, gtypes)
@@ -196,7 +198,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 				gtypes = newtypes
 
 			} else if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
-				err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.getType()
+				err := "parameter \"" + vname + "\" with type \"" + param.getType()
 				err += "\" does not match class variable \"" + base.name + "."
 				err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
 				panic(me.fail() + err)

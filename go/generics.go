@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -155,6 +156,12 @@ func (me *parser) genericsReplacer(typed string, gmapper map[string]string) stri
 }
 
 func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]*datatype) bool {
+	if b.is == dataTypeUnknown {
+		if _, ok := gindex[b.canonical]; ok {
+			update[b.canonical] = a
+			return true
+		}
+	}
 	if b.is == dataTypeMaybe {
 		return hintRecursiveReplace(a, b.member, gindex, update)
 	}
@@ -167,11 +174,6 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 		fallthrough
 	case dataTypePrimitive:
 		{
-			if b.is == dataTypeUnknown {
-				if _, ok := gindex[b.canonical]; ok {
-					update[b.canonical] = a
-				}
-			}
 			if a.generics != nil || b.generics != nil {
 				if a.generics == nil || b.generics == nil {
 					return false
@@ -235,6 +237,7 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) map[string]*datatype {
 	a := getdatatype(me.hmfile, data.full)
 	b := getdatatype(me.hmfile, gdata.full)
+	fmt.Println("HINT GENERIC ::", a.print(), "::", b.print())
 	update := make(map[string]*datatype)
 	ok := hintRecursiveReplace(a, b, gindex, update)
 	if !ok {

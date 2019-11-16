@@ -72,6 +72,8 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	}
 
 	test := match.code()
+	tempname := ""
+
 	isEnum := false
 	var enumNameSpace string
 
@@ -83,11 +85,13 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 				test = using.idata.name + "->type"
 			}
 		}
+		tempname = using.idata.name
 	}
 
 	code += "switch (" + test + ") {\n"
 	ix := 1
 	size := len(n.has)
+
 	for ix < size {
 		caseOf := n.has[ix]
 		thenDo := n.has[ix+1]
@@ -95,17 +99,19 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 			code += fmc(me.depth) + "default: {\n"
 		} else {
 			if isEnum {
-				code += fmc(me.depth) + "case " + using.data().module.enumTypeName(enumNameSpace, caseOf.is) + ": {\n"
-				tempname := ""
 				if len(caseOf.has) > 0 {
-					temp := caseOf.has[0]
-					tempname = temp.idata.name
-					tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
-					me.scope.variables[tempname] = tempv
-					ref := me.eval(n.has[0]).code()
-					code += fmc(me.depth + 1)
-					code += fmtassignspace(temp.data().typeSig()) + tempname + " = " + ref + ";\n"
+					temphas := caseOf.has[0]
+					idata := temphas.idata.name
+					if tempname == "" {
+						tempname = "match_" + me.temp()
+						tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
+						me.scope.variables[tempname] = tempv
+						code = match.data().typeSig() + tempname + ";\n" + fmc(me.depth) + code
+					}
+					me.scope.renaming[idata] = tempname
 				}
+				code += fmc(me.depth) + "case " + using.data().module.enumTypeName(enumNameSpace, caseOf.is) + ": {\n"
+
 			} else {
 				code += fmc(me.depth) + "case " + caseOf.is + ":\n"
 			}

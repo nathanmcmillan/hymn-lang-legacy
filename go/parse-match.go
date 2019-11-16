@@ -96,6 +96,12 @@ func (me *parser) parseMatch() *node {
 
 	matching := me.calc(0)
 	matchType := matching.data()
+
+	_, un, ok := matchType.checkIsEnum()
+	if ok && un != nil {
+		panic(me.fail() + "enum \"" + matchType.full + "\" does not need a match expression.")
+	}
+
 	var matchVar *variable
 	if matching.is == "variable" {
 		matchVar = me.hmfile.getvar(matching.idata.name)
@@ -217,5 +223,6 @@ func (me *parser) parseMatch() *node {
 			panic(me.fail() + "unknown match expression")
 		}
 	}
+
 	return n
 }

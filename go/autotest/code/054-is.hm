@@ -18,6 +18,9 @@ do_things(f foo)
 			echo("world!")
 			echo(w.0)
 
+get_me() foo
+	return foo.hello(8)
+
 main()
 	mutable e = foo.hello(2)
 	if e is hello : if 0 == 0 : echo("#1 hello!")
@@ -34,7 +37,7 @@ main()
 		echo("none")
 	if a is some
 		echo("some")
-
+	
 	match b := fun(2)
 		none => echo("no")
 		some(s) =>
@@ -45,12 +48,12 @@ main()
 					echo("#2 hello " + to_str(h.0))
 				world(w) =>
 					echo("#2 world " + w.0)
-	
-	match c := foo.hello(8)
-		hello =>
-			echo("#3 hello " + to_str(c.0))
-		world =>
-			echo("#3 world " + to_str(c.0))
+
+	match c := get_me()
+		hello(h) =>
+			echo("#3 hello " + to_str(h.0))
+		world(w) =>
+			echo("#3 world " + w.0)
 	
 	if fun(0) is none
 		echo("fun(0) is none")

@@ -1,5 +1,15 @@
 package main
 
+func (me *cfile) happyPrint(e *codeblock) string {
+	block := ""
+	for _, c := range e.flatten() {
+		if c.code != "" {
+			block += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
+		}
+	}
+	return block
+}
+
 func (me *cfile) compileFunction(name string, fn *function) {
 	cls := fn.forClass
 	if cls != nil && len(cls.generics) > 0 {
@@ -15,11 +25,7 @@ func (me *cfile) compileFunction(name string, fn *function) {
 	}
 	for _, expr := range expressions {
 		e := me.eval(expr)
-		for _, c := range e.flatten() {
-			if c.code != "" {
-				block += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
-			}
-		}
+		block += me.happyPrint(e)
 	}
 	me.popScope()
 	code := ""
@@ -64,11 +70,7 @@ func (me *cfile) compileMain(fn *function) {
 				returns = true
 			}
 		}
-		for _, c := range e.flatten() {
-			if c.code != "" {
-				block += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
-			}
-		}
+		block += me.happyPrint(e)
 	}
 	if !returns {
 		block += fmc(me.depth) + "return 0;\n"

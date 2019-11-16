@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -78,14 +79,15 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	var enumNameSpace string
 
 	if using.is == "variable" {
+		name := me.getvar(using.idata.name).cName
 		if baseEnum, _, ok := using.data().checkIsEnum(); ok {
 			isEnum = true
 			enumNameSpace = using.data().module.enumNameSpace(baseEnum.name)
 			if !baseEnum.simple {
-				test = using.idata.name + "->type"
+				test = name + "->type"
 			}
 		}
-		tempname = using.idata.name
+		tempname = name
 	}
 
 	code += "switch (" + test + ") {\n"
@@ -103,6 +105,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 					temphas := caseOf.has[0]
 					idata := temphas.idata.name
 					if tempname == "" {
+						fmt.Println("FIRST ::", using.string(0))
 						tempname = "match_" + me.temp()
 						tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
 						me.scope.variables[tempname] = tempv
@@ -137,7 +140,14 @@ func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeb
 	ifNotNull := ""
 	ix := 1
 	size := len(n.has)
+
+	using := n.has[0]
 	tempname := ""
+	casename := ""
+	if using.is == "variable" {
+		name := me.getvar(using.idata.name).cName
+		tempname = name
+	}
 
 	for ix < size {
 		block := ""
@@ -146,16 +156,19 @@ func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeb
 			if len(caseOf.has) > 0 {
 				temphas := caseOf.has[0]
 				idata := temphas.idata.name
-				tempname = "match_" + me.temp()
-				tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
+				if tempname == "" {
+					tempname = "match_" + me.temp()
+					casename = tempname
+					tempv := me.hmfile.varInitFromData(temphas.data(), casename, false)
+					me.scope.variables[casename] = tempv
+				}
 				me.scope.renaming[idata] = tempname
-				me.scope.variables[tempname] = tempv
 			}
 		}
 		c := me.eval(n.has[ix+1]).code()
 		block += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
-		if tempname != "" {
-			delete(me.scope.variables, tempname)
+		if casename != "" {
+			delete(me.scope.variables, casename)
 		}
 		if caseOf.is == "some" {
 			ifNotNull = block
@@ -168,11 +181,11 @@ func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeb
 	matchcode := match.code()
 	boolcode := ""
 
-	if tempname == "" {
-		boolcode = matchcode
-	} else {
+	if casename != "" {
 		code += match.data().typeSig() + tempname + " = " + matchcode + ";\n" + fmc(me.depth)
 		boolcode = tempname
+	} else {
+		boolcode = matchcode
 	}
 
 	if ifNull != "" && ifNotNull != "" {

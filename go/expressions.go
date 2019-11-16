@@ -319,14 +319,8 @@ func (me *parser) block() *node {
 	for {
 		for me.token.is == "line" {
 			me.eat("line")
-			if me.token.is != "line" {
-				if me.token.depth < depth {
-					goto blockEnd
-				}
-				break
-			}
 		}
-		if me.token.is == "eof" || me.token.is == "comment" {
+		if me.token.depth < depth || me.token.is == "eof" || me.token.is == "comment" {
 			goto blockEnd
 		}
 		block.push(me.expression())
@@ -371,9 +365,6 @@ func (me *parser) comparison(left *node, op string) *node {
 	n.copyData(me.hmfile.typeToVarData("bool"))
 	n.push(left)
 	n.push(right)
-	fmt.Println("> compare using", opType)
-	fmt.Println("> left", left.string(0))
-	fmt.Println("> right", right.string(0))
 	return n
 }
 

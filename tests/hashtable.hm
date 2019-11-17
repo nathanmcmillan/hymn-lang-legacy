@@ -52,21 +52,21 @@ hashtable set(key k, value v)
 
 hashtable get(key k) maybe<v>
 	bin = self.hash_element(key)
-	match element := self.table[bin]
-		some(e) =>
-			if key != e.key
-				return none
-			return e.value
-		none => return none
+	(* if element := self.table[bin] is some(e) *)
+	if self.table[bin] is some(e)
+		if key != e.key
+			return none
+		return e.value
+	return none
 
 hashtable has(key k) bool
 	return self.get(key) is some
 
-hashtable delete
+hashtable delete()
 	(* todo *)
 	self.size -= 1
 
-hashtable clear
+hashtable clear()
 	self.size = 0
 
 main

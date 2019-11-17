@@ -315,14 +315,14 @@ func (me *cfile) block(n *node) *codeblock {
 	me.depth++
 	expressions := n.has
 	code := ""
-	for ix, expr := range expressions {
-		c := me.eval(expr)
-		if c.code() != "" {
-			if ix > 0 {
-				code += "\n"
-			}
-			code += me.maybeFmc(c.code(), me.depth) + c.code() + me.maybeColon(c.code())
-		}
+	for _, expr := range expressions {
+		e := me.eval(expr)
+		// for _, c := range e.flatten() {
+		// 	if c.code != "" {
+		// 		code += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
+		// 	}
+		// }
+		code += me.happyOut(e)
 	}
 	me.depth--
 	return codeBlockOne(n, code)

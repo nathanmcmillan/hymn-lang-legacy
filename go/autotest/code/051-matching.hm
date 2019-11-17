@@ -39,8 +39,11 @@ noob() liquid
 numby() int
   return 2
 
+big_ant() bug
+  return bug.ant(3)
+
 main
-  b = bug.ant(3)
+  b = big_ant()
   echo(zoob(b))
   echo(goob(b))
 

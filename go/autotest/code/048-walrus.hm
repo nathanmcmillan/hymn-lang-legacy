@@ -5,6 +5,9 @@ enum thing
 foo(w int) bool
   return w < 3
 
+boo() thing
+  return thing.boo
+
 main
   if y := true
     echo("true!")
@@ -31,6 +34,6 @@ main
   echo(b)
   echo(c)
 
-  match t := thing.boo
+  match t := boo()
     boo => echo("boo!")
     zoo => echo("zoo!")

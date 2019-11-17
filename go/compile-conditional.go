@@ -2,10 +2,12 @@ package main
 
 func (me *cfile) compileIf(n *node) *codeblock {
 	hsize := len(n.has)
-	code := ""
-	code += me.walrusIf(n)
+	code := me.walrusIf(n)
+
+	cblock := &codeblock{}
+
 	ifval := me.eval(n.has[0])
-	code += ifval.precode()
+	cblock.prepend(ifval.pre)
 	code += "if (" + ifval.pop() + ") {\n"
 	ix := 1
 	for ix < hsize && n.has[ix].is == "variable" {
@@ -15,14 +17,15 @@ func (me *cfile) compileIf(n *node) *codeblock {
 		me.scope.variables[tempname] = tempv
 		ix++
 	}
-	thenCode := me.eval(n.has[ix]).code()
+	thenEval := me.eval(n.has[ix])
+	thenCode := thenEval.code()
 	code += me.maybeFmc(thenCode, me.depth+1) + thenCode + me.maybeColon(thenCode)
-	code += "\n" + fmc(me.depth) + "}"
+	code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 	ix++
 	for ix < hsize && n.has[ix].is == "elif" {
 		elif := n.has[ix]
 		elifval := me.eval(elif.has[0])
-		code += elifval.precode()
+		cblock.prepend(elifval.pre)
 		code += " else if (" + elifval.pop() + ") {\n"
 		elsize := len(elif.has)
 		ixo := 1
@@ -35,16 +38,18 @@ func (me *cfile) compileIf(n *node) *codeblock {
 		}
 		thenBlock := me.eval(elif.has[ixo]).code()
 		code += me.maybeFmc(thenBlock, me.depth+1) + thenBlock + me.maybeColon(thenBlock)
-		code += "\n" + fmc(me.depth) + "}"
+		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 		ix++
 	}
 	if ix >= 2 && ix < hsize {
 		code += " else {\n"
 		c := me.eval(n.has[ix]).code()
 		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
-		code += "\n" + fmc(me.depth) + "}"
+		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 	}
-	return codeBlockOne(n, code)
+
+	cblock.current = codeNode(n, code)
+	return cblock
 }
 
 func (me *cfile) compileLoop(op string, n *node) *codeblock {
@@ -86,6 +91,6 @@ func (me *cfile) compileLoop(op string, n *node) *codeblock {
 		code += "for (" + vinit + "; " + condition + "; " + inc + ") {\n"
 	}
 	code += me.eval(n.has[ix]).code()
-	code += "\n" + fmc(me.depth) + "}"
+	code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 	return codeBlockOne(n, code)
 }

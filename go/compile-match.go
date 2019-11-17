@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -36,6 +35,26 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		return codeBlockOne(n, code)
 	}
 
+	caseOf := n.has[1]
+	tempname := ""
+
+	if using.is == "variable" {
+		name := me.getvar(using.idata.name).cName
+		tempname = name
+	}
+
+	if len(caseOf.has) > 0 {
+		temphas := caseOf.has[0]
+		idata := temphas.idata.name
+		if tempname == "" {
+			tempname = "match_" + me.temp()
+			tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
+			me.scope.variables[tempname] = tempv
+			code = match.data().typeSig() + tempname + ";\n" + fmc(me.depth) + code
+		}
+		me.scope.renaming[idata] = tempname
+	}
+
 	baseEnum, _, _ := using.data().checkIsEnum()
 	if baseEnum.simple {
 		code += match.code()
@@ -45,7 +64,6 @@ func (me *cfile) compileIs(n *node) *codeblock {
 
 	code += " == "
 
-	caseOf := n.has[1]
 	if caseOf.is == "match-enum" {
 		matchBaseEnum, matchBaseUn, _ := caseOf.data().checkIsEnum()
 		enumNameSpace := using.data().module.enumNameSpace(matchBaseEnum.name)
@@ -105,7 +123,6 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 					temphas := caseOf.has[0]
 					idata := temphas.idata.name
 					if tempname == "" {
-						fmt.Println("FIRST ::", using.string(0))
 						tempname = "match_" + me.temp()
 						tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
 						me.scope.variables[tempname] = tempv
@@ -122,7 +139,8 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 		thenBlock := me.eval(thenDo).code()
 		me.depth++
 		if thenBlock != "" {
-			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock) + "\n"
+			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock)
+			code += me.maybeNewLine(code)
 		}
 		if !strings.Contains(thenBlock, "return") {
 			code += fmc(me.depth) + "break;"
@@ -191,19 +209,19 @@ func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeb
 	if ifNull != "" && ifNotNull != "" {
 		code += "if (" + boolcode + " == NULL) {\n"
 		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
-		code += "\n" + fmc(me.depth) + "} else {\n"
+		code += me.maybeNewLine(code) + fmc(me.depth) + "} else {\n"
 		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
-		code += "\n" + fmc(me.depth) + "}"
+		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 
 	} else if ifNull != "" {
 		code += "if (" + boolcode + " == NULL) {\n"
 		code += me.maybeFmc(ifNull, me.depth+1) + ifNull + me.maybeColon(ifNull)
-		code += "\n" + fmc(me.depth) + "}"
+		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 
 	} else {
 		code += "if (" + boolcode + " != NULL) {\n"
 		code += me.maybeFmc(ifNotNull, me.depth+1) + ifNotNull + me.maybeColon(ifNotNull)
-		code += "\n" + fmc(me.depth) + "}"
+		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 	}
 
 	return codeBlockOne(n, code)

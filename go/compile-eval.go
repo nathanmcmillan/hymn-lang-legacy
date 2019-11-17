@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -87,12 +86,12 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	if op == "return" {
 		if len(n.has) > 0 {
 			in := me.eval(n.has[0])
-			code := ""
-			if in.pre != nil {
-				// 	code += me.maybeFmc(in.pre.code(), me.depth)
-				fmt.Println("RETURN :: \"" + in.pre.code() + "\"")
-			}
-			code += "return " + in.pop()
+			// code := ""
+			// if in.pre != nil {
+			// 	code += fmc(me.depth)
+			// 	fmt.Println("RETURN :: \"" + in.pre.code() + "\"")
+			// }
+			code := "return " + in.pop()
 			cb := &codeblock{}
 			cb.prepend(in.pre)
 			cb.current = codeNode(n, code)

@@ -1,10 +1,27 @@
 package main
 
-func (me *cfile) happyPrint(e *codeblock) string {
+func cleanCode(code string) (string, bool) {
+	if code != "" {
+		for {
+			size := len(code)
+			ch := code[size-1]
+			if ch == '\n' || ch == '\t' || ch == ' ' {
+				code = code[0 : size-1]
+			} else {
+				break
+			}
+		}
+		return code, true
+	}
+	return code, false
+}
+
+func (me *cfile) happyOut(e *codeblock) string {
 	block := ""
 	for _, c := range e.flatten() {
-		if c.code != "" {
-			block += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
+		code, ok := cleanCode(c.code)
+		if ok {
+			block += fmc(me.depth) + code + me.maybeColon(code) + me.maybeNewLine(code)
 		}
 	}
 	return block
@@ -25,7 +42,7 @@ func (me *cfile) compileFunction(name string, fn *function) {
 	}
 	for _, expr := range expressions {
 		e := me.eval(expr)
-		block += me.happyPrint(e)
+		block += me.happyOut(e)
 	}
 	me.popScope()
 	code := ""
@@ -70,7 +87,7 @@ func (me *cfile) compileMain(fn *function) {
 				returns = true
 			}
 		}
-		block += me.happyPrint(e)
+		block += me.happyOut(e)
 	}
 	if !returns {
 		block += fmc(me.depth) + "return 0;\n"

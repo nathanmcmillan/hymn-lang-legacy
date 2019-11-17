@@ -41,6 +41,9 @@ calc_me(x int) either<int, float>
 	f = either<int, float>.two(5329.5)
 	return f
 
+omega_add() math.operation
+	return math.operation.add
+
 main
 	a = snake.cobra
 	b = snake.viper
@@ -55,11 +58,9 @@ main
 	d = mammal.cat("woof")
 
 	example2 = vec()
-	e = mammal.dog(1.4)
 
-	match e
-		dog => echo("good")
-		_ => echo("bad")
+	e = mammal.dog(1.4)
+	echo("doggo " + to_str(e.0))
 
 	me = calc_me(5)
 
@@ -68,7 +69,7 @@ main
 	i = bug.ant(vec())
 	j = bug.ant("buggie")
 
-	omega = math.operation.add
+	omega = omega_add()
 	match omega
 		add => echo("omega: good")
 		_ => echo("omega: not good")

@@ -41,9 +41,7 @@ func (me *cfile) maybeColon(code string) string {
 }
 
 func (me *cfile) maybeNewLine(code string) string {
-	size := len(code)
-	last := code[size-1]
-	if last == '\n' {
+	if code[len(code)-1] == '\n' {
 		return ""
 	}
 	return "\n"

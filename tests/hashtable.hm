@@ -12,74 +12,128 @@ string_hashcode(key string) int
 		pos += 1
 	return int value
 
-type hashtable_item<v>
-	key  int
+type hashtable_item<k, v>
+	code  int
+	key   k
 	value v
-	next  maybe<hashtable_item<v>>
+	next  maybe<hashtable_item<k,v>>
 
 type hashtable<k, v>
 	size     int
 	capacity int
 	get_code (k) int
-	table    []maybe<hashtable_item<v>>
+	table    []maybe<hashtable_item<k,v>>
 
-hashtable hash_int(code int) int
+hashtable get_bin(code int) int
 	return code % self.capacity
 
-hashtable hash_element(key k) int
-	code = self.get_code(key)
-	return self.hash_int(code)
-
 hashtable set(key k, value v)
-	bin = self.hash_element(key)
-	mutable next = self.table[bin]
-	mutable last = none<hashtable_item<v>>
-	for next is some(n)
-		if key != n.key : break
-		last = next
-		next = n.next
-	if next is some(n) : if key == n.key : return
-	element = hashtable_item(bin, value, _)
-	if next == self.table[bin]
-		element.next = next
+	code = self.get_code(key)
+	bin = self.get_bin(code)
+	search = self.table[bin]
+	mutable current = search
+	mutable previous = none<hashtable_item<k,v>>
+	if current is some(s)
+		if code == s.code
+			s.value = value
+			return
+	(* fix this ... *)
+	for current is some(s)
+		if code != s.code
+			break
+		previous = current
+		current = s.next
+	if current is some(s)
+		if code == s.code
+			s.value = value
+			return
+	element = hashtable_item(code, key, value, _)
+	if current == search
+		element.next = current
 		self.table[bin] = element
-	elif next is none
-		if last is some(s) : s.next = element
+	elif current is none
+		match previous
+			some(s) => s.next = element
+			none => echo("panic!")
 	else
-		element.next = next
-		if last is some(s) : s.next = element
+		element.next = current
+		match previous
+			some(s) => s.next = element
+			none => echo("panic!")
 	self.size += 1
 
 hashtable get(key k) maybe<v>
-	bin = self.hash_element(key)
-	(* if element := self.table[bin] is some(e) *)
-	if self.table[bin] is some(e)
-		if key != e.key
-			return none
-		return e.value
+	code = self.get_code(key)
+	bin = self.get_bin(code)
+	mutable element = self.table[bin]
+	for element is some(s)
+		if code == s.code
+			return s.value
+		element = s.next
 	return none
 
 hashtable has(key k) bool
 	return self.get(key) is some
 
-hashtable delete()
-	(* todo *)
+hashtable delete(key k)
 	self.size -= 1
 
 hashtable clear()
+	num = self.capacity
+	for i = 0, i < num, i += 1
+		echo("delete me: " + to_str(i))
+		self.table[i] = none
 	self.size = 0
 
 main
 	m = hashtable(
-		size: 10
-		capacity: 10
+		capacity: 12
 		get_code: int_hashcode
-		table: [0:10]maybe<hashtable_item<string>>)
-	m.set(0, "cool")
-	match m.get(0)
-		some(out) => echo("got: " + out)
-		none => echo("m.get() was null")
+		table: [0:12]maybe<hashtable_item<int,string>>)
 
+	m.set(0, "kiwi")
+	match m.get(0)
+		some(out) => echo("1. " + out)
+		none => echo("bad")
+	echo("1. size: " + to_str(m.size))
+	echo("---")
+
+	m.set(0, "lemon")
+	match m.get(0)
+		some(out) => echo("2. " + out)
+		none => echo("bad")
+	echo("2. size: " + to_str(m.size))
+	echo("---")
+
+	m.set(4, "coconut")
+	match m.get(4)
+		some(out) => echo("3. " + out)
+		none => echo("bad")
+	echo("3. size: " + to_str(m.size))
+	echo("---")
+
+	m.delete(0)
+	if m.get(0) is some
+		echo("bad")
+	echo("4. size: " + to_str(m.size))
+	echo("---")
+
+	m.set(5, "banana")
+	m.set(8, "eggplant")
+	m.set(13, "pickle")
+	m.set(20, "cucumber")
+	if m.get(5) is none : echo("bad")
+	if m.get(8) is none : echo("bad")
+	if m.get(13) is none : echo("bad")
+	if m.get(20) is none : echo("bad")
+	echo("5. size: " + to_str(m.size))
+	echo("---")
+
+	m.clear()
+	if m.get(0) is some : echo("bad")
+	echo("6. size: " + to_str(m.size))
+	echo("---")
+	
 	o = hashtable<int, string>(
 		size: 10
 		capacity: 10

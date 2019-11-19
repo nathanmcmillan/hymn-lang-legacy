@@ -7,8 +7,7 @@ import (
 func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	op := n.is
 	if op == "=" || op == ":=" {
-		code := me.compileAssign(n)
-		return codeBlockOne(n, code)
+		return me.compileAssign(n)
 	}
 	if op == "+=" || op == "-=" || op == "*=" || op == "/=" || op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
 		code := me.assignmentUpdate(n)

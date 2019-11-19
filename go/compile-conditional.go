@@ -1,14 +1,14 @@
 package main
 
 func (me *cfile) compileIf(n *node) *codeblock {
-	hsize := len(n.has)
 	code := me.walrusIf(n)
+	ifval := me.eval(n.has[0])
+	code += "if (" + ifval.pop() + ") {\n"
 
 	cblock := &codeblock{}
-
-	ifval := me.eval(n.has[0])
 	cblock.prepend(ifval.pre)
-	code += "if (" + ifval.pop() + ") {\n"
+
+	hsize := len(n.has)
 	ix := 1
 	for ix < hsize && n.has[ix].is == "variable" {
 		temp := n.has[ix]
@@ -41,9 +41,10 @@ func (me *cfile) compileIf(n *node) *codeblock {
 		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 		ix++
 	}
-	if ix >= 2 && ix < hsize {
+	if ix < hsize && n.has[ix].is == "else" {
+		el := n.has[ix].has[0]
 		code += " else {\n"
-		c := me.eval(n.has[ix]).code()
+		c := me.eval(el).code()
 		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 	}
@@ -85,7 +86,7 @@ func (me *cfile) compileLoop(op string, n *node) *codeblock {
 		if vexist == nil {
 			code += me.declare(vobj) + ";\n" + fmc(me.depth)
 		}
-		vinit := me.compileAssign(vset)
+		vinit := me.compileAssign(vset).code()
 		condition := me.eval(n.has[1]).code()
 		inc := me.assignmentUpdate(n.has[2])
 		code += "for (" + vinit + "; " + condition + "; " + inc + ") {\n"

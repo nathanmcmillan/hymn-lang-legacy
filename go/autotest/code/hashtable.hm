@@ -1,0 +1,68 @@
+immutable uint64_max = uint64 2000000
+
+int_hashcode(key int) int
+	return key
+
+string_hashcode(key string) int
+	mutable pos = 0
+	mutable value = uint64 0
+	length = len(key)
+	for value < uint64_max and pos < length
+		value = (value << uint64 8) + uint64 key[pos]
+		pos += 1
+	return int value
+
+type hashtable_item<v>
+	key  int
+	value v
+	next  maybe<hashtable_item<v>>
+
+type hashtable<k, v>
+	size     int
+	capacity int
+	get_code (k) int
+	table    []maybe<hashtable_item<v>>
+
+hashtable hash_int(code int) int
+	return code % self.capacity
+
+hashtable hash_element(key k) int
+	code = self.get_code(key)
+	return self.hash_int(code)
+
+hashtable set(key k, value v)
+	bin = self.hash_element(key)
+	mutable next = self.table[bin]
+	mutable last = none<hashtable_item<v>>
+	for next is some(n)
+		if key != n.key : break
+		last = next
+		next = n.next
+	if next is some(n) : if key == n.key : return
+	element = hashtable_item(bin, value, _)
+	if next == self.table[bin]
+		element.next = next
+		self.table[bin] = element
+	elif next is none
+		if last is some(s) : s.next = element
+	else
+		element.next = next
+		if last is some(s) : s.next = element
+	self.size += 1
+
+hashtable get(key k) maybe<v>
+	bin = self.hash_element(key)
+	if self.table[bin] is some(e)
+		if key != e.key
+			return none
+		return e.value
+	return none
+
+hashtable has(key k) bool
+	return self.get(key) is some
+
+hashtable delete()
+	self.size -= 1
+
+hashtable clear()
+	self.size = 0

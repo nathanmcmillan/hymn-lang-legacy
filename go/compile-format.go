@@ -48,7 +48,7 @@ func (me *cfile) maybeNewLine(code string) string {
 }
 
 func (me *cfile) maybeFmc(code string, depth int) string {
-	if code == "" || code[0] == spaceChar {
+	if code == "" || code[0] == spaceChar || code[len(code)-1] == spaceChar {
 		return ""
 	}
 	return fmc(depth)

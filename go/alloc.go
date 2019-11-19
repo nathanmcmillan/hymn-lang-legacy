@@ -186,8 +186,6 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 				update = me.hintGeneric(param.data(), clsvar.data(), gindex)
 			}
 
-			fmt.Println("UPDATE ::", vname, "|", param.string(0), "|", update)
-
 			if update != nil && len(update) > 0 {
 				lazyGenerics = true
 				good, newtypes := mergeMaps(update, gtypes)

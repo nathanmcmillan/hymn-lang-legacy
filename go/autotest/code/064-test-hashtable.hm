@@ -1,0 +1,17 @@
+import "hashtable"
+
+main
+	m = hashtable(
+		size: 10
+		capacity: 10
+		get_code: int_hashcode
+		table: [0:10]maybe<hashtable_item<string>>)
+	m.set(0, "cool")
+	match m.get(0)
+		some(out) => echo("got: " + out)
+		none => echo("m.get() was null")
+
+	o = hashtable<int, string>(
+		size: 10
+		capacity: 10
+		get_code: int_hashcode)

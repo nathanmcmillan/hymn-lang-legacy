@@ -113,7 +113,7 @@ func prefixIdent(me *parser, op string) *node {
 			panic(me.fail() + "variable not mutable")
 		}
 	} else if v == nil {
-		panic(me.fail() + "variable out of scope")
+		panic(me.fail() + "variable \"" + name + "\" out of scope")
 	}
 	return me.eatvar(module)
 }

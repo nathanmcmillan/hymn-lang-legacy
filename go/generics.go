@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -237,7 +236,6 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) map[string]*datatype {
 	a := getdatatype(me.hmfile, data.full)
 	b := getdatatype(me.hmfile, gdata.full)
-	fmt.Println("HINT GENERIC ::", a.print(), "::", b.print())
 	update := make(map[string]*datatype)
 	ok := hintRecursiveReplace(a, b, gindex, update)
 	if !ok {

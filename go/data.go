@@ -400,6 +400,12 @@ func (me *varData) typeEqual(b *varData) bool {
 	if me.full == b.full {
 		return true
 	}
+	if strings.HasPrefix(me.full, "maybe<") && b.full == "none" {
+		return true
+	}
+	if strings.HasPrefix(b.full, "maybe<") && me.full == "none" {
+		return true
+	}
 	return me.dtype.standard() == b.dtype.standard()
 }
 

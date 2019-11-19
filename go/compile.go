@@ -277,7 +277,7 @@ func (me *cfile) initStatic(n *node) string {
 	return code
 }
 
-func (me *cfile) compileAssign(n *node) string {
+func (me *cfile) compileAssign(n *node) *codeblock {
 	left := n.has[0]
 	right := n.has[1]
 	if _, ok := left.attributes["mutable"]; ok {
@@ -290,15 +290,16 @@ func (me *cfile) compileAssign(n *node) string {
 	}
 	declare := me.declare(left)
 	value := me.eval(right)
+	pre := value.precode()
+	post := value.pop()
 
-	preCode := value.precode()
-	postCode := value.pop()
+	code += pre
+	code += me.maybeFmc(code, me.depth) + declare + me.maybeLet(post, right.attributes) + post
 
-	code += preCode + me.maybeFmc(preCode, me.depth) + declare + me.maybeLet(postCode, right.attributes) + postCode
 	if paren {
 		code += ")"
 	}
-	return code
+	return codeBlockOne(n, code)
 }
 
 func (me *cfile) assignmentUpdate(n *node) string {
@@ -317,11 +318,6 @@ func (me *cfile) block(n *node) *codeblock {
 	code := ""
 	for _, expr := range expressions {
 		e := me.eval(expr)
-		// for _, c := range e.flatten() {
-		// 	if c.code != "" {
-		// 		code += fmc(me.depth) + c.code + me.maybeColon(c.code) + me.maybeNewLine(c.code)
-		// 	}
-		// }
 		code += me.happyOut(e)
 	}
 	me.depth--

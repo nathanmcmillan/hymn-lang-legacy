@@ -23,23 +23,29 @@ Learn more at https://hymn-lang.org
 * stack variables
 * function pointers
 * slices and arrays
+* class functions with generics
+* "_" for default parameters during class allocation
 
 ### timeline
-* class functions with generics
 * hash maps
 * file input / output
 * bootstrapping compiler from golang to hymn
 * JSON format tokens and parse tree
-* correct scoping for functions
 * references to primitives
 * borrow checker
 * free heap space
-* interfaces (maybe?)
-* threads / async await
+* interfaces / contraints (compile time check whether a class implements a set of functions)
+* threads / async await (split function in half for each await)
 * macros / def
 * better error output
 * language server protocol
-* use "_" for default parameters during class allocation
+* "_" default parameters for regular functions
+* optimize printf for multiple strings to avoid concatenation 
+* "iterate X in Y" syntax rather than "for"
+
+### bugs
+* correct scoping for functions
+* use "while" syntax instead of "for" for everything
 
 ### testing
 * need negative tests

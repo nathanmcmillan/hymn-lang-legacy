@@ -190,6 +190,10 @@ func (me *parser) defineFunction(name string, self *class) *function {
 			}
 		}
 		me.eat(")")
+	} else {
+		if self != nil {
+			panic(me.fail() + "class functions must include parenthesis")
+		}
 	}
 	if me.token.is != "line" {
 		if !parenthesis {

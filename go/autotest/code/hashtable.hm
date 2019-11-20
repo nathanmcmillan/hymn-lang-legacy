@@ -7,7 +7,7 @@ string_hashcode(key string) int
 	mutable pos = 0
 	mutable value = uint64 0
 	length = len(key)
-	for value < uint64_max and pos < length
+	while value < uint64_max and pos < length
 		value = (value << uint64 8) + uint64 key[pos]
 		pos += 1
 	return int value
@@ -34,7 +34,7 @@ hashtable set(key k, value v)
 	bin = self.hash_element(key)
 	mutable next = self.table[bin]
 	mutable last = none<hashtable_item<v>>
-	for next is some(n)
+	while next is some(n)
 		if key != n.key : break
 		last = next
 		next = n.next

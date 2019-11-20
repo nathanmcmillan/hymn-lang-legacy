@@ -58,17 +58,29 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 		} else if dict {
 			panic(me.fail() + "regular paramater found after mapped parameter")
 		} else {
-			param := me.calc(0)
 			if pix >= len(fn.args) {
 				panic(me.fail() + "function \"" + name + "\" argument count exceeds parameter count")
 			}
-			arg := fn.args[pix]
-			if param.data().notEqual(arg.data()) && arg.data().full != "?" {
-				err := "parameter \"" + param.getType()
-				err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.data().full + "\" for function \"" + name + "\""
-				panic(me.fail() + err)
+			if me.token.is == "_" {
+				me.eat("_")
+				var param *node
+				arg := fn.args[pix]
+				if arg.defaultNode != nil {
+					param = arg.defaultNode
+				} else {
+					param = me.defaultValue(arg.data())
+				}
+				params[pix] = param
+			} else {
+				param := me.calc(0)
+				arg := fn.args[pix]
+				if param.data().notEqual(arg.data()) && arg.data().full != "?" {
+					err := "parameter \"" + param.getType()
+					err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.data().full + "\" for function \"" + name + "\""
+					panic(me.fail() + err)
+				}
+				params[pix] = param
 			}
-			params[pix] = param
 			pix++
 		}
 	}

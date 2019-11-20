@@ -21,11 +21,11 @@ do_things(f foo)
 get_me() foo
 	return foo.hello(8)
 
-main()
+main
 	mutable e = foo.hello(2)
 	if e is hello : if 0 == 0 : echo("#1 hello!")
 
-	for e is hello
+	while e is hello
 		e = foo.world("e")
 
 	if e is the_world()

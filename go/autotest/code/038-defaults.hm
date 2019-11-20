@@ -16,6 +16,7 @@ partial(a int, b string, c:10 int, d:"fed" string)
 
 main
   fmt()
+  fmt(_)
   fmt(6)
   fmt(x:7)
 
@@ -33,3 +34,5 @@ main
   partial(10, "e", c:15, d:"hed")
   partial(11, "f", c:16)
   partial(12, "g", d:"qed")
+  partial(_, "2", _, _)
+  partial(_, _, 5, "z")

@@ -76,7 +76,11 @@ func (me *parser) expression() *node {
 	} else if op == "continue" {
 		return me.continuing()
 	} else if op == "for" {
-		return me.forexpr()
+		return me.forloop()
+	} else if op == "while" {
+		return me.whileloop()
+	} else if op == "iterate" {
+		return me.iterloop()
 	} else if op == "return" {
 		return me.parseReturn()
 	} else if op == "goto" {

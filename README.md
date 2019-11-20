@@ -39,13 +39,10 @@ Learn more at https://hymn-lang.org
 * macros / def
 * better error output
 * language server protocol
-* "_" default parameters for regular functions
 * optimize printf for multiple strings to avoid concatenation 
-* "iterate X in Y" syntax rather than "for"
 
 ### bugs
-* correct scoping for functions
-* use "while" syntax instead of "for" for everything
+* variable scoping
 
 ### testing
 * need negative tests

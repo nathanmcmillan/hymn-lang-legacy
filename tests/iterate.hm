@@ -1,0 +1,14 @@
+main
+	a = [4]int
+	a[0] = 875
+	a[1] = 538
+	a[2] = 255
+	a[3] = 156
+
+	iterate n in a
+		echo(n)
+	echo("---")
+
+	iterate i, n in a
+		echo(to_str(i) + ": " + to_str(n))
+	echo("---")

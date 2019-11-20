@@ -1,6 +1,8 @@
 fmt
 5
 fmt
+5
+fmt
 6
 fmt
 7
@@ -57,3 +59,13 @@ partial
 g
 10
 qed
+partial
+0
+2
+10
+fed
+partial
+0
+
+5
+z

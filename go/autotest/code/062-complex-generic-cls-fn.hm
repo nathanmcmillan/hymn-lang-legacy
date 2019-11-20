@@ -7,8 +7,8 @@ type foo<k, v>
 	total    int
 	weight   char
 
-transform(in string) string
-	return "transform_" + in
+transform(one string) string
+	return "transform_" + one
 
 foo set(one k, two v)
 	self.list[0] = one
@@ -20,9 +20,9 @@ foo get_size() k
 foo get_total() int
 	return self.total
 
-foo do_special(in v, in_two v) v
+foo do_special(one v, in_two v) v
 	mutable x = none<v>
-	x = in
+	x = one
 	match x
 		some(s) =>
 			echo(s)

@@ -13,12 +13,12 @@ foo(w maybe<vec>) maybe<vec>
 		none => echo("foo none")
 	return w
 
-zoo(in vec) maybe<vec>
-	in.x = 2
-	return in
+zoo(v vec) maybe<vec>
+	v.x = 2
+	return v
 
-moo(in none<vec>) maybe<vec>
-	return in
+moo(v none<vec>) maybe<vec>
+	return v
 
 main
 	a = none<vec>

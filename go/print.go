@@ -10,7 +10,7 @@ func (me *varData) string() string {
 }
 
 func (me *variable) string() string {
-	return "{var:" + me.data().string() + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
+	return "{data:" + me.data().string() + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
 }
 
 func (me *node) string(lv int) string {
@@ -26,7 +26,7 @@ func (me *node) string(lv int) string {
 		s += ", call:" + me.fn.canonical()
 	}
 	if me.data() != nil {
-		s += ", var:" + me.data().string()
+		s += ", data:" + me.data().string()
 	}
 	if len(me.attributes) > 0 {
 		s += ", attributes["

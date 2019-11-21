@@ -54,15 +54,35 @@ func (me *parser) iterloop() *node {
 		panic(me.fail() + "expected array or slice but was \"" + using.data().full + "\"")
 	}
 	me.eat("line")
+
 	no := nodeInit("iterate")
-	nov := nodeInit("id")
-	nov.value = var1
-	no.push(nov)
+
+	d := nodeInit("variable")
+	d.idata = &idData{}
+	d.idata.module = me.hmfile
+	d.idata.name = var1
+
 	if var2 != "" {
-		novt := nodeInit("id")
-		novt.value = var2
-		no.push(novt)
+		iterid := me.hmfile.varInit("int", var1, false)
+		me.hmfile.scope.variables[iterid.name] = iterid
+		e := nodeInit("variable")
+		e.idata = &idData{}
+		e.idata.module = me.hmfile
+		e.idata.name = iterid.name
+		e.copyData(iterid.data())
+		no.push(e)
+
+		d.idata.name = var2
 	}
+
+	itermint := me.hmfile.varInitFromData(using.data().memberType, d.idata.name, false)
+	me.hmfile.scope.variables[itermint.name] = itermint
+	d.copyData(itermint.data())
+
+	block := me.block()
+
+	no.push(d)
 	no.push(using)
+	no.push(block)
 	return no
 }

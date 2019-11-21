@@ -151,8 +151,17 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	if op == "is" {
 		return me.compileIs(n)
 	}
-	if op == "loop" || op == "while" || op == "for" {
+	if op == "for" {
+		return me.compileFor(op, n)
+	}
+	if op == "while" {
+		return me.compileWhile(op, n)
+	}
+	if op == "loop" {
 		return me.compileLoop(op, n)
+	}
+	if op == "iterate" {
+		return me.compileIterate(op, n)
 	}
 	if op == "if" {
 		return me.compileIf(n)

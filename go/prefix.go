@@ -122,11 +122,29 @@ func prefixArray(me *parser, op string) *node {
 	me.eat("[")
 	alloc := &allocData{}
 	var no *node
+	var size *node
+	simple := false
 	if me.token.is == "]" {
 		alloc.slice = true
 		no = nodeInit("slice")
+		simple = true
+	} else if me.token.is == ":" {
+		me.eat(":")
+		alloc.slice = true
+		no = nodeInit("slice")
+		if me.token.is != "]" {
+			capacity := me.calc(0)
+			if capacity.getType() != TokenInt {
+				panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
+			}
+			defaultSize := nodeInit(TokenInt)
+			defaultSize.value = "0"
+			defaultSize._vdata = me.hmfile.typeToVarData(TokenInt)
+			no.push(defaultSize)
+			no.push(capacity)
+		}
 	} else {
-		size := me.calc(0)
+		size = me.calc(0)
 		if size.getType() != TokenInt {
 			panic(me.fail() + "array or slice size " + size.string(0) + " is not an integer")
 		}
@@ -157,6 +175,37 @@ func prefixArray(me *parser, op string) *node {
 	}
 	me.eat("]")
 	data := me.declareType(true)
+	if me.token.is == "(" {
+		items := nodeInit("items")
+		me.eat("(")
+		for {
+			item := me.calc(0)
+			if item.data().notEqual(data) {
+				panic(me.fail() + "array member type \"" + item.data().full + "\" does not match array type \"" + no.data().memberType.full + "\"")
+			}
+			items.push(item)
+			if me.token.is == ")" {
+				break
+			}
+			me.eat(",")
+		}
+		me.eat(")")
+
+		if size != nil {
+			sizeint, er := strconv.Atoi(size.value)
+			if er != nil || sizeint < len(items.has) {
+				panic(me.fail() + "defined array size is less than implied size")
+			}
+		}
+		no.push(items)
+
+		if simple {
+			no.is = "array"
+			alloc.array = true
+			alloc.slice = false
+			alloc.size = len(items.has)
+		}
+	}
 	data.merge(alloc)
 	no._vdata = data
 

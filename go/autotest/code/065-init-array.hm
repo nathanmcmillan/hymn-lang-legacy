@@ -1,0 +1,25 @@
+main
+  y = []int(2, 3, 5, 7, 11, 13)
+  echo(len(y))
+  echo(cap(y))
+	iterate n in y
+		echo(n)
+	echo("---")
+  z = [:]float(2.4, 5.6, 7.2, 11.7, 13.9)
+  echo(len(z))
+  echo(cap(z))
+  iterate n in z
+		echo(n)
+	echo("---")
+  w = [10:20]bool(true, false, true)
+  echo(len(w))
+  echo(cap(w))
+  iterate n in w
+		echo(n)
+	echo("---")
+  x = [:20]bool(true, false, true)
+  echo(len(x))
+  echo(cap(x))
+  iterate n in x
+		echo(n)
+	echo("---")

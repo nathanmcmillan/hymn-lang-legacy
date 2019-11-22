@@ -53,13 +53,16 @@ func (me *cfile) compileFor(op string, n *node) *codeblock {
 func (me *cfile) compileIterate(op string, n *node) *codeblock {
 	code := ""
 	item := ""
+	var1 := ""
+	var2 := ""
 	index := "index_" + me.temp()
-	size := len(n.has)
 	ix := 0
+	size := len(n.has)
 	if size == 3 {
 		a := n.has[0]
 		me.scope.variables[a.idata.name] = me.hmfile.varInitFromData(a.data(), a.idata.name, false)
 		item = a.idata.name
+		var1 = a.idata.name
 		ix = 1
 	} else if size == 4 {
 		a := n.has[0]
@@ -68,14 +71,24 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 		b := n.has[1]
 		me.scope.variables[b.idata.name] = me.hmfile.varInitFromData(b.data(), b.idata.name, false)
 		item = b.idata.name
+		var1 = a.idata.name
+		var2 = b.idata.name
 		ix = 2
 	} else {
 		panic("")
 	}
-	init := index + " = 0"
 	array := n.has[ix]
-	arrayname := array.idata.name
-	me.scope.variables[arrayname] = me.hmfile.varInitFromData(array.data(), arrayname, false)
+	arrayname := ""
+	if array.is == "variable" {
+		arrayname = array.idata.name
+	} else {
+		arrayname = "iterate_" + me.temp()
+		array.attributes["assign"] = arrayname
+		me.scope.variables[arrayname] = me.hmfile.varInitFromData(array.data(), arrayname, false)
+		code += array.data().typeSig() + arrayname + " = "
+		code += me.eval(array).code()
+		code += "\n" + fmc(me.depth)
+	}
 	getlen := ""
 	if array.data().checkIsArray() {
 		getlen = array.data().sizeOfArray()
@@ -89,11 +102,13 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 	}
 	block := me.eval(n.has[ix+1])
 
-	// TODO
-	delete(me.scope.variables, arrayname)
+	delete(me.scope.renaming, var1)
+	if var2 != "" {
+		delete(me.scope.renaming, var2)
+	}
 
 	code += "int " + index + ";\n" + fmc(me.depth)
-	code += "for (" + init + "; " + index + " < " + getlen + "; " + index + "++) {\n"
+	code += "for (" + index + " = 0; " + index + " < " + getlen + "; " + index + "++) {\n"
 	code += fmc(me.depth + 1)
 	code += array.data().memberType.typeSig() + " " + item + " = " + arrayname + "[" + index + "];\n"
 	code += block.code()

@@ -190,7 +190,23 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 				lazyGenerics = true
 				good, newtypes := mergeMaps(update, gtypes)
 				if !good {
-					f := fmt.Sprint("lazy generic for class \""+base.name+"\" is ", gtypes, " but found ", update)
+					a := ""
+					for k, v := range gtypes {
+						if a != "" {
+							a += ", "
+						}
+						a += k + ":" + v.print()
+					}
+					a = "map[" + a + "]"
+					b := ""
+					for k, v := range update {
+						if b != "" {
+							b += ", "
+						}
+						b += k + ":" + v.print()
+					}
+					b = "map[" + b + "]"
+					f := fmt.Sprint("lazy generic for class \""+base.name+"\" is ", a, " but found ", b)
 					panic(me.fail() + f)
 				}
 				gtypes = newtypes

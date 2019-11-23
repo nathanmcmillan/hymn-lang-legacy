@@ -45,8 +45,13 @@ func (me *parser) iterloop() *node {
 	me.eat("id")
 	if me.token.is == "," {
 		me.eat(",")
-		var2 = me.token.value
-		me.eat("id")
+		if me.token.is == "_" {
+			var2 = me.token.is
+			me.eat("_")
+		} else {
+			var2 = me.token.value
+			me.eat("id")
+		}
 	}
 	me.eat("in")
 	using := me.calc(0)

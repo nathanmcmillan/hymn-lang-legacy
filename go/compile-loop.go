@@ -68,26 +68,32 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 		a := n.has[0]
 		me.scope.renaming[a.idata.name] = index
 		me.scope.variables[index] = me.hmfile.varInitFromData(a.data(), index, false)
-		b := n.has[1]
-		me.scope.variables[b.idata.name] = me.hmfile.varInitFromData(b.data(), b.idata.name, false)
-		item = b.idata.name
 		var1 = a.idata.name
-		var2 = b.idata.name
+		b := n.has[1]
+		if b.idata.name == "_" {
+			item = ""
+		} else {
+			me.scope.variables[b.idata.name] = me.hmfile.varInitFromData(b.data(), b.idata.name, false)
+			item = b.idata.name
+			var2 = b.idata.name
+		}
 		ix = 2
 	} else {
 		panic("")
 	}
 	array := n.has[ix]
 	arrayname := ""
-	if array.is == "variable" {
-		arrayname = array.idata.name
-	} else {
-		arrayname = "iterate_" + me.temp()
-		array.attributes["assign"] = arrayname
-		me.scope.variables[arrayname] = me.hmfile.varInitFromData(array.data(), arrayname, false)
-		code += array.data().typeSig() + arrayname + " = "
-		code += me.eval(array).code()
-		code += "\n" + fmc(me.depth)
+	if item != "" {
+		if array.is == "variable" {
+			arrayname = array.idata.name
+		} else {
+			arrayname = "iterate_" + me.temp()
+			array.attributes["assign"] = arrayname
+			me.scope.variables[arrayname] = me.hmfile.varInitFromData(array.data(), arrayname, false)
+			code += array.data().typeSig() + arrayname + " = "
+			code += me.eval(array).code()
+			code += ";\n" + fmc(me.depth)
+		}
 	}
 	getlen := ""
 	if array.data().checkIsArray() {
@@ -109,8 +115,10 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 
 	code += "int " + index + ";\n" + fmc(me.depth)
 	code += "for (" + index + " = 0; " + index + " < " + getlen + "; " + index + "++) {\n"
-	code += fmc(me.depth + 1)
-	code += array.data().memberType.typeSig() + " " + item + " = " + arrayname + "[" + index + "];\n"
+	if item != "" {
+		code += fmc(me.depth + 1)
+		code += fmtassignspace(array.data().memberType.typeSig()) + item + " = " + arrayname + "[" + index + "];\n"
+	}
 	code += block.code()
 	code += me.maybeNewLine(code) + fmc(me.depth) + "}"
 

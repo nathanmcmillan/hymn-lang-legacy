@@ -91,7 +91,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.push(head)
 					head = member
 				}
-			} else if data.maybe {
+			} else if data.checkIsSomeOrNone() {
 				panic(me.fail() + "unexpected maybe type \"" + head.data().full + "\" do you need a match statement?")
 			} else {
 				panic(me.fail() + "unexpected type \"" + head.data().full + "\"")

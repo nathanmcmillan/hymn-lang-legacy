@@ -1,13 +1,13 @@
 int_hashcode(key int) int
 	return key
 
-type hashtable_item<k, v>
+type hashtable_item<k,v>
 	code  int
 	key   k
 	value v
 	next  maybe<hashtable_item<k,v>>
 
-type hashtable<k, v>
+type hashtable<k,v>
 	size     int
 	capacity int
 	get_code (k) int

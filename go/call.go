@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 )
 
 func (me *parser) pushSigParams(n *node, sig *fnSig) {
@@ -110,8 +112,14 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 
 func (me *parser) call(module *hmfile) *node {
 	name := me.token.value
-	fn, _ := module.getFunction(name)
 	me.eat("id")
+	if me.token.is == "<" {
+		fmt.Println("CALL ::", name)
+		order, _ := me.genericHeader()
+		name += "<" + strings.Join(order, ",") + ">"
+	}
+	fmt.Println("CALL --->", name)
+	fn, _ := module.getFunction(name)
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
@@ -121,7 +129,7 @@ func (me *parser) call(module *hmfile) *node {
 }
 
 func (me *parser) parseFn(module *hmfile) *node {
-	if me.peek().is == "(" {
+	if me.peek().is == "(" || me.peek().is == "<" {
 		return me.call(module)
 	}
 

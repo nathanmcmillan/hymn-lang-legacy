@@ -1,15 +1,20 @@
 package main
 
 type function struct {
-	name        string
-	start       *parsepoint
-	module      *hmfile
-	forClass    *class
-	args        []*funcArg
-	argDict     map[string]int
-	aliasing    map[string]string
-	expressions []*node
-	returns     *varData
+	name          string
+	start         *parsepoint
+	module        *hmfile
+	forClass      *class
+	args          []*funcArg
+	argDict       map[string]int
+	aliasing      map[string]string
+	expressions   []*node
+	returns       *varData
+	generics      map[string]int
+	genericsOrder []string
+	genericsAlias map[string]string
+	base          *function
+	impls         []*function
 }
 
 func funcInit(module *hmfile, name string) *function {
@@ -144,6 +149,15 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		fn.aliasing = self.gmapper
 	}
 	parenthesis := false
+	if me.token.is == "<" {
+		if self != nil {
+			panic(me.fail() + "class functions cannot have additional generics")
+		}
+		order, dict := me.genericHeader()
+		me.verify("(")
+		fn.generics = dict
+		fn.genericsOrder = order
+	}
 	if me.token.is == "(" {
 		me.eat("(")
 		parenthesis = true
@@ -192,12 +206,12 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		me.eat(")")
 	} else {
 		if self != nil {
-			panic(me.fail() + "class functions must include parenthesis")
+			panic(me.fail() + "class function \"" + name + "\" must include parenthesis")
 		}
 	}
 	if me.token.is != "line" {
 		if !parenthesis {
-			panic(me.fail() + "functions that return must include parenthesis")
+			panic(me.fail() + "function \"" + name + "\" returns a value and must include parenthesis")
 		}
 		fn.returns = me.declareType(true)
 	} else {

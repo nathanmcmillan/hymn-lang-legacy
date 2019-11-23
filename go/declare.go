@@ -76,14 +76,6 @@ func (me *parser) declareGeneric(implementation bool, base hasGenerics) []string
 			me.eat(",")
 		}
 		gimpl := me.declareType(implementation)
-		// TODO
-		// uncomment this and make impl = false for class functions including generics
-		// _, ok := me.hmfile.getType(gimpl.full)
-		// if !ok {
-		// 	if impl {
-		// 		panic(me.fail() + "generic implementation type \"" + gimpl.full + "\" does not exist")
-		// 	}
-		// }
 		order = append(order, gimpl.full)
 	}
 	me.eat(">")

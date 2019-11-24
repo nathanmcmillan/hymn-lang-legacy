@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -128,6 +129,7 @@ func (me *parser) declareType(implementation bool) *varData {
 		array = true
 	}
 
+	module := me.hmfile
 	typed := ""
 
 	if me.token.is == "(" {
@@ -155,9 +157,13 @@ func (me *parser) declareType(implementation bool) *varData {
 	}
 
 	if _, ok := me.hmfile.imports[typed]; ok {
+		fmt.Println("IMPORT IS TRUE ::", typed)
+		module = me.hmfile.program.hmfiles[typed]
+		fmt.Println(module.name)
 		me.eat(".")
 		typed += "."
 		typed += me.token.value
+		// typed = me.token.value
 		me.eat("id")
 	}
 

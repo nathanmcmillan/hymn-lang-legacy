@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -114,11 +113,9 @@ func (me *parser) call(module *hmfile) *node {
 	name := me.token.value
 	me.eat("id")
 	if me.token.is == "<" {
-		fmt.Println("CALL ::", name)
 		order, _ := me.genericHeader()
 		name += "<" + strings.Join(order, ",") + ">"
 	}
-	fmt.Println("CALL --->", name)
 	fn, _ := module.getFunction(name)
 	n := nodeInit("call")
 	n.fn = fn

@@ -1,6 +1,16 @@
-
 main
+	y = open("files.tree", "r")
+	echo(y.read_all())
+	y.close()
+
 	x = open("files.tree", "r")
-	echo(x.read())
+	echo(x.read_line())
+	echo(x.read_line())
 	echo(x.read_line())
 	x.close()
+
+	z = open("files.tree", "r")
+	echo(z.read())
+	echo(z.read())
+	echo(z.read())
+	z.close()

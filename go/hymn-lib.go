@@ -2,6 +2,7 @@ package main
 
 const (
 	libEcho      = "echo"
+	libSystem    = "system"
 	libToStr     = "to_str"
 	libToInt     = "to_int"
 	libToInt8    = "to_int8"
@@ -17,6 +18,7 @@ const (
 	libToFloat32 = "to_float32"
 	libToFloat64 = "to_float64"
 	libOpen      = "open"
+	libCat       = "cat"
 	libLength    = "len"
 	libCapacity  = "cap"
 	libPush      = "push"
@@ -101,6 +103,8 @@ func (me *hmlib) libs() {
 
 	me.simple(libEcho, "void")
 
+	me.simple(libCat, TokenString)
+	me.simple(libSystem, TokenString)
 	me.simple(libToStr, TokenString)
 
 	me.simple(libToInt, TokenInt)

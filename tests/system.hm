@@ -1,0 +1,7 @@
+main
+	p = system("echo $PWD")
+	echo(p)
+	echo("---")
+	l = system("ls")
+	echo(l)
+	echo("---")

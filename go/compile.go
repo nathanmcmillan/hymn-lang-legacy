@@ -25,9 +25,13 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 
 	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_string.h\"\n"
 	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_slice.h\"\n"
+	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_files.h\"\n"
+	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_system.h\"\n"
 
 	cfile.hmfile.program.sources["hmlib_string.c"] = libDir + "/hmlib_string.c"
 	cfile.hmfile.program.sources["hmlib_slice.c"] = libDir + "/hmlib_slice.c"
+	cfile.hmfile.program.sources["hmlib_files.c"] = libDir + "/hmlib_files.c"
+	cfile.hmfile.program.sources["hmlib_system.c"] = libDir + "/hmlib_system.c"
 
 	for _, importName := range me.importOrder {
 		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"

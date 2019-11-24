@@ -57,6 +57,16 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		cb.prepend(param0.pre)
 		cb.prepend(param1.pre)
 		return cb
+	case libCat:
+		param := me.eval(parameters[0])
+		cb := codeBlockOne(n, "hmlib_cat("+param.pop()+")")
+		cb.prepend(param.pre)
+		return cb
+	case libSystem:
+		param := me.eval(parameters[0])
+		cb := codeBlockOne(n, "hmlib_system("+param.pop()+")")
+		cb.prepend(param.pre)
+		return cb
 	case libEcho:
 		param := me.eval(parameters[0])
 		switch param.getType() {

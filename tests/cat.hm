@@ -1,0 +1,3 @@
+main
+	x = cat("run.sh")
+	echo(x)

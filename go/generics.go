@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -87,6 +88,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 						me.defineEnumImplGeneric(base, pop, current.order)
 					} else {
 						base := me.hmfile.classes[current.name]
+						fmt.Println("BASE ::", current.name)
 						me.defineClassImplGeneric(base, pop, current.order)
 					}
 				}

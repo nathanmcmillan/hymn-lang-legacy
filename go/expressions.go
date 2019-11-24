@@ -9,8 +9,7 @@ func (me *parser) fileExpression() {
 	token := me.token
 	op := token.is
 	if op == "import" {
-		me.eat(op)
-		me.include()
+		me.importing()
 	} else if op == "immutable" {
 		me.eat(op)
 		me.immutable()
@@ -380,7 +379,8 @@ func (me *parser) calcBool() *node {
 	return n
 }
 
-func (me *parser) include() {
+func (me *parser) importing() {
+	me.eat("import")
 	name := me.token.value
 	fmt.Println("importing " + name)
 	me.eat(TokenStringLiteral)
@@ -392,6 +392,13 @@ func (me *parser) include() {
 		me.hmfile.program.compile(me.hmfile.program.out, path, me.hmfile.program.libDir)
 		fmt.Println("finished compiling " + name)
 		fmt.Println("=== continue " + me.hmfile.name + " parse === ")
+	}
+	if me.token.is == "id" {
+		fmt.Println("include specific type/enum/function/variable")
+	} else if me.token.is == "*" {
+		fmt.Println("include all of package")
+	} else {
+		fmt.Println("include without including namespace")
 	}
 	me.eat("line")
 }

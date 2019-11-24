@@ -1,10 +1,18 @@
-import "hashtable" hashtable
+import "hashtable"
+
+(*
+
+each hmfile generates it's own full qualified name space
+for both internal items and external
+
+*)
 
 main
-	m = hashtable(
+	t = [12:]maybe<hashtable.hashtable_item<int,string>>
+	m = hashtable.hashtable(
 		capacity: 12
-		get_code: int_hashcode
-		table: [12:]maybe<hashtable_item<int,string>>)
+		get_code: hashtable.int_hashcode
+		table: t)
 
 	m.set(0, "kiwi")
 	match m.get(0)
@@ -48,3 +56,12 @@ main
 	if m.get(0) is some : echo("bad")
 	echo("size: " + to_str(m.size))
 	echo("---")
+
+(* import "hashtable" hashtable *)
+(* import "hashtable" * *)
+
+(* m = hashtable(
+	capacity: 12
+	get_code: int_hashcode
+	table: [12:]maybe<hashtable_item<int,string>>) *)
+	

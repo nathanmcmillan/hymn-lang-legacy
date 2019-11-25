@@ -16,7 +16,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 	}
 
 	data := n.data()
-	typed := data.module.classNameSpace(data.typed)
+	typed := data.module.classNameSpace(data.dtype.cname())
 
 	_, useStack := n.attributes["stack"]
 	assign, local := n.attributes["assign"]

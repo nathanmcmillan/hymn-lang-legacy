@@ -220,17 +220,30 @@ func (me *cfile) compileNone(n *node) *codeblock {
 	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileEqual(n *node) *codeblock {
-	_, paren := n.attributes["parenthesis"]
+func (me *cfile) compileEqual(op string, n *node) *codeblock {
+	a := me.eval(n.has[0])
+	b := me.eval(n.has[1])
 	code := ""
-	if paren {
-		code += "("
-	}
-	code += me.eval(n.has[0]).code()
-	code += " == "
-	code += me.eval(n.has[1]).code()
-	if paren {
-		code += ")"
+	if a.data().checkIsString() && b.data().checkIsString() {
+		code = "hmlib_string_equal(" + a.code() + ", " + b.code() + ")"
+		if op == "not-equal" {
+			code = "!" + code
+		}
+	} else {
+		_, paren := n.attributes["parenthesis"]
+		if paren {
+			code += "("
+		}
+		code += a.code()
+		if op == "equal" {
+			code += " == "
+		} else {
+			code += " != "
+		}
+		code += b.code()
+		if paren {
+			code += ")"
+		}
 	}
 	return codeBlockOne(n, code)
 }

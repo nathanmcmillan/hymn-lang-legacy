@@ -8,6 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-hmlib_string hmlib_system(const hmlib_string command);
+hmlib_string hmlib_system(const char *command);
 
 #endif

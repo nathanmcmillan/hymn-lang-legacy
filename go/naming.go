@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 var (
 	globalClassPrefix = "Hm"
@@ -10,6 +12,10 @@ var (
 	globalVarPrefix   = "hm"
 	definePrefix      = "HM_"
 )
+
+func simpleCapitalize(name string) string {
+	return strings.ToUpper(name[0:1]) + name[1:]
+}
 
 func upperSplit(name, repl string) string {
 	full := ""

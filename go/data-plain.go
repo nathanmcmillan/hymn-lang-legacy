@@ -34,6 +34,50 @@ func (me *datatype) print() string {
 	return me.string(true)
 }
 
+func (me *datatype) cname() string {
+	switch me.is {
+	case dataTypeUnknown:
+		fallthrough
+	case dataTypePrimitive:
+		{
+			return simpleCapitalize(me.canonical)
+		}
+	case dataTypeArray:
+		{
+			return "Array" + me.size + me.member.cname()
+		}
+	case dataTypeFunction:
+		{
+			f := simpleCapitalize(me.canonical) + "("
+			for i, p := range me.parameters {
+				if i > 0 {
+					f += ","
+				}
+				f += p.cname()
+			}
+			f += ") " + me.returns.cname()
+			return f
+		}
+	case dataTypeClass:
+		fallthrough
+	case dataTypeEnum:
+		{
+			f := simpleCapitalize(me.canonical)
+			if len(me.generics) > 0 {
+				for i, g := range me.generics {
+					if i > 0 {
+						f += ","
+					}
+					f += g.cname()
+				}
+			}
+			return f
+		}
+	default:
+		panic("missing data type")
+	}
+}
+
 func (me *datatype) string(expand bool) string {
 	switch me.is {
 	case dataTypeUnknown:
@@ -45,17 +89,23 @@ func (me *datatype) string(expand bool) string {
 	case dataTypeMaybe:
 		{
 			if expand {
-				return "maybe<" + me.member.print() + ">"
+				return "maybe<" + me.member.string(expand) + ">"
 			}
-			return me.member.print()
+			return me.member.string(expand)
 		}
 	case dataTypeNone:
 		{
+			if me.member != nil {
+				if expand {
+					return "none<" + me.member.string(expand) + ">"
+				}
+				return me.member.string(expand)
+			}
 			return "none"
 		}
 	case dataTypeArray:
 		{
-			return "[" + me.size + "]" + me.member.print()
+			return "[" + me.size + "]" + me.member.string(expand)
 		}
 	case dataTypeFunction:
 		{
@@ -64,9 +114,9 @@ func (me *datatype) string(expand bool) string {
 				if i > 0 {
 					f += ","
 				}
-				f += p.print()
+				f += p.string(expand)
 			}
-			f += ") " + me.returns.print()
+			f += ") " + me.member.string(expand)
 			return f
 		}
 	case dataTypeClass:
@@ -80,7 +130,7 @@ func (me *datatype) string(expand bool) string {
 					if i > 0 {
 						f += ","
 					}
-					f += g.print()
+					f += g.string(expand)
 				}
 				f += ">"
 			}

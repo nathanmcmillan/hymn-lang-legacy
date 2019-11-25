@@ -60,6 +60,7 @@ var (
 		TokenFloat32:   "float",
 		TokenFloat64:   "double",
 		TokenString:    "hmlib_string",
+		"[]char":       "hmlib_string",
 		TokenRawString: "char *",
 		TokenInt8:      "int8_t",
 		TokenInt16:     "int16_t",

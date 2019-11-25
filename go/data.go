@@ -71,7 +71,7 @@ func (me *varData) copy() *varData {
 }
 
 func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[string]string) *varData {
-	data := me.typeToVarData(typed)
+	data := typeToVarData(me, typed)
 
 	if _, ok := attributes["stack"]; ok {
 		data.onStack = true
@@ -89,52 +89,54 @@ func (me *hmlib) literalType(typed string) *varData {
 	return data
 }
 
-func (me *hmfile) typeToVarData(typed string) *varData {
+func typeToVarData(module *hmfile, typed string) *varData {
 
-	if me.scope.fn != nil && me.scope.fn.aliasing != nil {
-		if alias, ok := me.scope.fn.aliasing[typed]; ok {
+	if module != nil && module.scope.fn != nil && module.scope.fn.aliasing != nil {
+		if alias, ok := module.scope.fn.aliasing[typed]; ok {
 			typed = alias
 		}
 	}
 
 	data := &varData{}
 	data.full = typed
+	data.typed = typed
 	data.mutable = true
 	data.isptr = true
 	data.heap = true
-	data.module = me
-
-	dtype := getdatatype(me, typed)
-	data.dtype = dtype
+	data.module = module
+	data.dtype = getdatatype(module, typed)
 
 	if checkIsPrimitive(typed) {
 		if typed == TokenString {
 			data.array = true
 			data.isptr = true
-			typed = TokenChar
-			data.memberType = me.typeToVarData(typed)
+			data.memberType = typeToVarData(module, TokenChar)
+			data.typed = TokenChar
 		} else {
 			data.isptr = false
 			data.onStack = true
 		}
-		data.typed = typed
 		return data
 	}
 
 	if strings.HasPrefix(typed, "maybe") {
 		data.maybe = true
-		if typed == "maybe<char>" {
-			panic("")
-		}
-		data.memberType = me.typeToVarData(typed[6 : len(typed)-1])
+		data.memberType = typeToVarData(module, typed[6:len(typed)-1])
+		return data
 
 	} else if strings.HasPrefix(typed, "none") {
-		data.none = true
 		if len(typed) > 4 {
-			data.memberType = me.typeToVarData(typed[5 : len(typed)-1])
+			data.memberType = typeToVarData(module, typed[5:len(typed)-1])
+			typed = "maybe" + typed[4:len(typed)]
+			data.full = typed
+			data.typed = typed
+			data.dtype = getdatatype(module, typed)
+			data.maybe = true
 		} else {
-			data.memberType = me.typeToVarData("")
+			data.none = true
+			data.memberType = typeToVarData(module, "")
 		}
+		return data
 	}
 
 	data.array = checkIsArray(typed)
@@ -142,17 +144,17 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 	if data.array || data.slice {
 		data.isptr = true
 		_, typed = typeOfArrayOrSlice(typed)
-		data.memberType = me.typeToVarData(typed)
+		data.memberType = typeToVarData(module, typed)
 	}
 
 	if checkIsFunction(typed) {
 		args, ret := functionSigType(typed)
-		fn := fnSigInit(me)
+		fn := fnSigInit(module)
 		for _, a := range args {
-			t := me.typeToVarData(a)
+			t := typeToVarData(module, a)
 			fn.args = append(fn.args, fnArgInit(t.asVariable()))
 		}
-		fn.returns = me.typeToVarData(ret)
+		fn.returns = typeToVarData(module, ret)
 		data.fn = fn
 	}
 
@@ -160,7 +162,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 
 	dot := strings.Split(typed, ".")
 	if len(dot) != 1 {
-		if module, ok := me.program.hmfiles[dot[0]]; ok {
+		if module, ok := module.program.hmfiles[dot[0]]; ok {
 			data.module = module
 			if len(dot) > 2 {
 				if _, ok := module.enums[dot[1]]; ok {
@@ -171,7 +173,7 @@ func (me *hmfile) typeToVarData(typed string) *varData {
 			} else {
 				data.typed = dot[1]
 			}
-		} else if _, ok := me.enums[dot[0]]; ok {
+		} else if _, ok := module.enums[dot[0]]; ok {
 			data.typed = dot[0] + "." + dot[1]
 		} else {
 			panic("unknown type \"" + typed + "\"")
@@ -228,6 +230,14 @@ func (me *varData) arrayToSlice() {
 
 func (me *varData) checkIsSomeOrNone() bool {
 	return me.maybe || me.none
+}
+
+func (me *varData) checkIsString() bool {
+	return me.full == TokenString || me.full == "[]char"
+}
+
+func (me *varData) checkIsChar() bool {
+	return me.full == TokenChar
 }
 
 func (me *varData) checkIsArray() bool {
@@ -357,7 +367,7 @@ func (me *varData) typeSig() string {
 		return me.memberType.typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {
-		sig := me.module.classNameSpace(me.typed)
+		sig := me.module.classNameSpace(me.dtype.cname())
 		if !me.onStack && me.isptr {
 			sig += " *"
 		}
@@ -373,7 +383,7 @@ func (me *varData) noMallocTypeSig() string {
 		return fmtptr(me.memberType.noMallocTypeSig())
 	}
 	if _, ok := me.checkIsClass(); ok {
-		return me.module.classNameSpace(me.typed)
+		return me.module.classNameSpace(me.dtype.cname())
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.noMallocTypeSig()
 	}
@@ -415,6 +425,12 @@ func (me *varData) notEqual(other *varData) bool {
 
 func (me *parser) typeEqual(one, two string) bool {
 	if one == two {
+		return true
+	}
+	if strings.HasPrefix(one, "maybe<") && two == "none" {
+		return true
+	}
+	if strings.HasPrefix(two, "maybe<") && one == "none" {
 		return true
 	}
 	return getdatatype(me.hmfile, one).standard() == getdatatype(me.hmfile, two).standard()

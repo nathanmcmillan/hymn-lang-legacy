@@ -1,6 +1,6 @@
 #include "hmlib_system.h"
 
-hmlib_string hmlib_system(const hmlib_string command) {
+hmlib_string hmlib_system(const char *command) {
     char buffer[128];
     FILE *fp;
     if ((fp = popen(command, "r")) == NULL) {

@@ -75,7 +75,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 		panic(me.fail() + "generic enum \"" + enumName + "\" has no impl for " + fmt.Sprint(enumDef.generics))
 	}
 
-	n.copyData(module.typeToVarData(enumName + "." + unionName))
+	n.copyData(typeToVarData(module, enumName+"."+unionName))
 
 	return n
 }
@@ -110,7 +110,7 @@ func (me *parser) defaultValue(in *varData) *node {
 		t := nodeInit("slice")
 		t.copyData(d.data())
 		s := nodeInit(TokenInt)
-		s.copyData(me.hmfile.typeToVarData(TokenInt))
+		s.copyData(typeToVarData(me.hmfile, TokenInt))
 		s.value = "0"
 		t.push(s)
 		d = t
@@ -318,7 +318,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 		typed = module.name + "." + typed
 	}
 
-	data := me.hmfile.typeToVarData(typed)
+	data := typeToVarData(me.hmfile, typed)
 	return data
 }
 

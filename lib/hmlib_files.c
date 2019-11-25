@@ -38,7 +38,7 @@ char *hmlib_write(const char *path, const char *content) {
     fclose(fp);
 }
 
-size_t hmlib_file_size(const hmlib_string path) {
+size_t hmlib_file_size(const char *path) {
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
         printf("could not open file");
@@ -53,7 +53,7 @@ size_t hmlib_file_size(const hmlib_string path) {
     return num;
 }
 
-hmlib_string hmlib_cat(const hmlib_string path) {
+hmlib_string hmlib_cat(const char *path) {
     size_t size = hmlib_file_size(path);
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {

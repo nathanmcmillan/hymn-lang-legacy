@@ -186,7 +186,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 				fnArg := &funcArg{}
 				fnArg.variable = me.hmfile.varInitFromData(typed, argname, false)
 				if defaultValue != "" {
-					defaultTypeVarData := me.hmfile.typeToVarData(defaultType)
+					defaultTypeVarData := typeToVarData(me.hmfile, defaultType)
 					if typed.notEqual(defaultTypeVarData) {
 						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.full + "\" do not match")
 					}
@@ -215,7 +215,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		}
 		fn.returns = me.declareType(true)
 	} else {
-		fn.returns = me.hmfile.typeToVarData("void")
+		fn.returns = typeToVarData(me.hmfile, "void")
 	}
 	me.eat("line")
 	for _, arg := range fn.args {

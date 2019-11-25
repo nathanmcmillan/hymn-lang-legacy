@@ -1,7 +1,7 @@
 package main
 
 func (me *parser) parseIs(left *node, op string, n *node) *node {
-	n.copyData(me.hmfile.typeToVarData("bool"))
+	n.copyData(typeToVarData(me.hmfile, "bool"))
 	me.eat(op)
 	var right *node
 	if left.data().checkIsSomeOrNone() {
@@ -52,7 +52,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				}
 				me.eat("id")
 				right = nodeInit("match-enum")
-				right.copyData(me.hmfile.typeToVarData(prefix + baseEnum.name + "." + un.name))
+				right.copyData(typeToVarData(me.hmfile, prefix+baseEnum.name+"."+un.name))
 				if me.token.is == "(" {
 					me.eat("(")
 					temp := me.token.value

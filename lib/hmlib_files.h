@@ -8,6 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-hmlib_string hmlib_cat(const hmlib_string path);
+hmlib_string hmlib_cat(const char *path);
 
 #endif

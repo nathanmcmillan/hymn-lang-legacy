@@ -72,6 +72,8 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		switch param.getType() {
 		case TokenChar:
 			return codeBlockMerge(n, "printf(\"%c\\n\", "+param.pop()+")", param.pre)
+		case "[]char":
+			fallthrough
 		case TokenString:
 			return codeBlockMerge(n, "printf(\"%s\\n\", "+param.pop()+")", param.pre)
 		case TokenRawString:
@@ -111,6 +113,8 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 	case libToStr:
 		param := me.eval(parameters[0])
 		switch param.getType() {
+		case "[]char":
+			fallthrough
 		case TokenString:
 			panic("redundant string cast")
 		case TokenInt:

@@ -6,15 +6,15 @@ enum dog
 	bark
 	woof
 
-enum cat
+enum kitten
 	meow(int)
 	hiss(float)
 
 doggo() dog
 	return dog.bark
 
-kitty() cat
-	return cat.meow(288)
+kitty() kitten
+	return kitten.meow(288)
 
 main
 	a = vec()

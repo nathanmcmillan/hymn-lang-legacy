@@ -1,0 +1,5 @@
+main
+	path = 'r' + 'u' + 'n' + '.' + 's' + 'h'
+	content = cat("run.sh")
+	iterate i, c in content 
+		echo(to_str(i) + ": " + c)

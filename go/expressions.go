@@ -228,6 +228,8 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 				if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
+					fmt.Println(left.string(0), "->", left.data().dtype.standard())
+					fmt.Println(right.string(0), "->", right.data().dtype.standard())
 					panic(me.fail() + "variable type \"" + left.getType() + "\" does not match expression type \"" + right.getType() + "\"")
 				}
 			}
@@ -330,45 +332,6 @@ func (me *parser) block() *node {
 	}
 blockEnd:
 	return block
-}
-
-func (me *parser) comparison(left *node, op string) *node {
-	fmt.Println("> comparison " + left.string(0) + "")
-	var opType string
-	if op == "and" || op == "or" {
-		if left.getType() != "bool" {
-			err := me.fail() + "left side of \"" + op + "\" must be a boolean, was \"" + left.getType() + "\""
-			err += "\nleft: " + left.string(0)
-			panic(err)
-		}
-		opType = op
-		me.eat(op)
-	} else if op == "==" {
-		opType = "equal"
-		me.eat(op)
-	} else if op == "!=" {
-		opType = "not-equal"
-		me.eat(op)
-	} else if op == ">" || op == ">=" || op == "<" || op == "<=" {
-		if !isNumber(left.getType()) {
-			err := me.fail() + "left side of comparison must be a number, was \"" + left.getType() + "\""
-			err += "\nleft: " + left.string(0)
-			panic(err)
-		}
-		opType = op
-		me.eat(op)
-	} else {
-		panic(me.fail() + "unknown token for boolean expression")
-	}
-	right := me.calc(0)
-	if left.data().notEqual(right.data()) {
-		panic(me.fail() + "comparison types \"" + left.getType() + "\" and \"" + right.getType() + "\" do not match")
-	}
-	n := nodeInit(opType)
-	n.copyData(me.hmfile.typeToVarData("bool"))
-	n.push(left)
-	n.push(right)
-	return n
 }
 
 func (me *parser) calcBool() *node {

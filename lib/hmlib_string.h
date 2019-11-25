@@ -10,8 +10,8 @@
 #include <string.h>
 
 struct __attribute__((__packed__)) hmlib_string_head {
-    size_t len;
-    size_t cap;
+    size_t length;
+    size_t capacity;
     char **chars;
 };
 
@@ -30,6 +30,9 @@ void hmlib_string_free(const hmlib_string s);
 char *hmlib_concat(const char *a, const char *b);
 char *hmlib_concat_list(const char **ls, const int size);
 char *hmlib_concat_varg(const int size, ...);
+
+int hmlib_string_compare(const hmlib_string a, const hmlib_string b);
+bool hmlib_string_equal(const hmlib_string a, const hmlib_string b);
 
 char *hmlib_char_to_string(const char ch);
 char *hmlib_int_to_string(const int number);

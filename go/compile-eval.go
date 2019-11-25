@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 )
 
 func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
@@ -85,11 +86,6 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	if op == "return" {
 		if len(n.has) > 0 {
 			in := me.eval(n.has[0])
-			// code := ""
-			// if in.pre != nil {
-			// 	code += fmc(me.depth)
-			// 	fmt.Println("RETURN :: \"" + in.pre.code() + "\"")
-			// }
 			code := "return " + in.pop()
 			cb := &codeblock{}
 			cb.prepend(in.pre)
@@ -102,17 +98,16 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 		code := me.eval(n.has[0]).code()
 		return codeBlockOne(n, code)
 	}
-	if op == "equal" {
-		return me.compileEqual(n)
+	if op == "equal" || op == "not-equal" {
+		return me.compileEqual(op, n)
 	}
 	if op == "not" {
-		code := "!" + me.eval(n.has[0]).code()
-		return codeBlockOne(n, code)
-	}
-	if op == "not-equal" {
 		code := me.eval(n.has[0]).code()
-		code += " != "
-		code += me.eval(n.has[1]).code()
+		if strings.HasPrefix(code, "!") {
+			code = code[1:]
+		} else {
+			code = "!" + code
+		}
 		return codeBlockOne(n, code)
 	}
 	if op == ">" || op == ">=" || op == "<" || op == "<=" {

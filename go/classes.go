@@ -2,6 +2,7 @@ package main
 
 type class struct {
 	name          string
+	cname         string
 	variables     map[string]*variable
 	variableOrder []string
 	generics      []string
@@ -13,9 +14,10 @@ type class struct {
 	impls         []*class
 }
 
-func classInit(name string, generics []string, genericsDict map[string]int) *class {
+func classInit(module *hmfile, name string, generics []string, genericsDict map[string]int) *class {
 	c := &class{}
 	c.name = name
+	c.cname = getdatatype(module, name).cname()
 	c.generics = generics
 	c.genericsDict = genericsDict
 	c.functions = make(map[string]*function)

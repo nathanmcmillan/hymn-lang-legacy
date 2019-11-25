@@ -7,7 +7,7 @@ func (me *parser) infixConcat(left *node) *node {
 	for me.token.is == "+" {
 		me.eat("+")
 		right := me.calc(getInfixPrecedence("+"))
-		if right.getType() != TokenString {
+		if !right.data().checkIsString() && !right.data().checkIsChar() {
 			err := me.fail() + "concatenation operation must be strings \"" + left.getType() + "\" and \"" + right.getType() + "\""
 			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 			panic(err)
@@ -18,7 +18,7 @@ func (me *parser) infixConcat(left *node) *node {
 }
 
 func infixBinary(me *parser, left *node, op string) *node {
-	if op == "+" && left.getType() == TokenString {
+	if op == "+" && left.data().checkIsString() {
 		return me.infixConcat(left)
 	}
 	node := nodeInit(op)
@@ -68,7 +68,7 @@ func infixCompare(me *parser, left *node, op string) *node {
 	right := me.calc(getInfixPrecedence(op))
 	node.push(left)
 	node.push(right)
-	node.copyData(me.hmfile.typeToVarData("bool"))
+	node.copyData(typeToVarData(me.hmfile, "bool"))
 	return node
 }
 

@@ -39,7 +39,7 @@ type hmlib struct {
 
 func (me *hmlib) simple(name string, ret string) {
 	fn := funcInit(nil, name)
-	fn.returns = me.literalType(ret)
+	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit("?", "s", false))
 	me.functions[name] = fn
 	me.types[name] = ""
@@ -58,7 +58,7 @@ func (me *hmlib) initIO() {
 	me.types[TokenLibFile] = ""
 	order := make([]string, 0)
 	dict := make(map[string]int)
-	classDef := classInit(TokenLibFile, order, dict)
+	classDef := classInit(nil, TokenLibFile, order, dict)
 	me.classes[TokenLibFile] = classDef
 
 	fn := funcInit(nil, libOpen)

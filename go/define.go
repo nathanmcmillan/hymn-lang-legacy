@@ -40,7 +40,7 @@ func (me *parser) defineClass() {
 	me.hmfile.types[name] = ""
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_type")
 
-	classDef := classInit(name, genericsOrder, genericsDict)
+	classDef := classInit(me.hmfile, name, genericsOrder, genericsDict)
 	me.hmfile.classes[name] = classDef
 
 	memberOrder := make([]string, 0)

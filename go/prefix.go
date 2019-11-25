@@ -27,7 +27,7 @@ func prefixPrimitive(me *parser, op string) *node {
 		panic(me.fail() + "unknown primitive \"" + op + "\"")
 	}
 	node := nodeInit(t)
-	node.copyData(me.hmfile.typeToVarData(t))
+	node.copyData(typeToVarData(me.hmfile, t))
 	node.value = me.token.value
 	me.eat(op)
 	return node
@@ -35,7 +35,7 @@ func prefixPrimitive(me *parser, op string) *node {
 
 func prefixString(me *parser, op string) *node {
 	node := nodeInit(TokenString)
-	node.copyData(me.hmfile.typeToVarData(TokenString))
+	node.copyData(typeToVarData(me.hmfile, TokenString))
 	node.value = me.token.value
 	me.eat(TokenStringLiteral)
 	return node
@@ -43,7 +43,7 @@ func prefixString(me *parser, op string) *node {
 
 func prefixChar(me *parser, op string) *node {
 	node := nodeInit(TokenChar)
-	node.copyData(me.hmfile.typeToVarData(TokenChar))
+	node.copyData(typeToVarData(me.hmfile, TokenChar))
 	node.value = me.token.value
 	me.eat(TokenCharLiteral)
 	return node
@@ -56,7 +56,7 @@ func prefixNot(me *parser, op string) *node {
 		me.eat("not")
 	}
 	node := nodeInit("not")
-	node.copyData(me.hmfile.typeToVarData("bool"))
+	node.copyData(typeToVarData(me.hmfile, "bool"))
 	node.push(me.calcBool())
 	return node
 }
@@ -64,7 +64,7 @@ func prefixNot(me *parser, op string) *node {
 func prefixCast(me *parser, op string) *node {
 	me.eat(op)
 	node := nodeInit("cast")
-	node.copyData(me.hmfile.typeToVarData(op))
+	node.copyData(typeToVarData(me.hmfile, op))
 	calc := me.calc(getPrefixPrecedence(op))
 	value := calc.data().full
 	if canCastToNumber(value) {
@@ -139,7 +139,7 @@ func prefixArray(me *parser, op string) *node {
 			}
 			defaultSize := nodeInit(TokenInt)
 			defaultSize.value = "0"
-			defaultSize._vdata = me.hmfile.typeToVarData(TokenInt)
+			defaultSize._vdata = typeToVarData(me.hmfile, TokenInt)
 			no.push(defaultSize)
 			no.push(capacity)
 		}

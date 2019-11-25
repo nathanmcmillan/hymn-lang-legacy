@@ -60,7 +60,7 @@ func (me *cfile) defineClass(class *class) {
 			return
 		}
 	}
-	hmName := me.hmfile.classNameSpace(class.name)
+	hmName := me.hmfile.classNameSpace(class.cname)
 	me.headTypeDefSection += "typedef struct " + hmName + " " + hmName + ";\n"
 	code := "struct " + hmName + " {\n"
 	for _, name := range class.variableOrder {

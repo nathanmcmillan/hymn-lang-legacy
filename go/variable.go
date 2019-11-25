@@ -39,7 +39,7 @@ func (me *hmfile) varInit(typed, name string, mutable bool) *variable {
 }
 
 func (me *variable) update(module *hmfile, typed string) {
-	me.copyData(module.typeToVarData(typed))
+	me.copyData(typeToVarData(module, typed))
 }
 
 func (me *variable) copy() *variable {

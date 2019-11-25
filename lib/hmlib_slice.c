@@ -9,14 +9,18 @@ hmlib_slice_head *hmlib_slice_head_init(const size_t member_size, const size_t l
     return head;
 }
 
-hmlib_slice_head *hmlib_slice_get_head(const hmlib_slice a) { return a - sizeof(hmlib_slice_head); }
+hmlib_slice_head *hmlib_slice_get_head(const hmlib_slice a) {
+    return a - sizeof(hmlib_slice_head);
+}
 
 hmlib_slice hmlib_slice_init(const size_t member_size, const size_t length, const size_t capacity) {
     hmlib_slice_head *head = hmlib_slice_head_init(member_size, length, capacity);
     return (void *)head + sizeof(hmlib_slice_head);
 }
 
-hmlib_slice hmlib_slice_simple_init(const size_t member_size, const size_t length) { return hmlib_slice_init(member_size, length, length); }
+hmlib_slice hmlib_slice_simple_init(const size_t member_size, const size_t length) {
+    return hmlib_slice_init(member_size, length, length);
+}
 
 hmlib_slice hmlib_array_to_slice(void *const array, const size_t member_size, const size_t length) {
     size_t array_memory = length * member_size;
@@ -39,14 +43,18 @@ size_t hmlib_slice_len_size(const hmlib_slice a) {
     return head->length;
 }
 
-int hmlib_slice_len(const hmlib_slice a) { return (int)hmlib_slice_len_size(a); }
+int hmlib_slice_len(const hmlib_slice a) {
+    return (int)hmlib_slice_len_size(a);
+}
 
 size_t hmlib_slice_cap_size(const hmlib_slice a) {
     hmlib_slice_head *head = hmlib_slice_get_head(a);
     return head->capacity;
 }
 
-int hmlib_slice_cap(const hmlib_slice a) { return (int)hmlib_slice_cap_size(a); }
+int hmlib_slice_cap(const hmlib_slice a) {
+    return (int)hmlib_slice_cap_size(a);
+}
 
 hmlib_slice_head *hmlib_slice_resize(const hmlib_slice head, const size_t member_size, const size_t length) {
     size_t memory = sizeof(hmlib_slice_head) + length * member_size;

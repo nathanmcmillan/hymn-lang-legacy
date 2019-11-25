@@ -23,7 +23,7 @@ func (me *hmfile) unionInit(name string, types []string, generics []string) *uni
 	u.name = name
 	u.types = make([]*varData, len(types))
 	for i, t := range types {
-		u.types[i] = me.typeToVarData(t)
+		u.types[i] = typeToVarData(me, t)
 	}
 	u.generics = generics
 	return u

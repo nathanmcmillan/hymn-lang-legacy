@@ -31,7 +31,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, typed := range un.types {
-			un.types[i] = me.hmfile.typeToVarData(me.genericsReplacer(typed.full, gmapper))
+			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed.full, gmapper))
 		}
 	}
 }
@@ -46,7 +46,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	me.hmfile.types[impl] = ""
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_type")
 
-	classDef := classInit(impl, nil, nil)
+	classDef := classInit(me.hmfile, impl, nil, nil)
 	classDef.base = base
 	base.impls = append(base.impls, classDef)
 	classDef.initMembers(base.variableOrder, memberMap)
@@ -103,14 +103,14 @@ func (me *parser) declareFn() *varData {
 	if me.token.is != "line" && me.token.is != "," {
 		fn.returns = me.declareType(true)
 	} else {
-		fn.returns = me.hmfile.typeToVarData("void")
+		fn.returns = typeToVarData(me.hmfile, "void")
 	}
 
 	return fn.data()
 }
 
 func (me *parser) declareFnPtr(fn *function) *varData {
-	return me.hmfile.typeToVarData(fn.name)
+	return typeToVarData(me.hmfile, fn.name)
 }
 
 func (me *parser) declareType(implementation bool) *varData {
@@ -179,7 +179,7 @@ func (me *parser) declareType(implementation bool) *varData {
 	}
 
 	if me.token.is == "<" {
-		data := me.hmfile.typeToVarData(typed)
+		data := typeToVarData(me.hmfile, typed)
 		if base, ok := data.module.classes[data.typed]; ok {
 			gtypes := me.declareGeneric(implementation, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
@@ -205,7 +205,7 @@ func (me *parser) declareType(implementation bool) *varData {
 		typed = "[" + size + "]" + typed
 	}
 
-	return me.hmfile.typeToVarData(typed)
+	return typeToVarData(me.hmfile, typed)
 }
 
 func sizeOfArray(typed string) string {

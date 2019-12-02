@@ -107,7 +107,7 @@ func (me *cfile) compilePrefixNeg(n *node) *codeblock {
 }
 
 func (me *cfile) compileCast(n *node) *codeblock {
-	typ := getCName(n.data().full)
+	typ, _ := getCName(n.data().full)
 	code := "(" + typ + ")" + me.eval(n.has[0]).code()
 	return codeBlockOne(n, code)
 }
@@ -282,7 +282,7 @@ func (me *cfile) initStatic(n *node) string {
 	right := n.has[1]
 	right.attributes["global"] = "true"
 
-	declareCode := me.declare(left)
+	declareCode := me.compileDeclare(left)
 	rightCode := me.eval(right)
 	setSign := me.maybeLet(rightCode.code(), right.attributes)
 
@@ -305,7 +305,7 @@ func (me *cfile) compileAssign(n *node) *codeblock {
 	if paren {
 		code += "("
 	}
-	declare := me.declare(left)
+	declare := me.compileDeclare(left)
 	value := me.eval(right)
 	pre := value.precode()
 	post := value.pop()

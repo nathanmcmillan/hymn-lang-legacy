@@ -1,7 +1,8 @@
 main
-	p = system("echo $PWD")
-	echo(p)
+	p = system("pwd")
+	echo("hymn: " + p)
+	(* echo("---")
+	echo(system("ls"))
 	echo("---")
-	l = system("ls")
-	echo(l)
-	echo("---")
+	echo(system("cat klsdfjsdljfdsl"))
+	echo("---") *)

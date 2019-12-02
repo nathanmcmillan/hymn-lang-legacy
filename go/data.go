@@ -352,14 +352,17 @@ func (me *varData) typeSigOf(name string, mutable bool) string {
 	return code
 }
 
-func getCName(primitive string) string {
+func getCName(primitive string) (string, bool) {
 	if name, ok := typeToCName[primitive]; ok {
-		return name
+		return name, true
 	}
-	return primitive
+	return primitive, false
 }
 
 func (me *varData) typeSig() string {
+	if cname, ok := getCName(me.full); ok {
+		return cname
+	}
 	if me.checkIsArrayOrSlice() {
 		return fmtptr(me.memberType.typeSig())
 	}
@@ -375,11 +378,14 @@ func (me *varData) typeSig() string {
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.typeSig()
 	}
-	return getCName(me.full)
+	return me.full
 }
 
 func (me *varData) noMallocTypeSig() string {
-	if me.array || me.slice {
+	if cname, ok := getCName(me.full); ok {
+		return cname
+	}
+	if me.checkIsArrayOrSlice() {
 		return fmtptr(me.memberType.noMallocTypeSig())
 	}
 	if _, ok := me.checkIsClass(); ok {
@@ -387,7 +393,7 @@ func (me *varData) noMallocTypeSig() string {
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.noMallocTypeSig()
 	}
-	return getCName(me.full)
+	return me.full
 }
 
 func (me *varData) memPtr() string {

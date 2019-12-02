@@ -7,6 +7,7 @@ type function struct {
 	forClass      *class
 	args          []*funcArg
 	argDict       map[string]int
+	argVariadic   *funcArg
 	aliasing      map[string]string
 	expressions   []*node
 	returns       *varData
@@ -63,6 +64,7 @@ func (me *function) asSig() *fnSig {
 	for _, arg := range me.args {
 		sig.args = append(sig.args, arg)
 	}
+	sig.argVariadic = me.argVariadic
 	sig.returns = me.returns
 	return sig
 }

@@ -1,6 +1,6 @@
 package main
 
-func (me *cfile) declare(n *node) string {
+func (me *cfile) compileDeclare(n *node) string {
 	if n.is != "variable" {
 		return me.eval(n).code()
 	}
@@ -51,7 +51,7 @@ func (me *cfile) declareStatic(n *node) string {
 	right := n.has[1]
 	right.attributes["global"] = "true"
 
-	declareCode := me.declare(left)
+	declareCode := me.compileDeclare(left)
 	rightCode := me.eval(right)
 	setSign := me.maybeLet(rightCode.code(), right.attributes)
 

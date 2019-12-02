@@ -32,19 +32,19 @@ func (me *cfile) walrusLoop(n *node) string {
 	code := ""
 	if ifnode.is == ":=" {
 		ifnode.has[0].attributes["mutable"] = "true"
-		code += me.declare(ifnode.has[0]) + ";\n" + fmc(me.depth)
+		code += me.compileDeclare(ifnode.has[0]) + ";\n" + fmc(me.depth)
 	}
 	if has > 0 {
 		ifleft := ifnode.has[0]
 		if ifleft.is == ":=" {
 			ifleft.has[0].attributes["mutable"] = "true"
-			code += me.declare(ifleft.has[0]) + ";\n" + fmc(me.depth)
+			code += me.compileDeclare(ifleft.has[0]) + ";\n" + fmc(me.depth)
 		}
 		if has > 1 {
 			ifright := ifnode.has[1]
 			if ifright.is == ":=" {
 				ifright.has[0].attributes["mutable"] = "true"
-				code += me.declare(ifright.has[0]) + ";\n" + fmc(me.depth)
+				code += me.compileDeclare(ifright.has[0]) + ";\n" + fmc(me.depth)
 			}
 		}
 	}

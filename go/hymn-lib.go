@@ -2,6 +2,11 @@ package main
 
 const (
 	libEcho      = "echo"
+	libFormat    = "format"
+	libPrintf    = "printf"
+	libPrintln   = "println"
+	libSprintf   = "sprintf"
+	libSprintln  = "sprintln"
 	libSystem    = "system"
 	libToStr     = "to_str"
 	libToInt     = "to_int"
@@ -22,6 +27,7 @@ const (
 	libLength    = "len"
 	libCapacity  = "cap"
 	libPush      = "push"
+	libExit      = "exit"
 )
 
 // library tokens
@@ -41,6 +47,31 @@ func (me *hmlib) simple(name string, ret string) {
 	fn := funcInit(nil, name)
 	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit("?", "s", false))
+	me.functions[name] = fn
+	me.types[name] = ""
+}
+
+func (me *hmlib) simpleIn(name string, in string, ret string) {
+	fn := funcInit(nil, name)
+	fn.returns = typeToVarData(nil, ret)
+	fn.args = append(fn.args, me.fnArgInit(in, "s", false))
+	me.functions[name] = fn
+	me.types[name] = ""
+}
+
+func (me *hmlib) simpleVardiac(name string, ret string) {
+	fn := funcInit(nil, name)
+	fn.returns = typeToVarData(nil, ret)
+	fn.argVariadic = me.fnArgInit("?", "a", false)
+	me.functions[name] = fn
+	me.types[name] = ""
+}
+
+func (me *hmlib) simplePrint(name string, ret string) {
+	fn := funcInit(nil, name)
+	fn.returns = typeToVarData(nil, ret)
+	fn.args = append(fn.args, me.fnArgInit(TokenString, "a", false))
+	fn.argVariadic = me.fnArgInit("?", "b", false)
 	me.functions[name] = fn
 	me.types[name] = ""
 }
@@ -101,7 +132,15 @@ func (me *hmlib) libs() {
 	me.classes = make(map[string]*class)
 	me.functions = make(map[string]*function)
 
-	me.simple(libEcho, "void")
+	me.simpleIn(libExit, TokenInt, "void")
+
+	me.simpleVardiac(libEcho, "void")
+	me.simpleVardiac(libFormat, TokenString)
+
+	me.simplePrint(libPrintf, "void")
+	me.simplePrint(libPrintln, "void")
+	me.simplePrint(libSprintf, TokenString)
+	me.simplePrint(libSprintln, TokenString)
 
 	me.simple(libCat, TokenString)
 	me.simple(libSystem, TokenString)

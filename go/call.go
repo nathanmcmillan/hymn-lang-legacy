@@ -30,7 +30,7 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 	}
 }
 
-func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *function) {
+func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *function) []*node {
 	me.eat("(")
 	min := pix
 	dict := false
@@ -59,13 +59,22 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 		} else if dict {
 			panic(me.fail() + "regular paramater found after mapped parameter")
 		} else {
-			if pix >= len(fn.args) {
-				panic(me.fail() + "function \"" + name + "\" argument count exceeds parameter count")
+			var arg *funcArg
+			size := len(fn.args)
+			if pix >= size {
+				if fn.argVariadic != nil {
+					arg = fn.argVariadic
+					params = append(params, nil)
+				} else {
+					panic(me.fail() + "function \"" + name + "\" argument count exceeds parameter count")
+				}
 			}
 			if me.token.is == "_" {
 				me.eat("_")
 				var param *node
-				arg := fn.args[pix]
+				if arg == nil {
+					arg = fn.args[pix]
+				}
 				if arg.defaultNode != nil {
 					param = arg.defaultNode
 				} else {
@@ -74,7 +83,9 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 				params[pix] = param
 			} else {
 				param := me.calc(0)
-				arg := fn.args[pix]
+				if arg == nil {
+					arg = fn.args[pix]
+				}
 				if param.data().notEqual(arg.data()) && arg.data().full != "?" {
 					err := "parameter \"" + param.getType()
 					err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.data().full + "\" for function \"" + name + "\""
@@ -87,7 +98,12 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 	}
 	for ix, param := range params {
 		if param == nil {
-			arg := fn.args[ix]
+			var arg *funcArg
+			if ix < len(fn.args) {
+				arg = fn.args[ix]
+			} else {
+				arg = fn.argVariadic
+			}
 			if arg.defaultNode == nil {
 				panic(me.fail() + "argument[" + strconv.Itoa(pix) + "] is missing")
 			}
@@ -96,6 +112,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			n.push(param)
 		}
 	}
+	return params
 }
 
 func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {

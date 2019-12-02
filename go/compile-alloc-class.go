@@ -51,7 +51,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 				d.idata.module = me.hmfile
 				d.idata.name = temp
 				d.copyDataOfNode(p)
-				decl := me.declare(d)
+				decl := me.compileDeclare(d)
 				value := me.eval(p).code()
 				code2 := ";\n" + fmc(me.depth) + decl
 				if clv.data().isptr {
@@ -77,7 +77,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 		d.idata.module = me.hmfile
 		d.idata.name = temp
 		d.copyDataOfNode(n)
-		decl := me.declare(d)
+		decl := me.compileDeclare(d)
 		value := me.eval(n).code()
 		code := decl + " = " + value + me.maybeColon(value) + "\n"
 		cn := codeNode(n, code)

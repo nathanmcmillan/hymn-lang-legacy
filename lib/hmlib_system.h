@@ -7,7 +7,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdio.h>
 
-hmlib_string hmlib_system(const char *command);
+typedef struct hmlib_system_std hmlib_system_std;
+
+struct hmlib_system_std
+{
+    hmlib_string stdin;
+    hmlib_string stdout;
+    int code;
+};
+
+hmlib_string hmlib_popen(const char *command);
+hmlib_string hmlib_system(const hmlib_string command);
 
 #endif

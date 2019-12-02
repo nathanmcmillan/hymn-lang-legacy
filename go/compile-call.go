@@ -7,11 +7,17 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		sig := head.data().fn
 		code := "(*" + me.eval(head).code() + ")("
 		parameters := node.has[1:len(node.has)]
+		fnsize := len(sig.args)
 		for ix, parameter := range parameters {
 			if ix > 0 {
 				code += ", "
 			}
-			arg := sig.args[ix]
+			var arg *funcArg
+			if ix >= fnsize {
+				arg = sig.argVariadic
+			} else {
+				arg = sig.args[ix]
+			}
 			code += me.hintEval(parameter, arg.data()).code()
 		}
 		code += ")"
@@ -27,11 +33,17 @@ func (me *cfile) compileCall(node *node) *codeblock {
 			name = fn.nameOfClassFunc()
 		}
 		code := module.funcNameSpace(name) + "("
+		fnsize := len(node.fn.args)
 		for ix, parameter := range parameters {
 			if ix > 0 {
 				code += ", "
 			}
-			arg := node.fn.args[ix]
+			var arg *funcArg
+			if ix >= fnsize {
+				arg = node.fn.argVariadic
+			} else {
+				arg = node.fn.args[ix]
+			}
 			value := me.hintEval(parameter, arg.data())
 			code += value.pop()
 			cb.prepend(value.pre)

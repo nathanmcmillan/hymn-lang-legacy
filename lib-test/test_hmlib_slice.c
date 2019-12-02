@@ -11,7 +11,7 @@ typedef struct vec vec;
 
 int main()
 {
-  vec **a = hmlib_slice_init(1);
+  vec **a = hmlib_slice_init(sizeof(vec), 1, 1);
   printf("addr %lld\n", (unsigned long long)a);
   printf("length = %ld\n", hmlib_slice_len(a));
 
@@ -28,7 +28,7 @@ int main()
   printf("get 2 = %f\n", a[0]->x);
   printf("get 3 = %f\n", a[1]->x);
 
-  vec **b = hmlib_slice_init(4);
+  vec **b = hmlib_slice_init(sizeof(vec), 4, 4);
   b[0] = malloc(sizeof(vec));
   b[0]->x = 88;
 

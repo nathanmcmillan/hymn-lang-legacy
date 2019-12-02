@@ -39,7 +39,7 @@ func (me *cfile) compileFor(op string, n *node) *codeblock {
 	}
 	vexist := me.getvar(vobj.idata.name)
 	if vexist == nil {
-		code += me.declare(vobj) + ";\n" + fmc(me.depth)
+		code += me.compileDeclare(vobj) + ";\n" + fmc(me.depth)
 	}
 	vinit := me.compileAssign(vset).code()
 	condition := me.eval(n.has[1]).code()

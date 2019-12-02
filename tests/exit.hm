@@ -1,0 +1,7 @@
+main
+	x = true
+	if x
+		echo("exiting...")
+		exit(1)
+		echo("bad")
+	echo("bad")

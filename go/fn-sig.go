@@ -1,9 +1,10 @@
 package main
 
 type fnSig struct {
-	module  *hmfile
-	args    []*funcArg
-	returns *varData
+	module      *hmfile
+	args        []*funcArg
+	argVariadic *funcArg
+	returns     *varData
 }
 
 func fnSigInit(module *hmfile) *fnSig {
@@ -20,6 +21,12 @@ func (me *fnSig) print() string {
 			sig += ", "
 		}
 		sig += arg.data().full
+	}
+	if me.argVariadic != nil {
+		if len(me.args) > 0 {
+			sig += ", "
+		}
+		sig += "..." + me.argVariadic.data().full
 	}
 	sig += ")"
 	if me.returns.full != "void" {

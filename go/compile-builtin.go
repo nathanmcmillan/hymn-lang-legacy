@@ -67,49 +67,120 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		cb := codeBlockOne(n, "hmlib_system("+param.pop()+")")
 		cb.prepend(param.pre)
 		return cb
-	case libEcho:
-		param := me.eval(parameters[0])
-		switch param.getType() {
-		case TokenChar:
-			return codeBlockMerge(n, "printf(\"%c\\n\", "+param.pop()+")", param.pre)
-		case "[]char":
-			fallthrough
-		case TokenString:
-			return codeBlockMerge(n, "printf(\"%s\\n\", "+param.pop()+")", param.pre)
-		case TokenRawString:
-			return codeBlockMerge(n, "printf(\"%s\\n\", "+param.pop()+")", param.pre)
-		case TokenInt:
-			return codeBlockMerge(n, "printf(\"%d\\n\", "+param.pop()+")", param.pre)
-		case TokenInt8:
-			return codeBlockMerge(n, "printf(\"%\" PRId8 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenInt16:
-			return codeBlockMerge(n, "printf(\"%\" PRId16 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenInt32:
-			return codeBlockMerge(n, "printf(\"%\" PRId32 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenInt64:
-			return codeBlockMerge(n, "printf(\"%\" PRId64 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenUInt:
-			return codeBlockMerge(n, "printf(\"%u\\n\", "+param.pop()+")", param.pre)
-		case TokenUInt8:
-			return codeBlockMerge(n, "printf(\"%\" PRId8 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenUInt16:
-			return codeBlockMerge(n, "printf(\"%\" PRId16 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenUInt32:
-			return codeBlockMerge(n, "printf(\"%\" PRId32 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenUInt64:
-			return codeBlockMerge(n, "printf(\"%\" PRId64 \"\\n\", "+param.pop()+")", param.pre)
-		case TokenFloat:
-			return codeBlockMerge(n, "printf(\"%f\\n\", "+param.pop()+")", param.pre)
-		case TokenFloat32:
-			return codeBlockMerge(n, "printf(\"%f\\n\", "+param.pop()+")", param.pre)
-		case TokenFloat64:
-			return codeBlockMerge(n, "printf(\"%f\\n\", "+param.pop()+")", param.pre)
-		case "bool":
-			return codeBlockMerge(n, "printf(\"%s\\n\", "+param.pop()+" ? \"true\" : \"false\")", param.pre)
-		case TokenLibSize:
-			return codeBlockMerge(n, "printf(\"%zu\\n\", "+param.pop()+")", param.pre)
+	case libPrintln:
+		fallthrough
+	case libPrintf:
+		if name == libSprintln {
+			parameters[0].value += "\\n"
 		}
-		panic("argument for echo was " + param.string(0))
+		cb := &codeblock{}
+		code := "printf("
+		for ix, param := range parameters {
+			if ix > 0 {
+				code += ", "
+			}
+			paramx := me.eval(param)
+			cb.prepend(paramx.pre)
+			code += paramx.pop()
+		}
+		code += ")"
+		cb.current = codeNode(n, code)
+		return cb
+	case libSprintf:
+		fallthrough
+	case libSprintln:
+		code := ""
+		if name == libSprintf {
+			code = "sprintf("
+		} else {
+			code = "sprintln("
+		}
+		cb := &codeblock{}
+		for ix, param := range parameters {
+			if ix > 0 {
+				code += ", "
+			}
+			paramx := me.eval(param)
+			cb.prepend(paramx.pre)
+			code += paramx.pop()
+		}
+		code += ")"
+		cb.current = codeNode(n, code)
+		return cb
+	case libFormat:
+		fallthrough
+	case libEcho:
+		code := ""
+		if name == libEcho {
+			code = "printf(\""
+		} else {
+			code = "sprintf(\""
+		}
+		cb := &codeblock{}
+		code2 := ""
+		for ix, param := range parameters {
+			if ix > 0 {
+				code += " "
+			}
+			code2 += ", "
+			paramx := me.eval(param)
+			cb.prepend(paramx.pre)
+			pop := true
+			switch param.getType() {
+			case TokenChar:
+				code += "%c"
+			case "[]char":
+				fallthrough
+			case TokenString:
+				code += "%s"
+			case TokenRawString:
+				code += "%s"
+			case TokenInt:
+				code += "%d"
+			case TokenInt8:
+				code += "%\" PRId8 \""
+			case TokenInt16:
+				code += "%\" PRId16 \""
+			case TokenInt32:
+				code += "%\" PRId32 \""
+			case TokenInt64:
+				code += "%\" PRId64 \""
+			case TokenUInt:
+				code += "%u\\n\""
+			case TokenUInt8:
+				code += "%\" PRId8 \""
+			case TokenUInt16:
+				code += "%\" PRId16 \""
+			case TokenUInt32:
+				code += "%\" PRId32 \""
+			case TokenUInt64:
+				code += "%\" PRId64 \""
+			case TokenFloat:
+				code += "%f"
+			case TokenFloat32:
+				code += "%f"
+			case TokenFloat64:
+				code += "%f"
+			case "bool":
+				code += "%s"
+				code2 += paramx.pop() + " ? \"true\" : \"false\""
+				pop = false
+			case TokenLibSize:
+				code += "%zu"
+			default:
+				panic("argument for echo was " + param.string(0))
+			}
+			if pop {
+				code2 += paramx.pop()
+			}
+		}
+		if name == libEcho {
+			code += "\\n"
+		}
+		code += "\""
+		code2 += ")"
+		cb.current = codeNode(n, code+code2)
+		return cb
 	case libToStr:
 		param := me.eval(parameters[0])
 		switch param.getType() {
@@ -117,6 +188,8 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			fallthrough
 		case TokenString:
 			panic("redundant string cast")
+		case TokenChar:
+			return codeBlockMerge(n, "hmlib_char_to_string("+param.pop()+")", param.pre)
 		case TokenInt:
 			return codeBlockMerge(n, "hmlib_int_to_string("+param.pop()+")", param.pre)
 		case TokenInt8:
@@ -143,8 +216,6 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "hmlib_float32_to_string("+param.pop()+")", param.pre)
 		case TokenFloat64:
 			return codeBlockMerge(n, "hmlib_float64_to_string("+param.pop()+")", param.pre)
-		case TokenChar:
-			return codeBlockMerge(n, "hmlib_char_to_string("+param.pop()+")", param.pre)
 		case "bool":
 			return codeBlockMerge(n, "("+param.pop()+" ? \"true\" : \"false\")", param.pre)
 		}
@@ -227,6 +298,12 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "hmlib_string_to_float64("+param.pop()+")", param.pre)
 		}
 		panic("argument for conversion to float64 was " + param.string(0))
+	case libExit:
+		param := me.eval(parameters[0])
+		if param.getType() == TokenInt {
+			return codeBlockMerge(n, "exit("+param.pop()+")", param.pre)
+		}
+		panic("argument for exit was " + param.string(0))
 	default:
 		return nil
 	}

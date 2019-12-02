@@ -7,8 +7,8 @@ func (me *parser) infixConcat(left *node) *node {
 	for me.token.is == "+" {
 		me.eat("+")
 		right := me.calc(getInfixPrecedence("+"))
-		if !right.data().checkIsString() && !right.data().checkIsChar() {
-			err := me.fail() + "concatenation operation must be strings \"" + left.getType() + "\" and \"" + right.getType() + "\""
+		if !right.data().checkIsString() {
+			err := me.fail() + "concatenation operation must be strings but found \"" + left.getType() + "\" and \"" + right.getType() + "\""
 			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 			panic(err)
 		}
@@ -18,19 +18,22 @@ func (me *parser) infixConcat(left *node) *node {
 }
 
 func infixBinary(me *parser, left *node, op string) *node {
-	if op == "+" && left.data().checkIsString() {
-		return me.infixConcat(left)
+	leftdata := left.data()
+	if op == "+" {
+		if leftdata.checkIsString() {
+			return me.infixConcat(left)
+		}
 	}
 	node := nodeInit(op)
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
 	if !isNumber(left.getType()) || !isNumber(right.getType()) {
-		err := me.fail() + "binary operation must be numbers \"" + left.getType() + "\" and \"" + right.getType() + "\""
+		err := me.fail() + "operation expected numbers but was \"" + left.getType() + "\" and \"" + right.getType() + "\""
 		err += "\n\nleft: " + left.string(0) + "\n\nright: " + right.string(0)
 		panic(err)
 	}
-	if left.data().notEqual(right.data()) {
+	if leftdata.notEqual(right.data()) {
 		err := me.fail() + "number types do not match \"" + left.getType() + "\" and \"" + right.getType() + "\""
 		panic(err)
 	}

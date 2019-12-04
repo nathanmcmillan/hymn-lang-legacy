@@ -23,18 +23,20 @@ type program struct {
 }
 
 type cfile struct {
-	hmfile             *hmfile
-	headPrefix         string
-	headIncludeSection string
-	headTypeDefSection string
-	headTypesSection   string
-	headExternSection  string
-	headFuncSection    string
-	headSuffix         string
-	codeFn             []string
-	rootScope          *scope
-	scope              *scope
-	depth              int
+	hmfile                   *hmfile
+	headPrefix               string
+	headIncludeSection       string
+	headEnumTypeDefSection   string
+	headEnumSection          string
+	headStructTypeDefSection string
+	headStructSection        string
+	headExternSection        string
+	headFuncSection          string
+	headSuffix               string
+	codeFn                   []string
+	rootScope                *scope
+	scope                    *scope
+	depth                    int
 }
 
 var (
@@ -187,11 +189,16 @@ func (me *cfile) head() string {
 	head := ""
 	head += me.headPrefix
 	head += me.headIncludeSection
-	if len(me.headTypeDefSection) != 0 {
-		head += me.headTypeDefSection
+	head += me.headEnumSection
+	if len(me.headEnumTypeDefSection) != 0 {
+		head += me.headEnumTypeDefSection
 		head += "\n"
 	}
-	head += me.headTypesSection
+	if len(me.headStructTypeDefSection) != 0 {
+		head += me.headStructTypeDefSection
+		head += "\n"
+	}
+	head += me.headStructSection
 	head += me.headExternSection
 	head += me.headFuncSection
 	head += me.headSuffix

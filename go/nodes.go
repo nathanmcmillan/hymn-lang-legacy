@@ -7,6 +7,7 @@ type node struct {
 	fn         *function
 	_vdata     *varData
 	attributes map[string]string
+	parent     *node
 	has        []*node
 }
 
@@ -35,6 +36,7 @@ func (me *node) copy() *node {
 	for k, v := range me.attributes {
 		n.attributes[k] = v
 	}
+	n.parent = me.parent
 	n.has = make([]*node, len(me.has))
 	for i, h := range me.has {
 		n.has[i] = h.copy()
@@ -47,6 +49,7 @@ func (me *node) prepend(leaf *node) {
 }
 
 func (me *node) push(leaf *node) {
+	leaf.parent = me
 	me.has = append(me.has, leaf)
 }
 

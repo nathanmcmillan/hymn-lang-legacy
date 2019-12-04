@@ -43,19 +43,23 @@ func (me *hmfile) parse(out, path string) {
 	if debug {
 		fmt.Println("=== " + name + " parse ===")
 
-		fileTokens := out + "/" + name + ".tokens"
-		if exists(fileTokens) {
-			os.Remove(fileTokens)
+		if debugTokens {
+			fileTokens := out + "/" + name + ".tokens"
+			if exists(fileTokens) {
+				os.Remove(fileTokens)
+			}
+			tokenFile = create(fileTokens)
+			defer tokenFile.Close()
 		}
-		tokenFile = create(fileTokens)
-		defer tokenFile.Close()
 
-		fileTree := out + "/" + name + ".tree"
-		if exists(fileTree) {
-			os.Remove(fileTree)
+		if debugTree {
+			fileTree := out + "/" + name + ".tree"
+			if exists(fileTree) {
+				os.Remove(fileTree)
+			}
+			treeFile = create(fileTree)
+			defer treeFile.Close()
 		}
-		treeFile = create(fileTree)
-		defer treeFile.Close()
 	}
 
 	stream := newStream(data)
@@ -74,10 +78,12 @@ func (me *hmfile) parse(out, path string) {
 		}
 	}
 
-	treeFile.Truncate(0)
-	treeFile.Seek(0, 0)
-	treeFile.WriteString(me.string())
-	treeFile.WriteString("\n")
+	if treeFile != nil {
+		treeFile.Truncate(0)
+		treeFile.Seek(0, 0)
+		treeFile.WriteString(me.string())
+		treeFile.WriteString("\n")
+	}
 }
 
 func (me *parser) next() {

@@ -12,8 +12,7 @@
 typedef char *hmlib_string;
 typedef struct hmlib_string_head hmlib_string_head;
 
-struct __attribute__((__packed__)) hmlib_string_head
-{
+struct __attribute__((__packed__)) hmlib_string_head {
     size_t length;
     size_t capacity;
     char **chars;
@@ -69,5 +68,7 @@ uint64_t hmlib_string_to_uint64(const hmlib_string str);
 float hmlib_string_to_float(const hmlib_string str);
 float hmlib_string_to_float32(const hmlib_string str);
 double hmlib_string_to_float64(const hmlib_string str);
+
+hmlib_string hmlib_format(const hmlib_string f, ...);
 
 #endif

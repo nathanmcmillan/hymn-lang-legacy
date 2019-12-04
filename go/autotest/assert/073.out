@@ -1,0 +1,10 @@
+char c: w int i: 987, float f: 3.450000
+char c: w int i: 987, float f: 3.450000
+---
+char c: w int i: 987, float f: 3.450000
+char c: w int i: 987, float f: 3.450000
+
+---
+char c: w and int i: 987 float f: 3.450000
+char c: w and int i: 987 float f: 3.450000
+---

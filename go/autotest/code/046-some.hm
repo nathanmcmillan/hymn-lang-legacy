@@ -53,3 +53,6 @@ main
 	match h.ge
 		some(s) => echo("some " + to_str(s.x))
 		none => echo("none")
+
+	if c is not none: echo("no!")
+	if d is not some: echo("no!")

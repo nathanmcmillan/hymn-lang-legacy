@@ -162,10 +162,10 @@ func typeToVarData(module *hmfile, typed string) *varData {
 
 	dot := strings.Split(typed, ".")
 	if len(dot) != 1 {
-		if module, ok := module.program.hmfiles[dot[0]]; ok {
-			data.module = module
+		if module2, ok := module.program.hmfiles[dot[0]]; ok {
+			data.module = module2
 			if len(dot) > 2 {
-				if _, ok := module.enums[dot[1]]; ok {
+				if _, ok := module2.enums[dot[1]]; ok {
 					data.typed = dot[1] + "." + dot[2]
 				} else {
 					panic("unknown type \"" + typed + "\"")

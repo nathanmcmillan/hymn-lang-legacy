@@ -53,6 +53,9 @@ main
 		echo("good")
 
 	z = [10]snake
+	z[0] = snake.python
+	z[1] = snake.viper
+	z[2] = snake.cobra
 
 	c = mammal.cat("meow")
 	d = mammal.cat("woof")
@@ -63,6 +66,7 @@ main
 	echo("doggo " + to_str(e.0))
 
 	me = calc_me(5)
+	if not me is int: echo("no!")
 
 	g = bug<int>.bee
 	h = bug.ant(true)

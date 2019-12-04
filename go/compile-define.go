@@ -10,7 +10,6 @@ func (me *cfile) defineEnum(enum *enum) {
 	hmBaseEnumName := enum.module.enumNameSpace(enum.baseEnum().name)
 
 	if !impl {
-		me.headTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
 		code := "enum " + hmBaseEnumName + " {\n"
 		for ix, enumUnion := range enum.typesOrder {
 			if ix == 0 {
@@ -20,7 +19,8 @@ func (me *cfile) defineEnum(enum *enum) {
 			}
 		}
 		code += "\n};\n\n"
-		me.headTypesSection += code
+		me.headEnumSection += code
+		me.headEnumTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
 	}
 
 	if enum.simple || len(enum.generics) > 0 {
@@ -29,7 +29,7 @@ func (me *cfile) defineEnum(enum *enum) {
 
 	code := ""
 	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
-	me.headTypeDefSection += "typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
+	me.headStructTypeDefSection += "typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
 	code += "struct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
@@ -48,7 +48,7 @@ func (me *cfile) defineEnum(enum *enum) {
 	}
 	code += fmc(1) + "};\n"
 	code += "};\n\n"
-	me.headTypesSection += code
+	me.headStructSection += code
 }
 
 func (me *cfile) defineClass(class *class) {
@@ -61,12 +61,12 @@ func (me *cfile) defineClass(class *class) {
 		}
 	}
 	hmName := me.hmfile.classNameSpace(class.cname)
-	me.headTypeDefSection += "typedef struct " + hmName + " " + hmName + ";\n"
+	me.headStructTypeDefSection += "typedef struct " + hmName + " " + hmName + ";\n"
 	code := "struct " + hmName + " {\n"
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
 		code += fmc(1) + field.data().typeSigOf(field.name, true) + ";\n"
 	}
 	code += "};\n\n"
-	me.headTypesSection += code
+	me.headStructSection += code
 }

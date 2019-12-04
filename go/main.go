@@ -13,7 +13,9 @@ import (
 )
 
 var (
-	debug = true
+	debug       = true
+	debugTokens = false
+	debugTree   = true
 )
 
 const (
@@ -117,6 +119,10 @@ func (me *program) compile(out, path, libDir string) {
 func gcc(sources map[string]string, fileOut string, isLib bool) {
 	fmt.Println("=== gcc ===")
 	paramGcc := make([]string, 0)
+	paramGcc = append(paramGcc, "-Wall")
+	paramGcc = append(paramGcc, "-Wextra")
+	paramGcc = append(paramGcc, "-pedantic")
+	paramGcc = append(paramGcc, "-std=c11")
 	for _, src := range sources {
 		paramGcc = append(paramGcc, src)
 	}

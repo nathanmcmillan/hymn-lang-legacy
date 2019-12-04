@@ -106,7 +106,7 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 		if strings.HasPrefix(code, "!") {
 			code = code[1:]
 		} else {
-			code = "!" + code
+			code = "!(" + code + ")"
 		}
 		return codeBlockOne(n, code)
 	}

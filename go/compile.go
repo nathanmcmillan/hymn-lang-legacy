@@ -259,7 +259,12 @@ func (me *cfile) compileTernary(n *node) *codeblock {
 }
 
 func (me *cfile) compileAndOr(n *node) *codeblock {
-	_, paren := n.attributes["parenthesis"]
+	// TODO remove me?
+	// _, paren := n.attributes["parenthesis"]
+	paren := true
+	if n.parent != nil && n.parent.is == "if" {
+		paren = false
+	}
 	code := ""
 	if paren {
 		code += "("

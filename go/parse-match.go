@@ -5,10 +5,35 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 	me.eat(op)
 	var right *node
 	if left.data().checkIsSomeOrNone() {
+		invert := false
+		if me.token.is == "not" {
+			invert = true
+			me.eat("not")
+		}
+		is := ""
 		if me.token.is == "some" {
-			right = nodeInit("some")
 			me.eat("some")
+			if invert {
+				is = "none"
+			} else {
+				is = "some"
+			}
+		} else if me.token.is == "none" {
+			me.eat("none")
+			if invert {
+				is = "some"
+			} else {
+				is = "none"
+			}
+		} else {
+			panic(me.fail() + "right side of \"is\" was \"" + me.token.is + "\"")
+		}
+		if is == "some" {
+			right = nodeInit("some")
 			if me.token.is == "(" {
+				if invert {
+					panic(me.fail() + "inversion not allowed with value here.")
+				}
 				me.eat("(")
 				temp := me.token.value
 				me.eat("id")
@@ -32,11 +57,14 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				right.push(tempvv)
 				//
 			}
-		} else if me.token.is == "none" {
+		} else if is == "none" {
 			right = nodeInit("none")
-			me.eat("none")
-		} else {
-			panic(me.fail() + "right side of \"is\" was \"" + me.token.is + "\"")
+			if me.token.is == "(" {
+				if invert {
+					panic(me.fail() + "inversion not allowed with value here.")
+				}
+				panic(me.fail() + "none type can't have a value here.")
+			}
 		}
 	} else {
 		if _, _, ok := left.data().checkIsEnum(); !ok {
@@ -80,6 +108,8 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			} else {
 				right = me.calc(getInfixPrecedence(op))
 			}
+		} else if _, ok := primitives[me.token.is]; ok {
+			panic("TODO!")
 		} else {
 			panic(me.fail() + "unknown right side of \"is\"")
 		}

@@ -70,7 +70,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 	case libPrintln:
 		fallthrough
 	case libPrintf:
-		if name == libSprintln {
+		if name == libPrintln {
 			parameters[0].value += "\\n"
 		}
 		cb := &codeblock{}
@@ -86,15 +86,13 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		code += ")"
 		cb.current = codeNode(n, code)
 		return cb
-	case libSprintf:
-		fallthrough
 	case libSprintln:
-		code := ""
-		if name == libSprintf {
-			code = "sprintf("
-		} else {
-			code = "sprintln("
+		fallthrough
+	case libSprintf:
+		if name == libSprintln {
+			parameters[0].value += "\\n"
 		}
+		code := "hmlib_format("
 		cb := &codeblock{}
 		for ix, param := range parameters {
 			if ix > 0 {
@@ -114,7 +112,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		if name == libEcho {
 			code = "printf(\""
 		} else {
-			code = "sprintf(\""
+			code = "hmlib_format(\""
 		}
 		cb := &codeblock{}
 		code2 := ""

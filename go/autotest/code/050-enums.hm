@@ -66,7 +66,7 @@ main
 	echo("doggo " + to_str(e.0))
 
 	me = calc_me(5)
-	if not me is int: echo("no!")
+	if not me is one : echo("no!")
 
 	g = bug<int>.bee
 	h = bug.ant(true)

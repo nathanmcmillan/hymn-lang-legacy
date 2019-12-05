@@ -66,11 +66,18 @@ func (me *cfile) compileIs(n *node) *codeblock {
 
 	if caseOf.is == "match-enum" {
 		matchBaseEnum, matchBaseUn, _ := caseOf.data().checkIsEnum()
+		matchBaseEnum = matchBaseEnum.baseEnum()
 		enumNameSpace := using.data().module.enumNameSpace(matchBaseEnum.name)
 		code += using.data().module.enumTypeName(enumNameSpace, matchBaseUn.name)
 	} else {
 		compare := me.eval(caseOf)
-		compareEnum, _, _ := compare.data().checkIsEnum()
+		if compare.data() == nil {
+			panic("expected enum but was " + caseOf.string(0))
+		}
+		compareEnum, _, ok := compare.data().checkIsEnum()
+		if !ok {
+			panic("expected enum but was " + caseOf.string(0))
+		}
 		code += compare.code()
 		if !compareEnum.simple {
 			code += "->type"
@@ -111,11 +118,13 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	code += "switch (" + test + ") {\n"
 	ix := 1
 	size := len(n.has)
+	hasdefault := false
 
 	for ix < size {
 		caseOf := n.has[ix]
 		thenDo := n.has[ix+1]
 		if caseOf.is == "_" {
+			hasdefault = true
 			code += fmc(me.depth) + "default: {\n"
 		} else {
 			if isEnum {
@@ -143,11 +152,14 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 			code += me.maybeNewLine(code)
 		}
 		if !strings.Contains(thenBlock, "return") {
-			code += fmc(me.depth) + "break;"
+			code += fmc(me.depth) + "break;\n"
 		}
-		code += " }\n"
 		me.depth--
+		code += fmc(me.depth) + "}\n"
 		ix += 2
+	}
+	if !hasdefault {
+		code += fmc(me.depth) + "default: exit(1);\n"
 	}
 	code += fmc(me.depth) + "}"
 	return codeBlockOne(n, code)

@@ -25,7 +25,8 @@ main
 	mutable w = 1
 	while z := foo(w) 
 		w += 1
-	echo(z)
+		echo("z ==", z)
+	echo("z ==", z)
 
 	mutable a = 1
 	while (b := a + a) >= (c := a * a)

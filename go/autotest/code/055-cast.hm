@@ -28,6 +28,20 @@ main
 	l = float32 2
 	m = float64 2
 
+	if a == 0 : echo("no!")
+	if b == 0 : echo("no!")
+	if c == 0 : echo("no!")
+	if d == 0 : echo("no!")
+	if e == 0 : echo("no!")
+	if f == 0 : echo("no!")
+	if g == 0 : echo("no!")
+	if h == 0 : echo("no!")
+	if i == 0 : echo("no!")
+	if j == 0 : echo("no!")
+	if k == 0 : echo("no!")
+	if l == 0 : echo("no!")
+	if m == 0 : echo("no!")
+
 	echo(to_str(int 2))
 	echo(to_str(int8 2))
 	echo(to_str(int16 2))

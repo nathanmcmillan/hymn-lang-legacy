@@ -9,9 +9,16 @@ func (me *cfile) compileLoop(op string, n *node) *codeblock {
 
 func (me *cfile) compileWhile(op string, n *node) *codeblock {
 	code := me.walrusLoop(n)
+	iswalrus := code != ""
 	whileval := me.eval(n.has[0])
 	code += whileval.precode()
-	code += "while (" + whileval.pop() + ") {\n"
+	code += "while ("
+	if iswalrus {
+		code += "(" + whileval.pop() + ")"
+	} else {
+		code += whileval.pop()
+	}
+	code += ") {\n"
 	size := len(n.has)
 	ix := 1
 	for ix < size && n.has[ix].is == "variable" {

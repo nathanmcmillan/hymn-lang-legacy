@@ -144,7 +144,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			case TokenInt64:
 				code += "%\" PRId64 \""
 			case TokenUInt:
-				code += "%u\\n\""
+				code += "%u"
 			case TokenUInt8:
 				code += "%\" PRId8 \""
 			case TokenUInt16:

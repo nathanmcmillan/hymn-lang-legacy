@@ -4,7 +4,9 @@ true!
 4
 true!
 6
-false
+z == true
+z == true
+z == false
 3
 6
 9

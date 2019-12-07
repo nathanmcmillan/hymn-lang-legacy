@@ -21,7 +21,7 @@ func (me *parser) fileExpression() {
 		if _, ok := me.hmfile.classes[name]; ok {
 			me.defineClassFunction()
 		} else {
-			me.defineFileFunction()
+			me.defineStaticFunction()
 		}
 	} else if op == "type" {
 		me.defineClass()

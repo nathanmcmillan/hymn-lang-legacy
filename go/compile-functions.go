@@ -29,7 +29,7 @@ func (me *cfile) happyOut(e *codeblock) string {
 
 func (me *cfile) compileFunction(name string, fn *function) {
 	cls := fn.forClass
-	if cls != nil && len(cls.generics) > 0 {
+	if (cls != nil && len(cls.generics) > 0) || len(fn.generics) > 0 {
 		return
 	}
 	args := fn.args

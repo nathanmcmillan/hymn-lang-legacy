@@ -25,7 +25,7 @@ foo do_special(one v, in_two v) v
 	x = one
 	match x
 		some(s) =>
-			echo(s)
+			echo(s, self.weight)
 			return s
 		none => pass
 	return in_two

@@ -90,11 +90,21 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	}
 }
 
+func (me *parser) remapFunctionImpl(funcName string, alias map[string]string, original *function) *function {
+	pos := me.save()
+	me.jump(original.start)
+	fn := me.defineFunction(funcName, alias, original, nil)
+	me.jump(pos)
+	fn.start = original.start
+	me.pushFunction(funcName, me.hmfile, fn)
+	return fn
+}
+
 func (me *parser) remapClassFunctionImpl(class *class, original *function) {
 	funcName := original.name
 	pos := me.save()
 	me.jump(original.start)
-	fn := me.defineFunction(funcName, class)
+	fn := me.defineFunction(funcName, nil, nil, class)
 	me.jump(pos)
 	fn.start = original.start
 	fn.forClass = class
@@ -117,9 +127,7 @@ func (me *parser) defineClassFunction() {
 	if _, ok := class.variables[funcName]; ok {
 		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
 	}
-	start := me.save()
-	fn := me.defineFunction(funcName, class)
-	fn.start = start
+	fn := me.defineFunction(funcName, nil, nil, class)
 	fn.forClass = class
 	class.functions[funcName] = fn
 	class.functionOrder = append(class.functionOrder, fn)
@@ -129,7 +137,7 @@ func (me *parser) defineClassFunction() {
 	}
 }
 
-func (me *parser) defineFileFunction() {
+func (me *parser) defineStaticFunction() {
 	module := me.hmfile
 	token := me.token
 	name := token.value
@@ -137,29 +145,42 @@ func (me *parser) defineFileFunction() {
 		panic(me.fail() + "function \"" + name + "\" is already defined")
 	}
 	me.eat("id")
-	fn := me.defineFunction(name, nil)
+	fn := me.defineFunction(name, nil, nil, nil)
 	me.pushFunction(name, module, fn)
 }
 
-func (me *parser) defineFunction(name string, self *class) *function {
+func (me *parser) defineFunction(name string, alias map[string]string, base *function, self *class) *function {
 	fn := funcInit(me.hmfile, name)
 	me.hmfile.pushScope()
 	me.hmfile.scope.fn = fn
+	fname := name
 	if self != nil {
 		ref := me.hmfile.fnArgInit(self.name, "self", false)
+		fn.argDict["self"] = 0
 		fn.args = append(fn.args, ref)
 		fn.aliasing = self.gmapper
+		fname = self.name + "." + name
 	}
-	parenthesis := false
+	if base != nil {
+		fn.base = base
+		base.impls = append(base.impls, fn)
+		fn.aliasing = alias
+	}
 	if me.token.is == "<" {
 		if self != nil {
 			panic(me.fail() + "class functions cannot have additional generics")
+		}
+		if base != nil {
+			panic(me.fail() + "implementation of static function cannot have additional generics")
 		}
 		order, dict := me.genericHeader()
 		me.verify("(")
 		fn.generics = dict
 		fn.genericsOrder = order
 	}
+	start := me.save()
+	fn.start = start
+	parenthesis := false
 	if me.token.is == "(" {
 		me.eat("(")
 		parenthesis = true
@@ -208,7 +229,7 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		me.eat(")")
 	} else {
 		if self != nil {
-			panic(me.fail() + "class function \"" + name + "\" must include parenthesis")
+			panic(me.fail() + "class function \"" + fname + "\" must include parenthesis")
 		}
 	}
 	if me.token.is != "line" {
@@ -243,6 +264,16 @@ func (me *parser) defineFunction(name string, self *class) *function {
 		fn.expressions = append(fn.expressions, expr)
 	}
 fnEnd:
+	for _, arg := range fn.args {
+		if !arg.used {
+			er := me.fail() + "variable \"" + arg.name + "\" for function \"" + fname + "\" was unused."
+			if arg.name == "self" {
+				er += " can this be a static function?"
+			}
+			panic(er)
+
+		}
+	}
 	me.hmfile.popScope()
 	return fn
 }

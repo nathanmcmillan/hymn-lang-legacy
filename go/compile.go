@@ -316,7 +316,10 @@ func (me *cfile) compileAssign(n *node) *codeblock {
 	post := value.pop()
 
 	code += pre
-	code += me.maybeFmc(code, me.depth) + declare + me.maybeLet(post, right.attributes) + post
+	if n.is != ":=" {
+		code += me.maybeFmc(code, me.depth)
+	}
+	code += declare + me.maybeLet(post, right.attributes) + post
 
 	if paren {
 		code += ")"

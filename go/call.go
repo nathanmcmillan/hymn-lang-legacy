@@ -127,13 +127,26 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 }
 
 func (me *parser) call(module *hmfile) *node {
-	name := me.token.value
+	base := me.token.value
+	name := base
 	me.eat("id")
+	var order []string
 	if me.token.is == "<" {
-		order, _ := me.genericHeader()
+		order, _ = me.genericHeader()
 		name += "<" + strings.Join(order, ",") + ">"
 	}
-	fn, _ := module.getFunction(name)
+	fn, ok := module.getFunction(name)
+	if !ok {
+		fnbase, ok := module.getFunction(base)
+		if !ok {
+			panic(me.fail() + "missing function \"" + name + "\"")
+		}
+		alias := make(map[string]string)
+		for ix, gname := range fnbase.genericsOrder {
+			alias[gname] = order[ix]
+		}
+		fn = me.remapFunctionImpl(name, alias, fnbase)
+	}
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)

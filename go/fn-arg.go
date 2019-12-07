@@ -3,6 +3,7 @@ package main
 type funcArg struct {
 	*variable
 	defaultNode *node
+	used        bool
 }
 
 func (me *funcArg) copy() *funcArg {

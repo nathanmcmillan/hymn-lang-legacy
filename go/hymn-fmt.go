@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func hymnFmt(path string) {
+func execFormat(path string) {
 	in := read(path)
 
 	stream := newStream(in)

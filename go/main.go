@@ -6,6 +6,7 @@ package main
 //
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -16,6 +17,13 @@ var (
 	debug       = true
 	debugTokens = false
 	debugTree   = true
+
+	helpFlag     bool
+	formatFlag   bool
+	pathFlag     string
+	hmlibFlag    string
+	libraryFlag  bool
+	analysisFlag bool
 )
 
 const (
@@ -34,58 +42,36 @@ func fmc(depth int) string {
 func help() {
 	fmt.Println("Hymn command line interface.")
 	fmt.Println("")
-	fmt.Println("Usage:")
-	fmt.Println("")
-	fmt.Println("    hymn <command> [arguments]")
-	fmt.Println("")
-	fmt.Println("The commands are:")
-	fmt.Println("")
-	fmt.Println("    fmt      format a file")
-	fmt.Println("    build    compile a program")
+	flag.Usage()
 }
 
-func execFormat(args []string) {
-	size := len(args)
-	if size <= 2 {
-		fmt.Println("[path]")
-	} else {
-		path := args[2]
-		hymnFmt(path)
-	}
-}
-
-func execBuild(args []string) {
-	size := len(args)
-	if size <= 3 {
-		fmt.Println("[library] [path]")
-		return
-	}
-	libDir := args[2]
-	path := args[3]
-	isLib := false
-	if size >= 5 {
-		if args[4] == "--lib" {
-			isLib = true
-		}
-	}
-	execCompile("out", path, libDir, isLib)
+func helpExit() {
+	help()
+	os.Exit(0)
 }
 
 func main() {
-	args := os.Args
-	size := len(args)
-	if size <= 1 {
-		help()
-	} else if args[1] == "fmt" {
-		execFormat(args)
-	} else if args[1] == "build" {
-		execBuild(args)
+
+	flag.BoolVar(&helpFlag, "h", false, "show usage")
+	flag.BoolVar(&formatFlag, "f", false, "format the given code")
+	flag.BoolVar(&analysisFlag, "a", false, "run static analysis on the given code")
+	flag.StringVar(&pathFlag, "p", "", "path to main hymn file")
+	flag.StringVar(&hmlibFlag, "d", "", "directory path of hmlib files")
+	flag.BoolVar(&libraryFlag, "lib", false, "generate code for use as a library")
+	flag.Parse()
+
+	if helpFlag || pathFlag == "" || hmlibFlag == "" {
+		helpExit()
+	}
+
+	if formatFlag {
+		execFormat(pathFlag)
 	} else {
-		help()
+		execCompile("out", pathFlag, hmlibFlag, analysisFlag, libraryFlag)
 	}
 }
 
-func execCompile(out, path, libDir string, isLib bool) string {
+func execCompile(out, path, libDir string, isAnalysis, isLib bool) string {
 	program := programInit()
 	program.out = out
 	program.libDir = libDir
@@ -102,7 +88,7 @@ func execCompile(out, path, libDir string, isLib bool) string {
 	if exists(fileOut) {
 		os.Remove(fileOut)
 	}
-	gcc(program.sources, fileOut, isLib)
+	gcc(program.sources, fileOut, isAnalysis, isLib)
 	return app(fileOut)
 }
 
@@ -116,11 +102,20 @@ func (me *program) compile(out, path, libDir string) {
 	me.sources[name] = source
 }
 
-func gcc(sources map[string]string, fileOut string, isLib bool) {
+func gcc(sources map[string]string, fileOut string, isAnalysis, isLib bool) {
 	fmt.Println("=== gcc ===")
+	command := "gcc"
 	paramGcc := make([]string, 0)
+	if isAnalysis {
+		paramGcc = append(paramGcc, "-v")
+		paramGcc = append(paramGcc, "-o")
+		paramGcc = append(paramGcc, "out")
+		paramGcc = append(paramGcc, command)
+		command = "scan-build"
+	}
 	paramGcc = append(paramGcc, "-Wall")
 	paramGcc = append(paramGcc, "-Wextra")
+	paramGcc = append(paramGcc, "-Werror")
 	paramGcc = append(paramGcc, "-pedantic")
 	paramGcc = append(paramGcc, "-std=c11")
 	for _, src := range sources {
@@ -134,8 +129,8 @@ func gcc(sources map[string]string, fileOut string, isLib bool) {
 	} else {
 		paramGcc = append(paramGcc, fileOut)
 	}
-	fmt.Println("gcc", strings.Join(paramGcc, " "))
-	cmd := exec.Command("gcc", paramGcc...)
+	fmt.Println(command, strings.Join(paramGcc, " "))
+	cmd := exec.Command(command, paramGcc...)
 	stdout, err := cmd.CombinedOutput()
 	std := string(stdout)
 	if std != "" {

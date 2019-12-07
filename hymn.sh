@@ -5,5 +5,7 @@ cd "$(dirname "$0")"
 
 if [ -f bin/hymn ]; then
   lib="$PWD/lib"
-  bin/hymn "build" $lib $@
+  path="$1"
+  shift
+  bin/hymn -d="$lib" -p="$path" "$@"
 fi

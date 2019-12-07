@@ -27,4 +27,3 @@ main
 	echo(len(m.table))
 	echo(cap(m.table))
 	echo("---")
-

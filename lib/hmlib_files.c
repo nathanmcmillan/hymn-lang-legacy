@@ -68,5 +68,7 @@ hmlib_string hmlib_cat(const char *path) {
         content[i] = fgetc(fp);
     }
     fclose(fp);
-    return hmlib_string_init_with_length(content, size);
+    hmlib_string s = hmlib_string_init_with_length(content, size);
+    free(content);
+    return s;
 }

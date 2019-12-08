@@ -18,12 +18,18 @@ var (
 	debugTokens = false
 	debugTree   = true
 
-	helpFlag     bool
-	formatFlag   bool
-	pathFlag     string
-	hmlibFlag    string
-	libraryFlag  bool
-	analysisFlag bool
+	ccFlag              string
+	pathFlag            string
+	hmlibFlag           string
+	writeToFlag         string
+	helpFlag            bool
+	formatFlag          bool
+	libraryFlag         bool
+	analysisFlag        bool
+	memoryCheckFlag     bool
+	sanitizeAddressFlag bool
+	infoFlag            bool
+	optimizeFlag        bool
 )
 
 const (
@@ -52,12 +58,18 @@ func helpExit() {
 
 func main() {
 
-	flag.BoolVar(&helpFlag, "h", false, "show usage")
-	flag.BoolVar(&formatFlag, "f", false, "format the given code")
-	flag.BoolVar(&analysisFlag, "a", false, "run static analysis on the given code")
+	flag.StringVar(&ccFlag, "c", "gcc", "specify what compiler to use")
 	flag.StringVar(&pathFlag, "p", "", "path to main hymn file")
 	flag.StringVar(&hmlibFlag, "d", "", "directory path of hmlib files")
-	flag.BoolVar(&libraryFlag, "lib", false, "generate code for use as a library")
+	flag.StringVar(&writeToFlag, "w", ".", "write generated files to this directory")
+	flag.BoolVar(&helpFlag, "h", false, "show usage")
+	flag.BoolVar(&formatFlag, "f", false, "format the given code")
+	flag.BoolVar(&analysisFlag, "a", false, "run static analysis on the generated binary")
+	flag.BoolVar(&sanitizeAddressFlag, "s", false, "includes memory analysis in the binary (sends -fsanitize=address to the compiler)")
+	flag.BoolVar(&memoryCheckFlag, "m", false, "run dynamic memory analysis on the generated binary")
+	flag.BoolVar(&libraryFlag, "l", false, "generate code for use as a library")
+	flag.BoolVar(&infoFlag, "i", false, "includes additional information in the binary (sends -g flag to the compiler)")
+	flag.BoolVar(&optimizeFlag, "o", false, "optimizes the binary (sends -O2 flag to the compiler)")
 	flag.Parse()
 
 	if helpFlag || pathFlag == "" || hmlibFlag == "" {
@@ -67,11 +79,11 @@ func main() {
 	if formatFlag {
 		execFormat(pathFlag)
 	} else {
-		execCompile("out", pathFlag, hmlibFlag, analysisFlag, libraryFlag)
+		execCompile("out", pathFlag, hmlibFlag)
 	}
 }
 
-func execCompile(out, path, libDir string, isAnalysis, isLib bool) string {
+func execCompile(out, path, libDir string) string {
 	program := programInit()
 	program.out = out
 	program.libDir = libDir
@@ -88,7 +100,7 @@ func execCompile(out, path, libDir string, isAnalysis, isLib bool) string {
 	if exists(fileOut) {
 		os.Remove(fileOut)
 	}
-	gcc(program.sources, fileOut, isAnalysis, isLib)
+	gcc(program.sources, fileOut)
 	return app(fileOut)
 }
 
@@ -102,16 +114,25 @@ func (me *program) compile(out, path, libDir string) {
 	me.sources[name] = source
 }
 
-func gcc(sources map[string]string, fileOut string, isAnalysis, isLib bool) {
-	fmt.Println("=== gcc ===")
-	command := "gcc"
+func gcc(sources map[string]string, fileOut string) {
+	command := ccFlag
+	fmt.Println("=== " + command + " ===")
 	paramGcc := make([]string, 0)
-	if isAnalysis {
+	if analysisFlag {
 		paramGcc = append(paramGcc, "-v")
 		paramGcc = append(paramGcc, "-o")
 		paramGcc = append(paramGcc, "out")
 		paramGcc = append(paramGcc, command)
 		command = "scan-build"
+	}
+	if infoFlag {
+		paramGcc = append(paramGcc, "-g")
+	}
+	if sanitizeAddressFlag {
+		paramGcc = append(paramGcc, "-fsanitize=address")
+	}
+	if optimizeFlag {
+		paramGcc = append(paramGcc, "-O2")
 	}
 	paramGcc = append(paramGcc, "-Wall")
 	paramGcc = append(paramGcc, "-Wextra")
@@ -122,7 +143,7 @@ func gcc(sources map[string]string, fileOut string, isAnalysis, isLib bool) {
 		paramGcc = append(paramGcc, src)
 	}
 	paramGcc = append(paramGcc, "-o")
-	if isLib {
+	if libraryFlag {
 		fileOut += ".o"
 		paramGcc = append(paramGcc, fileOut)
 		paramGcc = append(paramGcc, "-c")
@@ -144,7 +165,12 @@ func gcc(sources map[string]string, fileOut string, isAnalysis, isLib bool) {
 func app(path string) string {
 	if exists(path) {
 		fmt.Println("=== run ===")
-		stdout, _ := exec.Command(path).CombinedOutput()
+		var stdout []byte
+		if memoryCheckFlag {
+			stdout, _ = exec.Command("valgrind", "--track-origins=yes", path).CombinedOutput()
+		} else {
+			stdout, _ = exec.Command(path).CombinedOutput()
+		}
 		finalout := string(stdout)
 		fmt.Println(finalout)
 		return finalout

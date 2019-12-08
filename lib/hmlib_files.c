@@ -23,7 +23,8 @@ char *hmlib_buffer_read(const char *path) {
     } else {
         const int size = 255;
         char buffer[size];
-        fgets(buffer, size, fp);
+        if (fgets(buffer, size, fp)) {
+        }
         printf("%s", buffer);
     }
     fclose(fp);

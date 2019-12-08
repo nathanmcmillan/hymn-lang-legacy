@@ -35,8 +35,15 @@ hmlib_string hmlib_system(hmlib_string command) {
 
     int pipes[2][2];
 
-    pipe(pipes[PARENT_READ_PIPE]);
-    pipe(pipes[PARENT_WRITE_PIPE]);
+    if (pipe(pipes[PARENT_READ_PIPE]) != 0) {
+        printf("pipe failed");
+        exit(1);
+    }
+
+    if (pipe(pipes[PARENT_WRITE_PIPE]) != 0) {
+        printf("pipe failed");
+        exit(1);
+    }
 
     if (fork()) {
         printf("fork\n");
@@ -50,7 +57,9 @@ hmlib_string hmlib_system(hmlib_string command) {
 
         command = hmlib_string_append(command, "\n");
         size_t len = hmlib_string_len_size(command);
-        write(pipes[PARENT_WRITE_PIPE][WRITE_FD], command, len);
+
+        if (write(pipes[PARENT_WRITE_PIPE][WRITE_FD], command, len)) {
+        }
 
         count = read(pipes[PARENT_READ_PIPE][READ_FD], buffer, sizeof(buffer) - 1);
         if (count >= 0) {

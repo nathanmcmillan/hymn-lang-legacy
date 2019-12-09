@@ -158,7 +158,7 @@ func gcc(sources map[string]string, fileOut string) {
 		fmt.Println(std)
 	}
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 }
 

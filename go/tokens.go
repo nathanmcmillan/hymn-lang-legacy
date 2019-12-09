@@ -321,12 +321,16 @@ func (me *tokenizer) get(pos int) *token {
 	}
 	if c == '\'' {
 		stream.next()
+		value := ""
+		// if stream.peek() == '\\' {
+		// 	value += "\\"
+		// }
 		peek := stream.doublePeek()
 		if peek == '\'' {
-			value := stream.peek()
+			value += string(stream.peek())
 			stream.next()
 			stream.next()
-			token := me.valueToken(TokenCharLiteral, string(value))
+			token := me.valueToken(TokenCharLiteral, value)
 			me.push(token)
 			return token
 		}

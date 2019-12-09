@@ -354,14 +354,12 @@ func (me *parser) importing() {
 		path := me.hmfile.program.directory + "/" + name + ".hm"
 		me.hmfile.program.compile(me.hmfile.program.out, path, me.hmfile.program.libDir)
 		fmt.Println("finished compiling " + name)
-		fmt.Println("=== continue " + me.hmfile.name + " parse === ")
+		fmt.Println("=== continuing " + me.hmfile.name + " === ")
 	}
 	if me.token.is == "id" {
 		fmt.Println("include specific type/enum/function/variable")
 	} else if me.token.is == "*" {
 		fmt.Println("include all of package")
-	} else {
-		fmt.Println("include without including namespace")
 	}
 	me.eat("line")
 }

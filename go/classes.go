@@ -1,6 +1,7 @@
 package main
 
 type class struct {
+	module        *hmfile
 	name          string
 	cname         string
 	variables     map[string]*variable
@@ -16,6 +17,7 @@ type class struct {
 
 func classInit(module *hmfile, name string, generics []string, genericsDict map[string]int) *class {
 	c := &class{}
+	c.module = module
 	c.name = name
 	c.cname = getdatatype(module, name).cname()
 	c.generics = generics

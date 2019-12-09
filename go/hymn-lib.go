@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 const (
 	libEcho      = "echo"
 	libFormat    = "format"
@@ -24,10 +26,12 @@ const (
 	libToFloat64 = "to_float64"
 	libOpen      = "open"
 	libCat       = "cat"
+	libWrite     = "write"
 	libLength    = "len"
 	libCapacity  = "cap"
 	libPush      = "push"
 	libExit      = "exit"
+	libSubstring = "substring"
 )
 
 // library tokens
@@ -43,15 +47,30 @@ type hmlib struct {
 	functions map[string]*function
 }
 
-func (me *hmlib) simple(name string, ret string) {
+func (me *hmlib) newLibSimple(name string, ret string, params ...string) {
 	fn := funcInit(nil, name)
 	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit("?", "s", false))
+	if params != nil {
+		fn.args = append(fn.args, me.fnArgInit("?", "s", false))
+	}
 	me.functions[name] = fn
 	me.types[name] = ""
 }
 
-func (me *hmlib) simpleIn(name string, in string, ret string) {
+func (me *hmlib) newLibRegular(name string, ret string, params ...string) {
+	fn := funcInit(nil, name)
+	fn.returns = typeToVarData(nil, ret)
+	if params != nil {
+		for ix, p := range params {
+			fn.args = append(fn.args, me.fnArgInit(p, "p"+strconv.Itoa(ix), false))
+		}
+	}
+	me.functions[name] = fn
+	me.types[name] = ""
+}
+
+func (me *hmlib) newLibSimpleIn(name string, in string, ret string) {
 	fn := funcInit(nil, name)
 	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit(in, "s", false))
@@ -59,7 +78,7 @@ func (me *hmlib) simpleIn(name string, in string, ret string) {
 	me.types[name] = ""
 }
 
-func (me *hmlib) simpleVardiac(name string, ret string) {
+func (me *hmlib) newLibSimpleVardiac(name string, ret string) {
 	fn := funcInit(nil, name)
 	fn.returns = typeToVarData(nil, ret)
 	fn.argVariadic = me.fnArgInit("?", "a", false)
@@ -67,7 +86,7 @@ func (me *hmlib) simpleVardiac(name string, ret string) {
 	me.types[name] = ""
 }
 
-func (me *hmlib) simplePrint(name string, ret string) {
+func (me *hmlib) newLibSimplePrint(name string, ret string) {
 	fn := funcInit(nil, name)
 	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "a", false))
@@ -132,38 +151,41 @@ func (me *hmlib) libs() {
 	me.classes = make(map[string]*class)
 	me.functions = make(map[string]*function)
 
-	me.simpleIn(libExit, TokenInt, "void")
+	me.newLibSimpleIn(libExit, TokenInt, "void")
 
-	me.simpleVardiac(libEcho, "void")
-	me.simpleVardiac(libFormat, TokenString)
+	me.newLibSimpleVardiac(libEcho, "void")
+	me.newLibSimpleVardiac(libFormat, TokenString)
 
-	me.simplePrint(libPrintf, "void")
-	me.simplePrint(libPrintln, "void")
-	me.simplePrint(libSprintf, TokenString)
-	me.simplePrint(libSprintln, TokenString)
+	me.newLibSimplePrint(libPrintf, "void")
+	me.newLibSimplePrint(libPrintln, "void")
+	me.newLibSimplePrint(libSprintf, TokenString)
+	me.newLibSimplePrint(libSprintln, TokenString)
 
-	me.simple(libCat, TokenString)
-	me.simple(libSystem, TokenString)
-	me.simple(libToStr, TokenString)
+	me.newLibSimple(libCat, TokenString)
+	me.newLibSimple(libSystem, TokenString)
+	me.newLibSimple(libToStr, TokenString)
 
-	me.simple(libToInt, TokenInt)
-	me.simple(libToInt8, TokenInt8)
-	me.simple(libToInt16, TokenInt16)
-	me.simple(libToInt32, TokenInt32)
-	me.simple(libToInt64, TokenInt64)
+	me.newLibSimple(libToInt, TokenInt)
+	me.newLibSimple(libToInt8, TokenInt8)
+	me.newLibSimple(libToInt16, TokenInt16)
+	me.newLibSimple(libToInt32, TokenInt32)
+	me.newLibSimple(libToInt64, TokenInt64)
 
-	me.simple(libToUInt, TokenUInt)
-	me.simple(libToUInt8, TokenUInt8)
-	me.simple(libToUInt16, TokenUInt16)
-	me.simple(libToUInt32, TokenUInt32)
-	me.simple(libToUInt64, TokenUInt64)
+	me.newLibSimple(libToUInt, TokenUInt)
+	me.newLibSimple(libToUInt8, TokenUInt8)
+	me.newLibSimple(libToUInt16, TokenUInt16)
+	me.newLibSimple(libToUInt32, TokenUInt32)
+	me.newLibSimple(libToUInt64, TokenUInt64)
 
-	me.simple(libToFloat, TokenFloat)
-	me.simple(libToFloat32, TokenFloat32)
-	me.simple(libToFloat64, TokenFloat64)
+	me.newLibSimple(libToFloat, TokenFloat)
+	me.newLibSimple(libToFloat32, TokenFloat32)
+	me.newLibSimple(libToFloat64, TokenFloat64)
 
-	me.simple(libLength, TokenInt)
-	me.simple(libCapacity, TokenInt)
+	me.newLibSimple(libLength, TokenInt)
+	me.newLibSimple(libCapacity, TokenInt)
+
+	me.newLibRegular(libWrite, "void", TokenString, TokenString)
+	me.newLibRegular(libSubstring, TokenString, TokenString, TokenInt, TokenInt)
 
 	me.initIO()
 	me.initPush()

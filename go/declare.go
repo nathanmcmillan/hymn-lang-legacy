@@ -42,15 +42,19 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 		memberMap[k] = v.copy()
 	}
 
-	me.hmfile.namespace[impl] = "type"
-	me.hmfile.types[impl] = ""
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_type")
+	module := base.module
 
-	classDef := classInit(me.hmfile, impl, nil, nil)
+	fmt.Println("defineClassImplGeneric ::", me.hmfile.name, "|", base.module.name)
+
+	module.namespace[impl] = "type"
+	module.types[impl] = ""
+	module.defineOrder = append(module.defineOrder, impl+"_type")
+
+	classDef := classInit(module, impl, nil, nil)
 	classDef.base = base
 	base.impls = append(base.impls, classDef)
 	classDef.initMembers(base.variableOrder, memberMap)
-	me.hmfile.classes[impl] = classDef
+	module.classes[impl] = classDef
 
 	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
@@ -60,7 +64,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem.update(me.hmfile, me.genericsReplacer(mem.data().full, gmapper))
+		mem.update(module, me.genericsReplacer(mem.data().full, gmapper))
 	}
 
 	for _, fn := range base.functionOrder {
@@ -157,9 +161,8 @@ func (me *parser) declareType(implementation bool) *varData {
 	}
 
 	if _, ok := me.hmfile.imports[typed]; ok {
-		fmt.Println("IMPORT IS TRUE ::", typed)
 		module = me.hmfile.program.hmfiles[typed]
-		fmt.Println(module.name)
+		fmt.Println("declareType 1 :: module ::", module.name)
 		me.eat(".")
 		typed += "."
 		typed += me.token.value
@@ -185,6 +188,7 @@ func (me *parser) declareType(implementation bool) *varData {
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if implementation {
 				if _, ok := data.module.classes[typed]; !ok {
+					fmt.Println("declareType 2 ::", base.name, "|", typed, "|", gtypes)
 					me.defineClassImplGeneric(base, typed, gtypes)
 				}
 			}

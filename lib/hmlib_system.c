@@ -35,6 +35,8 @@ hmlib_string hmlib_system(hmlib_string command) {
 
     int pipes[2][2];
 
+    printf("command == %s\n", command);
+
     if (pipe(pipes[PARENT_READ_PIPE]) != 0) {
         printf("pipe failed");
         exit(1);
@@ -64,15 +66,13 @@ hmlib_string hmlib_system(hmlib_string command) {
         count = read(pipes[PARENT_READ_PIPE][READ_FD], buffer, sizeof(buffer) - 1);
         if (count >= 0) {
             buffer[count] = 0;
-            printf("%s", buffer);
+            printf("buffer == %s\n", buffer);
         } else {
             printf("IO Error\n");
         }
     } else {
         printf("not fork\n");
         fflush(stdout);
-
-        char *argv[] = {"/usr/bin/bc", "-q", NULL};
 
         dup2(pipes[PARENT_WRITE_PIPE][READ_FD], STDIN_FILENO);
         dup2(pipes[PARENT_READ_PIPE][WRITE_FD], STDOUT_FILENO);
@@ -81,8 +81,6 @@ hmlib_string hmlib_system(hmlib_string command) {
         close(pipes[PARENT_READ_PIPE][WRITE_FD]);
         close(pipes[PARENT_READ_PIPE][READ_FD]);
         close(pipes[PARENT_WRITE_PIPE][WRITE_FD]);
-
-        execv(argv[0], argv);
     }
 
     return hmlib_string_init("foo");

@@ -11,7 +11,7 @@ hmlib_string_head *hmlib_string_head_init(const size_t length, const size_t capa
 
 hmlib_string hmlib_string_init_with_length(const char *init, const size_t length) {
     hmlib_string_head *head = hmlib_string_head_init(length, length);
-    char *s = (char *)head + sizeof(hmlib_string_head);
+    char *s = (char *)(head + 1);
     memcpy(s, init, length);
     s[length] = '\0';
     return (hmlib_string)s;
@@ -49,7 +49,7 @@ hmlib_string hmlib_concat(const hmlib_string a, const hmlib_string b) {
     const size_t len2 = hmlib_string_len_size(b);
     const size_t len = len1 + len2;
     hmlib_string_head *head = hmlib_string_head_init(len, len);
-    char *s = (char *)head + sizeof(hmlib_string_head);
+    char *s = (char *)(head + 1);
     memcpy(s, a, len1);
     memcpy(s + len1, b, len2 + 1);
     s[len] = '\0';
@@ -62,7 +62,7 @@ hmlib_string hmlib_concat_list(const hmlib_string *list, const int size) {
         len += hmlib_string_len_size(list[i]);
     }
     hmlib_string_head *head = hmlib_string_head_init(len, len);
-    char *s = (char *)head + sizeof(hmlib_string_head);
+    char *s = (char *)(head + 1);
     size_t pos = 0;
     for (int i = 0; i < size; i++) {
         size_t len_i = hmlib_string_len_size(list[i]);
@@ -84,7 +84,7 @@ hmlib_string hmlib_concat_varg(const int size, ...) {
     va_end(ap);
 
     hmlib_string_head *head = hmlib_string_head_init(len, len);
-    char *s = (char *)head + sizeof(hmlib_string_head);
+    char *s = (char *)(head + 1);
 
     size_t pos = 0;
     va_start(ap, size);
@@ -100,12 +100,21 @@ hmlib_string hmlib_concat_varg(const int size, ...) {
     return (hmlib_string)s;
 }
 
+hmlib_string hmlib_substring(const hmlib_string a, const size_t start, const size_t end) {
+    const size_t len = end - start;
+    hmlib_string_head *head = hmlib_string_head_init(len, len);
+    char *s = (char *)(head + 1);
+    memcpy(s, a + start, len);
+    s[len] = '\0';
+    return (hmlib_string)s;
+}
+
 hmlib_string hmlib_string_append(const hmlib_string a, const char *b) {
     const size_t len1 = hmlib_string_len_size(a);
     const size_t len2 = strlen(b);
     const size_t len = len1 + len2;
     hmlib_string_head *head = hmlib_string_head_init(len, len);
-    char *s = (char *)head + sizeof(hmlib_string_head);
+    char *s = (char *)(head + 1);
     memcpy(s, a, len1);
     memcpy(s + len1, b, len2 + 1);
     s[len] = '\0';

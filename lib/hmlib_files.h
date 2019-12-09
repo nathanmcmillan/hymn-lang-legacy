@@ -9,5 +9,6 @@
 #include <string.h>
 
 hmlib_string hmlib_cat(const char *path);
+void hmlib_write(const char *path, const char *content);
 
 #endif

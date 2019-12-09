@@ -50,6 +50,22 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "hmlib_slice_cap("+param.pop()+")", param.pre)
 		}
 		panic("argument for cap() was " + param.string(0))
+	case libSubstring:
+		str := me.eval(parameters[0])
+		start := me.eval(parameters[1])
+		end := me.eval(parameters[2])
+		cb := codeBlockOne(n, "hmlib_substring("+str.pop()+", "+start.pop()+", "+end.pop()+")")
+		cb.prepend(str.pre)
+		cb.prepend(start.pre)
+		cb.prepend(end.pre)
+		return cb
+	case libWrite:
+		path := me.eval(parameters[0])
+		content := me.eval(parameters[1])
+		cb := codeBlockOne(n, "hmlib_write("+path.pop()+", "+content.pop()+")")
+		cb.prepend(path.pre)
+		cb.prepend(content.pre)
+		return cb
 	case libOpen:
 		param0 := me.eval(parameters[0])
 		param1 := me.eval(parameters[1])
@@ -64,7 +80,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		return cb
 	case libSystem:
 		param := me.eval(parameters[0])
-		cb := codeBlockOne(n, "hmlib_system("+param.pop()+")")
+		cb := codeBlockOne(n, "hmlib_popen("+param.pop()+")")
 		cb.prepend(param.pre)
 		return cb
 	case libPrintln:

@@ -1,0 +1,10 @@
+main
+	f = "hello world"
+	c = substring(f, 0, len(f))
+	h = substring(f, 0, 5)
+	w = substring(f, 6, 11)
+	echo(f)
+	echo(c)
+	echo(h)
+	echo(w)
+	echo("size:", len(f))

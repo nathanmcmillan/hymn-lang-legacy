@@ -31,6 +31,8 @@ hmlib_string hmlib_concat(const hmlib_string a, const hmlib_string b);
 hmlib_string hmlib_concat_list(const hmlib_string *list, const int size);
 hmlib_string hmlib_concat_varg(const int size, ...);
 
+hmlib_string hmlib_substring(const hmlib_string s, const size_t start, const size_t end);
+
 hmlib_string hmlib_string_append(const hmlib_string a, const char *b);
 
 int hmlib_string_compare(const hmlib_string a, const hmlib_string b);

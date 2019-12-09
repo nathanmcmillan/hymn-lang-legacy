@@ -1,6 +1,6 @@
 main
 	p = system("pwd")
-	echo("hymn: " + p)
+	echo("pwd: " + p)
 	(* echo("---")
 	echo(system("ls"))
 	echo("---")

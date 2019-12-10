@@ -61,7 +61,7 @@ func main() {
 	flag.StringVar(&ccFlag, "c", "gcc", "specify what compiler to use")
 	flag.StringVar(&pathFlag, "p", "", "path to main hymn file")
 	flag.StringVar(&hmlibFlag, "d", "", "directory path of hmlib files")
-	flag.StringVar(&writeToFlag, "w", ".", "write generated files to this directory")
+	flag.StringVar(&writeToFlag, "w", "out", "write generated files to this directory")
 	flag.BoolVar(&helpFlag, "h", false, "show usage")
 	flag.BoolVar(&formatFlag, "f", false, "format the given code")
 	flag.BoolVar(&analysisFlag, "a", false, "run static analysis on the generated binary")
@@ -79,11 +79,14 @@ func main() {
 	if formatFlag {
 		execFormat(pathFlag)
 	} else {
-		execCompile("out", pathFlag, hmlibFlag)
+		execCompile(writeToFlag, pathFlag, hmlibFlag)
 	}
 }
 
 func execCompile(out, path, libDir string) string {
+
+	os.MkdirAll(out, os.ModePerm)
+
 	program := programInit()
 	program.out = out
 	program.libDir = libDir
@@ -121,7 +124,7 @@ func gcc(sources map[string]string, fileOut string) {
 	if analysisFlag {
 		paramGcc = append(paramGcc, "-v")
 		paramGcc = append(paramGcc, "-o")
-		paramGcc = append(paramGcc, "out")
+		paramGcc = append(paramGcc, writeToFlag)
 		paramGcc = append(paramGcc, command)
 		command = "scan-build"
 	}

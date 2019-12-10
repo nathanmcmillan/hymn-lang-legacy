@@ -17,18 +17,21 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
 	return mapped
 }
 
-func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
+func (me *parser) buildImplGeneric(plain *plainType, gmapper map[string]string) string {
+
+	module := plain.module
+	typed := plain.typed
 	base := typed[0:strings.Index(typed, "<")]
 
 	var baseEnum *enum
-	baseClass, okc := me.hmfile.classes[base]
-	baseEnum, oke := me.hmfile.enums[base]
+	baseClass, okc := module.classes[base]
+	baseEnum, oke := module.enums[base]
 
 	if !okc && !oke && base != "maybe" {
 		panic(me.fail() + "type \"" + base + "\" does not exist")
 	}
 
-	order := me.mapGenerics(typed, gmapper)
+	order := me.mapGenerics(plain, gmapper)
 	impl := base + "<" + strings.Join(order, ",") + ">"
 
 	if okc {
@@ -49,11 +52,13 @@ type gstack struct {
 	order []string
 }
 
-func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string {
+func (me *parser) mapGenerics(plain *plainType, gmapper map[string]string) []string {
 
 	var order []string
 	stack := make([]*gstack, 0)
-	rest := typed
+
+	module := plain.module
+	rest := plain.typed
 
 	for {
 		begin := strings.Index(rest, "<")
@@ -82,12 +87,13 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 			} else {
 				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
 
-				if _, okc := me.hmfile.classes[pop]; !okc {
-					if _, oke := me.hmfile.enums[pop]; oke {
-						base := me.hmfile.enums[current.name]
+				if _, okc := module.classes[pop]; !okc {
+					if _, oke := module.enums[pop]; oke {
+						base := module.enums[current.name]
 						me.defineEnumImplGeneric(base, pop, current.order)
 					} else {
-						base := me.hmfile.classes[current.name]
+						base := module.classes[current.name]
+						fmt.Println("mapGenerics :: ", current.name, "->", base.name)
 						me.defineClassImplGeneric(base, pop, current.order)
 					}
 				}
@@ -112,7 +118,7 @@ func (me *parser) mapGenerics(typed string, gmapper map[string]string) []string 
 			rest = rest[comma+1:]
 
 		} else {
-			panic(me.fail() + "could not parse impl of type \"" + typed + "\"")
+			panic(me.fail() + "could not parse impl of type \"" + plain.print() + "\"")
 		}
 	}
 
@@ -140,16 +146,17 @@ func (me *parser) mapGenericFunctionSig(typed string, gmapper map[string]string)
 	return sig
 }
 
-func (me *parser) genericsReplacer(typed string, gmapper map[string]string) string {
+func (me *parser) genericsReplacer(plain *plainType, gmapper map[string]string) string {
+	typed := plain.typed
 	if checkIsArrayOrSlice(typed) {
 		size, typeOfMem := typeOfArrayOrSlice(typed)
 		if checkHasGeneric(typed) {
-			return "[" + size + "]" + me.buildImplGeneric(typeOfMem, gmapper)
+			return "[" + size + "]" + me.buildImplGeneric(&plainType{plain.module, typeOfMem}, gmapper)
 		}
 		return "[" + size + "]" + me.mapGenericSingle(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
-		fmt.Println("genericsReplacer 1 ::", typed, "|", gmapper)
-		return me.buildImplGeneric(typed, gmapper)
+		fmt.Println("genericsReplacer 1 ::", plain.print(), "|", gmapper)
+		return me.buildImplGeneric(plain, gmapper)
 	} else if checkIsFunction(typed) {
 		return me.mapGenericFunctionSig(typed, gmapper)
 	}

@@ -347,14 +347,15 @@ func (me *parser) importing() {
 	name := me.token.value
 	fmt.Println("importing " + name)
 	me.eat(TokenStringLiteral)
-	_, ok := me.hmfile.imports[name]
+	module := me.hmfile
+	_, ok := module.imports[name]
 	if !ok {
-		me.hmfile.imports[name] = true
-		me.hmfile.importOrder = append(me.hmfile.importOrder, name)
-		path := me.hmfile.program.directory + "/" + name + ".hm"
-		me.hmfile.program.compile(me.hmfile.program.out, path, me.hmfile.program.libDir)
+		module.imports[name] = true
+		module.importOrder = append(module.importOrder, name)
+		path := module.program.directory + "/" + name + ".hm"
+		module.program.compile(module.program.out, path, module.program.libDir)
 		fmt.Println("finished compiling " + name)
-		fmt.Println("=== continuing " + me.hmfile.name + " === ")
+		fmt.Println("=== continuing " + module.name + " === ")
 	}
 	if me.token.is == "id" {
 		fmt.Println("include specific type/enum/function/variable")

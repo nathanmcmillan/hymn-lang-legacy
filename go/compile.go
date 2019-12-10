@@ -5,11 +5,17 @@ import (
 	"strings"
 )
 
-func (me *hmfile) generateC(folder, name, libDir string) string {
+func (me *hmfile) generateC(folder, name, hmlibs string) string {
 
 	if debug {
 		fmt.Println("=== generate C ===")
 	}
+
+	// TODO
+	// need to split class generics into separate folders and files
+	// e.g.
+	// type foo<k,v>
+	// ---> out/foo/foo_int_string.c
 
 	cfile := me.cFileInit()
 
@@ -23,15 +29,15 @@ func (me *hmfile) generateC(folder, name, libDir string) string {
 	cfile.headIncludeSection += "#include <inttypes.h>\n"
 	cfile.headIncludeSection += "#include <stdbool.h>\n"
 
-	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_string.h\"\n"
-	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_slice.h\"\n"
-	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_files.h\"\n"
-	cfile.headIncludeSection += "#include \"" + libDir + "/hmlib_system.h\"\n"
+	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_string.h\"\n"
+	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_slice.h\"\n"
+	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_files.h\"\n"
+	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_system.h\"\n"
 
-	cfile.hmfile.program.sources["hmlib_string.c"] = libDir + "/hmlib_string.c"
-	cfile.hmfile.program.sources["hmlib_slice.c"] = libDir + "/hmlib_slice.c"
-	cfile.hmfile.program.sources["hmlib_files.c"] = libDir + "/hmlib_files.c"
-	cfile.hmfile.program.sources["hmlib_system.c"] = libDir + "/hmlib_system.c"
+	cfile.hmfile.program.sources["hmlib_string.c"] = hmlibs + "/hmlib_string.c"
+	cfile.hmfile.program.sources["hmlib_slice.c"] = hmlibs + "/hmlib_slice.c"
+	cfile.hmfile.program.sources["hmlib_files.c"] = hmlibs + "/hmlib_files.c"
+	cfile.hmfile.program.sources["hmlib_system.c"] = hmlibs + "/hmlib_system.c"
 
 	for _, importName := range me.importOrder {
 		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"

@@ -28,7 +28,6 @@ func TestCompile(t *testing.T) {
 		fmt.Println("====================================================================== test", info.Name())
 		path := tests + "/" + info.Name()
 		out := folder + "/out/" + nameNum
-		os.MkdirAll(out, os.ModePerm)
 		stdout := execCompile(out, path, libDir)
 		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {

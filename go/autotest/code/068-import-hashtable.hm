@@ -1,10 +1,5 @@
 import "hashtable"
 
-(*
-each hmfile generates it's own full qualified name space
-for both internal items and external
-*)
-
 main
 	t = [12:]maybe<hashtable.hashtable_item<int,string>>
 	m = hashtable.hashtable(

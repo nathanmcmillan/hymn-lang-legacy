@@ -178,8 +178,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		fn.generics = dict
 		fn.genericsOrder = order
 	}
-	start := me.save()
-	fn.start = start
+	fn.start = me.save()
 	parenthesis := false
 	if me.token.is == "(" {
 		me.eat("(")

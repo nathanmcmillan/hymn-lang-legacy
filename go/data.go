@@ -5,6 +5,15 @@ import (
 	"strings"
 )
 
+type plainType struct {
+	module *hmfile
+	typed  string
+}
+
+func (me *plainType) print() string {
+	return me.module.name + "." + me.typed
+}
+
 type idData struct {
 	module *hmfile
 	name   string
@@ -87,6 +96,10 @@ func (me *hmlib) literalType(typed string) *varData {
 	data.hmlib = me
 	data.dtype = getdatatype(nil, typed)
 	return data
+}
+
+func (me *varData) plain() *plainType {
+	return &plainType{me.module, me.full}
 }
 
 func typeToVarData(module *hmfile, typed string) *varData {

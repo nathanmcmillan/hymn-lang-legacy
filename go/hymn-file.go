@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type hmfile struct {
 	program         *program
 	hmlib           *hmlib
@@ -67,7 +69,7 @@ func (me *hmfile) cFileInit() *cfile {
 	c.hmfile = me
 	c.rootScope = scopeInit(nil)
 	c.scope = c.rootScope
-	c.codeFn = make([]string, 0)
+	c.codeFn = make([]strings.Builder, 0)
 	return c
 }
 

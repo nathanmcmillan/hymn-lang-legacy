@@ -60,7 +60,7 @@ func (me *cfile) declareStatic(n *node) string {
 		head += rightCode.code()
 	}
 	head += ";\n"
-	me.headExternSection += head
+	me.headExternSection.WriteString(head)
 
 	if setSign == "" {
 		return declareCode + setSign + rightCode.code() + ";\n"

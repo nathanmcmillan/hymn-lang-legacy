@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 )
 
 func (me *cfile) defineEnum(enum *enum) {
@@ -19,8 +20,8 @@ func (me *cfile) defineEnum(enum *enum) {
 			}
 		}
 		code += "\n};\n\n"
-		me.headEnumSection += code
-		me.headEnumTypeDefSection += "typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n"
+		me.headEnumSection.WriteString(code)
+		me.headEnumTypeDefSection.WriteString("typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n")
 	}
 
 	if enum.simple || len(enum.generics) > 0 {
@@ -29,7 +30,7 @@ func (me *cfile) defineEnum(enum *enum) {
 
 	code := ""
 	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
-	me.headStructTypeDefSection += "typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n"
+	me.headStructTypeDefSection.WriteString("typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n")
 	code += "struct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
@@ -48,7 +49,7 @@ func (me *cfile) defineEnum(enum *enum) {
 	}
 	code += fmc(1) + "};\n"
 	code += "};\n\n"
-	me.headStructSection += code
+	me.headStructSection.WriteString(code)
 }
 
 func (me *cfile) defineClass(class *class) {
@@ -61,12 +62,13 @@ func (me *cfile) defineClass(class *class) {
 		}
 	}
 	hmName := me.hmfile.classNameSpace(class.cname)
-	me.headStructTypeDefSection += "typedef struct " + hmName + " " + hmName + ";\n"
-	code := "struct " + hmName + " {\n"
+	me.headStructTypeDefSection.WriteString("typedef struct " + hmName + " " + hmName + ";\n")
+	var code strings.Builder
+	code.WriteString("struct " + hmName + " {\n")
 	for _, name := range class.variableOrder {
 		field := class.variables[name]
-		code += fmc(1) + field.data().typeSigOf(field.name, true) + ";\n"
+		code.WriteString(fmc(1) + field.data().typeSigOf(field.name, true) + ";\n")
 	}
-	code += "};\n\n"
-	me.headStructSection += code
+	code.WriteString("};\n\n")
+	me.headStructSection.WriteString(code.String())
 }

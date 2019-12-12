@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type scope struct {
 	root      *scope
 	temp      int
@@ -24,16 +26,16 @@ type program struct {
 
 type cfile struct {
 	hmfile                   *hmfile
-	headPrefix               string
-	headIncludeSection       string
-	headEnumTypeDefSection   string
-	headEnumSection          string
-	headStructTypeDefSection string
-	headStructSection        string
-	headExternSection        string
-	headFuncSection          string
-	headSuffix               string
-	codeFn                   []string
+	headPrefix               strings.Builder
+	headIncludeSection       strings.Builder
+	headEnumTypeDefSection   strings.Builder
+	headEnumSection          strings.Builder
+	headStructTypeDefSection strings.Builder
+	headStructSection        strings.Builder
+	headExternSection        strings.Builder
+	headFuncSection          strings.Builder
+	headSuffix               strings.Builder
+	codeFn                   []strings.Builder
 	rootScope                *scope
 	scope                    *scope
 	depth                    int
@@ -186,23 +188,23 @@ func isInteger(t string) bool {
 }
 
 func (me *cfile) head() string {
-	head := ""
-	head += me.headPrefix
-	head += me.headIncludeSection
-	head += me.headEnumSection
-	if len(me.headEnumTypeDefSection) != 0 {
-		head += me.headEnumTypeDefSection
-		head += "\n"
+	var head strings.Builder
+	head.WriteString(me.headPrefix.String())
+	head.WriteString(me.headIncludeSection.String())
+	head.WriteString(me.headEnumSection.String())
+	if me.headEnumTypeDefSection.Len() != 0 {
+		head.WriteString(me.headEnumTypeDefSection.String())
+		head.WriteString("\n")
 	}
-	if len(me.headStructTypeDefSection) != 0 {
-		head += me.headStructTypeDefSection
-		head += "\n"
+	if me.headStructTypeDefSection.Len() != 0 {
+		head.WriteString(me.headStructTypeDefSection.String())
+		head.WriteString("\n")
 	}
-	head += me.headStructSection
-	head += me.headExternSection
-	head += me.headFuncSection
-	head += me.headSuffix
-	return head
+	head.WriteString(me.headStructSection.String())
+	head.WriteString(me.headExternSection.String())
+	head.WriteString(me.headFuncSection.String())
+	head.WriteString(me.headSuffix.String())
+	return head.String()
 }
 
 type allocData struct {

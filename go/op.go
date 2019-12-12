@@ -26,6 +26,18 @@ func write(path, content string) {
 	}
 }
 
+func fileappend(path, content string) {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	_, err = f.WriteString(content)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func scan(path string) []os.FileInfo {
 	dir, err := ioutil.ReadDir(path)
 	if err != nil {

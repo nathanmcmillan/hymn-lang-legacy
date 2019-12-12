@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 func cleanCode(code string) (string, bool) {
 	if code != "" {
 		for {
@@ -27,14 +29,20 @@ func (me *cfile) happyOut(e *codeblock) string {
 	return block
 }
 
-func (me *cfile) compileFunction(name string, fn *function) {
+func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	cls := fn.forClass
-	if (cls != nil && len(cls.generics) > 0) || len(fn.generics) > 0 {
+	if cls != nil {
+		if len(cls.generics) > 0 || (!use && cls.base != nil) {
+			return
+		}
+	}
+	if len(fn.generics) > 0 {
 		return
 	}
+
 	args := fn.args
 	expressions := fn.expressions
-	block := ""
+	var block strings.Builder
 	me.pushScope()
 	me.depth = 1
 	for _, arg := range args {
@@ -42,23 +50,23 @@ func (me *cfile) compileFunction(name string, fn *function) {
 	}
 	for _, expr := range expressions {
 		e := me.eval(expr)
-		block += me.happyOut(e)
+		block.WriteString(me.happyOut(e))
 	}
 	me.popScope()
-	code := ""
-	code += fmtassignspace(fn.returns.typeSig()) + me.hmfile.funcNameSpace(name) + "("
+	var code strings.Builder
+	code.WriteString(fmtassignspace(fn.returns.typeSig()) + me.hmfile.funcNameSpace(name) + "(")
 	for ix, arg := range args {
 		if ix > 0 {
-			code += ", "
+			code.WriteString(", ")
 		}
-		code += arg.data().typeSigOf(arg.name, false)
+		code.WriteString(arg.data().typeSigOf(arg.name, false))
 	}
-	head := code + ");\n"
-	code += ") {\n"
-	code += block
-	code += "}\n\n"
+	head := code.String() + ");\n"
+	code.WriteString(") {\n")
+	code.WriteString(block.String())
+	code.WriteString("}\n\n")
 
-	me.headFuncSection += head
+	me.headFuncSection.WriteString(head)
 	me.codeFn = append(me.codeFn, code)
 }
 
@@ -67,7 +75,7 @@ func (me *cfile) compileMain(fn *function) {
 		panic("main can not have arguments")
 	}
 	expressions := fn.expressions
-	block := ""
+	var block strings.Builder
 	returns := false
 	me.pushScope()
 	me.depth = 1
@@ -75,7 +83,7 @@ func (me *cfile) compileMain(fn *function) {
 	for x := len(list) - 1; x >= 0; x-- {
 		file := list[x]
 		if file.needInit {
-			block += fmc(me.depth) + file.funcNameSpace("init") + "();\n"
+			block.WriteString(fmc(me.depth) + file.funcNameSpace("init") + "();\n")
 		}
 	}
 	for _, expr := range expressions {
@@ -87,17 +95,17 @@ func (me *cfile) compileMain(fn *function) {
 				returns = true
 			}
 		}
-		block += me.happyOut(e)
+		block.WriteString(me.happyOut(e))
 	}
 	if !returns {
-		block += fmc(me.depth) + "return 0;\n"
+		block.WriteString(fmc(me.depth) + "return 0;\n")
 	}
 	me.popScope()
-	code := ""
-	code += "int main() {\n"
-	code += block
-	code += "}\n"
+	var code strings.Builder
+	code.WriteString("int main() {\n")
+	code.WriteString(block.String())
+	code.WriteString("}\n")
 
-	me.headFuncSection += "int main();\n"
+	me.headFuncSection.WriteString("int main();\n")
 	me.codeFn = append(me.codeFn, code)
 }

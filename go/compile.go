@@ -2,51 +2,25 @@ package main
 
 import (
 	"fmt"
+	"path"
+	"path/filepath"
 	"strings"
 )
 
 func (me *hmfile) generateC(folder, name, hmlibs string) string {
-
 	if debug {
 		fmt.Println("=== generate C ===")
 	}
 
-	// TODO
-	// need to split class generics into separate folders and files
-	// e.g.
-	// type foo<k,v>
-	// ---> out/foo/foo_int_string.c
-
-	cfile := me.cFileInit()
-
-	guard := me.defNameSpace(name)
-	cfile.headPrefix += "#ifndef " + guard + "\n"
-	cfile.headPrefix += "#define " + guard + "\n\n"
-
-	cfile.headIncludeSection += "#include <stdio.h>\n"
-	cfile.headIncludeSection += "#include <stdlib.h>\n"
-	cfile.headIncludeSection += "#include <stdint.h>\n"
-	cfile.headIncludeSection += "#include <inttypes.h>\n"
-	cfile.headIncludeSection += "#include <stdbool.h>\n"
-
-	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_string.h\"\n"
-	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_slice.h\"\n"
-	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_files.h\"\n"
-	cfile.headIncludeSection += "#include \"" + hmlibs + "/hmlib_system.h\"\n"
-
-	cfile.hmfile.program.sources["hmlib_string.c"] = hmlibs + "/hmlib_string.c"
-	cfile.hmfile.program.sources["hmlib_slice.c"] = hmlibs + "/hmlib_slice.c"
-	cfile.hmfile.program.sources["hmlib_files.c"] = hmlibs + "/hmlib_files.c"
-	cfile.hmfile.program.sources["hmlib_system.c"] = hmlibs + "/hmlib_system.c"
+	cfile := initC(me, folder, name, hmlibs)
 
 	for _, importName := range me.importOrder {
-		cfile.headIncludeSection += "#include \"" + importName + ".h\"\n"
+		cfile.headIncludeSection.WriteString("#include \"" + importName + ".h\"\n")
 	}
-	cfile.headIncludeSection += "\n"
+	cfile.headIncludeSection.WriteString("\n")
 
-	code := ""
-	code += "#include \"" + name + ".h\"\n"
-	code += "\n"
+	var code strings.Builder
+	code.WriteString("#include \"" + name + ".h\"\n\n")
 
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
@@ -65,34 +39,47 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 
 	if me.needInit {
 		for _, s := range me.statics {
-			code += cfile.declareStatic(s)
+			code.WriteString(cfile.declareStatic(s))
 		}
-		cfile.headExternSection += "\n"
-		code += "\n"
+		cfile.headExternSection.WriteString("\n")
+		code.WriteString("\n")
 
-		cfile.headFuncSection += "void " + me.funcNameSpace("init") + "();\n"
-		code += "void " + me.funcNameSpace("init") + "() {\n"
+		cfile.headFuncSection.WriteString("void " + me.funcNameSpace("init") + "();\n")
+		code.WriteString("void " + me.funcNameSpace("init") + "() {\n")
 		for _, s := range me.statics {
-			code += cfile.initStatic(s)
+			code.WriteString(cfile.initStatic(s))
 		}
-		code += "}\n\n"
+		code.WriteString("}\n\n")
 	}
 
 	for _, f := range me.functionOrder {
 		if f == "main" {
 			cfile.compileMain(me.functions[f])
 		} else {
-			cfile.compileFunction(f, me.functions[f])
+			cfile.compileFunction(f, me.functions[f], false)
 		}
 	}
+
+	// foo<float,string>_set_name
+	// foo<float,string>_get_size
+	p := path.Join(folder, "foo", "foo-float-String.h")
+	fabs, _ := filepath.Abs(p)
+	root, _ := filepath.Abs(path.Join(folder, name+".h"))
+	funcs := make([]string, 1)
+	funcs[0] = "foo<float,string>_get_size"
+	cfile.functionC(root, folder+"/foo", "foo-float-String", hmlibs, funcs)
+	cfile.headFuncSection.WriteString("#include \"" + fabs + "\"\n\n")
 
 	fmt.Println("=== end C ===")
 
 	fileCode := folder + "/" + name + ".c"
 
-	write(fileCode, code+strings.Join(cfile.codeFn, ""))
+	write(fileCode, code.String())
+	for _, cfn := range cfile.codeFn {
+		fileappend(fileCode, cfn.String())
+	}
 
-	cfile.headSuffix += "\n#endif\n"
+	cfile.headSuffix.WriteString("\n#endif\n")
 	write(folder+"/"+name+".h", cfile.head())
 
 	return fileCode

@@ -16,7 +16,7 @@ import (
 var (
 	debug       = true
 	debugTokens = false
-	debugTree   = true
+	debugTree   = false
 
 	ccFlag              string
 	pathFlag            string
@@ -104,7 +104,7 @@ func execCompile(out, path, libDir string) string {
 		os.Remove(fileOut)
 	}
 	gcc(program.sources, fileOut)
-	return app(fileOut)
+	return app(out, name)
 }
 
 func (me *program) compile(out, path, libDir string) {
@@ -165,15 +165,21 @@ func gcc(sources map[string]string, fileOut string) {
 	}
 }
 
-func app(path string) string {
+func app(folder, name string) string {
+	path := folder + "/" + name
 	if exists(path) {
 		fmt.Println("=== run ===")
 		var stdout []byte
+		pwd, _ := os.Getwd()
+		os.Chdir(folder)
+		bwd, _ := os.Getwd()
+		binary := bwd + "/" + name
 		if memoryCheckFlag {
-			stdout, _ = exec.Command("valgrind", "--track-origins=yes", path).CombinedOutput()
+			stdout, _ = exec.Command("valgrind", "--track-origins=yes", binary).CombinedOutput()
 		} else {
-			stdout, _ = exec.Command(path).CombinedOutput()
+			stdout, _ = exec.Command(binary).CombinedOutput()
 		}
+		os.Chdir(pwd)
 		finalout := string(stdout)
 		fmt.Println(finalout)
 		return finalout

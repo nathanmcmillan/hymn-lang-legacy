@@ -32,11 +32,12 @@ func (me *cfile) happyOut(e *codeblock) string {
 func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	cls := fn.forClass
 	if cls != nil {
-		if len(cls.generics) > 0 || (!use && cls.base != nil) {
+		if len(cls.generics) > 0 {
+			return
+		} else if !use && cls.base != nil {
 			return
 		}
-	}
-	if len(fn.generics) > 0 {
+	} else if len(fn.generics) > 0 {
 		return
 	}
 

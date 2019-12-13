@@ -1,12 +1,13 @@
 main
 	mutable pwd = system("pwd")
-	(* if pwd[len(pwd) - 1] == '\n' *)
-	pwd = substring(pwd, 0, len(pwd) - 1)
+	mutable size = len(pwd) 
+	if pwd[size - 1] == '\n'
+		pwd = substring(pwd, 0, size - 1)
 	mutable date = system("date +%s")
 	size = len(date)
-	(* if date[size - 1] == '\n' *)
-	date = substring(date, 0, size - 1)
-	path = pwd + "/out/" + date + ".txt"
+	if date[size - 1] == '\n'
+		date = substring(date, 0, size - 1)
+	path = pwd + "/" + date + ".txt"
 	content = "hello file\n"
 	echo("path:", path)
 	echo("content:", content)

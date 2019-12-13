@@ -12,12 +12,11 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		fmt.Println("=== generate C ===")
 	}
 
-	cfile := initC(me, folder, name, hmlibs)
+	cfile := initC(me, folder, "", name, hmlibs)
 
 	for _, importName := range me.importOrder {
 		cfile.headIncludeSection.WriteString("#include \"" + importName + ".h\"\n")
 	}
-	cfile.headIncludeSection.WriteString("\n")
 
 	var code strings.Builder
 	code.WriteString("#include \"" + name + ".h\"\n\n")
@@ -60,15 +59,23 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		}
 	}
 
+	// TODO
+	// include all "extern" variables in sub header
+	// declare and define all functions typedef and structs off FooFloatString
+
 	// foo<float,string>_set_name
 	// foo<float,string>_get_size
-	p := path.Join(folder, "foo", "foo-float-String.h")
-	fabs, _ := filepath.Abs(p)
-	root, _ := filepath.Abs(path.Join(folder, name+".h"))
-	funcs := make([]string, 1)
-	funcs[0] = "foo<float,string>_get_size"
-	cfile.functionC(root, folder+"/foo", "foo-float-String", hmlibs, funcs)
-	cfile.headFuncSection.WriteString("#include \"" + fabs + "\"\n\n")
+	{
+		p := path.Join(folder, "foo", "foo-float-string.h")
+		fabs, _ := filepath.Abs(p)
+		root, _ := filepath.Abs(path.Join(folder, name+".h"))
+		funcs := make([]string, 1)
+		funcs[0] = "foo<float,string>_get_size"
+		cfile.subC(root, folder+"/foo", name, "foo-float-string", hmlibs, funcs)
+		cfile.headIncludeSection.WriteString("#include \"" + fabs + "\"\n")
+		cfile.headIncludeSection.WriteString("\n")
+	}
+	//
 
 	fmt.Println("=== end C ===")
 

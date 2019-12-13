@@ -1,35 +1,8 @@
 main
-	a = "foo"
-	b = "foo"
-	c = "foo"
-	d = "bar"
-	
-	if a == b
-		echo("good")
-	else
-		echo("bad")
-
-	if a != b
-		echo("bad")
-	else
-		echo("good")
-
-	if c == d
-		echo("bad")
-	else
-		echo("good")
-
-	if c != d
-		echo("good")
-	else
-		echo("bad")
-
-	if not c == d
-		echo("good")
-	else
-		echo("bad")
-
-	if not c != d
-		echo("bad")
-	else
-		echo("good")
+	p = system("pwd")
+	echo("pwd: " + p)
+	(* echo("---")
+	echo(system("ls"))
+	echo("---")
+	echo(system("cat klsdfjsdljfdsl"))
+	echo("---") *)

@@ -2,13 +2,17 @@ type foo<k, v>
 	size k
 	name v
 
+immutable thingy = "foo!"
+
 foo set_name(name v)
+	echo(thingy)
 	self.name = name
 
 foo get_size() k
 	return self.size
 
 main
+	echo(thingy)
 	f = foo(
 		size:22.33
 		name:"zoob")

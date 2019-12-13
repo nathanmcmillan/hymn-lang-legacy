@@ -44,10 +44,15 @@ func flatten(name string) string {
 	return name
 }
 
-func (me *hmfile) defNameSpace(name string) string {
+func (me *hmfile) defNameSpace(root, name string) string {
+	if root != "" {
+		root = strings.ToUpper(root)
+		root = strings.ReplaceAll(root, "-", "_")
+		root += "_"
+	}
 	name = strings.ToUpper(name)
 	name = strings.ReplaceAll(name, "-", "_")
-	return definePrefix + name + "_H"
+	return definePrefix + root + name + "_H"
 }
 
 func (me *hmfile) varNameSpace(id string) string {

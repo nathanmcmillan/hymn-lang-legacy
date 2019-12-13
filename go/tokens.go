@@ -266,7 +266,7 @@ func (me *tokenizer) get(pos int) *token {
 	space := me.forSpace()
 	if me.updateDepth {
 		if space%2 != 0 {
-			panic(stream.fail() + "bad spacing")
+			panic("bad spacing " + stream.fail())
 		}
 		me.depth = space / 2
 		me.updateDepth = false
@@ -322,11 +322,19 @@ func (me *tokenizer) get(pos int) *token {
 	if c == '\'' {
 		stream.next()
 		value := ""
-		// if stream.peek() == '\\' {
-		// 	value += "\\"
-		// }
+		ischar := false
+		if stream.peek() == '\\' {
+			value += "\\"
+			ischar = true
+			stream.next()
+		}
 		peek := stream.doublePeek()
 		if peek == '\'' {
+			ischar = true
+		} else if ischar {
+			panic("expecting character literal " + stream.fail())
+		}
+		if ischar {
 			value += string(stream.peek())
 			stream.next()
 			stream.next()

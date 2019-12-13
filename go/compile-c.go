@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-func initC(module *hmfile, folder, name, hmlibs string) *cfile {
+func initC(module *hmfile, folder, root, name, hmlibs string) *cfile {
 	cfile := module.cFileInit()
-	guard := module.defNameSpace(name)
+	guard := module.defNameSpace(root, name)
 
 	cfile.headPrefix.WriteString("#ifndef " + guard + "\n")
 	cfile.headPrefix.WriteString("#define " + guard + "\n\n")
@@ -18,6 +18,7 @@ func initC(module *hmfile, folder, name, hmlibs string) *cfile {
 	cfile.headIncludeSection.WriteString("#include <stdint.h>\n")
 	cfile.headIncludeSection.WriteString("#include <inttypes.h>\n")
 	cfile.headIncludeSection.WriteString("#include <stdbool.h>\n")
+	cfile.headIncludeSection.WriteString("\n")
 
 	hmlibls := scan(hmlibs)
 	for _, f := range hmlibls {
@@ -28,20 +29,18 @@ func initC(module *hmfile, folder, name, hmlibs string) *cfile {
 			cfile.headIncludeSection.WriteString("#include \"" + hmlibs + "/" + name + "\"\n")
 		}
 	}
+	cfile.headIncludeSection.WriteString("\n")
 
 	return cfile
 }
 
-func (me *cfile) functionC(root, folder, name, hmlibs string, funcs []string) string {
+func (me *cfile) subC(root, folder, rootname, name, hmlibs string, funcs []string) string {
 	if debug {
 		fmt.Println("=== generate C " + folder + "/" + name + " ===")
 	}
 
 	module := me.hmfile
-	cfile := initC(module, folder, name, hmlibs)
-
-	cfile.headIncludeSection.WriteString("#include \"" + root + "\"\n")
-	cfile.headIncludeSection.WriteString("\n")
+	cfile := initC(module, folder, rootname, name, hmlibs)
 
 	var code strings.Builder
 	code.WriteString("#include \"" + name + ".h\"\n\n")

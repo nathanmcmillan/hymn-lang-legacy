@@ -14,9 +14,29 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 
 	cfile := initC(me, folder, "", name, hmlibs)
 
-	for _, importName := range me.importOrder {
-		cfile.headIncludeSection.WriteString("#include \"" + importName + ".h\"\n")
+	for _, iname := range me.importOrder {
+		cfile.headIncludeSection.WriteString("#include \"" + iname + ".h\"\n")
 	}
+
+	root, _ := filepath.Abs(path.Join(folder, name+".h"))
+	filters := make(map[string]string)
+
+	for _, c := range me.defineOrder {
+		underscore := strings.LastIndex(c, "_")
+		name := c[0:underscore]
+		if strings.Index(name, "<") != -1 {
+			filters[name] = ""
+		}
+	}
+
+	for f := range filters {
+		fname := flatten(f)
+		fname = strings.ReplaceAll(fname, "_", "-")
+		subfolder := f[0:strings.Index(f, "<")]
+		filters[f] = fname
+		cfile.headIncludeSection.WriteString("#include \"" + subfolder + "/" + fname + ".h\"\n")
+	}
+	cfile.headIncludeSection.WriteString("\n")
 
 	var code strings.Builder
 	code.WriteString("#include \"" + name + ".h\"\n\n")
@@ -24,6 +44,9 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
 		name := c[0:underscore]
+		if _, ok := filters[name]; ok {
+			continue
+		}
 		typed := c[underscore+1:]
 		if typed == "type" {
 			cfile.defineClass(me.classes[name])
@@ -52,6 +75,9 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	}
 
 	for _, f := range me.functionOrder {
+		if _, ok := filters[name]; ok {
+			continue
+		}
 		if f == "main" {
 			cfile.compileMain(me.functions[f])
 		} else {
@@ -59,23 +85,10 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		}
 	}
 
-	// TODO
-	// include all "extern" variables in sub header
-	// declare and define all functions typedef and structs off FooFloatString
-
-	// foo<float,string>_set_name
-	// foo<float,string>_get_size
-	{
-		p := path.Join(folder, "foo", "foo-float-string.h")
-		fabs, _ := filepath.Abs(p)
-		root, _ := filepath.Abs(path.Join(folder, name+".h"))
-		funcs := make([]string, 1)
-		funcs[0] = "foo<float,string>_get_size"
-		cfile.subC(root, folder+"/foo", name, "foo-float-string", hmlibs, funcs)
-		cfile.headIncludeSection.WriteString("#include \"" + fabs + "\"\n")
-		cfile.headIncludeSection.WriteString("\n")
+	for f, fname := range filters {
+		subfolder := f[0:strings.Index(f, "<")]
+		cfile.subC(root, folder, name, subfolder, fname, hmlibs, f)
 	}
-	//
 
 	fmt.Println("=== end C ===")
 

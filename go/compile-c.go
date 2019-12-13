@@ -34,18 +34,46 @@ func initC(module *hmfile, folder, root, name, hmlibs string) *cfile {
 	return cfile
 }
 
-func (me *cfile) subC(root, folder, rootname, name, hmlibs string, funcs []string) string {
+func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter string) string {
 	if debug {
-		fmt.Println("=== generate C " + folder + "/" + name + " ===")
+		fmt.Println("=== generate C " + subfolder + "/" + name + " ===")
 	}
+
+	folder = folder + "/" + subfolder
 
 	module := me.hmfile
 	cfile := initC(module, folder, rootname, name, hmlibs)
 
+	module.program.sources[name] = folder + "/" + name + ".c"
+
 	var code strings.Builder
 	code.WriteString("#include \"" + name + ".h\"\n\n")
 
-	for _, f := range funcs {
+	for _, c := range module.defineOrder {
+		underscore := strings.LastIndex(c, "_")
+		name := c[0:underscore]
+		if !strings.HasPrefix(name, filter) {
+			continue
+		}
+		typed := c[underscore+1:]
+		if typed == "type" {
+			cfile.defineClass(module.classes[name])
+		} else if typed == "enum" {
+			cfile.defineEnum(module.enums[name])
+		}
+	}
+
+	if module.needInit {
+		for _, s := range module.statics {
+			cfile.declareStatic(s)
+		}
+		cfile.headExternSection.WriteString("\n")
+	}
+
+	for _, f := range module.functionOrder {
+		if !strings.HasPrefix(f, filter) {
+			continue
+		}
 		cfile.compileFunction(f, module.functions[f], true)
 	}
 

@@ -34,7 +34,7 @@ func initC(module *hmfile, folder, root, name, hmlibs string) *cfile {
 	return cfile
 }
 
-func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter string) string {
+func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter string, filters map[string]string) string {
 	if debug {
 		fmt.Println("=== generate C " + subfolder + "/" + name + " ===")
 	}
@@ -45,6 +45,19 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 	cfile := initC(module, folder, rootname, name, hmlibs)
 
 	module.program.sources[name] = folder + "/" + name + ".c"
+
+	fx := 0
+	for f, fname := range filters {
+		if f == filter {
+			continue
+		}
+		subfolder := f[0:strings.Index(f, "<")]
+		cfile.headIncludeSection.WriteString("#include \"" + root + "/" + subfolder + "/" + fname + ".h\"\n")
+		fx++
+	}
+	if fx > 0 {
+		cfile.headIncludeSection.WriteString("\n")
+	}
 
 	var code strings.Builder
 	code.WriteString("#include \"" + name + ".h\"\n\n")
@@ -84,11 +97,15 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 	os.Mkdir(folder, os.ModePerm)
 
 	write(fileCode, code.String())
-	for _, cfn := range cfile.codeFn {
-		fileappend(fileCode, cfn.String())
+
+	if len(cfile.codeFn) > 0 {
+		for _, cfn := range cfile.codeFn {
+			fileappend(fileCode, cfn.String())
+		}
+		cfile.headSuffix.WriteString("\n")
 	}
 
-	cfile.headSuffix.WriteString("\n#endif\n")
+	cfile.headSuffix.WriteString("#endif\n")
 	write(folder+"/"+name+".h", cfile.head())
 
 	return fileCode

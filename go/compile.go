@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -18,24 +17,27 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		cfile.headIncludeSection.WriteString("#include \"" + iname + ".h\"\n")
 	}
 
-	root, _ := filepath.Abs(path.Join(folder, name+".h"))
+	root, _ := filepath.Abs(folder)
 	filters := make(map[string]string)
 
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
 		name := c[0:underscore]
 		if strings.Index(name, "<") != -1 {
-			filters[name] = ""
+			typed := c[underscore+1:]
+			if typed == "type" {
+				if me.classes[name].doNotDefine() {
+					continue
+				}
+			}
+			fname := flatten(name)
+			fname = strings.ReplaceAll(fname, "_", "-")
+			filters[name] = fname
+			subfolder := name[0:strings.Index(name, "<")]
+			cfile.headIncludeSection.WriteString("#include \"" + subfolder + "/" + fname + ".h\"\n")
 		}
 	}
 
-	for f := range filters {
-		fname := flatten(f)
-		fname = strings.ReplaceAll(fname, "_", "-")
-		subfolder := f[0:strings.Index(f, "<")]
-		filters[f] = fname
-		cfile.headIncludeSection.WriteString("#include \"" + subfolder + "/" + fname + ".h\"\n")
-	}
 	cfile.headIncludeSection.WriteString("\n")
 
 	var code strings.Builder
@@ -87,7 +89,7 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 
 	for f, fname := range filters {
 		subfolder := f[0:strings.Index(f, "<")]
-		cfile.subC(root, folder, name, subfolder, fname, hmlibs, f)
+		cfile.subC(root, folder, name, subfolder, fname, hmlibs, f, filters)
 	}
 
 	fmt.Println("=== end C ===")

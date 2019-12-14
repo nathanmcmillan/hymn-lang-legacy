@@ -53,13 +53,8 @@ func (me *cfile) defineEnum(enum *enum) {
 }
 
 func (me *cfile) defineClass(class *class) {
-	if len(class.generics) > 0 {
+	if class.doNotDefine() {
 		return
-	}
-	for k, v := range class.gmapper {
-		if k == v {
-			return
-		}
 	}
 	hmName := me.hmfile.classNameSpace(class.cname)
 	me.headStructTypeDefSection.WriteString("typedef struct " + hmName + " " + hmName + ";\n")
@@ -71,4 +66,16 @@ func (me *cfile) defineClass(class *class) {
 	}
 	code.WriteString("};\n\n")
 	me.headStructSection.WriteString(code.String())
+}
+
+func (me *class) doNotDefine() bool {
+	if len(me.generics) > 0 {
+		return true
+	}
+	for k, v := range me.gmapper {
+		if k == v {
+			return true
+		}
+	}
+	return false
 }

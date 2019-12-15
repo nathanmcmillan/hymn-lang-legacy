@@ -87,18 +87,18 @@ func main() {
 	}
 }
 
-func execCompile(flags *flags, out, path, libDir string) string {
-
+func execCompile(flags *flags, out, path, libs string) string {
 	program := programInit()
 	program.out = out
-	program.libDir = libDir
+	program.libs = libs
 	program.directory = fileDir(path)
 
 	hmlib := &hmlib{}
 	hmlib.libs()
 	program.hmlib = hmlib
 
-	program.compile(out, path, libDir)
+	program.parse(out, path, libs)
+	program.compile()
 
 	name := fileName(path)
 	fileOut := out + "/" + name
@@ -109,15 +109,23 @@ func execCompile(flags *flags, out, path, libDir string) string {
 	return app(flags, out, name)
 }
 
-func (me *program) compile(out, path, libDir string) {
+func (me *program) parse(out, path, libs string) {
 	name := fileName(path)
 	hymn := me.hymnFileInit(name)
+	hymn.out = out
+	hymn.path = path
+	hymn.libs = libs
 	me.hmfiles[name] = hymn
 	me.hmorder = append(me.hmorder, hymn)
 	hymn.parse(out, path)
-	os.MkdirAll(out, os.ModePerm)
-	source := hymn.generateC(out, name, libDir)
-	me.sources[name] = source
+}
+
+func (me *program) compile() {
+	for _, module := range me.hmorder {
+		os.MkdirAll(module.out, os.ModePerm)
+		source := module.generateC(module.out, module.path, module.libs)
+		me.sources[module.name] = source
+	}
 }
 
 func gcc(flags *flags, sources map[string]string, fileOut string) {

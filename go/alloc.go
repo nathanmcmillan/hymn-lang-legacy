@@ -133,6 +133,7 @@ func (me *parser) defaultValue(in *varData) *node {
 func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	for i, param := range params {
 		if param == nil {
+			fmt.Println("pushClassParams ::", base, "|", i)
 			clsvar := base.variables[base.variableOrder[i]]
 			d := me.defaultValue(clsvar.data())
 			n.push(d)
@@ -271,10 +272,10 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			panic(me.fail() + f)
 		}
 		lazy := typed + "<" + strings.Join(glist, ",") + ">"
-		if _, ok := me.hmfile.classes[lazy]; !ok {
+		if _, ok := module.classes[lazy]; !ok {
 			me.defineClassImplGeneric(base, lazy, glist)
 		}
-		base = me.hmfile.classes[lazy]
+		base = module.classes[lazy]
 		typed = lazy
 	}
 	me.pushClassParams(n, base, params)

@@ -49,12 +49,3 @@ main
 	if m.get(0) is some : echo("bad")
 	echo("size: " + to_str(m.size))
 	echo("---")
-
-(* import "hashtable" hashtable *)
-(* import "hashtable" * *)
-
-(* m = hashtable(
-	capacity: 12
-	get_code: int_hashcode
-	table: [12:]maybe<hashtable_item<int,string>>) *)
-	

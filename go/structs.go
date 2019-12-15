@@ -17,7 +17,7 @@ type hasGenerics interface {
 type program struct {
 	out       string
 	directory string
-	libDir    string
+	libs      string
 	hmlib     *hmlib
 	hmfiles   map[string]*hmfile
 	hmorder   []*hmfile

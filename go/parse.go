@@ -63,7 +63,10 @@ func (me *hmfile) parse(out, path string) {
 	}
 
 	stream := newStream(data)
-	parsing := parser{}
+
+	parsing := &parser{}
+	me.parser = parsing
+
 	parsing.hmfile = me
 	parsing.line = 1
 	parsing.tokens = tokenize(stream, tokenFile)

@@ -68,7 +68,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	}
 
 	for _, fn := range base.functionOrder {
-		me.remapClassFunctionImpl(classDef, fn)
+		remapClassFunctionImpl(classDef, fn)
 	}
 }
 

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type function struct {
 	name          string
 	start         *parsepoint
@@ -100,17 +102,20 @@ func (me *parser) remapFunctionImpl(funcName string, alias map[string]string, or
 	return fn
 }
 
-func (me *parser) remapClassFunctionImpl(class *class, original *function) {
+func remapClassFunctionImpl(class *class, original *function) {
+	fmt.Println("remapClassFunctionImpl ::", original.name, "|", class.name)
+	module := class.module
+	parsing := module.parser
 	funcName := original.name
-	pos := me.save()
-	me.jump(original.start)
-	fn := me.defineFunction(funcName, nil, nil, class)
-	me.jump(pos)
+	pos := parsing.save()
+	parsing.jump(original.start)
+	fn := parsing.defineFunction(funcName, nil, nil, class)
+	parsing.jump(pos)
 	fn.start = original.start
 	fn.forClass = class
 	class.functions[fn.name] = fn
 	class.functionOrder = append(class.functionOrder, fn)
-	me.pushFunction(fn.nameOfClassFunc(), me.hmfile, fn)
+	parsing.pushFunction(fn.nameOfClassFunc(), module, fn)
 }
 
 func (me *parser) defineClassFunction() {
@@ -133,7 +138,7 @@ func (me *parser) defineClassFunction() {
 	class.functionOrder = append(class.functionOrder, fn)
 	me.pushFunction(globalFuncName, module, fn)
 	for _, impl := range class.impls {
-		me.remapClassFunctionImpl(impl, fn)
+		remapClassFunctionImpl(impl, fn)
 	}
 }
 
@@ -150,21 +155,27 @@ func (me *parser) defineStaticFunction() {
 }
 
 func (me *parser) defineFunction(name string, alias map[string]string, base *function, self *class) *function {
-	fn := funcInit(me.hmfile, name)
-	me.hmfile.pushScope()
-	me.hmfile.scope.fn = fn
-	fname := name
-	if self != nil {
-		ref := me.hmfile.fnArgInit(self.name, "self", false)
-		fn.argDict["self"] = 0
-		fn.args = append(fn.args, ref)
-		fn.aliasing = self.gmapper
-		fname = self.name + "." + name
+	module := me.hmfile
+	if base != nil {
+		module = base.module
+	} else if self != nil {
+		module = self.module
 	}
+	fmt.Println("defineFunction ::", name, "|", alias, "|", me.hmfile.name, "|", module.name)
+	fn := funcInit(module, name)
+	module.pushScope()
+	module.scope.fn = fn
+	fname := name
 	if base != nil {
 		fn.base = base
 		base.impls = append(base.impls, fn)
 		fn.aliasing = alias
+	} else if self != nil {
+		ref := module.fnArgInit(self.name, "self", false)
+		fn.argDict["self"] = 0
+		fn.args = append(fn.args, ref)
+		fn.aliasing = self.gmapper
+		fname = self.name + "." + name
 	}
 	if me.token.is == "<" {
 		if self != nil {
@@ -206,9 +217,9 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 				typed := me.declareType(true)
 				fn.argDict[argname] = len(fn.args)
 				fnArg := &funcArg{}
-				fnArg.variable = me.hmfile.varInitFromData(typed, argname, false)
+				fnArg.variable = module.varInitFromData(typed, argname, false)
 				if defaultValue != "" {
-					defaultTypeVarData := typeToVarData(me.hmfile, defaultType)
+					defaultTypeVarData := typeToVarData(module, defaultType)
 					if typed.notEqual(defaultTypeVarData) {
 						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.full + "\" do not match")
 					}
@@ -237,11 +248,11 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		}
 		fn.returns = me.declareType(true)
 	} else {
-		fn.returns = typeToVarData(me.hmfile, "void")
+		fn.returns = typeToVarData(module, "void")
 	}
 	me.eat("line")
 	for _, arg := range fn.args {
-		me.hmfile.scope.variables[arg.name] = arg.variable
+		module.scope.variables[arg.name] = arg.variable
 	}
 	for {
 		for me.token.is == "line" {
@@ -273,6 +284,6 @@ fnEnd:
 
 		}
 	}
-	me.hmfile.popScope()
+	module.popScope()
 	return fn
 }

@@ -3,6 +3,10 @@ package main
 import "strings"
 
 type hmfile struct {
+	out             string
+	path            string
+	libs            string
+	parser          *parser
 	program         *program
 	hmlib           *hmlib
 	name            string

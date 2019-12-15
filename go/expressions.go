@@ -354,7 +354,7 @@ func (me *parser) importing() {
 		module.importOrder = append(module.importOrder, name)
 		out := module.program.out + "/" + name
 		path := module.program.directory + "/" + name + ".hm"
-		module.program.compile(out, path, module.program.libDir)
+		module.program.parse(out, path, module.program.libs)
 		fmt.Println("=== continuing " + module.name + " === ")
 	}
 	if me.token.is == "id" {

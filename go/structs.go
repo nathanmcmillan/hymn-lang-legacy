@@ -26,7 +26,6 @@ type program struct {
 
 type cfile struct {
 	hmfile                   *hmfile
-	headPrefix               strings.Builder
 	headIncludeSection       strings.Builder
 	headEnumTypeDefSection   strings.Builder
 	headEnumSection          strings.Builder
@@ -189,8 +188,8 @@ func isInteger(t string) bool {
 
 func (me *cfile) head() string {
 	var head strings.Builder
-	head.WriteString(me.headPrefix.String())
 	head.WriteString(me.headIncludeSection.String())
+	head.WriteString("\n")
 	head.WriteString(me.headEnumSection.String())
 	if me.headEnumTypeDefSection.Len() != 0 {
 		head.WriteString(me.headEnumTypeDefSection.String())

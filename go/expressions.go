@@ -352,9 +352,9 @@ func (me *parser) importing() {
 	if !ok {
 		module.imports[name] = true
 		module.importOrder = append(module.importOrder, name)
+		out := module.program.out + "/" + name
 		path := module.program.directory + "/" + name + ".hm"
-		module.program.compile(module.program.out, path, module.program.libDir)
-		fmt.Println("finished compiling " + name)
+		module.program.compile(out, path, module.program.libDir)
 		fmt.Println("=== continuing " + module.name + " === ")
 	}
 	if me.token.is == "id" {

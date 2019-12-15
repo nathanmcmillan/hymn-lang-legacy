@@ -13,13 +13,17 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 
 	cfile := initC(me, folder, "", name, hmlibs)
 
-	for _, iname := range me.importOrder {
-		cfile.headIncludeSection.WriteString("#include \"" + iname + ".h\"\n")
+	if len(me.importOrder) > 0 {
+		cfile.headIncludeSection.WriteString("\n")
+		for _, iname := range me.importOrder {
+			cfile.headIncludeSection.WriteString("\n#include \"" + iname + ".h\"")
+		}
 	}
 
 	root, _ := filepath.Abs(folder)
 	filters := make(map[string]string)
 
+	havefilters := false
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
 		name := c[0:underscore]
@@ -30,18 +34,20 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 					continue
 				}
 			}
+			if !havefilters {
+				havefilters = true
+				cfile.headIncludeSection.WriteString("\n")
+			}
 			fname := flatten(name)
 			fname = strings.ReplaceAll(fname, "_", "-")
 			filters[name] = fname
 			subfolder := name[0:strings.Index(name, "<")]
-			cfile.headIncludeSection.WriteString("#include \"" + subfolder + "/" + fname + ".h\"\n")
+			cfile.headIncludeSection.WriteString("\n#include \"" + subfolder + "/" + fname + ".h\"")
 		}
 	}
 
-	cfile.headIncludeSection.WriteString("\n")
-
 	var code strings.Builder
-	code.WriteString("#include \"" + name + ".h\"\n\n")
+	code.WriteString("#include \"" + name + ".h\"\n")
 
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
@@ -65,15 +71,14 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		for _, s := range me.statics {
 			code.WriteString(cfile.declareStatic(s))
 		}
-		cfile.headExternSection.WriteString("\n")
 		code.WriteString("\n")
 
-		cfile.headFuncSection.WriteString("void " + me.funcNameSpace("init") + "();\n")
+		cfile.headFuncSection.WriteString("\nvoid " + me.funcNameSpace("init") + "();")
 		code.WriteString("void " + me.funcNameSpace("init") + "() {\n")
 		for _, s := range me.statics {
 			code.WriteString(cfile.initStatic(s))
 		}
-		code.WriteString("}\n\n")
+		code.WriteString("}\n")
 	}
 
 	for _, f := range me.functionOrder {
@@ -101,7 +106,7 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		fileappend(fileCode, cfn.String())
 	}
 
-	cfile.headSuffix.WriteString("\n#endif\n")
+	cfile.headSuffix.WriteString("\n\n#endif\n")
 	write(folder+"/"+name+".h", cfile.head())
 
 	return fileCode

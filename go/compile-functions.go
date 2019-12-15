@@ -55,6 +55,7 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	}
 	me.popScope()
 	var code strings.Builder
+	code.WriteString("\n")
 	code.WriteString(fmtassignspace(fn.returns.typeSig()) + me.hmfile.funcNameSpace(name) + "(")
 	for ix, arg := range args {
 		if ix > 0 {
@@ -62,10 +63,10 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 		}
 		code.WriteString(arg.data().typeSigOf(arg.name, false))
 	}
-	head := code.String() + ");\n"
+	head := code.String() + ");"
 	code.WriteString(") {\n")
 	code.WriteString(block.String())
-	code.WriteString("}\n\n")
+	code.WriteString("}\n")
 
 	me.headFuncSection.WriteString(head)
 	me.codeFn = append(me.codeFn, code)
@@ -103,10 +104,10 @@ func (me *cfile) compileMain(fn *function) {
 	}
 	me.popScope()
 	var code strings.Builder
-	code.WriteString("int main() {\n")
+	code.WriteString("\nint main() {\n")
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 
-	me.headFuncSection.WriteString("int main();\n")
+	me.headFuncSection.WriteString("\nint main();")
 	me.codeFn = append(me.codeFn, code)
 }

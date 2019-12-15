@@ -55,13 +55,14 @@ func (me *cfile) declareStatic(n *node) string {
 	rightCode := me.eval(right)
 	setSign := me.maybeLet(rightCode.code(), right.attributes)
 
-	head := "extern " + declareCode
+	head := "\nextern " + declareCode
 	if setSign == "" {
 		head += rightCode.code()
 	}
 	head += ";\n"
 	me.headExternSection.WriteString(head)
 
+	declareCode = "\n" + declareCode
 	if setSign == "" {
 		return declareCode + setSign + rightCode.code() + ";\n"
 	}

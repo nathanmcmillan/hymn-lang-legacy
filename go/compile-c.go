@@ -10,33 +10,36 @@ func initC(module *hmfile, folder, root, name, hmlibs string) *cfile {
 	cfile := module.cFileInit()
 	guard := module.defNameSpace(root, name)
 
-	cfile.headPrefix.WriteString("#ifndef " + guard + "\n")
-	cfile.headPrefix.WriteString("#define " + guard + "\n\n")
+	cfile.headIncludeSection.WriteString("#ifndef " + guard + "\n")
+	cfile.headIncludeSection.WriteString("#define " + guard + "\n")
 
-	cfile.headIncludeSection.WriteString("#include <stdio.h>\n")
-	cfile.headIncludeSection.WriteString("#include <stdlib.h>\n")
-	cfile.headIncludeSection.WriteString("#include <stdint.h>\n")
-	cfile.headIncludeSection.WriteString("#include <inttypes.h>\n")
-	cfile.headIncludeSection.WriteString("#include <stdbool.h>\n")
-	cfile.headIncludeSection.WriteString("\n")
+	cfile.headIncludeSection.WriteString("\n#include <stdio.h>")
+	cfile.headIncludeSection.WriteString("\n#include <stdlib.h>")
+	cfile.headIncludeSection.WriteString("\n#include <stdint.h>")
+	cfile.headIncludeSection.WriteString("\n#include <inttypes.h>")
+	cfile.headIncludeSection.WriteString("\n#include <stdbool.h>")
 
+	requirelibs := false
 	hmlibls := scan(hmlibs)
 	for _, f := range hmlibls {
 		name := f.Name()
 		if strings.HasSuffix(name, ".c") {
 			cfile.hmfile.program.sources[name] = hmlibs + "/" + name
 		} else if strings.HasSuffix(name, ".h") {
-			cfile.headIncludeSection.WriteString("#include \"" + hmlibs + "/" + name + "\"\n")
+			if !requirelibs {
+				requirelibs = true
+				cfile.headIncludeSection.WriteString("\n")
+			}
+			cfile.headIncludeSection.WriteString("\n#include \"" + hmlibs + "/" + name + "\"")
 		}
 	}
-	cfile.headIncludeSection.WriteString("\n")
 
 	return cfile
 }
 
 func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter string, filters map[string]string) string {
 	if debug {
-		fmt.Println("=== generate C " + subfolder + "/" + name + " ===")
+		fmt.Println("=== " + subfolder + "/" + name + " ===")
 	}
 
 	folder = folder + "/" + subfolder
@@ -52,7 +55,7 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 			continue
 		}
 		subfolder := f[0:strings.Index(f, "<")]
-		cfile.headIncludeSection.WriteString("#include \"" + root + "/" + subfolder + "/" + fname + ".h\"\n")
+		cfile.headIncludeSection.WriteString("\n#include \"" + root + "/" + subfolder + "/" + fname + ".h\"")
 		fx++
 	}
 	if fx > 0 {
@@ -60,19 +63,22 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 	}
 
 	var code strings.Builder
-	code.WriteString("#include \"" + name + ".h\"\n\n")
+	code.WriteString("#include \"" + name + ".h\"\n")
 
 	for _, c := range module.defineOrder {
 		underscore := strings.LastIndex(c, "_")
 		name := c[0:underscore]
-		if !strings.HasPrefix(name, filter) {
-			continue
-		}
 		typed := c[underscore+1:]
-		if typed == "type" {
-			cfile.defineClass(module.classes[name])
-		} else if typed == "enum" {
-			cfile.defineEnum(module.enums[name])
+		if !strings.HasPrefix(name, filter) {
+			if typed == "type" {
+				cfile.typedefClass(module.classes[name])
+			}
+		} else {
+			if typed == "type" {
+				cfile.defineClass(module.classes[name])
+			} else if typed == "enum" {
+				cfile.defineEnum(module.enums[name])
+			}
 		}
 	}
 
@@ -80,7 +86,6 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 		for _, s := range module.statics {
 			cfile.declareStatic(s)
 		}
-		cfile.headExternSection.WriteString("\n")
 	}
 
 	for _, f := range module.functionOrder {
@@ -89,8 +94,6 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 		}
 		cfile.compileFunction(f, module.functions[f], true)
 	}
-
-	fmt.Println("=== end C ===")
 
 	fileCode := folder + "/" + name + ".c"
 
@@ -105,7 +108,7 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 		cfile.headSuffix.WriteString("\n")
 	}
 
-	cfile.headSuffix.WriteString("#endif\n")
+	cfile.headSuffix.WriteString("\n#endif\n")
 	write(folder+"/"+name+".h", cfile.head())
 
 	return fileCode

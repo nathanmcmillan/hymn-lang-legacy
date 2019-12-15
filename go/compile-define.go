@@ -11,7 +11,7 @@ func (me *cfile) defineEnum(enum *enum) {
 	hmBaseEnumName := enum.module.enumNameSpace(enum.baseEnum().name)
 
 	if !impl {
-		code := "enum " + hmBaseEnumName + " {\n"
+		code := "\nenum " + hmBaseEnumName + " {\n"
 		for ix, enumUnion := range enum.typesOrder {
 			if ix == 0 {
 				code += fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
@@ -19,9 +19,9 @@ func (me *cfile) defineEnum(enum *enum) {
 				code += ",\n" + fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
 			}
 		}
-		code += "\n};\n\n"
+		code += "\n};\n"
 		me.headEnumSection.WriteString(code)
-		me.headEnumTypeDefSection.WriteString("typedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";\n")
+		me.headEnumTypeDefSection.WriteString("\ntypedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";")
 	}
 
 	if enum.simple || len(enum.generics) > 0 {
@@ -30,8 +30,8 @@ func (me *cfile) defineEnum(enum *enum) {
 
 	code := ""
 	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
-	me.headStructTypeDefSection.WriteString("typedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";\n")
-	code += "struct " + hmBaseUnionName + " {\n"
+	me.headStructTypeDefSection.WriteString("\ntypedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";")
+	code += "\nstruct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
 	for _, enumUnion := range enum.typesOrder {
@@ -48,23 +48,28 @@ func (me *cfile) defineEnum(enum *enum) {
 		}
 	}
 	code += fmc(1) + "};\n"
-	code += "};\n\n"
+	code += "};\n"
 	me.headStructSection.WriteString(code)
 }
 
-func (me *cfile) defineClass(class *class) {
-	if class.doNotDefine() {
+func (me *cfile) typedefClass(c *class) string {
+	hmName := me.hmfile.classNameSpace(c.cname)
+	me.headStructTypeDefSection.WriteString("\ntypedef struct " + hmName + " " + hmName + ";")
+	return hmName
+}
+
+func (me *cfile) defineClass(c *class) {
+	if c.doNotDefine() {
 		return
 	}
-	hmName := me.hmfile.classNameSpace(class.cname)
-	me.headStructTypeDefSection.WriteString("typedef struct " + hmName + " " + hmName + ";\n")
+	hmName := me.typedefClass(c)
 	var code strings.Builder
-	code.WriteString("struct " + hmName + " {\n")
-	for _, name := range class.variableOrder {
-		field := class.variables[name]
+	code.WriteString("\nstruct " + hmName + " {\n")
+	for _, name := range c.variableOrder {
+		field := c.variables[name]
 		code.WriteString(fmc(1) + field.data().typeSigOf(field.name, true) + ";\n")
 	}
-	code.WriteString("};\n\n")
+	code.WriteString("};\n")
 	me.headStructSection.WriteString(code.String())
 }
 

@@ -17,20 +17,22 @@ var (
 	debug       = true
 	debugTokens = false
 	debugTree   = false
-
-	ccFlag              string
-	pathFlag            string
-	hmlibFlag           string
-	writeToFlag         string
-	helpFlag            bool
-	formatFlag          bool
-	libraryFlag         bool
-	analysisFlag        bool
-	memoryCheckFlag     bool
-	sanitizeAddressFlag bool
-	infoFlag            bool
-	optimizeFlag        bool
 )
+
+type flags struct {
+	cc              string
+	path            string
+	hmlib           string
+	writeTo         string
+	help            bool
+	format          bool
+	library         bool
+	analysis        bool
+	memoryCheck     bool
+	sanitizeAddress bool
+	info            bool
+	optimize        bool
+}
 
 const (
 	spaceChar = '\t'
@@ -58,34 +60,34 @@ func helpExit() {
 
 func main() {
 
-	flag.StringVar(&ccFlag, "c", "gcc", "specify what compiler to use")
-	flag.StringVar(&pathFlag, "p", "", "path to main hymn file")
-	flag.StringVar(&hmlibFlag, "d", "", "directory path of hmlib files")
-	flag.StringVar(&writeToFlag, "w", "out", "write generated files to this directory")
-	flag.BoolVar(&helpFlag, "h", false, "show usage")
-	flag.BoolVar(&formatFlag, "f", false, "format the given code")
-	flag.BoolVar(&analysisFlag, "a", false, "run static analysis on the generated binary")
-	flag.BoolVar(&sanitizeAddressFlag, "s", false, "includes memory analysis in the binary (sends -fsanitize=address to the compiler)")
-	flag.BoolVar(&memoryCheckFlag, "m", false, "run dynamic memory analysis on the generated binary")
-	flag.BoolVar(&libraryFlag, "l", false, "generate code for use as a library")
-	flag.BoolVar(&infoFlag, "i", false, "includes additional information in the binary (sends -g flag to the compiler)")
-	flag.BoolVar(&optimizeFlag, "o", false, "optimizes the binary (sends -O2 flag to the compiler)")
+	flags := &flags{}
+
+	flag.StringVar(&flags.cc, "c", "gcc", "specify what compiler to use")
+	flag.StringVar(&flags.path, "p", "", "path to main hymn file")
+	flag.StringVar(&flags.hmlib, "d", "", "directory path of hmlib files")
+	flag.StringVar(&flags.writeTo, "w", "out", "write generated files to this directory")
+	flag.BoolVar(&flags.help, "h", false, "show usage")
+	flag.BoolVar(&flags.format, "f", false, "format the given code")
+	flag.BoolVar(&flags.analysis, "a", false, "run static analysis on the generated binary")
+	flag.BoolVar(&flags.sanitizeAddress, "s", false, "includes memory analysis in the binary (sends -fsanitize=address to the compiler)")
+	flag.BoolVar(&flags.memoryCheck, "m", false, "run dynamic memory analysis on the generated binary")
+	flag.BoolVar(&flags.library, "l", false, "generate code for use as a library")
+	flag.BoolVar(&flags.info, "i", false, "includes additional information in the binary (sends -g flag to the compiler)")
+	flag.BoolVar(&flags.optimize, "o", false, "optimizes the binary (sends -O2 flag to the compiler)")
 	flag.Parse()
 
-	if helpFlag || pathFlag == "" || hmlibFlag == "" {
+	if flags.help || flags.path == "" || flags.hmlib == "" {
 		helpExit()
 	}
 
-	if formatFlag {
-		execFormat(pathFlag)
+	if flags.format {
+		execFormat(flags.path)
 	} else {
-		execCompile(writeToFlag, pathFlag, hmlibFlag)
+		execCompile(flags, flags.writeTo, flags.path, flags.hmlib)
 	}
 }
 
-func execCompile(out, path, libDir string) string {
-
-	os.MkdirAll(out, os.ModePerm)
+func execCompile(flags *flags, out, path, libDir string) string {
 
 	program := programInit()
 	program.out = out
@@ -103,8 +105,8 @@ func execCompile(out, path, libDir string) string {
 	if exists(fileOut) {
 		os.Remove(fileOut)
 	}
-	gcc(program.sources, fileOut)
-	return app(out, name)
+	gcc(flags, program.sources, fileOut)
+	return app(flags, out, name)
 }
 
 func (me *program) compile(out, path, libDir string) {
@@ -113,28 +115,29 @@ func (me *program) compile(out, path, libDir string) {
 	me.hmfiles[name] = hymn
 	me.hmorder = append(me.hmorder, hymn)
 	hymn.parse(out, path)
+	os.MkdirAll(out, os.ModePerm)
 	source := hymn.generateC(out, name, libDir)
 	me.sources[name] = source
 }
 
-func gcc(sources map[string]string, fileOut string) {
-	command := ccFlag
+func gcc(flags *flags, sources map[string]string, fileOut string) {
+	command := flags.cc
 	fmt.Println("=== " + command + " ===")
 	paramGcc := make([]string, 0)
-	if analysisFlag {
+	if flags.analysis {
 		paramGcc = append(paramGcc, "-v")
 		paramGcc = append(paramGcc, "-o")
-		paramGcc = append(paramGcc, writeToFlag)
+		paramGcc = append(paramGcc, flags.writeTo)
 		paramGcc = append(paramGcc, command)
 		command = "scan-build"
 	}
-	if infoFlag {
+	if flags.info {
 		paramGcc = append(paramGcc, "-g")
 	}
-	if sanitizeAddressFlag {
+	if flags.sanitizeAddress {
 		paramGcc = append(paramGcc, "-fsanitize=address")
 	}
-	if optimizeFlag {
+	if flags.optimize {
 		paramGcc = append(paramGcc, "-O2")
 	}
 	paramGcc = append(paramGcc, "-Wall")
@@ -146,7 +149,7 @@ func gcc(sources map[string]string, fileOut string) {
 		paramGcc = append(paramGcc, src)
 	}
 	paramGcc = append(paramGcc, "-o")
-	if libraryFlag {
+	if flags.library {
 		fileOut += ".o"
 		paramGcc = append(paramGcc, fileOut)
 		paramGcc = append(paramGcc, "-c")
@@ -165,7 +168,7 @@ func gcc(sources map[string]string, fileOut string) {
 	}
 }
 
-func app(folder, name string) string {
+func app(flags *flags, folder, name string) string {
 	path := folder + "/" + name
 	if exists(path) {
 		fmt.Println("=== run ===")
@@ -174,7 +177,7 @@ func app(folder, name string) string {
 		os.Chdir(folder)
 		bwd, _ := os.Getwd()
 		binary := bwd + "/" + name
-		if memoryCheckFlag {
+		if flags.memoryCheck {
 			stdout, _ = exec.Command("valgrind", "--track-origins=yes", binary).CombinedOutput()
 		} else {
 			stdout, _ = exec.Command(binary).CombinedOutput()

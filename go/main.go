@@ -123,7 +123,7 @@ func (me *program) parse(out, path, libs string) {
 func (me *program) compile() {
 	for _, module := range me.hmorder {
 		os.MkdirAll(module.out, os.ModePerm)
-		source := module.generateC(module.out, module.path, module.libs)
+		source := module.generateC(module.out, fileName(module.path), module.libs)
 		me.sources[module.name] = source
 	}
 }

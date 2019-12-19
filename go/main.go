@@ -105,8 +105,9 @@ func execCompile(flags *flags, out, path, libs string) string {
 	if exists(fileOut) {
 		os.Remove(fileOut)
 	}
-	gcc(flags, program.sources, fileOut)
-	return app(flags, out, name)
+	return ""
+	// gcc(flags, program.sources, fileOut)
+	// return app(flags, out, name)
 }
 
 func (me *program) parse(out, path, libs string) {

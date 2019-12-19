@@ -133,7 +133,6 @@ func (me *parser) defaultValue(in *varData) *node {
 func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	for i, param := range params {
 		if param == nil {
-			fmt.Println("pushClassParams ::", base, "|", i)
 			clsvar := base.variables[base.variableOrder[i]]
 			d := me.defaultValue(clsvar.data())
 			n.push(d)

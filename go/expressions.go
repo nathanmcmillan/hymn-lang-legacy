@@ -302,16 +302,12 @@ func (me *parser) extern() *node {
 	module := me.hmfile.program.hmfiles[extname]
 
 	if _, ok := module.functions[idname]; ok {
-		fmt.Println("extern call")
 		return me.parseFn(module)
 	} else if _, ok := module.classes[idname]; ok {
-		fmt.Println("extern class", extname, idname)
 		return me.allocClass(module, nil)
 	} else if _, ok := module.enums[idname]; ok {
-		fmt.Println("extern enum")
 		return me.allocEnum(module)
 	} else if module.getStatic(idname) != nil {
-		fmt.Println("extern var")
 		return me.eatvar(module)
 	} else {
 		panic(me.fail() + "external type \"" + extname + "." + idname + "\" does not exist")

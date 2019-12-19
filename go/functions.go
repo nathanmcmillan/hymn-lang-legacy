@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type function struct {
 	name          string
 	start         *parsepoint
@@ -103,7 +101,6 @@ func (me *parser) remapFunctionImpl(funcName string, alias map[string]string, or
 }
 
 func remapClassFunctionImpl(class *class, original *function) {
-	fmt.Println("remapClassFunctionImpl ::", original.name, "|", class.name)
 	module := class.module
 	parsing := module.parser
 	funcName := original.name
@@ -161,7 +158,6 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 	} else if self != nil {
 		module = self.module
 	}
-	fmt.Println("defineFunction ::", name, "|", alias, "|", me.hmfile.name, "|", module.name)
 	fn := funcInit(module, name)
 	module.pushScope()
 	module.scope.fn = fn

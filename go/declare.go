@@ -162,11 +162,10 @@ func (me *parser) declareType(implementation bool) *varData {
 
 	if _, ok := me.hmfile.imports[typed]; ok {
 		module = me.hmfile.program.hmfiles[typed]
-		fmt.Println("declareType 1 :: module ::", module.name)
+		fmt.Println("declare 1 :: module ::", module.name)
 		me.eat(".")
 		typed += "."
 		typed += me.token.value
-		// typed = me.token.value
 		me.eat("id")
 	}
 
@@ -183,12 +182,17 @@ func (me *parser) declareType(implementation bool) *varData {
 
 	if me.token.is == "<" {
 		data := typeToVarData(me.hmfile, typed)
+		fmt.Println("declare 2 ::", typed, "|", me.hmfile.name, "|", data.module.name, "--->", data.full)
 		if base, ok := data.module.classes[data.typed]; ok {
 			gtypes := me.declareGeneric(implementation, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if implementation {
 				if _, ok := data.module.classes[typed]; !ok {
-					fmt.Println("declareType 2 ::", base.name, "|", typed, "|", gtypes)
+					// TODO
+					// all imports need to be translated to a fully qualified path
+					// import "hashtabe" --> /home/user/lib/hashtable
+					// import "hashtabe" all --> /home/user/lib/hashtable
+					fmt.Println("declare 3 ::", base.name, "|", typed, "|", gtypes)
 					me.defineClassImplGeneric(base, typed, gtypes)
 				}
 			}

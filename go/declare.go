@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -43,8 +42,6 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	}
 
 	module := base.module
-
-	fmt.Println("defineClassImplGeneric ::", me.hmfile.name, "|", base.module.name)
 
 	module.namespace[impl] = "type"
 	module.types[impl] = ""
@@ -142,9 +139,9 @@ func (me *parser) declareType(implementation bool) *varData {
 	} else if me.token.is == "maybe" {
 		me.eat("maybe")
 		me.eat("<")
-		option := me.declareType(implementation).full
+		option := me.declareType(implementation)
 		me.eat(">")
-		typed += "maybe<" + option + ">"
+		typed += "maybe<" + option.full + ">"
 
 	} else if me.token.is == "none" {
 		me.eat("none")
@@ -161,8 +158,7 @@ func (me *parser) declareType(implementation bool) *varData {
 	}
 
 	if _, ok := me.hmfile.imports[typed]; ok {
-		module = me.hmfile.program.hmfiles[typed]
-		fmt.Println("declare 1 :: module ::", module.name)
+		// module = me.hmfile.imports[typed]
 		me.eat(".")
 		typed += "."
 		typed += me.token.value
@@ -182,17 +178,12 @@ func (me *parser) declareType(implementation bool) *varData {
 
 	if me.token.is == "<" {
 		data := typeToVarData(me.hmfile, typed)
-		fmt.Println("declare 2 ::", typed, "|", me.hmfile.name, "|", data.module.name, "--->", data.full)
+		typed = data.full
 		if base, ok := data.module.classes[data.typed]; ok {
 			gtypes := me.declareGeneric(implementation, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if implementation {
 				if _, ok := data.module.classes[typed]; !ok {
-					// TODO
-					// all imports need to be translated to a fully qualified path
-					// import "hashtabe" --> /home/user/lib/hashtable
-					// import "hashtabe" all --> /home/user/lib/hashtable
-					fmt.Println("declare 3 ::", base.name, "|", typed, "|", gtypes)
 					me.defineClassImplGeneric(base, typed, gtypes)
 				}
 			}
@@ -213,7 +204,7 @@ func (me *parser) declareType(implementation bool) *varData {
 		typed = "[" + size + "]" + typed
 	}
 
-	return typeToVarData(me.hmfile, typed)
+	return typeToVarData(module, typed)
 }
 
 func sizeOfArray(typed string) string {

@@ -15,8 +15,8 @@ func TestCompile(t *testing.T) {
 	flags.cc = "gcc"
 	pwd, _ := os.Getwd()
 	fmt.Println("$PWD", pwd)
-	libDir := path.Clean(path.Join(pwd, "..", "lib"))
-	fmt.Println("$LIB", libDir)
+	flags.hmlib = path.Clean(path.Join(pwd, "..", "lib"))
+	fmt.Println("$LIB", flags.hmlib)
 	folder := "autotest"
 	tests := folder + "/code"
 	source := scan(tests)
@@ -28,9 +28,9 @@ func TestCompile(t *testing.T) {
 			continue
 		}
 		fmt.Println("====================================================================== test", info.Name())
-		path := tests + "/" + info.Name()
-		out := folder + "/out/" + nameNum
-		stdout := execCompile(flags, out, path, libDir)
+		flags.path = tests + "/" + info.Name()
+		flags.writeTo = folder + "/out/" + nameNum
+		stdout := execCompile(flags)
 		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {
 			t.Errorf("assert failed for " + info.Name())

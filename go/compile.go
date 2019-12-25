@@ -16,7 +16,9 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	if len(me.importOrder) > 0 {
 		cfile.headIncludeSection.WriteString("\n")
 		for _, iname := range me.importOrder {
-			cfile.headIncludeSection.WriteString("\n#include \"" + iname + ".h\"")
+			imp := me.imports[iname]
+			path := imp.name + "/" + imp.name
+			cfile.headIncludeSection.WriteString("\n#include \"" + path + ".h\"")
 		}
 	}
 

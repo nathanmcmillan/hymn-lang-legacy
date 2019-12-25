@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -111,13 +112,22 @@ func typeToVarData(module *hmfile, typed string) *varData {
 	}
 
 	data := &varData{}
+	data.dtype = getdatatype(module, typed)
+	data.module = module
 	data.full = typed
 	data.typed = typed
 	data.mutable = true
 	data.isptr = true
 	data.heap = true
-	data.module = module
-	data.dtype = getdatatype(module, typed)
+
+	dot := strings.Split(typed, ".")
+	if len(dot) != 1 {
+		fmt.Println("type to data ::", typed, "||", module.name, "||", module.imports)
+		if newmodule, ok := module.imports[dot[0]]; ok {
+			data.module = newmodule
+			typed = strings.Join(dot[1:], ".")
+		}
+	}
 
 	if checkIsPrimitive(typed) {
 		if typed == TokenString {
@@ -173,20 +183,9 @@ func typeToVarData(module *hmfile, typed string) *varData {
 
 	data.typed = typed
 
-	dot := strings.Split(typed, ".")
+	dot = strings.Split(typed, ".")
 	if len(dot) != 1 {
-		if module2, ok := module.program.hmfiles[dot[0]]; ok {
-			data.module = module2
-			if len(dot) > 2 {
-				if _, ok := module2.enums[dot[1]]; ok {
-					data.typed = dot[1] + "." + dot[2]
-				} else {
-					panic("unknown type \"" + typed + "\"")
-				}
-			} else {
-				data.typed = dot[1]
-			}
-		} else if _, ok := module.enums[dot[0]]; ok {
+		if _, ok := module.enums[dot[0]]; ok {
 			data.typed = dot[0] + "." + dot[1]
 		} else {
 			panic("unknown type \"" + typed + "\"")
@@ -377,9 +376,11 @@ func (me *varData) typeSig() string {
 		return cname
 	}
 	if me.checkIsArrayOrSlice() {
+		fmt.Println("member type slice sig ::", me.memberType.module.name, "/", me.memberType.full)
 		return fmtptr(me.memberType.typeSig())
 	}
 	if me.checkIsSomeOrNone() {
+		fmt.Println("member type some sig ::", me.memberType.module.name, "/", me.memberType.full)
 		return me.memberType.typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {

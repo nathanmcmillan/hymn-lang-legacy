@@ -42,7 +42,6 @@ func (me *cfile) compileDeclare(n *node) string {
 	} else {
 		code += v.cName
 	}
-
 	return code
 }
 

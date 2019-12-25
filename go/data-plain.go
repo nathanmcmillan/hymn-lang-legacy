@@ -151,8 +151,8 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	d := strings.Index(typed, ".")
 	if d != -1 {
 		base := typed[0:d]
-		if _, ok := me.imports[base]; ok {
-			module = me.program.hmfiles[base]
+		if imp, ok := me.imports[base]; ok {
+			module = imp
 			typed = typed[d+1:]
 		}
 	}

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -83,42 +84,43 @@ func main() {
 	if flags.format {
 		execFormat(flags.path)
 	} else {
-		execCompile(flags, flags.writeTo, flags.path, flags.hmlib)
+		execCompile(flags)
 	}
 }
 
-func execCompile(flags *flags, out, path, libs string) string {
+func execCompile(flags *flags) string {
 	program := programInit()
-	program.out = out
-	program.libs = libs
-	program.directory = fileDir(path)
+	program.out = flags.writeTo
+	program.libs = flags.hmlib
+	program.directory = fileDir(flags.path)
 
 	hmlib := &hmlib{}
 	hmlib.libs()
 	program.hmlib = hmlib
 
-	program.parse(out, path, libs)
+	program.parse(flags.writeTo, flags.path, flags.hmlib)
 	program.compile()
 
-	name := fileName(path)
-	fileOut := out + "/" + name
+	name := fileName(flags.path)
+	fileOut := flags.writeTo + "/" + name
 	if exists(fileOut) {
 		os.Remove(fileOut)
 	}
-	return ""
-	// gcc(flags, program.sources, fileOut)
-	// return app(flags, out, name)
+	gcc(flags, program.sources, fileOut)
+	return app(flags, name)
 }
 
-func (me *program) parse(out, path, libs string) {
+func (me *program) parse(out, path, libs string) *hmfile {
+	path, _ = filepath.Abs(path)
 	name := fileName(path)
-	hymn := me.hymnFileInit(name)
-	hymn.out = out
-	hymn.path = path
-	hymn.libs = libs
-	me.hmfiles[name] = hymn
-	me.hmorder = append(me.hmorder, hymn)
-	hymn.parse(out, path)
+	module := me.hymnFileInit(name)
+	module.out = out
+	module.path = path
+	module.libs = libs
+	me.hmfiles[path] = module
+	me.hmorder = append(me.hmorder, module)
+	module.parse(out, path)
+	return module
 }
 
 func (me *program) compile() {
@@ -154,6 +156,10 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	paramGcc = append(paramGcc, "-Werror")
 	paramGcc = append(paramGcc, "-pedantic")
 	paramGcc = append(paramGcc, "-std=c11")
+	hmlibabs, _ := filepath.Abs(flags.hmlib)
+	hmpathabs, _ := filepath.Abs(flags.writeTo)
+	paramGcc = append(paramGcc, "-I"+hmlibabs)
+	paramGcc = append(paramGcc, "-I"+hmpathabs)
 	for _, src := range sources {
 		paramGcc = append(paramGcc, src)
 	}
@@ -177,13 +183,13 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	}
 }
 
-func app(flags *flags, folder, name string) string {
-	path := folder + "/" + name
+func app(flags *flags, name string) string {
+	path := flags.writeTo + "/" + name
 	if exists(path) {
 		fmt.Println("=== run ===")
 		var stdout []byte
 		pwd, _ := os.Getwd()
-		os.Chdir(folder)
+		os.Chdir(flags.writeTo)
 		bwd, _ := os.Getwd()
 		binary := bwd + "/" + name
 		if flags.memoryCheck {

@@ -39,4 +39,3 @@ main
 
   e = math.operation.add
 	if not e is add : echo("no!")
-

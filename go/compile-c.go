@@ -30,7 +30,7 @@ func initC(module *hmfile, folder, root, name, hmlibs string) *cfile {
 				requirelibs = true
 				cfile.headIncludeSection.WriteString("\n")
 			}
-			cfile.headIncludeSection.WriteString("\n#include \"" + hmlibs + "/" + name + "\"")
+			cfile.headIncludeSection.WriteString("\n#include \"" + name + "\"")
 		}
 	}
 
@@ -49,17 +49,17 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 
 	module.program.sources[name] = folder + "/" + name + ".c"
 
-	fx := 0
+	havefilters := false
 	for f, fname := range filters {
 		if f == filter {
 			continue
 		}
+		if !havefilters {
+			havefilters = true
+			cfile.headIncludeSection.WriteString("\n")
+		}
 		subfolder := f[0:strings.Index(f, "<")]
-		cfile.headIncludeSection.WriteString("\n#include \"" + root + "/" + subfolder + "/" + fname + ".h\"")
-		fx++
-	}
-	if fx > 0 {
-		cfile.headIncludeSection.WriteString("\n")
+		cfile.headIncludeSection.WriteString("\n#include \"" + subfolder + "/" + fname + ".h\"")
 	}
 
 	var code strings.Builder

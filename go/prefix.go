@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -175,6 +176,7 @@ func prefixArray(me *parser, op string) *node {
 	}
 	me.eat("]")
 	data := me.declareType(true)
+	fmt.Println("slice ::", data.module.name, "--->", data.full)
 	if me.token.is == "(" {
 		items := nodeInit("items")
 		me.eat("(")

@@ -155,7 +155,6 @@ func (me *parser) genericsReplacer(plain *plainType, gmapper map[string]string) 
 		}
 		return "[" + size + "]" + me.mapGenericSingle(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
-		fmt.Println("genericsReplacer 1 ::", plain.print(), "|", gmapper)
 		return me.buildImplGeneric(plain, gmapper)
 	} else if checkIsFunction(typed) {
 		return me.mapGenericFunctionSig(typed, gmapper)

@@ -14,7 +14,7 @@ type hmfile struct {
 	scope           *scope
 	staticScope     map[string]*variable
 	namespace       map[string]string
-	imports         map[string]bool
+	imports         map[string]*hmfile
 	importOrder     []string
 	classes         map[string]*class
 	enums           map[string]*enum
@@ -44,7 +44,7 @@ func (program *program) hymnFileInit(name string) *hmfile {
 	hm.staticScope = make(map[string]*variable)
 	hm.namespace = make(map[string]string)
 	hm.types = make(map[string]string)
-	hm.imports = make(map[string]bool)
+	hm.imports = make(map[string]*hmfile)
 	hm.importOrder = make([]string, 0)
 	hm.classes = make(map[string]*class)
 	hm.enums = make(map[string]*enum)

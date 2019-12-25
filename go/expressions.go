@@ -299,7 +299,7 @@ func (me *parser) extern() *node {
 		panic(me.fail() + "expecting id token after extern " + extname)
 	}
 	idname := id.value
-	module := me.hmfile.program.hmfiles[extname]
+	module := me.hmfile.imports[extname]
 
 	if _, ok := module.functions[idname]; ok {
 		return me.parseFn(module)
@@ -346,11 +346,11 @@ func (me *parser) importing() {
 	module := me.hmfile
 	_, ok := module.imports[name]
 	if !ok {
-		module.imports[name] = true
-		module.importOrder = append(module.importOrder, name)
 		out := module.program.out + "/" + name
 		path := module.program.directory + "/" + name + ".hm"
-		module.program.parse(out, path, module.program.libs)
+		newmodule := module.program.parse(out, path, module.program.libs)
+		module.imports[name] = newmodule
+		module.importOrder = append(module.importOrder, name)
 		fmt.Println("=== continuing " + module.name + " === ")
 	}
 	if me.token.is == "id" {

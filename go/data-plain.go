@@ -27,11 +27,33 @@ type datatype struct {
 }
 
 func (me *datatype) standard() string {
-	return me.string(false)
+	return me.output(false)
 }
 
 func (me *datatype) print() string {
-	return me.string(true)
+	return me.output(true)
+}
+
+func (me *datatype) nameIs() string {
+	switch me.is {
+	case dataTypePrimitive:
+		return "primitive"
+	case dataTypeMaybe:
+		return "maybe"
+	case dataTypeArray:
+		return "array"
+	case dataTypeFunction:
+		return "function"
+	case dataTypeClass:
+		return "class"
+	case dataTypeEnum:
+		return "enum"
+	case dataTypeUnknown:
+		return "unknown"
+	case dataTypeNone:
+		return "none"
+	}
+	panic("missing data type")
 }
 
 func (me *datatype) cname() string {
@@ -78,7 +100,7 @@ func (me *datatype) cname() string {
 	}
 }
 
-func (me *datatype) string(expand bool) string {
+func (me *datatype) output(expand bool) string {
 	switch me.is {
 	case dataTypeUnknown:
 		fallthrough
@@ -89,23 +111,23 @@ func (me *datatype) string(expand bool) string {
 	case dataTypeMaybe:
 		{
 			if expand {
-				return "maybe<" + me.member.string(expand) + ">"
+				return "maybe<" + me.member.output(expand) + ">"
 			}
-			return me.member.string(expand)
+			return me.member.output(expand)
 		}
 	case dataTypeNone:
 		{
 			if me.member != nil {
 				if expand {
-					return "none<" + me.member.string(expand) + ">"
+					return "none<" + me.member.output(expand) + ">"
 				}
-				return me.member.string(expand)
+				return me.member.output(expand)
 			}
 			return "none"
 		}
 	case dataTypeArray:
 		{
-			return "[" + me.size + "]" + me.member.string(expand)
+			return "[" + me.size + "]" + me.member.output(expand)
 		}
 	case dataTypeFunction:
 		{
@@ -114,9 +136,9 @@ func (me *datatype) string(expand bool) string {
 				if i > 0 {
 					f += ","
 				}
-				f += p.string(expand)
+				f += p.output(expand)
 			}
-			f += ") " + me.member.string(expand)
+			f += ") " + me.member.output(expand)
 			return f
 		}
 	case dataTypeClass:
@@ -130,7 +152,7 @@ func (me *datatype) string(expand bool) string {
 					if i > 0 {
 						f += ","
 					}
-					f += g.string(expand)
+					f += g.output(expand)
 				}
 				f += ">"
 			}
@@ -158,17 +180,17 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	if checkIsPrimitive(typed) {
-		return &datatype{module: module, is: dataTypePrimitive, canonical: typed}
+		return &datatype{is: dataTypePrimitive, canonical: typed}
 	}
 
 	if strings.HasPrefix(typed, "maybe") {
-		return &datatype{module: module, is: dataTypeMaybe, member: getdatatype(me, typed[6:len(typed)-1])}
+		return &datatype{is: dataTypeMaybe, member: getdatatype(me, typed[6:len(typed)-1])}
 
 	} else if typed == "none" {
-		return &datatype{module: module, is: dataTypeNone}
+		return &datatype{is: dataTypeNone}
 
 	} else if strings.HasPrefix(typed, "none") {
-		return &datatype{module: module, is: dataTypeMaybe, member: getdatatype(me, typed[5:len(typed)-1])}
+		return &datatype{is: dataTypeMaybe, member: getdatatype(me, typed[5:len(typed)-1])}
 	}
 
 	if checkIsArray(typed) || checkIsSlice(typed) {
@@ -189,9 +211,9 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	if g != -1 {
 		base := typed[0:g]
 		var is int
-		if _, ok := me.classes[base]; ok {
+		if _, ok := module.classes[base]; ok {
 			is = dataTypeClass
-		} else if _, ok := me.enums[base]; ok {
+		} else if _, ok := module.enums[base]; ok {
 			is = dataTypeEnum
 		} else {
 			is = dataTypeUnknown
@@ -208,7 +230,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	if d != -1 {
 		base := typed[0:d]
 		var is int
-		if _, ok := me.enums[base]; ok {
+		if _, ok := module.enums[base]; ok {
 			is = dataTypeEnum
 		} else {
 			is = dataTypeUnknown
@@ -217,9 +239,9 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	var is int
-	if _, ok := me.classes[typed]; ok {
+	if _, ok := module.classes[typed]; ok {
 		is = dataTypeClass
-	} else if _, ok := me.enums[typed]; ok {
+	} else if _, ok := module.enums[typed]; ok {
 		is = dataTypeEnum
 	} else {
 		is = dataTypeUnknown

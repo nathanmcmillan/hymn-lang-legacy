@@ -17,7 +17,7 @@ import (
 var (
 	debug       = true
 	debugTokens = false
-	debugTree   = false
+	debugTree   = true
 )
 
 type flags struct {

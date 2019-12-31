@@ -53,7 +53,7 @@ func (me *hmfile) parse(out, path string) {
 		}
 
 		if debugTree {
-			fileTree := out + "/" + name + ".tree"
+			fileTree := out + "/" + name + ".json"
 			if exists(fileTree) {
 				os.Remove(fileTree)
 			}

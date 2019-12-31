@@ -9,6 +9,10 @@
 			"name": "comment.block.hymn"
 		},
 		{
+			"match": "--.*$",
+			"name": "comment.line.double-slash.hymn"
+		},
+		{
 			"match": "'.*?'",
 			"name": "string.quoted.hymn",
 			"patterns": [

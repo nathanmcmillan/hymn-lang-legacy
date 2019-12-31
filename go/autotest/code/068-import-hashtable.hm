@@ -1,5 +1,6 @@
 import "hashtable"
 
+-- testing hashtables
 main
 	t = [12:]maybe<hashtable.hashtable_item<int,string>>
 	m = hashtable.hashtable(

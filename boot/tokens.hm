@@ -1,31 +1,30 @@
-immutable keywords = set<string>
-    "import"
-    "macro"
+immutable keywords = set<string>()
+
+init()
+	keywords.add("import")
+	keywords.add("macro")
 
 type token
-  depth int
-  name  string
-  value string
+	depth int
+	name  string
+	value string
 
 type tokenizer
-  tokens []token
+	tokens []token
 
-token.to_string() string
-  mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
-  if self.value != ""
-    s += ", value:" + self.value
-  s += "}" 
-  return s
+token to_string() string
+	mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
+	if self.value != ""
+		s += ", value:" + self.value
+	s += "}" 
+	return s
 
 digit(c byte) bool
-  return false
+	return false
 
-tokenizer.simple_token(name string) token
-  return self.token_for(self.depth, name)
+tokenizer simple_token(name string) token
+	return self.token_for(self.depth, name)
 
-tokenizer.token_for(depth int, name string) token
-  t = token
-    depth: depth
-    name   : name
-    value: ""
-  return t
+tokenizer token_for(depth int, name string) token
+	t = token(depth:depth, name:name, value:"")
+	return t

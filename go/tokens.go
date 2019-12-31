@@ -221,7 +221,20 @@ func (me *tokenizer) forString() string {
 	return value.String()
 }
 
-func (me *tokenizer) forComment() string {
+func (me *tokenizer) forLineComment() string {
+	stream := me.stream
+	value := &strings.Builder{}
+	for !stream.eof() {
+		c := stream.next()
+		if c == '\n' {
+			break
+		}
+		value.WriteByte(c)
+	}
+	return value.String()
+}
+
+func (me *tokenizer) forBlockComment() string {
 	stream := me.stream
 	value := &strings.Builder{}
 	nest := 1
@@ -303,10 +316,10 @@ func (me *tokenizer) get(pos int) *token {
 		peek := stream.peek()
 		if peek == '*' {
 			stream.next()
-			// value := me.forComment()
+			// value := me.forBlockComment()
 			// token := me.valueToken("comment", value)
 			// return token
-			me.forComment()
+			me.forBlockComment()
 			return me.get(pos)
 		}
 		token := me.simpleToken("(")
@@ -390,6 +403,10 @@ func (me *tokenizer) get(pos int) *token {
 		} else if peek == '>' {
 			stream.next()
 			token = me.simpleToken("->")
+		} else if peek == '-' {
+			stream.next()
+			me.forLineComment()
+			return me.get(pos)
 		} else {
 			token = me.simpleToken("-")
 		}

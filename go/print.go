@@ -5,61 +5,134 @@ import (
 	"strings"
 )
 
-func (me *varData) string() string {
-	return me.full + "(pointer:" + strconv.FormatBool(me.isptr) + ", stack:" + strconv.FormatBool(me.onStack) + ")"
+func (me *datatype) string(lv int) string {
+	lv++
+	s := "{\n"
+	s += fmc(lv) + "\"is\": \"" + me.nameIs() + "\""
+	if me.module != nil {
+		s += ",\n" + fmc(lv) + "\"module\": \"" + me.module.name + "\""
+	}
+	if me.canonical != "" {
+		s += ",\n" + fmc(lv) + "\"canonical\": \"" + me.canonical + "\""
+	}
+	if me.size != "" {
+		s += ",\n" + fmc(lv) + "\"size\": \"" + me.size + "\""
+	}
+	if me.member != nil {
+		s += ",\n" + fmc(lv) + "\"member\": " + me.member.string(lv)
+	}
+	if me.generics != nil {
+		s += ",\n" + fmc(lv) + "\"generics\": [\n"
+		lv++
+		end := len(me.generics) - 1
+		for i, v := range me.generics {
+			s += fmc(lv) + v.string(lv)
+			if i < end {
+				s += ",\n"
+			}
+		}
+		lv--
+		s += "\n" + fmc(lv) + "]"
+
+	}
+	if me.parameters != nil {
+		s += ",\n" + fmc(lv) + "\"parameters\": [\n"
+		lv++
+		end := len(me.parameters) - 1
+		for i, v := range me.parameters {
+			s += fmc(lv) + v.string(lv)
+			if i < end {
+				s += ",\n"
+			}
+		}
+		lv--
+		s += "\n" + fmc(lv) + "]"
+	}
+	if me.returns != nil {
+		s += ",\n" + fmc(lv) + "\"returns\": " + me.returns.string(lv)
+	}
+	lv--
+	s += "\n" + fmc(lv) + "}"
+	return s
 }
 
-func (me *variable) string() string {
-	return "{data:" + me.data().string() + ", name:" + me.name + ", mutable:" + strconv.FormatBool(me.mutable) + "}"
+func (me *varData) string(lv int) string {
+	lv++
+	s := "{\n"
+	s += fmc(lv) + "\"is\": \"" + me.full + "\",\n"
+	s += fmc(lv) + "\"pointer\": " + strconv.FormatBool(me.isptr) + ",\n"
+	s += fmc(lv) + "\"stack\": " + strconv.FormatBool(me.onStack) + "\n"
+	lv--
+	s += fmc(lv) + "}"
+	return s
+}
+
+func (me *variable) string(lv int) string {
+	s := "{\n"
+	lv++
+	s += fmc(lv) + "\"data\": " + me.data().dtype.string(lv) + ",\n"
+	// s += fmc(lv) + "\"data\": " + me.data().string(lv) + ",\n"
+	s += fmc(lv) + "\"name\": \"" + me.name + "\",\n"
+	s += fmc(lv) + "\"mutable\": " + strconv.FormatBool(me.mutable)
+	lv--
+	s += "\n" + fmc(lv) + "}"
+	return s
 }
 
 func (me *node) string(lv int) string {
 	s := ""
-	s += fmc(lv) + "{is:" + me.is
+	s += fmc(lv) + "{\n"
+	lv++
+	s += fmc(lv) + "\"is\": \"" + me.is + "\""
 	if me.value != "" {
-		s += ", value:" + me.value
+		s += ",\n" + fmc(lv) + "\"value\": \"" + me.value + "\""
 	}
 	if me.idata != nil {
-		s += ", id:" + me.idata.string()
+		s += ",\n" + fmc(lv) + "\"id\": \"" + me.idata.string() + "\""
 	}
 	if me.fn != nil {
-		s += ", call:" + me.fn.canonical()
+		s += ",\n" + fmc(lv) + "\"call\": \"" + me.fn.canonical() + "\""
 	}
 	if me.data() != nil {
-		s += ", data:" + me.data().string()
+		s += ",\n" + fmc(lv) + "\"data\": " + me.data().dtype.string(lv)
+		// s += ",\n" + fmc(lv) + "\"data\": " + me.data().string(lv)
 	}
 	if len(me.attributes) > 0 {
-		s += ", attributes["
+		s += ",\n" + fmc(lv) + "\"attributes\": {\n"
+		lv++
 		ix := 0
+		end := len(me.attributes) - 1
 		for key, value := range me.attributes {
-			if ix > 0 {
-				s += ", "
+			s += fmc(lv) + "\"" + key + "\": \"" + value + "\""
+			if ix < end {
+				s += ",\n"
 			}
-			s += "{" + key + ":" + value + "}"
 			ix++
 		}
-		s += "]"
+		lv--
+		s += "\n" + fmc(lv) + "}"
 	}
 	if len(me.has) > 0 {
-		s += ", has[\n"
+		s += ",\n" + fmc(lv) + "\"has\": [\n"
 		lv++
-		for ix, has := range me.has {
-			if ix > 0 {
-				s += "\n"
-			}
+		end := len(me.has) - 1
+		for i, has := range me.has {
 			s += has.string(lv)
+			if i < end {
+				s += ",\n"
+			}
 		}
 		lv--
 		s += "\n"
 		s += fmc(lv) + "]"
 	}
-	s += "}"
+	lv--
+	s += "\n" + fmc(lv) + "}"
 	return s
 }
 
 func (me *cnode) string(lv int) string {
-	s := ""
-	s += fmc(lv) + "{is:" + me.is
+	s := fmc(lv) + "{\"is\":" + me.is
 	if me.value != "" {
 		s += ", value:" + me.value
 	}
@@ -67,7 +140,7 @@ func (me *cnode) string(lv int) string {
 		s += ", typed:" + me.typed
 	}
 	if me.data() != nil {
-		s += ", var:" + me.data().string()
+		s += ", var:" + me.data().string(lv)
 	}
 	s += ", code:" + me.code
 	if len(me.has) > 0 {
@@ -100,20 +173,29 @@ func (me *codeblock) string(lv int) string {
 }
 
 func (me *class) string(lv int) string {
-	s := fmc(lv) + me.name + "[\n"
+	s := fmc(lv) + "\"" + me.name + "\": [\n"
 	lv++
-	for _, cls := range me.variableOrder {
+	end := len(me.variableOrder) - 1
+	for i, cls := range me.variableOrder {
 		classVar := me.variables[cls]
-		s += fmc(lv) + "{name:" + classVar.name + ", typed:" + classVar.data().string()
-		s += "}\n"
+		s += fmc(lv) + "{\n"
+		lv++
+		s += fmc(lv) + "\"name\": \"" + classVar.name + "\",\n" + fmc(lv)
+		s += "\"typed\": " + classVar.data().string(lv)
+		lv--
+		s += "\n" + fmc(lv) + "}"
+		if i < end {
+			s += ","
+		}
+		s += "\n"
 	}
 	lv--
-	s += fmc(lv) + "]\n"
+	s += fmc(lv) + "]"
 	return s
 }
 
 func (me *enum) string(lv int) string {
-	s := fmc(lv) + me.name + "[\n"
+	s := fmc(lv) + "\"" + me.name + "\": [\n"
 	lv++
 	for _, unionType := range me.typesOrder {
 		if len(unionType.types) > 0 {
@@ -122,11 +204,11 @@ func (me *enum) string(lv int) string {
 				if ix > 0 {
 					types += ", "
 				}
-				types += typ.string()
+				types += typ.string(lv)
 			}
-			s += fmc(lv) + "{name:" + unionType.name + ", union:<" + types + ">}\n"
+			s += fmc(lv) + "{\"name\":" + unionType.name + ", \"union\":<" + types + ">}\n"
 		} else {
-			s += fmc(lv) + "{name:" + unionType.name + "}\n"
+			s += fmc(lv) + "{\"name\":" + unionType.name + "}\n"
 		}
 	}
 	lv--
@@ -135,44 +217,62 @@ func (me *enum) string(lv int) string {
 }
 
 func (me *function) string(lv int) string {
-	s := fmc(lv)
+	s := fmc(lv) + "\""
 	if me.forClass != nil {
 		s += me.nameOfClassFunc()
 	} else {
 		s += me.name
 	}
-	s += "{\n"
+	s += "\": {\n"
 	lv++
+	comma := false
 	if len(me.args) > 0 {
-		s += fmc(lv) + "args[\n"
+		comma = true
+		s += fmc(lv) + "\"args\": [\n"
 		lv++
-		for _, arg := range me.args {
-			s += fmc(lv) + arg.string() + "\n"
+		end := len(me.args) - 1
+		for i, arg := range me.args {
+			s += fmc(lv) + arg.string(lv)
+			if i < end {
+				s += ",\n"
+			}
 		}
 		lv--
-		s += fmc(lv) + "]\n"
+		s += "\n" + fmc(lv) + "]"
 	}
 	if len(me.expressions) > 0 {
-		s += fmc(lv) + "expressions[\n"
+		if comma {
+			s += ",\n"
+		} else {
+			comma = true
+		}
+		s += fmc(lv) + "\"expressions\": [\n"
 		lv++
-		for _, expr := range me.expressions {
-			s += expr.string(lv) + "\n"
+		end := len(me.expressions) - 1
+		for i, expr := range me.expressions {
+			s += expr.string(lv)
+			if i < end {
+				s += ",\n"
+			}
 		}
 		lv--
-		s += fmc(lv) + "]\n"
+		s += "\n" + fmc(lv) + "]\n"
 	}
 	lv--
-	s += fmc(lv) + "}\n"
+	s += fmc(lv) + "}"
 	return s
 }
 
 func (me *hmfile) string() string {
-	s := ""
-	lv := 0
+	s := "{\n"
+	lv := 1
+	comma := false
 	if len(me.defineOrder) > 0 {
-		s += fmc(lv) + "define[\n"
+		comma = true
+		s += fmc(lv) + "\"define\": {\n"
 		lv++
-		for _, c := range me.defineOrder {
+		end := len(me.defineOrder) - 1
+		for i, c := range me.defineOrder {
 			underscore := strings.LastIndex(c, "_")
 			name := c[0:underscore]
 			typed := c[underscore+1:]
@@ -183,26 +283,46 @@ func (me *hmfile) string() string {
 				en := me.enums[name]
 				s += en.string(lv)
 			}
+			if i < end {
+				s += ","
+			}
+			s += "\n"
 		}
 		lv--
-		s += fmc(lv) + "]\n"
+		s += fmc(lv) + "}"
 	}
 	if len(me.statics) > 0 {
-		s += fmc(lv) + "static[\n"
+		if comma {
+			s += ",\n"
+		} else {
+			comma = true
+		}
+		s += fmc(lv) + "\"static\": [\n"
 		lv++
-		for _, st := range me.statics {
+		end := len(me.statics) - 1
+		for i, st := range me.statics {
 			s += st.string(lv) + "\n"
+			if i < end {
+				s += ","
+			}
 		}
 		lv--
-		s += fmc(lv) + "]\n"
+		s += fmc(lv) + "]"
 	}
-	s += fmc(lv) + "functions[\n"
+	if comma {
+		s += ",\n"
+	}
+	s += fmc(lv) + "\"functions\": {\n"
 	lv++
-	for _, name := range me.functionOrder {
+	end := len(me.functionOrder) - 1
+	for i, name := range me.functionOrder {
 		fn := me.functions[name]
 		s += fn.string(lv)
+		if i < end {
+			s += ",\n"
+		}
 	}
 	lv--
-	s += fmc(lv) + "]\n"
+	s += fmc(lv) + "}\n}\n"
 	return s
 }

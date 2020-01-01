@@ -37,7 +37,10 @@ func initC(module *hmfile, folder, root, name, hmlibs string) *cfile {
 	return cfile
 }
 
-func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter string, filters map[string]string) string {
+func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc, filterOrder []string, filters map[string]subc) string {
+	name := subc.fname
+	subfolder := subc.subfolder
+
 	if debug {
 		fmt.Println("=== " + subfolder + "/" + name + " ===")
 	}
@@ -50,7 +53,7 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 	module.program.sources[name] = folder + "/" + name + ".c"
 
 	havefilters := false
-	for f, fname := range filters {
+	for _, f := range filterOrder {
 		if f == filter {
 			continue
 		}
@@ -58,8 +61,8 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 			havefilters = true
 			cfile.headIncludeSection.WriteString("\n")
 		}
-		subfolder := f[0:strings.Index(f, "<")]
-		cfile.headIncludeSection.WriteString("\n#include \"" + subfolder + "/" + fname + ".h\"")
+		subc := filters[f]
+		cfile.headIncludeSection.WriteString("\n#include \"" + subc.subfolder + "/" + subc.fname + ".h\"")
 	}
 
 	var code strings.Builder
@@ -69,16 +72,25 @@ func (me *cfile) subC(root, folder, rootname, subfolder, name, hmlibs, filter st
 		underscore := strings.LastIndex(c, "_")
 		name := c[0:underscore]
 		typed := c[underscore+1:]
-		if !strings.HasPrefix(name, filter) {
-			if typed == "type" {
-				cfile.typedefClass(module.classes[name])
+		matching := name == filter
+		if typed == "type" {
+			cl := module.classes[name]
+			if matching {
+				cfile.defineClass(cl)
+			} else {
+				cfile.typedefClass(cl)
+			}
+		} else if typed == "enum" {
+			en := module.enums[name]
+			if matching {
+				cfile.defineEnum(en)
+			} else {
+				if en.baseEnum() == en {
+					cfile.typedefEnum(en)
+				}
 			}
 		} else {
-			if typed == "type" {
-				cfile.defineClass(module.classes[name])
-			} else if typed == "enum" {
-				cfile.defineEnum(module.enums[name])
-			}
+			panic("missing type")
 		}
 	}
 

@@ -177,7 +177,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 				code += "%f"
 			case "bool":
 				code += "%s"
-				code2 += paramx.pop() + " ? \"true\" : \"false\""
+				code2 += paramx.pop() + " ? hmlib_string_init(\"true\") : hmlib_string_init(\"false\")"
 				pop = false
 			case TokenLibSize:
 				code += "%zu"
@@ -231,7 +231,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		case TokenFloat64:
 			return codeBlockMerge(n, "hmlib_float64_to_string("+param.pop()+")", param.pre)
 		case "bool":
-			return codeBlockMerge(n, "("+param.pop()+" ? \"true\" : \"false\")", param.pre)
+			return codeBlockMerge(n, "("+param.pop()+" ? hmlib_string_init(\"true\") : hmlib_string_init(\"false\"))", param.pre)
 		}
 		panic("argument for string cast was " + param.string(0))
 	case libToInt:

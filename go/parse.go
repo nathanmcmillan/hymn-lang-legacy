@@ -41,19 +41,21 @@ func (me *hmfile) parse(out, path string) {
 	var treeFile *os.File
 
 	if debug {
+		os.MkdirAll(out, os.ModePerm)
 		fmt.Println("=== " + name + " parse ===")
 
 		if debugTokens {
-			fileTokens := out + "/" + name + ".tokens"
+			fileTokens := out + "/" + name + "-tokens.json"
 			if exists(fileTokens) {
 				os.Remove(fileTokens)
 			}
 			tokenFile = create(fileTokens)
+			tokenFile.WriteString("{\n\t\"tokens\": [\n")
 			defer tokenFile.Close()
 		}
 
 		if debugTree {
-			fileTree := out + "/" + name + ".json"
+			fileTree := out + "/" + name + "-tree.json"
 			if exists(fileTree) {
 				os.Remove(fileTree)
 			}
@@ -79,6 +81,10 @@ func (me *hmfile) parse(out, path string) {
 		if parsing.token.is == "line" {
 			parsing.eat("line")
 		}
+	}
+
+	if tokenFile != nil {
+		tokenFile.WriteString("\n\t]\n}\n")
 	}
 
 	if treeFile != nil {

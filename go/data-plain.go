@@ -13,6 +13,7 @@ const (
 	dataTypeEnum      = 5
 	dataTypeUnknown   = 6
 	dataTypeNone      = 7
+	dataTypeSlice     = 8
 )
 
 type datatype struct {
@@ -24,6 +25,74 @@ type datatype struct {
 	parameters []*datatype
 	returns    *datatype
 	generics   []*datatype
+	hmlib      *hmlib
+	original   string
+	mutable    bool
+	heap       bool
+	pointer    bool
+	en         *enum
+	un         *union
+	cl         *class
+	fn         *fnSig
+}
+
+func (me *datatype) copyTo(c *datatype) {
+	c.module = me.module
+	c.is = me.is
+	c.canonical = me.canonical
+	c.size = me.size
+	if me.member != nil {
+		c.member = me.member.copy()
+	}
+	if me.parameters != nil {
+		c.parameters = make([]*datatype, len(me.parameters))
+		for i, p := range me.parameters {
+			c.parameters[i] = p.copy()
+		}
+	}
+	if me.returns != nil {
+		c.returns = me.returns.copy()
+	}
+	if me.generics != nil {
+		c.generics = make([]*datatype, len(me.generics))
+		for i, g := range me.generics {
+			c.generics[i] = g.copy()
+		}
+	}
+}
+
+func (me *datatype) copy() *datatype {
+	c := &datatype{}
+	me.copyTo(c)
+	return c
+}
+
+func (me *datatype) isSomeOrNone() bool {
+	return me.is == dataTypeMaybe || me.is == dataTypeNone
+}
+
+func (me *datatype) isString() bool {
+	return me.is == dataTypePrimitive && me.canonical == TokenString
+}
+
+func (me *datatype) isChar() bool {
+	return me.is == dataTypePrimitive && me.canonical == TokenChar
+}
+
+func (me *datatype) isArray() bool {
+	return me.is == dataTypeArray || (me.is == dataTypePrimitive && me.canonical == TokenString)
+}
+
+func (me *datatype) isSlice() bool {
+	return me.is == dataTypeSlice
+}
+
+func (me *datatype) isArrayOrSlice() bool {
+	return me.isArray() || me.isSlice()
+}
+
+func (me *datatype) isPointerInC() bool {
+	return me.pointer
 }
 
 func (me *datatype) standard() string {
@@ -42,6 +111,8 @@ func (me *datatype) nameIs() string {
 		return "maybe"
 	case dataTypeArray:
 		return "array"
+	case dataTypeSlice:
+		return "slice"
 	case dataTypeFunction:
 		return "function"
 	case dataTypeClass:
@@ -67,6 +138,10 @@ func (me *datatype) cname() string {
 	case dataTypeArray:
 		{
 			return "Array" + me.size + me.member.cname()
+		}
+	case dataTypeSlice:
+		{
+			return "Slice" + me.member.cname()
 		}
 	case dataTypeFunction:
 		{
@@ -129,6 +204,10 @@ func (me *datatype) output(expand bool) string {
 		{
 			return "[" + me.size + "]" + me.member.output(expand)
 		}
+	case dataTypeSlice:
+		{
+			return "[]" + me.member.output(expand)
+		}
 	case dataTypeFunction:
 		{
 			f := me.canonical + "("
@@ -163,21 +242,15 @@ func (me *datatype) output(expand bool) string {
 	}
 }
 
+func newdatatypearray(module *hmfile, size string, member *datatype) *datatype {
+	return &datatype{module: module, is: dataTypeArray, size: size, member: member}
+}
+
+func newdatatypeslice(module *hmfile, member *datatype) *datatype {
+	return &datatype{module: module, is: dataTypeSlice, member: member}
+}
+
 func getdatatype(me *hmfile, typed string) *datatype {
-
-	if me == nil {
-		return &datatype{module: me, is: dataTypeUnknown, canonical: typed}
-	}
-
-	module := me
-	d := strings.Index(typed, ".")
-	if d != -1 {
-		base := typed[0:d]
-		if imp, ok := me.imports[base]; ok {
-			module = imp
-			typed = typed[d+1:]
-		}
-	}
 
 	if checkIsPrimitive(typed) {
 		return &datatype{is: dataTypePrimitive, canonical: typed}
@@ -193,9 +266,28 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		return &datatype{is: dataTypeMaybe, member: getdatatype(me, typed[5:len(typed)-1])}
 	}
 
-	if checkIsArray(typed) || checkIsSlice(typed) {
+	if checkIsArray(typed) {
 		size, member := typeOfArrayOrSlice(typed)
-		return &datatype{module: module, is: dataTypeArray, size: size, member: getdatatype(me, member)}
+		return &datatype{is: dataTypeArray, size: size, member: getdatatype(me, member)}
+	}
+
+	if checkIsSlice(typed) {
+		size, member := typeOfArrayOrSlice(typed)
+		return &datatype{is: dataTypeSlice, size: size, member: getdatatype(me, member)}
+	}
+
+	if me == nil {
+		return &datatype{module: me, is: dataTypeUnknown, canonical: typed}
+	}
+
+	module := me
+	d := strings.Index(typed, ".")
+	if d != -1 {
+		base := typed[0:d]
+		if imp, ok := me.imports[base]; ok {
+			module = imp
+			typed = typed[d+1:]
+		}
 	}
 
 	if checkIsFunction(typed) {

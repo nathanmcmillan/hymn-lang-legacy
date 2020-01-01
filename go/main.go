@@ -16,7 +16,7 @@ import (
 
 var (
 	debug       = true
-	debugTokens = false
+	debugTokens = true
 	debugTree   = true
 )
 
@@ -124,7 +124,9 @@ func (me *program) parse(out, path, libs string) *hmfile {
 }
 
 func (me *program) compile() {
-	for _, module := range me.hmorder {
+	list := me.hmorder
+	for x := len(list) - 1; x >= 0; x-- {
+		module := list[x]
 		os.MkdirAll(module.out, os.ModePerm)
 		source := module.generateC(module.out, fileName(module.path), module.libs)
 		me.sources[module.name] = source
@@ -171,7 +173,9 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	} else {
 		paramGcc = append(paramGcc, fileOut)
 	}
-	fmt.Println(command, strings.Join(paramGcc, " "))
+	if debug {
+		fmt.Println(command, strings.Join(paramGcc, " "))
+	}
 	cmd := exec.Command(command, paramGcc...)
 	stdout, err := cmd.CombinedOutput()
 	std := string(stdout)

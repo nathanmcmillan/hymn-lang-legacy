@@ -200,7 +200,10 @@ func (me *cfile) head() string {
 		head.WriteString("\n")
 	}
 	head.WriteString(me.headStructSection.String())
-	head.WriteString(me.headExternSection.String())
+	if me.headExternSection.Len() != 0 {
+		head.WriteString(me.headExternSection.String())
+		head.WriteString("\n")
+	}
 	head.WriteString(me.headFuncSection.String())
 	head.WriteString(me.headSuffix.String())
 	return head.String()

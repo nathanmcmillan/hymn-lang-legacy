@@ -7,7 +7,8 @@ import (
 
 func (me *cfile) defineEnum(enum *enum) {
 
-	impl := enum.baseEnum() != enum
+	base := enum.baseEnum()
+	impl := base != enum
 	hmBaseEnumName := enum.module.enumNameSpace(enum.baseEnum().name)
 
 	if !impl {
@@ -58,6 +59,12 @@ func (me *cfile) typedefClass(c *class) string {
 	return hmName
 }
 
+func (me *cfile) typedefEnum(e *enum) string {
+	hmBaseEnumName := e.module.enumNameSpace(e.baseEnum().name)
+	me.headEnumTypeDefSection.WriteString("\ntypedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";")
+	return hmBaseEnumName
+}
+
 func (me *cfile) defineClass(c *class) {
 	if c.doNotDefine() {
 		return
@@ -81,6 +88,13 @@ func (me *class) doNotDefine() bool {
 		if k == v {
 			return true
 		}
+	}
+	return false
+}
+
+func (me *enum) doNotDefine() bool {
+	if len(me.generics) > 0 {
+		return true
 	}
 	return false
 }

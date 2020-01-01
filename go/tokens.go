@@ -108,9 +108,9 @@ type tokenizer struct {
 
 func (me *token) string() string {
 	if me.value == "" {
-		return fmt.Sprintf("{depth:%d, type:%s}", me.depth, me.is)
+		return fmt.Sprintf("{\"depth\": %d, \"type\": \"%s\"}", me.depth, me.is)
 	}
-	return fmt.Sprintf("{depth:%d, type:%s, value:%s}", me.depth, me.is, me.value)
+	return fmt.Sprintf("{\"depth\": %d, \"type\": \"%s\", \"value\": \"%s\"}", me.depth, me.is, me.value)
 }
 
 func digit(c byte) bool {
@@ -264,7 +264,10 @@ func (me *tokenizer) forBlockComment() string {
 func (me *tokenizer) push(t *token) {
 	me.tokens = append(me.tokens, t)
 	if me.file != nil {
-		me.file.WriteString(t.string() + "\n")
+		if len(me.tokens) > 1 {
+			me.file.WriteString(",\n")
+		}
+		me.file.WriteString("\t\t" + t.string())
 	}
 }
 

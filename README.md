@@ -30,7 +30,6 @@ Learn more at https://hymn-lang.org
 * hash maps
 * file input / output
 * bootstrapping compiler from golang to hymn
-* JSON format tokens and parse tree
 * references to primitives
 * borrow checker
 * free heap space

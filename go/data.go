@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -122,7 +121,6 @@ func typeToVarData(module *hmfile, typed string) *varData {
 
 	dot := strings.Split(typed, ".")
 	if len(dot) != 1 {
-		fmt.Println("type to data ::", typed, "||", module.name, "||", module.imports)
 		if newmodule, ok := module.imports[dot[0]]; ok {
 			data.module = newmodule
 			typed = strings.Join(dot[1:], ".")
@@ -185,7 +183,7 @@ func typeToVarData(module *hmfile, typed string) *varData {
 
 	dot = strings.Split(typed, ".")
 	if len(dot) != 1 {
-		if _, ok := module.enums[dot[0]]; ok {
+		if _, ok := data.module.enums[dot[0]]; ok {
 			data.typed = dot[0] + "." + dot[1]
 		} else {
 			panic("unknown type \"" + typed + "\"")
@@ -220,16 +218,23 @@ func (me *varData) merge(hint *allocData) {
 			size := "[" + strconv.Itoa(hint.size) + "]"
 			me.full = size + member.full
 			me.typed = size + member.typed
+			dt := me.dtype
+			me.dtype = newdatatypearray(me.module, strconv.Itoa(hint.size), dt)
 		} else {
 			me.full = "[]" + member.full
 			me.typed = "[]" + member.typed
+			dt := me.dtype
+			me.dtype = newdatatypeslice(me.module, dt)
 		}
 	}
+	me.dtype.heap = me.heap
+	me.dtype.pointer = me.isptr
 }
 
 func (me *varData) sizeOfArray() string {
-	i := strings.Index(me.full, "]")
-	return me.full[1:i]
+	return me.dtype.size
+	// i := strings.Index(me.full, "]")
+	// return me.full[1:i]
 }
 
 func (me *varData) arrayToSlice() {
@@ -238,37 +243,47 @@ func (me *varData) arrayToSlice() {
 	index := strings.Index(me.full, "]")
 	me.full = "[]" + me.full[index+1:]
 	me.typed = me.full
+
+	me.dtype.is = dataTypeSlice
+	me.dtype.size = ""
 }
 
 func (me *varData) checkIsSomeOrNone() bool {
-	return me.maybe || me.none
+	// return me.maybe || me.none
+	return me.dtype.isSomeOrNone()
 }
 
 func (me *varData) checkIsString() bool {
-	return me.full == TokenString || me.full == "[]char"
+	// return me.full == TokenString || me.full == "[]char"
+	return me.dtype.isString()
 }
 
 func (me *varData) checkIsChar() bool {
-	return me.full == TokenChar
+	// return me.full == TokenChar
+	return me.dtype.isChar()
 }
 
 func (me *varData) checkIsArray() bool {
-	return checkIsArray(me.full)
+	// return checkIsArray(me.full)
+	return me.dtype.isArray()
 }
 
 func (me *varData) checkIsSlice() bool {
-	return checkIsSlice(me.full)
+	// return checkIsSlice(me.full)
+	return me.dtype.isSlice()
 }
 
 func (me *varData) checkIsArrayOrSlice() bool {
-	return me.array || me.slice
+	// return me.array || me.slice
+	return me.dtype.isArrayOrSlice()
 }
 
 func (me *varData) checkIsPointerInC() bool {
-	if me.checkIsPrimitive() {
-		return false
-	}
-	return me.isptr
+	// if me.checkIsPrimitive() {
+	// 	return false
+	// }
+	// return me.isptr
+	return me.dtype.isPointerInC()
 }
 
 func checkIsPrimitive(t string) bool {
@@ -376,11 +391,9 @@ func (me *varData) typeSig() string {
 		return cname
 	}
 	if me.checkIsArrayOrSlice() {
-		fmt.Println("member type slice sig ::", me.memberType.module.name, "/", me.memberType.full)
 		return fmtptr(me.memberType.typeSig())
 	}
 	if me.checkIsSomeOrNone() {
-		fmt.Println("member type some sig ::", me.memberType.module.name, "/", me.memberType.full)
 		return me.memberType.typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {

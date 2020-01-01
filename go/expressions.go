@@ -341,7 +341,6 @@ func (me *parser) calcBool() *node {
 func (me *parser) importing() {
 	me.eat("import")
 	name := me.token.value
-	fmt.Println("importing " + name)
 	me.eat(TokenStringLiteral)
 	module := me.hmfile
 	_, ok := module.imports[name]

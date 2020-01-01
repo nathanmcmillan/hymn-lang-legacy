@@ -25,18 +25,15 @@ func (me *cfile) compileDeclare(n *node) string {
 		}
 		data := n.data()
 		newVar := me.hmfile.varInitFromData(data, name, mutable)
+		me.scope.variables[name] = newVar
 		if global {
 			newVar.cName = data.module.varNameSpace(name)
-			me.scope.variables[name] = newVar
 			code += fmtassignspace(data.noMallocTypeSig())
 			code += newVar.cName
 		} else if useStack {
-			me.scope.variables[name] = newVar
 			code += fmtassignspace(data.typeSig())
 			code += name
-
 		} else {
-			me.scope.variables[name] = newVar
 			code += data.typeSigOf(name, mutable)
 		}
 	} else {
@@ -58,12 +55,12 @@ func (me *cfile) declareStatic(n *node) string {
 	if setSign == "" {
 		head += rightCode.code()
 	}
-	head += ";\n"
+	head += ";"
 	me.headExternSection.WriteString(head)
 
 	declareCode = "\n" + declareCode
 	if setSign == "" {
-		return declareCode + setSign + rightCode.code() + ";\n"
+		return declareCode + setSign + rightCode.code() + ";"
 	}
-	return declareCode + ";\n"
+	return declareCode + ";"
 }

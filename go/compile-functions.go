@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 func cleanCode(code string) (string, bool) {
 	if code != "" {

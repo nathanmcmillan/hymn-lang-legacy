@@ -197,22 +197,26 @@ func (me *class) string(lv int) string {
 func (me *enum) string(lv int) string {
 	s := fmc(lv) + "\"" + me.name + "\": [\n"
 	lv++
-	for _, unionType := range me.typesOrder {
+	end := len(me.typesOrder) - 1
+	for i, unionType := range me.typesOrder {
 		if len(unionType.types) > 0 {
 			types := ""
 			for ix, typ := range unionType.types {
 				if ix > 0 {
 					types += ", "
 				}
-				types += typ.string(lv)
+				types += "\"" + typ.string(lv) + "\""
 			}
-			s += fmc(lv) + "{\"name\":" + unionType.name + ", \"union\":<" + types + ">}\n"
+			s += fmc(lv) + "{\"name\": \"" + unionType.name + "\", \"unions\": [" + types + "]}"
 		} else {
-			s += fmc(lv) + "{\"name\":" + unionType.name + "}\n"
+			s += fmc(lv) + "{\"name\": \"" + unionType.name + "\"}"
+		}
+		if i < end {
+			s += ",\n"
 		}
 	}
 	lv--
-	s += fmc(lv) + "]\n"
+	s += "\n" + fmc(lv) + "]\n"
 	return s
 }
 

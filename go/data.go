@@ -55,7 +55,7 @@ func (me *varData) set(in *varData) {
 	me.module = in.module
 	me.typed = in.typed
 	me.full = in.full
-	me.dtype = in.dtype
+	me.dtype = in.dtype.copy()
 	me.mutable = in.mutable
 	me.onStack = in.onStack
 	me.isptr = in.isptr
@@ -218,13 +218,11 @@ func (me *varData) merge(hint *allocData) {
 			size := "[" + strconv.Itoa(hint.size) + "]"
 			me.full = size + member.full
 			me.typed = size + member.typed
-			dt := me.dtype
-			me.dtype = newdatatypearray(me.module, strconv.Itoa(hint.size), dt)
+			me.dtype = newdatatypearray(me.module, strconv.Itoa(hint.size), me.dtype)
 		} else {
 			me.full = "[]" + member.full
 			me.typed = "[]" + member.typed
-			dt := me.dtype
-			me.dtype = newdatatypeslice(me.module, dt)
+			me.dtype = newdatatypeslice(me.module, me.dtype)
 		}
 	}
 	me.dtype.heap = me.heap

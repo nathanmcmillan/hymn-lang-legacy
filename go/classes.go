@@ -1,9 +1,12 @@
 package main
 
+import "strings"
+
 type class struct {
 	module        *hmfile
 	name          string
 	cname         string
+	location      string
 	variables     map[string]*variable
 	variableOrder []string
 	generics      []string
@@ -19,6 +22,7 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 	c := &class{}
 	c.module = module
 	c.name = name
+	c.location = c.getLocation()
 	c.cname = getdatatype(module, name).cname()
 	c.generics = generics
 	c.genericsDict = genericsDict
@@ -37,4 +41,17 @@ func (me *class) initMembers(variableOrder []string, variables map[string]*varia
 
 func (me *class) getGenerics() []string {
 	return me.generics
+}
+
+func (me *class) getLocation() string {
+	path := ""
+	name := me.name
+	if strings.Index(name, "<") != -1 {
+		path = name[0:strings.Index(name, "<")]
+	} else {
+		path = name
+	}
+	name = flatten(name)
+	name = strings.ReplaceAll(name, "_", "-")
+	return path + "/" + name
 }

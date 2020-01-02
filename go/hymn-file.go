@@ -74,6 +74,11 @@ func (me *hmfile) cFileInit() *cfile {
 	c.rootScope = scopeInit(nil)
 	c.scope = c.rootScope
 	c.codeFn = make([]strings.Builder, 0)
+	c.stdReq = newOrderSet()
+	c.libReq = newOrderSet()
+	c.dependencyReq = newOrderSet()
+	c.structReq = newOrderSet()
+	c.enumReq = newOrderSet()
 	return c
 }
 

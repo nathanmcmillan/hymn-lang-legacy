@@ -5,3 +5,5 @@ example/
 go/autotest/out
 
 compiler
+
+*.o

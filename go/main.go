@@ -16,7 +16,7 @@ import (
 
 var (
 	debug       = true
-	debugTokens = true
+	debugTokens = false
 	debugTree   = true
 )
 
@@ -33,6 +33,7 @@ type flags struct {
 	sanitizeAddress bool
 	info            bool
 	optimize        bool
+	makefile        bool
 }
 
 const (
@@ -75,6 +76,7 @@ func main() {
 	flag.BoolVar(&flags.library, "l", false, "generate code for use as a library")
 	flag.BoolVar(&flags.info, "i", false, "includes additional information in the binary (sends -g flag to the compiler)")
 	flag.BoolVar(&flags.optimize, "o", false, "optimizes the binary (sends -O2 flag to the compiler)")
+	flag.BoolVar(&flags.makefile, "g", false, "generate a makefile")
 	flag.Parse()
 
 	if flags.help || flags.path == "" || flags.hmlib == "" {
@@ -93,6 +95,8 @@ func execCompile(flags *flags) string {
 	program.out = flags.writeTo
 	program.libs = flags.hmlib
 	program.directory = fileDir(flags.path)
+
+	program.loadlibs(flags.hmlib)
 
 	hmlib := &hmlib{}
 	hmlib.libs()
@@ -176,6 +180,16 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	if debug {
 		fmt.Println(command, strings.Join(paramGcc, " "))
 	}
+
+	if flags.makefile {
+		var make strings.Builder
+		make.WriteString("CC= gcc\n")
+		make.WriteString("program:\n\t")
+		make.WriteString(command + " ")
+		make.WriteString(strings.Join(paramGcc, " "))
+		write(flags.writeTo+"/makefile", make.String())
+	}
+
 	cmd := exec.Command(command, paramGcc...)
 	stdout, err := cmd.CombinedOutput()
 	std := string(stdout)

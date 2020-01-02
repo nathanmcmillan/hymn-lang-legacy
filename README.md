@@ -26,7 +26,13 @@ Learn more at https://hymn-lang.org
 * class functions with generics
 * "_" for default parameters during class allocation
 
+### todo
+* remove c files for header only necessary files
+* split all structs / enums to separate folder/files ?
+* only include minimum necessary typedefs / include statements
+
 ### timeline
+* generate makefiles
 * hash maps
 * file input / output
 * bootstrapping compiler from golang to hymn
@@ -46,6 +52,3 @@ Learn more at https://hymn-lang.org
 ### testing
 * need negative tests
 * need regex matching C code
-
-### ideas
-* "transfer" keyword replaces "return" when giving a strong pointer is desired

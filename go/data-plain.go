@@ -30,10 +30,6 @@ type datatype struct {
 	mutable    bool
 	heap       bool
 	pointer    bool
-	en         *enum
-	un         *union
-	cl         *class
-	fn         *fnSig
 }
 
 func (me *datatype) copyTo(c *datatype) {

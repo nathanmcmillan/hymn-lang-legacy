@@ -1,0 +1,20 @@
+
+# program:
+# 	gcc -Wall -Wextra -Werror -pedantic -std=c11 \
+# 	-I/Users/nmm/Documents/programming/hymn-lang/lib \
+# 	-I. \
+# 	/Users/nmm/Documents/programming/hymn-lang/lib/hmlib_string.c \
+# 	005.c \
+# 	-o 005
+
+# run:
+# 	./005
+
+CC=gcc
+CFLAGS=-Wall -Wextra -Werror -pedantic -std=c11 -I/Users/nmm/Documents/programming/hymn-lang/lib -I.
+
+src=$(wildcard *.c) $(wildcard /Users/nmm/Documents/programming/hymn-lang/lib/*.c) $(wildcard foo/*.c)
+obj=$(src:.c=.o)
+
+program: $(obj)
+	$(CC) -o $@ $^

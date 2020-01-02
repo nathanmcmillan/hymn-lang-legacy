@@ -374,7 +374,6 @@ func (me *parser) immutable() {
 func (me *parser) mutable() {
 	n := me.forceassign(false, true)
 	av := n.has[0]
-	fmt.Println("static mutable", n.string(0))
 	if n.is != "=" || av.is != "variable" {
 		panic(me.fail() + "invalid static variable")
 	}

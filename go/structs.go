@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 type scope struct {
 	root      *scope
@@ -18,26 +20,11 @@ type program struct {
 	out       string
 	directory string
 	libs      string
+	hmlibmap  map[string]string
 	hmlib     *hmlib
 	hmfiles   map[string]*hmfile
 	hmorder   []*hmfile
 	sources   map[string]string
-}
-
-type cfile struct {
-	hmfile                   *hmfile
-	headIncludeSection       strings.Builder
-	headEnumTypeDefSection   strings.Builder
-	headEnumSection          strings.Builder
-	headStructTypeDefSection strings.Builder
-	headStructSection        strings.Builder
-	headExternSection        strings.Builder
-	headFuncSection          strings.Builder
-	headSuffix               strings.Builder
-	codeFn                   []strings.Builder
-	rootScope                *scope
-	scope                    *scope
-	depth                    int
 }
 
 var (
@@ -120,37 +107,21 @@ func scopeInit(root *scope) *scope {
 
 func programInit() *program {
 	prog := &program{}
+	prog.hmlibmap = make(map[string]string)
 	prog.hmfiles = make(map[string]*hmfile)
 	prog.hmorder = make([]*hmfile, 0)
 	prog.sources = make(map[string]string)
 	return prog
 }
 
-func (me *cfile) pushScope() {
-	sc := scopeInit(me.scope)
-	me.scope = sc
-}
-
-func (me *cfile) popScope() {
-	me.scope = me.scope.root
-}
-
-func (me *cfile) getvar(name string) *variable {
-	// TODO fix scoping rules
-
-	if alias, ok := me.scope.renaming[name]; ok {
-		name = alias
-	}
-
-	scope := me.scope
-	for {
-		if v, ok := scope.variables[name]; ok {
-			return v
+func (me *program) loadlibs(hmlibs string) {
+	hmlibls := scan(hmlibs)
+	for _, f := range hmlibls {
+		name := f.Name()
+		if strings.HasSuffix(name, ".c") {
+			base := name[0:strings.LastIndex(name, ".c")]
+			me.hmlibmap[base] = hmlibs + "/" + name
 		}
-		if scope.root == nil {
-			return nil
-		}
-		scope = scope.root
 	}
 }
 
@@ -184,29 +155,6 @@ func canCastToNumber(t string) bool {
 func isInteger(t string) bool {
 	_, ok := integerTypes[t]
 	return ok
-}
-
-func (me *cfile) head() string {
-	var head strings.Builder
-	head.WriteString(me.headIncludeSection.String())
-	head.WriteString("\n")
-	head.WriteString(me.headEnumSection.String())
-	if me.headEnumTypeDefSection.Len() != 0 {
-		head.WriteString(me.headEnumTypeDefSection.String())
-		head.WriteString("\n")
-	}
-	if me.headStructTypeDefSection.Len() != 0 {
-		head.WriteString(me.headStructTypeDefSection.String())
-		head.WriteString("\n")
-	}
-	head.WriteString(me.headStructSection.String())
-	if me.headExternSection.Len() != 0 {
-		head.WriteString(me.headExternSection.String())
-		head.WriteString("\n")
-	}
-	head.WriteString(me.headFuncSection.String())
-	head.WriteString(me.headSuffix.String())
-	return head.String()
 }
 
 type allocData struct {

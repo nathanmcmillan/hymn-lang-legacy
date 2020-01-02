@@ -17,61 +17,59 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		fmt.Println("=== " + name + " C ===")
 	}
 
-	cfile := initC(me, folder, "", name, hmlibs)
+	cfile := me.cFileInit()
+	guard := me.defNameSpace("", name)
 
-	if len(me.importOrder) > 0 {
-		cfile.headIncludeSection.WriteString("\n")
-		for _, iname := range me.importOrder {
-			imp := me.imports[iname]
-			path := imp.name + "/" + imp.name
-			cfile.headIncludeSection.WriteString("\n#include \"" + path + ".h\"")
-		}
-	}
+	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
+	cfile.headStdIncludeSection.WriteString("#define " + guard + "\n")
+
+	cfile.headStdIncludeSection.WriteString("\n#include <stdio.h>")
+	cfile.headStdIncludeSection.WriteString("\n#include <stdlib.h>")
+	cfile.headStdIncludeSection.WriteString("\n#include <stdint.h>")
+	cfile.headStdIncludeSection.WriteString("\n#include <inttypes.h>")
+	cfile.headStdIncludeSection.WriteString("\n#include <stdbool.h>")
+
+	// if len(me.importOrder) > 0 {
+	// 	cfile.headReqIncludeSection.WriteString("\n")
+	// 	for _, iname := range me.importOrder {
+	// 		imp := me.imports[iname]
+	// 		path := imp.name + "/" + imp.name
+	// 		cfile.headReqIncludeSection.WriteString("\n#include \"" + path + ".h\"")
+	// 	}
+	// }
 
 	root, _ := filepath.Abs(folder)
 	filterOrder := make([]string, 0)
 	filters := make(map[string]subc)
 
-	havefilters := false
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
 		name := c[0:underscore]
 		typed := c[underscore+1:]
 		subfolder := ""
 		base := false
-		if strings.Index(name, "<") != -1 {
-			if typed == "type" {
-				if me.classes[name].doNotDefine() {
-					continue
-				}
-			} else if typed == "enum" {
-				if me.enums[name].doNotDefine() {
-					continue
-				}
-			} else {
-				panic("missing type")
-			}
-			if !havefilters {
-				havefilters = true
-				cfile.headIncludeSection.WriteString("\n")
-			}
-			subfolder = name[0:strings.Index(name, "<")]
-		} else {
-			if typed == "enum" {
-				if len(me.enums[name].generics) == 0 {
-					continue
-				}
-			} else {
+		if typed == "type" {
+			if me.classes[name].doNotDefine() {
 				continue
 			}
+		} else if typed == "enum" {
+			if me.enums[name].doNotDefine() {
+				continue
+			}
+		} else {
+			panic("missing type")
+		}
+		if strings.Index(name, "<") == -1 {
 			subfolder = name
 			base = true
+		} else {
+			subfolder = name[0:strings.Index(name, "<")]
 		}
 		fname := flatten(name)
 		fname = strings.ReplaceAll(fname, "_", "-")
 		filterOrder = append(filterOrder, name)
 		filters[name] = subc{fname: fname, subfolder: subfolder, base: base}
-		cfile.headIncludeSection.WriteString("\n#include \"" + subfolder + "/" + fname + ".h\"")
+		cfile.headReqIncludeSection.WriteString("\n#include \"" + subfolder + "/" + fname + ".h\"")
 	}
 
 	var code strings.Builder
@@ -254,6 +252,7 @@ func (me *cfile) compileRawString(n *node) *codeblock {
 }
 
 func (me *cfile) compileString(n *node) *codeblock {
+	me.libReq.add(HmLibString)
 	code := "hmlib_string_init(\"" + n.value + "\")"
 	return codeBlockOne(n, code)
 }
@@ -273,6 +272,7 @@ func (me *cfile) compileEqual(op string, n *node) *codeblock {
 	b := me.eval(n.has[1])
 	code := ""
 	if a.data().checkIsString() && b.data().checkIsString() {
+		me.libReq.add(HmLibString)
 		code = "hmlib_string_equal(" + a.code() + ", " + b.code() + ")"
 		if op == "not-equal" {
 			code = "!" + code

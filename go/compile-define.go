@@ -74,10 +74,47 @@ func (me *cfile) defineClass(c *class) {
 	code.WriteString("\nstruct " + hmName + " {\n")
 	for _, name := range c.variableOrder {
 		field := c.variables[name]
+		me.dependencyGraph(field.data().dtype)
 		code.WriteString(fmc(1) + field.data().typeSigOf(field.name, true) + ";\n")
 	}
 	code.WriteString("};\n")
 	me.headStructSection.WriteString(code.String())
+}
+
+func (me *cfile) dependencyGraph(d *datatype) {
+	switch d.is {
+	case dataTypeNone:
+		{
+			if d.member != nil {
+				me.dependencyGraph(d.member)
+			}
+		}
+	case dataTypeMaybe:
+		fallthrough
+	case dataTypeArray:
+		fallthrough
+	case dataTypeSlice:
+		{
+			me.dependencyGraph(d.member)
+		}
+	case dataTypeClass:
+		name := d.print()
+		if cl, ok := me.hmfile.classes[name]; ok {
+			if !cl.doNotDefine() {
+				me.dependencyReq.add(cl.location)
+			}
+		}
+	case dataTypeEnum:
+		return
+	case dataTypeUnknown:
+		return
+	case dataTypePrimitive:
+		return
+	case dataTypeFunction:
+		return
+	default:
+		panic("missing data type")
+	}
 }
 
 func (me *class) doNotDefine() bool {

@@ -88,6 +88,7 @@ func (me *cfile) compileAllocSlice(n *node) *codeblock {
 	if _, ok := n.attributes["global"]; ok {
 		code = "[" + size + "]"
 	} else {
+		me.libReq.add(HmLibSlice)
 		if capacity != "" {
 			code = "hmlib_slice_init(sizeof(" + n.data().memberType.typeSig() + "), " + size + ", " + capacity + ")"
 		} else {
@@ -109,6 +110,7 @@ func (me *cfile) compileAllocSlice(n *node) *codeblock {
 func (me *cfile) compileArrayToSlice(n *node) *codeblock {
 	array := n.has[0]
 	data := array.data()
+	me.libReq.add(HmLibSlice)
 	code := "hmlib_array_to_slice(" + array.idata.name + ", sizeof(" + data.memberType.typeSig() + "), " + data.sizeOfArray() + ")"
 	return codeBlockOne(n, code)
 }

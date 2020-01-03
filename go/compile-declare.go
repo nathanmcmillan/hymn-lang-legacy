@@ -64,3 +64,10 @@ func (me *cfile) declareStatic(n *node) string {
 	}
 	return declareCode + ";"
 }
+
+func (me *cfile) defineStatic(n *node) {
+	left := n.has[0]
+	declareCode := me.compileDeclare(left)
+	head := "\nextern " + declareCode + ";"
+	me.headExternSection.WriteString(head)
+}

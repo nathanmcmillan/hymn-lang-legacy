@@ -366,8 +366,9 @@ func (me *parser) immutable() {
 	if n.is != "=" || av.is != "variable" {
 		panic(me.fail() + "invalid static variable")
 	}
-	me.hmfile.statics = append(me.hmfile.statics, n)
-	me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
+	module := me.hmfile
+	module.statics = append(module.statics, n)
+	module.staticScope[av.idata.name] = module.scope.variables[av.idata.name]
 	me.eat("line")
 }
 
@@ -377,7 +378,8 @@ func (me *parser) mutable() {
 	if n.is != "=" || av.is != "variable" {
 		panic(me.fail() + "invalid static variable")
 	}
-	me.hmfile.statics = append(me.hmfile.statics, n)
-	me.hmfile.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
+	module := me.hmfile
+	module.statics = append(module.statics, n)
+	module.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
 	me.eat("line")
 }

@@ -22,13 +22,13 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 	guard := module.defNameSpace(rootname, name)
 
 	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
-	cfile.headStdIncludeSection.WriteString("#define " + guard + "\n")
+	cfile.headStdIncludeSection.WriteString("#define " + guard)
 
-	cfile.headStdIncludeSection.WriteString("\n#include <stdio.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <stdlib.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <stdint.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <inttypes.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <stdbool.h>")
+	// cfile.headStdIncludeSection.WriteString("\n#include <stdio.h>")
+	// cfile.headStdIncludeSection.WriteString("\n#include <stdlib.h>")
+	// cfile.headStdIncludeSection.WriteString("\n#include <stdint.h>")
+	// cfile.headStdIncludeSection.WriteString("\n#include <inttypes.h>")
+	// cfile.headStdIncludeSection.WriteString("\n#include <stdbool.h>")
 
 	// for _, f := range filterOrder {
 	// 	if f == filter {
@@ -68,15 +68,9 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 		}
 	}
 
-	// if module.needInit {
-	// 	for _, s := range module.statics {
-	// 		cfile.declareStatic(s)
-	// 	}
-	// }
-
 	for _, f := range module.functionOrder {
 		fun := module.functions[f]
-		if fun.forClass == nil || fun.forClass.name != name {
+		if fun.forClass == nil || fun.forClass.getLocation() != name {
 			continue
 		}
 		cfile.compileFunction(f, fun, true)

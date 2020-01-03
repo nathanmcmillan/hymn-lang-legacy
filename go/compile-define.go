@@ -114,13 +114,10 @@ func (me *cfile) dependencyGraph(d *datatype) {
 			me.dependencyReq.add(en.location)
 		}
 	case dataTypeString:
-		return
+		me.libReq.add(HmLibString)
 	case dataTypeUnknown:
 		return
 	case dataTypePrimitive:
-		if d.canonical == TokenString {
-			me.libReq.add(HmLibString)
-		}
 		return
 	case dataTypeFunction:
 		return

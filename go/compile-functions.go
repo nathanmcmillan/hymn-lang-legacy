@@ -45,6 +45,7 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 
 	args := fn.args
 	expressions := fn.expressions
+	returns := fn.returns
 	var block strings.Builder
 	me.pushScope()
 	me.depth = 1
@@ -58,8 +59,10 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	me.popScope()
 	var code strings.Builder
 	code.WriteString("\n")
-	code.WriteString(fmtassignspace(fn.returns.typeSig()) + me.hmfile.funcNameSpace(name) + "(")
+	code.WriteString(fmtassignspace(returns.typeSig()) + me.hmfile.funcNameSpace(name) + "(")
+	me.dependencyGraph(returns.dtype)
 	for ix, arg := range args {
+		me.dependencyGraph(arg.data().dtype)
 		if ix > 0 {
 			code.WriteString(", ")
 		}

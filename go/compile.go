@@ -246,7 +246,19 @@ func (me *cfile) compileFnPtr(n *node, hint *varData) *codeblock {
 func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
 	code := ""
 	if n.idata.module == me.hmfile {
-		v := me.getvar(n.idata.name)
+		name := n.idata.name
+		v := me.getvar(name)
+		if v == nil {
+			module := me.hmfile
+			for _, s := range module.statics {
+				sname := s.has[0].idata.name
+				if sname == name {
+					me.defineStatic(s)
+					break
+				}
+			}
+			v = me.getvar(name)
+		}
 		code = v.cName
 		if hint != nil && hint.isptr && !v.data().isptr {
 			code = "&" + code

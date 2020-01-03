@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 type cfile struct {
 	location                 string
@@ -57,8 +59,10 @@ func (me *cfile) getvar(name string) *variable {
 func (me *cfile) head() string {
 	me.includeLibs()
 	var head strings.Builder
-	head.WriteString(me.headStdIncludeSection.String())
-	head.WriteString("\n")
+	if me.headStdIncludeSection.Len() != 0 {
+		head.WriteString(me.headStdIncludeSection.String())
+		head.WriteString("\n")
+	}
 	if me.headLibIncludeSection.Len() != 0 {
 		head.WriteString(me.headLibIncludeSection.String())
 		head.WriteString("\n")
@@ -87,6 +91,9 @@ func (me *cfile) head() string {
 }
 
 func (me *cfile) includeLibs() {
+	for _, name := range me.stdReq.order {
+		me.headStdIncludeSection.WriteString("\n#include <" + name + ">")
+	}
 	for _, name := range me.libReq.order {
 		location := me.hmfile.program.hmlibmap[name]
 		me.hmfile.program.sources[name] = location

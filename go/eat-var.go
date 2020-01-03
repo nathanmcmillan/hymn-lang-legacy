@@ -117,8 +117,8 @@ func (me *parser) eatvar(from *hmfile) *node {
 				member.push(head)
 				head = member
 			} else {
-				if !head.data().checkIsArrayOrSlice() {
-					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
+				if !head.data().checkIsIndexable() {
+					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not indexable")
 				}
 				member := nodeInit("array-member")
 				index := me.calc(0)

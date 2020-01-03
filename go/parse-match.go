@@ -108,7 +108,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			} else {
 				right = me.calc(getInfixPrecedence(op))
 			}
-		} else if _, ok := primitives[me.token.is]; ok {
+		} else if checkIsPrimitive(me.token.is) {
 			panic(me.fail() + "can't match on a primitive. did you mean to use an enum implementation?")
 		} else {
 			panic(me.fail() + "unknown right side of \"is\"")

@@ -144,7 +144,7 @@ func (me *parser) verifyWordOrPrimitive() {
 	if t == "id" {
 		me.verify("id")
 		return
-	} else if _, ok := primitives[t]; ok {
+	} else if checkIsPrimitive(t) {
 		me.verify(t)
 		return
 	}

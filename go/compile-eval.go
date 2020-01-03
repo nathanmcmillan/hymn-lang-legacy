@@ -173,7 +173,7 @@ func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
 	if op == "none" {
 		return me.compileNone(n)
 	}
-	if _, ok := primitives[op]; ok {
+	if checkIsPrimitive(op) {
 		return codeBlockOne(n, n.value)
 	}
 	panic("eval unknown operation " + n.string(0))

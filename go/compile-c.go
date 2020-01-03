@@ -8,14 +8,13 @@ import (
 
 func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc, filterOrder []string, filters map[string]subc) {
 	name := subc.fname
-	subfolder := subc.subfolder
-	location := subfolder + "/" + name
+	// subfolder := subc.subfolder
 
 	if debug {
-		fmt.Println("=== " + location + " ===")
+		fmt.Println("=== " + subc.location() + " ===")
 	}
 
-	folder = folder + "/" + subfolder
+	// folder = folder + "/" + subfolder
 
 	module := me.hmfile
 
@@ -39,7 +38,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 	// 	cfile.headReqIncludeSection.WriteString("\n#include \"" + subc.subfolder + "/" + subc.fname + ".h\"")
 	// }
 
-	cfile.location = location
+	cfile.location = subc.location()
 
 	for _, c := range module.defineOrder {
 		underscore := strings.LastIndex(c, "_")
@@ -69,17 +68,18 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 		}
 	}
 
-	if module.needInit {
-		for _, s := range module.statics {
-			cfile.declareStatic(s)
-		}
-	}
+	// if module.needInit {
+	// 	for _, s := range module.statics {
+	// 		cfile.declareStatic(s)
+	// 	}
+	// }
 
 	for _, f := range module.functionOrder {
-		if !strings.HasPrefix(f, filter) {
+		fun := module.functions[f]
+		if fun.forClass == nil || fun.forClass.name != name {
 			continue
 		}
-		cfile.compileFunction(f, module.functions[f], true)
+		cfile.compileFunction(f, fun, true)
 	}
 
 	os.Mkdir(folder, os.ModePerm)

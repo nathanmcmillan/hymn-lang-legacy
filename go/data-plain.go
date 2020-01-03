@@ -14,6 +14,7 @@ const (
 	dataTypeUnknown   = 6
 	dataTypeNone      = 7
 	dataTypeSlice     = 8
+	dataTypeString    = 9
 )
 
 type datatype struct {
@@ -55,6 +56,11 @@ func (me *datatype) copyTo(c *datatype) {
 			c.generics[i] = g.copy()
 		}
 	}
+	c.hmlib = me.hmlib
+	c.original = me.original
+	c.mutable = me.mutable
+	c.heap = me.heap
+	c.pointer = me.pointer
 }
 
 func (me *datatype) copy() *datatype {
@@ -68,7 +74,7 @@ func (me *datatype) isSomeOrNone() bool {
 }
 
 func (me *datatype) isString() bool {
-	return me.is == dataTypePrimitive && me.canonical == TokenString
+	return me.is == dataTypeString
 }
 
 func (me *datatype) isChar() bool {
@@ -87,8 +93,19 @@ func (me *datatype) isArrayOrSlice() bool {
 	return me.isArray() || me.isSlice()
 }
 
+func (me *datatype) isIndexable() bool {
+	return me.is == dataTypeString || me.isArrayOrSlice()
+}
+
 func (me *datatype) isPointerInC() bool {
+	if me.isPrimitive() {
+		return false
+	}
 	return me.pointer
+}
+
+func (me *datatype) isPrimitive() bool {
+	return me.is == dataTypePrimitive
 }
 
 func (me *datatype) standard() string {
@@ -103,6 +120,8 @@ func (me *datatype) nameIs() string {
 	switch me.is {
 	case dataTypePrimitive:
 		return "primitive"
+	case dataTypeString:
+		return "string"
 	case dataTypeMaybe:
 		return "maybe"
 	case dataTypeArray:
@@ -126,6 +145,8 @@ func (me *datatype) nameIs() string {
 func (me *datatype) cname() string {
 	switch me.is {
 	case dataTypeUnknown:
+		fallthrough
+	case dataTypeString:
 		fallthrough
 	case dataTypePrimitive:
 		{
@@ -174,6 +195,8 @@ func (me *datatype) cname() string {
 func (me *datatype) output(expand bool) string {
 	switch me.is {
 	case dataTypeUnknown:
+		fallthrough
+	case dataTypeString:
 		fallthrough
 	case dataTypePrimitive:
 		{
@@ -238,42 +261,116 @@ func (me *datatype) output(expand bool) string {
 	}
 }
 
-func newdatatypearray(module *hmfile, size string, member *datatype) *datatype {
-	return &datatype{module: module, is: dataTypeArray, size: size, member: member}
+func newdatatype(is int) *datatype {
+	d := &datatype{}
+	d.is = is
+	d.mutable = true
+	d.pointer = true
+	d.heap = true
+	return d
 }
 
-func newdatatypeslice(module *hmfile, member *datatype) *datatype {
-	return &datatype{module: module, is: dataTypeSlice, member: member}
+func newdatamaybe(member *datatype) *datatype {
+	d := newdatatype(dataTypeMaybe)
+	d.member = member
+	return d
+}
+
+func newdatanone() *datatype {
+	return newdatatype(dataTypeNone)
+}
+
+func newdatastring() *datatype {
+	d := newdatatype(dataTypeString)
+	d.canonical = TokenString
+	return d
+}
+
+func newdataprimitive(canonical string) *datatype {
+	d := newdatatype(dataTypePrimitive)
+	d.canonical = canonical
+	d.pointer = false
+	d.heap = false
+	return d
+}
+
+func newdataclass(module *hmfile, canonical string, generics []*datatype) *datatype {
+	d := newdatatype(dataTypeClass)
+	d.module = module
+	d.canonical = canonical
+	d.generics = generics
+	return d
+}
+
+func newdataenum(module *hmfile, canonical string, generics []*datatype) *datatype {
+	d := newdatatype(dataTypeEnum)
+	d.module = module
+	d.canonical = canonical
+	d.generics = generics
+	return d
+}
+
+func newdataunknown(module *hmfile, canonical string, generics []*datatype) *datatype {
+	d := newdatatype(dataTypeUnknown)
+	d.module = module
+	d.canonical = canonical
+	d.generics = generics
+	return d
+}
+
+func newdataarray(size string, member *datatype) *datatype {
+	d := newdatatype(dataTypeArray)
+	d.size = size
+	d.member = member
+	return d
+}
+
+func newdataslice(member *datatype) *datatype {
+	d := newdatatype(dataTypeSlice)
+	d.member = member
+	return d
+}
+
+func newdatafunction(module *hmfile, parameters []*datatype, returns *datatype) *datatype {
+	d := newdatatype(dataTypeFunction)
+	d.module = module
+	d.parameters = parameters
+	d.returns = returns
+	return d
 }
 
 func getdatatype(me *hmfile, typed string) *datatype {
 
+	if typed == TokenString {
+		return newdatastring()
+	}
+
 	if checkIsPrimitive(typed) {
-		return &datatype{is: dataTypePrimitive, canonical: typed}
+		return newdataprimitive(typed)
 	}
 
 	if strings.HasPrefix(typed, "maybe") {
-		return &datatype{is: dataTypeMaybe, member: getdatatype(me, typed[6:len(typed)-1])}
+		return newdatamaybe(getdatatype(me, typed[6:len(typed)-1]))
 
 	} else if typed == "none" {
-		return &datatype{is: dataTypeNone}
+		return newdatanone()
 
 	} else if strings.HasPrefix(typed, "none") {
-		return &datatype{is: dataTypeMaybe, member: getdatatype(me, typed[5:len(typed)-1])}
+		return newdatamaybe(getdatatype(me, typed[5:len(typed)-1]))
 	}
 
 	if checkIsArray(typed) {
 		size, member := typeOfArrayOrSlice(typed)
-		return &datatype{is: dataTypeArray, size: size, member: getdatatype(me, member)}
+		return newdataarray(size, getdatatype(me, member))
 	}
 
 	if checkIsSlice(typed) {
-		size, member := typeOfArrayOrSlice(typed)
-		return &datatype{is: dataTypeSlice, size: size, member: getdatatype(me, member)}
+		_, member := typeOfArrayOrSlice(typed)
+		return newdataslice(getdatatype(me, member))
 	}
 
 	if me == nil {
-		return &datatype{module: me, is: dataTypeUnknown, canonical: typed}
+		return newdataunknown(nil, typed, nil)
 	}
 
 	module := me
@@ -292,50 +389,42 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		for i, p := range parameters {
 			list[i] = getdatatype(me, p)
 		}
-		return &datatype{module: module, is: dataTypeFunction, parameters: list, returns: getdatatype(me, returns)}
+		return newdatafunction(module, list, getdatatype(me, returns))
 	}
 
 	g := strings.Index(typed, "<")
 	if g != -1 {
 		base := typed[0:g]
-		var is int
-		if _, ok := module.classes[base]; ok {
-			is = dataTypeClass
-		} else if _, ok := module.enums[base]; ok {
-			is = dataTypeEnum
-		} else {
-			is = dataTypeUnknown
-		}
 		graw := me.getdatatypegenerics(typed)
 		glist := make([]*datatype, len(graw))
 		for i, r := range graw {
 			glist[i] = getdatatype(me, r)
 		}
-		return &datatype{module: module, is: is, canonical: base, generics: glist}
+		if _, ok := module.classes[base]; ok {
+			return newdataclass(module, base, glist)
+		} else if _, ok := module.enums[base]; ok {
+			return newdataenum(module, base, glist)
+		} else {
+			return newdataunknown(module, base, glist)
+		}
 	}
 
 	d = strings.Index(typed, ".")
 	if d != -1 {
 		base := typed[0:d]
-		var is int
 		if _, ok := module.enums[base]; ok {
-			is = dataTypeEnum
-		} else {
-			is = dataTypeUnknown
+			return newdataenum(module, base, nil)
 		}
-		return &datatype{module: module, is: is, canonical: base}
+		return newdataunknown(module, base, nil)
 	}
 
-	var is int
 	if _, ok := module.classes[typed]; ok {
-		is = dataTypeClass
+		return newdataclass(module, typed, nil)
 	} else if _, ok := module.enums[typed]; ok {
-		is = dataTypeEnum
-	} else {
-		is = dataTypeUnknown
+		return newdataenum(module, typed, nil)
 	}
 
-	return &datatype{module: module, is: is, canonical: typed}
+	return newdataunknown(module, typed, nil)
 }
 
 func (me *hmfile) getdatatypegenerics(typed string) []string {

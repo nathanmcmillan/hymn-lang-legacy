@@ -44,14 +44,14 @@ func (me *class) getGenerics() []string {
 }
 
 func (me *class) getLocation() string {
-	path := ""
+	// path := ""
 	name := me.name
-	if strings.Index(name, "<") != -1 {
-		path = name[0:strings.Index(name, "<")]
-	} else {
-		path = name
-	}
+	// if strings.Index(name, "<") != -1 {
+	// 	path = name[0:strings.Index(name, "<")]
+	// } else {
+	// 	path = name
+	// }
 	name = flatten(name)
 	name = strings.ReplaceAll(name, "_", "-")
-	return path + "/" + name
+	return name // path + "/" + name
 }

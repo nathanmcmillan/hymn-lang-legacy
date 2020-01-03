@@ -1,4 +1,3 @@
-
 main
 	foo = "hello i am an array of chars"
 	a = foo[0]

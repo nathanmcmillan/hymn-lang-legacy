@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -93,7 +93,6 @@ func (me *parser) mapGenerics(plain *plainType, gmapper map[string]string) []str
 						me.defineEnumImplGeneric(base, pop, current.order)
 					} else {
 						base := module.classes[current.name]
-						fmt.Println("mapGenerics :: ", current.name, "->", base.name)
 						me.defineClassImplGeneric(base, pop, current.order)
 					}
 				}
@@ -179,6 +178,8 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 		fallthrough
 	case dataTypeUnknown:
 		fallthrough
+	case dataTypeString:
+		fallthrough
 	case dataTypePrimitive:
 		{
 			if a.generics != nil || b.generics != nil {
@@ -204,6 +205,16 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 	case dataTypeMaybe:
 		{
 			return hintRecursiveReplace(a.member, b, gindex, update)
+		}
+	case dataTypeSlice:
+		{
+			if b.is != dataTypeSlice {
+				return false
+			}
+			ok := hintRecursiveReplace(a.member, b.member, gindex, update)
+			if !ok {
+				return false
+			}
 		}
 	case dataTypeArray:
 		{
@@ -236,7 +247,7 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 			}
 		}
 	default:
-		panic("missing data type")
+		panic("missing data type " + strconv.Itoa(a.is))
 	}
 	return true
 }

@@ -12,6 +12,10 @@ type subc struct {
 	base      bool
 }
 
+func (me *subc) location() string {
+	return me.fname
+}
+
 func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	if debug {
 		fmt.Println("=== " + name + " C ===")
@@ -29,14 +33,13 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	cfile.headStdIncludeSection.WriteString("\n#include <inttypes.h>")
 	cfile.headStdIncludeSection.WriteString("\n#include <stdbool.h>")
 
-	// if len(me.importOrder) > 0 {
-	// 	cfile.headReqIncludeSection.WriteString("\n")
-	// 	for _, iname := range me.importOrder {
-	// 		imp := me.imports[iname]
-	// 		path := imp.name + "/" + imp.name
-	// 		cfile.headReqIncludeSection.WriteString("\n#include \"" + path + ".h\"")
-	// 	}
-	// }
+	if len(me.importOrder) > 0 {
+		for _, iname := range me.importOrder {
+			imp := me.imports[iname]
+			path := imp.name + "/" + imp.name
+			cfile.headReqIncludeSection.WriteString("\n#include \"" + path + ".h\"")
+		}
+	}
 
 	root, _ := filepath.Abs(folder)
 	filterOrder := make([]string, 0)
@@ -53,9 +56,9 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 				continue
 			}
 		} else if typed == "enum" {
-			if me.enums[name].doNotDefine() {
-				continue
-			}
+			// if me.enums[name].doNotDefine() {
+			// 	continue
+			// }
 		} else {
 			panic("missing type")
 		}
@@ -68,8 +71,9 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		fname := flatten(name)
 		fname = strings.ReplaceAll(fname, "_", "-")
 		filterOrder = append(filterOrder, name)
-		filters[name] = subc{fname: fname, subfolder: subfolder, base: base}
-		cfile.headReqIncludeSection.WriteString("\n#include \"" + subfolder + "/" + fname + ".h\"")
+		s := subc{fname: fname, subfolder: subfolder, base: base}
+		filters[name] = s
+		cfile.headReqIncludeSection.WriteString("\n#include \"" + s.location() + ".h\"")
 	}
 
 	var code strings.Builder
@@ -111,10 +115,14 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		if _, ok := filters[name]; ok {
 			continue
 		}
+		fun := me.functions[f]
+		if fun.forClass != nil {
+			continue
+		}
 		if f == "main" {
-			cfile.compileMain(me.functions[f])
+			cfile.compileMain(fun)
 		} else {
-			cfile.compileFunction(f, me.functions[f], false)
+			cfile.compileFunction(f, fun, false)
 		}
 	}
 
@@ -123,7 +131,9 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		cfile.subC(root, folder, name, hmlibs, f, &subc, filterOrder, filters)
 	}
 
-	fmt.Println("=== end C ===")
+	if debug {
+		fmt.Println("=== end C ===")
+	}
 
 	fileCode := folder + "/" + name + ".c"
 

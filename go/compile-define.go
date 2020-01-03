@@ -29,6 +29,8 @@ func (me *cfile) defineEnum(enum *enum) {
 		return
 	}
 
+	me.dependencyReq.add(base.location)
+
 	code := ""
 	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
 	me.headStructTypeDefSection.WriteString("\ntypedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";")
@@ -39,10 +41,12 @@ func (me *cfile) defineEnum(enum *enum) {
 		num := len(enumUnion.types)
 		if num == 1 {
 			typed := enumUnion.types[0]
+			me.dependencyGraph(typed.dtype)
 			code += fmc(2) + fmtassignspace(typed.typeSig()) + enumUnion.name + ";\n"
 		} else if num != 0 {
 			code += fmc(2) + "struct {\n"
 			for ix, typed := range enumUnion.types {
+				me.dependencyGraph(typed.dtype)
 				code += fmc(3) + fmtassignspace(typed.typeSig()) + "var" + strconv.Itoa(ix) + ";\n"
 			}
 			code += fmc(2) + "} " + enumUnion.name + ";\n"
@@ -105,10 +109,18 @@ func (me *cfile) dependencyGraph(d *datatype) {
 			}
 		}
 	case dataTypeEnum:
+		name := d.print()
+		if en, ok := me.hmfile.enums[name]; ok {
+			me.dependencyReq.add(en.location)
+		}
+	case dataTypeString:
 		return
 	case dataTypeUnknown:
 		return
 	case dataTypePrimitive:
+		if d.canonical == TokenString {
+			me.libReq.add(HmLibString)
+		}
 		return
 	case dataTypeFunction:
 		return
@@ -132,6 +144,11 @@ func (me *class) doNotDefine() bool {
 func (me *enum) doNotDefine() bool {
 	if len(me.generics) > 0 {
 		return true
+	}
+	for k, v := range me.genericsDict {
+		if k == me.generics[v] {
+			return true
+		}
 	}
 	return false
 }

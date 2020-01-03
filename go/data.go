@@ -218,11 +218,11 @@ func (me *varData) merge(hint *allocData) {
 			size := "[" + strconv.Itoa(hint.size) + "]"
 			me.full = size + member.full
 			me.typed = size + member.typed
-			me.dtype = newdatatypearray(me.module, strconv.Itoa(hint.size), me.dtype)
+			me.dtype = newdataarray(strconv.Itoa(hint.size), me.dtype)
 		} else {
 			me.full = "[]" + member.full
 			me.typed = "[]" + member.typed
-			me.dtype = newdatatypeslice(me.module, me.dtype)
+			me.dtype = newdataslice(me.dtype)
 		}
 	}
 	me.dtype.heap = me.heap
@@ -274,6 +274,10 @@ func (me *varData) checkIsSlice() bool {
 func (me *varData) checkIsArrayOrSlice() bool {
 	// return me.array || me.slice
 	return me.dtype.isArrayOrSlice()
+}
+
+func (me *varData) checkIsIndexable() bool {
+	return me.dtype.isIndexable()
 }
 
 func (me *varData) checkIsPointerInC() bool {

@@ -42,9 +42,9 @@ var (
 		TokenFloat:   true,
 		TokenFloat32: true,
 		TokenFloat64: true,
-		TokenString:  true,
 		TokenChar:    true,
 		TokenBoolean: true,
+		TokenString:  true,
 	}
 	typeToCName = map[string]string{
 		TokenFloat32:   "float",

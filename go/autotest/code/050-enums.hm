@@ -34,11 +34,11 @@ immutable example = vec()
 immutable snap = snake.viper
 immutable woof = mammal.dog(7.2)
 
-calc_me(x int) either<int, float>
+calc_me(x int) either<int,float>
 	if x < 10
-		i = either<int, float>.one(6432)
+		i = either<int,float>.one(6432)
 		return i
-	f = either<int, float>.two(5329.5)
+	f = either<int,float>.two(5329.5)
 	return f
 
 omega_add() math.operation

@@ -1,14 +1,14 @@
 type foo
-  a int
-  b string
+	a int
+	b string
 
 type bar
-  c foo
-  d string
+	c foo
+	d string
 
 main
-  x = foo()
-  z = bar()
-  z.c = x
-  x.b = "hello test foo & bar"
-  echo(z.c.b)
+	x = foo()
+	z = bar()
+	z.c = x
+	x.b = "hello test foo & bar"
+	echo(z.c.b)

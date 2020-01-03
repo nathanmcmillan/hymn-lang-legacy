@@ -30,7 +30,10 @@ func TestCompile(t *testing.T) {
 		fmt.Println("====================================================================== test", info.Name())
 		flags.path = tests + "/" + info.Name()
 		flags.writeTo = folder + "/out/" + nameNum
-		stdout := execCompile(flags)
+		stdout, err := execCompile(flags)
+		if err != nil {
+			t.Errorf("compile error for " + info.Name() + " :: " + err.Error())
+		}
 		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {
 			t.Errorf("assert failed for " + info.Name())

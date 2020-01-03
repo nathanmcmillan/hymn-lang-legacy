@@ -34,6 +34,7 @@ type flags struct {
 	info            bool
 	optimize        bool
 	makefile        bool
+	doNotCompile    bool
 }
 
 const (
@@ -77,6 +78,7 @@ func main() {
 	flag.BoolVar(&flags.info, "i", false, "includes additional information in the binary (sends -g flag to the compiler)")
 	flag.BoolVar(&flags.optimize, "o", false, "optimizes the binary (sends -O2 flag to the compiler)")
 	flag.BoolVar(&flags.makefile, "g", false, "generate a makefile")
+	flag.BoolVar(&flags.doNotCompile, "x", false, "do not compile")
 	flag.Parse()
 
 	if flags.help || flags.path == "" || flags.hmlib == "" {
@@ -90,7 +92,7 @@ func main() {
 	}
 }
 
-func execCompile(flags *flags) string {
+func execCompile(flags *flags) (string, error) {
 	program := programInit()
 	program.out = flags.writeTo
 	program.libs = flags.hmlib
@@ -109,6 +111,9 @@ func execCompile(flags *flags) string {
 	fileOut := flags.writeTo + "/" + name
 	if exists(fileOut) {
 		os.Remove(fileOut)
+	}
+	if flags.doNotCompile {
+		return "", nil
 	}
 	gcc(flags, program.sources, fileOut)
 	return app(flags, name)
@@ -139,7 +144,9 @@ func (me *program) compile() {
 
 func gcc(flags *flags, sources map[string]string, fileOut string) {
 	command := flags.cc
-	fmt.Println("=== " + command + " ===")
+	if debug {
+		fmt.Println("=== " + command + " ===")
+	}
 	paramGcc := make([]string, 0)
 	if flags.analysis {
 		paramGcc = append(paramGcc, "-v")
@@ -201,25 +208,28 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	}
 }
 
-func app(flags *flags, name string) string {
+func app(flags *flags, name string) (string, error) {
 	path := flags.writeTo + "/" + name
 	if exists(path) {
-		fmt.Println("=== run ===")
+		if debug {
+			fmt.Println("=== run ===")
+		}
 		var stdout []byte
+		var err error
 		pwd, _ := os.Getwd()
 		os.Chdir(flags.writeTo)
 		bwd, _ := os.Getwd()
 		binary := bwd + "/" + name
 		if flags.memoryCheck {
-			stdout, _ = exec.Command("valgrind", "--track-origins=yes", binary).CombinedOutput()
+			stdout, err = exec.Command("valgrind", "--track-origins=yes", binary).CombinedOutput()
 		} else {
-			stdout, _ = exec.Command(binary).CombinedOutput()
+			stdout, err = exec.Command(binary).CombinedOutput()
 		}
 		os.Chdir(pwd)
 		finalout := string(stdout)
 		fmt.Println(finalout)
-		return finalout
+		return finalout, err
 	}
 	fmt.Println("===")
-	return ""
+	return "", nil
 }

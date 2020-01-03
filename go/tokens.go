@@ -302,7 +302,7 @@ func (me *tokenizer) get(pos int) *token {
 		if _, ok := keywords[word]; ok {
 			if word == "true" || word == "false" {
 				token = me.valueToken(TokenBooleanLiteral, word)
-			} else if _, ok := primitives[word]; ok {
+			} else if checkIsPrimitive(word) {
 				token = me.valueToken(word, word)
 			} else {
 				token = me.simpleToken(word)

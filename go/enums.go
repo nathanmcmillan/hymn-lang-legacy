@@ -1,8 +1,11 @@
 package main
 
+import "strings"
+
 type enum struct {
 	module       *hmfile
 	name         string
+	location     string
 	simple       bool
 	types        map[string]*union
 	typesOrder   []*union
@@ -47,6 +50,7 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 	e := &enum{}
 	e.module = module
 	e.name = name
+	e.location = e.getLocation()
 	e.simple = simple
 	e.types = dict
 	e.typesOrder = order
@@ -81,4 +85,17 @@ func (me *enum) noMallocTypeSig() string {
 
 func (me *enum) getGenerics() []string {
 	return me.generics
+}
+
+func (me *enum) getLocation() string {
+	// path := ""
+	name := me.name
+	// if strings.Index(name, "<") != -1 {
+	// 	path = name[0:strings.Index(name, "<")]
+	// } else {
+	// 	path = name
+	// }
+	name = flatten(name)
+	name = strings.ReplaceAll(name, "_", "-")
+	return name // path + "/" + name
 }

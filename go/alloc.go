@@ -94,6 +94,7 @@ func (me *parser) defaultValue(in *varData) *node {
 	d := nodeInit(in.full)
 	d.copyData(in)
 	typed := in.full
+	fmt.Print(">>>", d.string(0))
 	if typed == TokenString {
 		d.value = ""
 	} else if typed == TokenChar {

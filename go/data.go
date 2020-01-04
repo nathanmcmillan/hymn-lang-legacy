@@ -231,8 +231,6 @@ func (me *varData) merge(hint *allocData) {
 
 func (me *varData) sizeOfArray() string {
 	return me.dtype.size
-	// i := strings.Index(me.full, "]")
-	// return me.full[1:i]
 }
 
 func (me *varData) arrayToSlice() {
@@ -247,32 +245,26 @@ func (me *varData) arrayToSlice() {
 }
 
 func (me *varData) checkIsSomeOrNone() bool {
-	// return me.maybe || me.none
 	return me.dtype.isSomeOrNone()
 }
 
 func (me *varData) checkIsString() bool {
-	// return me.full == TokenString || me.full == "[]char"
 	return me.dtype.isString()
 }
 
 func (me *varData) checkIsChar() bool {
-	// return me.full == TokenChar
 	return me.dtype.isChar()
 }
 
 func (me *varData) checkIsArray() bool {
-	// return checkIsArray(me.full)
 	return me.dtype.isArray()
 }
 
 func (me *varData) checkIsSlice() bool {
-	// return checkIsSlice(me.full)
 	return me.dtype.isSlice()
 }
 
 func (me *varData) checkIsArrayOrSlice() bool {
-	// return me.array || me.slice
 	return me.dtype.isArrayOrSlice()
 }
 
@@ -281,46 +273,19 @@ func (me *varData) checkIsIndexable() bool {
 }
 
 func (me *varData) checkIsPointerInC() bool {
-	// if me.checkIsPrimitive() {
-	// 	return false
-	// }
-	// return me.isptr
 	return me.dtype.isPointerInC()
 }
 
-func checkIsPrimitive(t string) bool {
-	_, ok := primitives[t]
-	return ok
-}
-
 func (me *varData) checkIsPrimitive() bool {
-	return checkIsPrimitive(me.full)
+	return me.dtype.isPrimitive()
 }
 
 func (me *varData) checkIsClass() (*class, bool) {
-	if me.module == nil {
-		if me.hmlib == nil {
-			return nil, false
-		}
-		cl, ok := me.hmlib.classes[me.typed]
-		return cl, ok
-	}
-	cl, ok := me.module.classes[me.typed]
-	return cl, ok
+	return me.dtype.isClass()
 }
 
 func (me *varData) checkIsEnum() (*enum, *union, bool) {
-	if me.module == nil {
-		return nil, nil, false
-	}
-	dot := strings.Split(me.typed, ".")
-	if len(dot) != 1 {
-		en, ok := me.module.enums[dot[0]]
-		un, _ := en.types[dot[1]]
-		return en, un, ok
-	}
-	en, ok := me.module.enums[me.typed]
-	return en, nil, ok
+	return me.dtype.isEnum()
 }
 
 func (me *varData) postfixConst() bool {
@@ -469,4 +434,9 @@ func (me *parser) typeEqual(one, two string) bool {
 		return true
 	}
 	return getdatatype(me.hmfile, one).standard() == getdatatype(me.hmfile, two).standard()
+}
+
+func checkIsPrimitive(t string) bool {
+	_, ok := primitives[t]
+	return ok
 }

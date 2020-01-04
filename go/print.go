@@ -51,6 +51,15 @@ func (me *datatype) string(lv int) string {
 	if me.returns != nil {
 		s += ",\n" + fmc(lv) + "\"returns\": " + me.returns.string(lv)
 	}
+	if me.class != nil {
+		s += ",\n" + fmc(lv) + "\"class\": \"" + me.class.name + "\""
+	}
+	if me.enum != nil {
+		s += ",\n" + fmc(lv) + "\"enum\": \"" + me.enum.name + "\""
+		if me.union != nil {
+			s += ",\n" + fmc(lv) + "\"union\": \"" + me.union.name + "\""
+		}
+	}
 	lv--
 	s += "\n" + fmc(lv) + "}"
 	return s

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -27,10 +28,12 @@ type datatype struct {
 	returns    *datatype
 	generics   []*datatype
 	hmlib      *hmlib
-	original   string
 	mutable    bool
 	heap       bool
 	pointer    bool
+	class      *class
+	enum       *enum
+	union      *union
 }
 
 func (me *datatype) copyTo(c *datatype) {
@@ -57,10 +60,12 @@ func (me *datatype) copyTo(c *datatype) {
 		}
 	}
 	c.hmlib = me.hmlib
-	c.original = me.original
 	c.mutable = me.mutable
 	c.heap = me.heap
 	c.pointer = me.pointer
+	c.class = me.class
+	c.enum = me.enum
+	c.union = me.union
 }
 
 func (me *datatype) copy() *datatype {
@@ -105,7 +110,21 @@ func (me *datatype) isPointerInC() bool {
 }
 
 func (me *datatype) isPrimitive() bool {
-	return me.is == dataTypePrimitive
+	return me.is == dataTypePrimitive || me.is == dataTypeString
+}
+
+func (me *datatype) isClass() (*class, bool) {
+	if me.class == nil {
+		return nil, false
+	}
+	return me.class, true
+}
+
+func (me *datatype) isEnum() (*enum, *union, bool) {
+	if me.enum == nil {
+		return nil, nil, false
+	}
+	return me.enum, me.union, true
 }
 
 func (me *datatype) standard() string {
@@ -142,6 +161,19 @@ func (me *datatype) nameIs() string {
 	panic("missing data type")
 }
 
+func (me *datatype) cNameGenerics() string {
+	f := ""
+	if len(me.generics) > 0 {
+		for i, g := range me.generics {
+			if i > 0 {
+				f += ","
+			}
+			f += g.cname()
+		}
+	}
+	return f
+}
+
 func (me *datatype) cname() string {
 	switch me.is {
 	case dataTypeUnknown:
@@ -173,20 +205,9 @@ func (me *datatype) cname() string {
 			return f
 		}
 	case dataTypeClass:
-		fallthrough
+		return simpleCapitalize(me.class.name) + me.cNameGenerics()
 	case dataTypeEnum:
-		{
-			f := simpleCapitalize(me.canonical)
-			if len(me.generics) > 0 {
-				for i, g := range me.generics {
-					if i > 0 {
-						f += ","
-					}
-					f += g.cname()
-				}
-			}
-			return f
-		}
+		return simpleCapitalize(me.enum.name) + me.cNameGenerics()
 	default:
 		panic("missing data type")
 	}
@@ -240,10 +261,26 @@ func (me *datatype) output(expand bool) string {
 			return f
 		}
 	case dataTypeClass:
-		fallthrough
+		{
+			f := me.class.name
+			if len(me.generics) > 0 {
+				f += "<"
+				for i, g := range me.generics {
+					if i > 0 {
+						f += ","
+					}
+					f += g.output(expand)
+				}
+				f += ">"
+			}
+			return f
+		}
 	case dataTypeEnum:
 		{
-			f := me.canonical
+			f := me.enum.name
+			if me.union != nil {
+				f += "." + me.union.name
+			}
 			if len(me.generics) > 0 {
 				f += "<"
 				for i, g := range me.generics {
@@ -294,18 +331,19 @@ func newdataprimitive(canonical string) *datatype {
 	return d
 }
 
-func newdataclass(module *hmfile, canonical string, generics []*datatype) *datatype {
+func newdataclass(module *hmfile, class *class, generics []*datatype) *datatype {
 	d := newdatatype(dataTypeClass)
 	d.module = module
-	d.canonical = canonical
+	d.class = class
 	d.generics = generics
 	return d
 }
 
-func newdataenum(module *hmfile, canonical string, generics []*datatype) *datatype {
+func newdataenum(module *hmfile, enum *enum, union *union, generics []*datatype) *datatype {
 	d := newdatatype(dataTypeEnum)
 	d.module = module
-	d.canonical = canonical
+	d.enum = enum
+	d.union = union
 	d.generics = generics
 	return d
 }
@@ -400,11 +438,13 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		for i, r := range graw {
 			glist[i] = getdatatype(me, r)
 		}
-		if _, ok := module.classes[base]; ok {
-			return newdataclass(module, base, glist)
-		} else if _, ok := module.enums[base]; ok {
-			return newdataenum(module, base, glist)
+		if cl, ok := module.classes[base]; ok {
+			return newdataclass(module, cl, glist)
+		} else if en, ok := module.enums[base]; ok {
+			fmt.Println("enum ?", typed, "->", base)
+			return newdataenum(module, en, nil, glist)
 		} else {
+			fmt.Println("unknown ?")
 			return newdataunknown(module, base, glist)
 		}
 	}
@@ -412,16 +452,17 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	d = strings.Index(typed, ".")
 	if d != -1 {
 		base := typed[0:d]
-		if _, ok := module.enums[base]; ok {
-			return newdataenum(module, base, nil)
+		if en, ok := module.enums[base]; ok {
+			un := en.types[typed[d+1:]]
+			return newdataenum(module, en, un, nil)
 		}
-		return newdataunknown(module, base, nil)
+		return newdataunknown(module, typed, nil)
 	}
 
-	if _, ok := module.classes[typed]; ok {
-		return newdataclass(module, typed, nil)
-	} else if _, ok := module.enums[typed]; ok {
-		return newdataenum(module, typed, nil)
+	if cl, ok := module.classes[typed]; ok {
+		return newdataclass(module, cl, nil)
+	} else if en, ok := module.enums[typed]; ok {
+		return newdataenum(module, en, nil, nil)
 	}
 
 	return newdataunknown(module, typed, nil)

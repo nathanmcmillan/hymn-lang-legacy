@@ -56,9 +56,6 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 				continue
 			}
 		} else if typed == "enum" {
-			// if me.enums[name].doNotDefine() {
-			// 	continue
-			// }
 		} else {
 			panic("missing type")
 		}

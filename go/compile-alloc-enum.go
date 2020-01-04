@@ -1,6 +1,8 @@
 package main
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func (me *cfile) compileAllocEnum(n *node) *codeblock {
 	if _, ok := n.attributes["global"]; ok {

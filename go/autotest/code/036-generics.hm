@@ -15,7 +15,7 @@ type attribute<v>
 	on  bool
 	has v
 
-type node<t, w>
+type node<t,w>
 	data  t
 	make  w
 	value int
@@ -23,7 +23,7 @@ type node<t, w>
 	nest  attribute<t>
 
 main
-	f = node<float, string>()
+	f = node<float,string>()
 	f.use = attribute()
 	f.nest = attribute()
 	f.value = 12

@@ -205,9 +205,13 @@ func (me *datatype) cname() string {
 			return f
 		}
 	case dataTypeClass:
-		return simpleCapitalize(me.class.name) + me.cNameGenerics()
+		{
+			return me.class.cname
+		}
 	case dataTypeEnum:
-		return simpleCapitalize(me.enum.name) + me.cNameGenerics()
+		{
+			return simpleCapitalize(me.enum.name) + me.cNameGenerics()
+		}
 	default:
 		panic("missing data type")
 	}
@@ -262,23 +266,12 @@ func (me *datatype) output(expand bool) string {
 		}
 	case dataTypeClass:
 		{
-			f := me.class.name
-			if len(me.generics) > 0 {
-				f += "<"
-				for i, g := range me.generics {
-					if i > 0 {
-						f += ","
-					}
-					f += g.output(expand)
-				}
-				f += ">"
-			}
-			return f
+			return me.class.name
 		}
 	case dataTypeEnum:
 		{
 			f := me.enum.name
-			if me.union != nil {
+			if expand && me.union != nil {
 				f += "." + me.union.name
 			}
 			if len(me.generics) > 0 {
@@ -438,13 +431,14 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		for i, r := range graw {
 			glist[i] = getdatatype(me, r)
 		}
-		if cl, ok := module.classes[base]; ok {
+		if cl, ok := module.classes[typed]; ok {
 			return newdataclass(module, cl, glist)
-		} else if en, ok := module.enums[base]; ok {
-			fmt.Println("enum ?", typed, "->", base)
+		} else if cl, ok := module.classes[base]; ok {
+			return newdataclass(module, cl, glist)
+		} else if en, ok := module.enums[typed]; ok {
+			fmt.Println("todo :: " + en.name)
 			return newdataenum(module, en, nil, glist)
 		} else {
-			fmt.Println("unknown ?")
 			return newdataunknown(module, base, glist)
 		}
 	}

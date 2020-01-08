@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -58,7 +59,7 @@ func (me *cfile) defineEnum(enum *enum) {
 }
 
 func (me *cfile) typedefClass(c *class) string {
-	hmName := me.hmfile.classNameSpace(c.cname)
+	hmName := c.cname
 	me.headStructTypeDefSection.WriteString("\ntypedef struct " + hmName + " " + hmName + ";")
 	return hmName
 }
@@ -103,6 +104,7 @@ func (me *cfile) dependencyGraph(d *datatype) {
 		}
 	case dataTypeClass:
 		name := d.print()
+		fmt.Println("dependency ::", name)
 		if cl, ok := me.hmfile.classes[name]; ok {
 			if !cl.doNotDefine() {
 				me.dependencyReq.add(cl.location)

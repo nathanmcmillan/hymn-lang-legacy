@@ -350,7 +350,9 @@ func (me *parser) importing() {
 		newmodule := module.program.parse(out, path, module.program.libs)
 		module.imports[name] = newmodule
 		module.importOrder = append(module.importOrder, name)
-		fmt.Println("=== continuing " + module.name + " === ")
+		if debug {
+			fmt.Println("=== continuing " + module.name + " === ")
+		}
 	}
 	if me.token.is == "id" {
 		fmt.Println("include specific type/enum/function/variable")

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -40,6 +41,8 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	for k, v := range base.variables {
 		memberMap[k] = v.copy()
 	}
+
+	fmt.Println("class impl generic ::", impl)
 
 	module := base.module
 

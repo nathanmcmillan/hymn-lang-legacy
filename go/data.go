@@ -364,7 +364,7 @@ func (me *varData) typeSig() string {
 		return me.memberType.typeSig()
 	}
 	if _, ok := me.checkIsClass(); ok {
-		sig := me.module.classNameSpace(me.dtype.cname())
+		sig := me.dtype.cname()
 		if !me.onStack && me.isptr {
 			sig += " *"
 		}
@@ -383,7 +383,7 @@ func (me *varData) noMallocTypeSig() string {
 		return fmtptr(me.memberType.noMallocTypeSig())
 	}
 	if _, ok := me.checkIsClass(); ok {
-		return me.module.classNameSpace(me.dtype.cname())
+		return me.dtype.cname()
 	} else if en, _, ok := me.checkIsEnum(); ok {
 		return en.noMallocTypeSig()
 	}

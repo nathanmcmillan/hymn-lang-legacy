@@ -108,7 +108,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			me.eat("[")
 			if me.token.is == ":" {
 				if !head.data().array {
-					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not an array")
+					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().full + "\" is not an array")
 				}
 				me.eat(":")
 				member := nodeInit("array-to-slice")
@@ -118,7 +118,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head = member
 			} else {
 				if !head.data().checkIsIndexable() {
-					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.getType() + "\" is not indexable")
+					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().full + "\" is not indexable")
 				}
 				member := nodeInit("array-member")
 				index := me.calc(0)

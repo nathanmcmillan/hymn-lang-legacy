@@ -124,7 +124,7 @@ func (me *parser) declareType(implementation bool) *varData {
 		me.eat("[")
 		if me.token.is != "]" {
 			sizeNode := me.calc(0)
-			if sizeNode.getType() != TokenInt || sizeNode.value == "" {
+			if sizeNode.data().full != TokenInt || sizeNode.value == "" {
 				panic(me.fail() + "array size must be constant integer")
 			}
 			size = sizeNode.value
@@ -161,7 +161,6 @@ func (me *parser) declareType(implementation bool) *varData {
 	}
 
 	if _, ok := me.hmfile.imports[typed]; ok {
-		// module = me.hmfile.imports[typed]
 		me.eat(".")
 		typed += "."
 		typed += me.token.value
@@ -180,26 +179,24 @@ func (me *parser) declareType(implementation bool) *varData {
 	}
 
 	if me.token.is == "<" {
-		data := typeToVarData(me.hmfile, typed)
-		typed = data.full
-		if base, ok := data.module.classes[data.typed]; ok {
+		if base, ok := module.classes[typed]; ok {
 			gtypes := me.declareGeneric(implementation, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if implementation {
-				if _, ok := data.module.classes[typed]; !ok {
+				if _, ok := module.classes[typed]; !ok {
 					me.defineClassImplGeneric(base, typed, gtypes)
 				}
 			}
-		} else if base, ok := data.module.enums[data.typed]; ok {
+		} else if base, ok := module.enums[typed]; ok {
 			gtypes := me.declareGeneric(implementation, base)
 			typed += "<" + strings.Join(gtypes, ",") + ">"
 			if implementation {
-				if _, ok := data.module.enums[typed]; !ok {
+				if _, ok := module.enums[typed]; !ok {
 					me.defineEnumImplGeneric(base, typed, gtypes)
 				}
 			}
 		} else {
-			panic(me.fail() + "type \"" + data.typed + "\" does not exist")
+			panic(me.fail() + "type \"" + typed + "\" does not exist")
 		}
 	}
 

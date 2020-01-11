@@ -61,10 +61,6 @@ func (me *node) copyTypeFromVar(other *variable) {
 	me._vdata = other.data().copy()
 }
 
-func (me *node) getType() string {
-	return me.data().full
-}
-
 func (me *node) data() *varData {
 	return me._vdata
 }

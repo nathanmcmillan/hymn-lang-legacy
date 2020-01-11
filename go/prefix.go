@@ -134,7 +134,7 @@ func prefixArray(me *parser, op string) *node {
 		no = nodeInit("slice")
 		if me.token.is != "]" {
 			capacity := me.calc(0)
-			if capacity.getType() != TokenInt {
+			if capacity.data().full != TokenInt {
 				panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 			}
 			defaultSize := nodeInit(TokenInt)
@@ -145,7 +145,7 @@ func prefixArray(me *parser, op string) *node {
 		}
 	} else {
 		size = me.calc(0)
-		if size.getType() != TokenInt {
+		if size.data().full != TokenInt {
 			panic(me.fail() + "array or slice size " + size.string(0) + " is not an integer")
 		}
 		slice := false
@@ -155,7 +155,7 @@ func prefixArray(me *parser, op string) *node {
 			slice = true
 			if me.token.is != "]" {
 				capacity = me.calc(0)
-				if capacity.getType() != TokenInt {
+				if capacity.data().full != TokenInt {
 					panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 				}
 			}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -161,19 +160,6 @@ func (me *datatype) nameIs() string {
 	panic("missing data type")
 }
 
-func (me *datatype) cNameGenerics() string {
-	f := ""
-	if len(me.generics) > 0 {
-		for i, g := range me.generics {
-			if i > 0 {
-				f += ","
-			}
-			f += g.cname()
-		}
-	}
-	return f
-}
-
 func (me *datatype) cname() string {
 	switch me.is {
 	case dataTypeUnknown:
@@ -210,7 +196,11 @@ func (me *datatype) cname() string {
 		}
 	case dataTypeEnum:
 		{
-			return simpleCapitalize(me.enum.name) + me.cNameGenerics()
+			panic("todo")
+			if me.union != nil {
+				return me.union.name
+			}
+			return me.enum.cname
 		}
 	default:
 		panic("missing data type")
@@ -274,16 +264,16 @@ func (me *datatype) output(expand bool) string {
 			if expand && me.union != nil {
 				f += "." + me.union.name
 			}
-			if len(me.generics) > 0 {
-				f += "<"
-				for i, g := range me.generics {
-					if i > 0 {
-						f += ","
-					}
-					f += g.output(expand)
-				}
-				f += ">"
-			}
+			// if len(me.generics) > 0 {
+			// 	f += "<"
+			// 	for i, g := range me.generics {
+			// 		if i > 0 {
+			// 			f += ","
+			// 		}
+			// 		f += g.output(expand)
+			// 	}
+			// 	f += ">"
+			// }
 			return f
 		}
 	default:
@@ -380,13 +370,13 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		return newdataprimitive(typed)
 	}
 
-	if strings.HasPrefix(typed, "maybe") {
+	if strings.HasPrefix(typed, "maybe<") {
 		return newdatamaybe(getdatatype(me, typed[6:len(typed)-1]))
 
 	} else if typed == "none" {
 		return newdatanone()
 
-	} else if strings.HasPrefix(typed, "none") {
+	} else if strings.HasPrefix(typed, "none<") {
 		return newdatamaybe(getdatatype(me, typed[5:len(typed)-1]))
 	}
 
@@ -423,43 +413,39 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		return newdatafunction(module, list, getdatatype(me, returns))
 	}
 
+	var base string
+	var glist []*datatype
 	g := strings.Index(typed, "<")
 	if g != -1 {
-		base := typed[0:g]
 		graw := me.getdatatypegenerics(typed)
-		glist := make([]*datatype, len(graw))
+		base = typed[0:g]
+		glist = make([]*datatype, len(graw))
 		for i, r := range graw {
 			glist[i] = getdatatype(me, r)
-		}
-		if cl, ok := module.classes[typed]; ok {
-			return newdataclass(module, cl, glist)
-		} else if cl, ok := module.classes[base]; ok {
-			return newdataclass(module, cl, glist)
-		} else if en, ok := module.enums[typed]; ok {
-			fmt.Println("todo :: " + en.name)
-			return newdataenum(module, en, nil, glist)
-		} else {
-			return newdataunknown(module, base, glist)
 		}
 	}
 
 	d = strings.Index(typed, ".")
 	if d != -1 {
-		base := typed[0:d]
+		base = typed[0:d]
 		if en, ok := module.enums[base]; ok {
 			un := en.types[typed[d+1:]]
-			return newdataenum(module, en, un, nil)
+			return newdataenum(module, en, un, glist)
 		}
-		return newdataunknown(module, typed, nil)
+		return newdataunknown(module, typed, glist)
 	}
 
 	if cl, ok := module.classes[typed]; ok {
-		return newdataclass(module, cl, nil)
+		return newdataclass(module, cl, glist)
 	} else if en, ok := module.enums[typed]; ok {
-		return newdataenum(module, en, nil, nil)
+		return newdataenum(module, en, nil, glist)
+	} else if base != typed {
+		if cl, ok := module.classes[base]; ok {
+			return newdataclass(module, cl, glist)
+		}
 	}
 
-	return newdataunknown(module, typed, nil)
+	return newdataunknown(module, typed, glist)
 }
 
 func (me *hmfile) getdatatypegenerics(typed string) []string {

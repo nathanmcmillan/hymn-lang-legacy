@@ -179,7 +179,7 @@ func (me *parser) parseReturn() *node {
 				}
 			}
 		} else if fn.returns.notEqual(ret) {
-			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.full + "\" but found \"" + calc.getType() + "\"")
+			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.full + "\" but found \"" + ret.full + "\"")
 		}
 	}
 	me.verify("line")
@@ -189,7 +189,7 @@ func (me *parser) parseReturn() *node {
 func (me *parser) forceassign(malloc, mutable bool) *node {
 	v := me.eatvar(me.hmfile)
 	if !me.assignable(v) {
-		panic(me.fail() + "expected variable for assignment but was \"" + v.getType() + "\"")
+		panic(me.fail() + "expected variable for assignment but was \"" + v.data().full + "\"")
 	}
 	return me.assign(v, malloc, mutable)
 }
@@ -210,11 +210,11 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	right := me.calc(0)
 	me.hmfile.assignmentStack = me.hmfile.assignmentStack[0 : len(me.hmfile.assignmentStack)-1]
 	if mustBeInt {
-		if right.getType() != TokenInt {
+		if right.data().full != TokenInt {
 			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
 		}
 	} else if mustBeNumber {
-		if !isNumber(right.getType()) {
+		if !isNumber(right.data().full) {
 			panic(me.fail() + "assign operation \"" + op + "\" requires number type")
 		}
 	}
@@ -225,12 +225,12 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
 			if right.data().full != "?" && left.data().notEqual(right.data()) {
-				if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
+				if strings.HasPrefix(left.data().full, right.data().full) && strings.Index(left.data().full, "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
 					fmt.Println(left.string(0), "->", left.data().dtype.standard())
 					fmt.Println(right.string(0), "->", right.data().dtype.standard())
-					panic(me.fail() + "variable type \"" + left.getType() + "\" does not match expression type \"" + right.getType() + "\"")
+					panic(me.fail() + "variable type \"" + left.data().full + "\" does not match expression type \"" + right.data().full + "\"")
 				}
 			}
 		} else if mustBeInt || mustBeNumber {
@@ -248,10 +248,10 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
 		if right.data().full != "?" && left.data().notEqual(right.data()) {
-			if strings.HasPrefix(left.getType(), right.getType()) && strings.Index(left.getType(), "<") != -1 {
+			if strings.HasPrefix(left.data().full, right.data().full) && strings.Index(left.data().full, "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {
-				panic(me.fail() + "member variable type \"" + left.getType() + "\" does not match expression type \"" + right.getType() + "\"")
+				panic(me.fail() + "member variable type \"" + left.data().full + "\" does not match expression type \"" + right.data().full + "\"")
 			}
 		}
 	} else {
@@ -332,7 +332,7 @@ blockEnd:
 
 func (me *parser) calcBool() *node {
 	n := me.calc(0)
-	if n.getType() != "bool" {
+	if n.data().full != "bool" {
 		panic(me.fail() + "must be boolean expression")
 	}
 	return n

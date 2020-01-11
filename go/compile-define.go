@@ -10,7 +10,7 @@ func (me *cfile) defineEnum(enum *enum) {
 
 	base := enum.baseEnum()
 	impl := base != enum
-	hmBaseEnumName := enum.module.enumNameSpace(enum.baseEnum().name)
+	hmBaseEnumName := enum.baseEnum().cname
 
 	if !impl {
 		code := "\nenum " + hmBaseEnumName + " {\n"
@@ -33,7 +33,7 @@ func (me *cfile) defineEnum(enum *enum) {
 	me.dependencyReq.add(base.location)
 
 	code := ""
-	hmBaseUnionName := me.hmfile.unionNameSpace(enum.name)
+	hmBaseUnionName := enum.ucname
 	me.headStructTypeDefSection.WriteString("\ntypedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";")
 	code += "\nstruct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
@@ -65,7 +65,7 @@ func (me *cfile) typedefClass(c *class) string {
 }
 
 func (me *cfile) typedefEnum(e *enum) string {
-	hmBaseEnumName := e.module.enumNameSpace(e.baseEnum().name)
+	hmBaseEnumName := e.baseEnum().cname
 	me.headEnumTypeDefSection.WriteString("\ntypedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";")
 	return hmBaseEnumName
 }

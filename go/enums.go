@@ -1,10 +1,14 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 type enum struct {
 	module       *hmfile
 	name         string
+	cname        string
+	ucname       string
 	location     string
 	simple       bool
 	types        map[string]*union
@@ -21,12 +25,12 @@ type union struct {
 	generics []string
 }
 
-func (me *hmfile) unionInit(name string, types []string, generics []string) *union {
+func unionInit(module *hmfile, en string, name string, types []string, generics []string) *union {
 	u := &union{}
 	u.name = name
 	u.types = make([]*varData, len(types))
 	for i, t := range types {
-		u.types[i] = typeToVarData(me, t)
+		u.types[i] = typeToVarData(module, t)
 	}
 	u.generics = generics
 	return u
@@ -50,6 +54,10 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 	e := &enum{}
 	e.module = module
 	e.name = name
+	if module != nil {
+		e.cname = module.enumNameSpace(name)
+		e.ucname = module.unionNameSpace(name)
+	}
 	e.location = e.getLocation()
 	e.simple = simple
 	e.types = dict
@@ -71,16 +79,13 @@ func (me *enum) baseEnum() *enum {
 
 func (me *enum) typeSig() string {
 	if me.simple {
-		return me.module.enumNameSpace(me.name)
+		return me.cname
 	}
-	return me.module.unionNameSpace(me.name) + " *"
+	return me.ucname + " *"
 }
 
 func (me *enum) noMallocTypeSig() string {
-	if me.simple {
-		return me.module.enumNameSpace(me.name)
-	}
-	return me.module.unionNameSpace(me.name)
+	return me.cname
 }
 
 func (me *enum) getGenerics() []string {
@@ -88,14 +93,8 @@ func (me *enum) getGenerics() []string {
 }
 
 func (me *enum) getLocation() string {
-	// path := ""
 	name := me.name
-	// if strings.Index(name, "<") != -1 {
-	// 	path = name[0:strings.Index(name, "<")]
-	// } else {
-	// 	path = name
-	// }
 	name = flatten(name)
 	name = strings.ReplaceAll(name, "_", "-")
-	return name // path + "/" + name
+	return name
 }

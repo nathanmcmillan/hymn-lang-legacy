@@ -22,10 +22,10 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 	c := &class{}
 	c.module = module
 	c.name = name
-	c.location = c.getLocation()
 	if module != nil {
 		c.cname = module.classNameSpace(name)
 	}
+	c.location = c.getLocation()
 	c.generics = generics
 	c.genericsDict = genericsDict
 	c.functions = make(map[string]*function)

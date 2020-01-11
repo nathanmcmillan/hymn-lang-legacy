@@ -13,13 +13,13 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 	en, un, _ := data.checkIsEnum()
 	enumType := un.name
 	if en.simple {
-		enumBase := module.enumNameSpace(en.name)
+		enumBase := en.cname
 		globalName := module.enumTypeName(enumBase, enumType)
 		return codeBlockOne(n, globalName)
 	}
 
-	baseEnumName := module.enumNameSpace(en.baseEnum().name)
-	unionName := me.hmfile.unionNameSpace(en.name)
+	baseEnumName := en.baseEnum().cname
+	unionName := en.ucname
 
 	_, useStack := n.attributes["stack"]
 	assign, local := n.attributes["assign"]

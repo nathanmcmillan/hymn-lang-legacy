@@ -51,9 +51,9 @@ func (me *parser) allocEnum(module *hmfile) *node {
 			param := me.calc(0)
 			if param.data().notEqual(unionType) {
 				if _, gok := gdict[unionType.full]; gok {
-					gimpl[unionType.full] = param.getType()
+					gimpl[unionType.full] = param.data().full
 				} else {
-					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.full + "\" but parameter was \"" + param.getType() + "\"")
+					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.full + "\" but parameter was \"" + param.data().full + "\"")
 				}
 			}
 			n.push(param)
@@ -213,7 +213,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 				gtypes = newtypes
 
 			} else if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
-				err := "parameter \"" + vname + "\" with type \"" + param.getType()
+				err := "parameter \"" + vname + "\" with type \"" + param.data().full
 				err += "\" does not match class variable \"" + base.name + "."
 				err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
 				panic(me.fail() + err)
@@ -251,7 +251,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 					gtypes = newtypes
 
 				} else if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
-					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.getType()
+					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().full
 					err += "\" does not match class variable \"" + base.name + "."
 					err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
 					panic(me.fail() + err)

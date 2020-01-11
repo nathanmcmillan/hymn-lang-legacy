@@ -147,7 +147,7 @@ func (me *parser) defineEnum() {
 				me.eat(")")
 			}
 			me.eat("line")
-			un := me.hmfile.unionInit(typeName, unionList, unionGOrder)
+			un := unionInit(me.hmfile, name, typeName, unionList, unionGOrder)
 			typesOrder = append(typesOrder, un)
 			typesMap[typeName] = un
 			continue

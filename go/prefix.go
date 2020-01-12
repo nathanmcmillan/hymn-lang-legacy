@@ -66,12 +66,12 @@ func prefixCast(me *parser, op string) *node {
 	node := nodeInit("cast")
 	node.copyData(typeToVarData(me.hmfile, op))
 	calc := me.calc(getPrefixPrecedence(op))
-	value := calc.data().full
-	if canCastToNumber(value) {
+	data := calc.data().dtype
+	if data.canCastToNumber() {
 		node.push(calc)
 		return node
 	}
-	panic(me.fail() + "invalid cast \"" + value + "\"")
+	panic(me.fail() + "invalid cast \"" + data.print() + "\"")
 }
 
 func prefixIdent(me *parser, op string) *node {
@@ -134,7 +134,7 @@ func prefixArray(me *parser, op string) *node {
 		no = nodeInit("slice")
 		if me.token.is != "]" {
 			capacity := me.calc(0)
-			if capacity.data().full != TokenInt {
+			if !capacity.data().dtype.isInt() {
 				panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 			}
 			defaultSize := nodeInit(TokenInt)
@@ -145,7 +145,7 @@ func prefixArray(me *parser, op string) *node {
 		}
 	} else {
 		size = me.calc(0)
-		if size.data().full != TokenInt {
+		if !size.data().dtype.isInt() {
 			panic(me.fail() + "array or slice size " + size.string(0) + " is not an integer")
 		}
 		slice := false
@@ -155,7 +155,7 @@ func prefixArray(me *parser, op string) *node {
 			slice = true
 			if me.token.is != "]" {
 				capacity = me.calc(0)
-				if capacity.data().full != TokenInt {
+				if !capacity.data().dtype.isInt() {
 					panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 				}
 			}
@@ -181,7 +181,7 @@ func prefixArray(me *parser, op string) *node {
 		for {
 			item := me.calc(0)
 			if item.data().notEqual(data) {
-				panic(me.fail() + "array member type \"" + item.data().full + "\" does not match array type \"" + no.data().memberType.full + "\"")
+				panic(me.fail() + "array member type \"" + item.data().print() + "\" does not match array type \"" + no.data().memberType.print() + "\"")
 			}
 			items.push(item)
 			if me.token.is == ")" {

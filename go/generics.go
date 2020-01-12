@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -247,7 +246,7 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 			}
 		}
 	default:
-		panic("missing data type " + strconv.Itoa(a.is))
+		panic("missing data type " + a.nameIs())
 	}
 	return true
 }
@@ -267,7 +266,7 @@ func mergeMaps(one, two map[string]*datatype) (bool, map[string]*datatype) {
 	merge := make(map[string]*datatype)
 	for k, v := range one {
 		w, ok := two[k]
-		if ok && v.standard() != w.standard() {
+		if ok && v.notEquals(w) {
 			return false, nil
 		}
 		merge[k] = v

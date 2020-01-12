@@ -68,7 +68,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 		}
 	} else {
 		if _, _, ok := left.data().checkIsEnum(); !ok {
-			panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.data().full + "\"")
+			panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.data().print() + "\"")
 		}
 		if me.token.is == "id" {
 			name := me.token.value
@@ -129,7 +129,7 @@ func (me *parser) parseMatch() *node {
 
 	_, un, ok := matchType.checkIsEnum()
 	if ok && un != nil {
-		panic(me.fail() + "enum \"" + matchType.full + "\" does not need a match expression.")
+		panic(me.fail() + "enum \"" + matchType.print() + "\" does not need a match expression.")
 	}
 
 	var matchVar *variable

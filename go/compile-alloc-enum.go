@@ -42,7 +42,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 		xvar := len(un.types) > 1
 		for i, v := range un.types {
 			p := n.has[i]
-			if !v.isptr {
+			if !v.isPointer() {
 				p.attributes["stack"] = "true"
 			}
 			cassign := ";\n" + fmc(me.depth) + assign + memberRef + un.name
@@ -61,7 +61,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 				decl := me.compileDeclare(d)
 				value := me.eval(p).code()
 				code2 := ";\n" + fmc(me.depth) + decl
-				if v.isptr {
+				if v.isPointer() {
 					code2 += " = "
 				}
 				code2 += value

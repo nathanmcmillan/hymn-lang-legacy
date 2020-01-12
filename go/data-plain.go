@@ -33,6 +33,7 @@ type datatype struct {
 	class      *class
 	enum       *enum
 	union      *union
+	funcSig    *fnSig
 }
 
 func (me *datatype) copyTo(c *datatype) {
@@ -65,6 +66,7 @@ func (me *datatype) copyTo(c *datatype) {
 	c.class = me.class
 	c.enum = me.enum
 	c.union = me.union
+	c.funcSig = me.funcSig
 }
 
 func (me *datatype) copy() *datatype {
@@ -85,6 +87,14 @@ func (me *datatype) isChar() bool {
 	return me.is == dataTypePrimitive && me.canonical == TokenChar
 }
 
+func (me *datatype) isNumber() bool {
+	return me.is == dataTypePrimitive && isNumber(me.canonical)
+}
+
+func (me *datatype) isBoolean() bool {
+	return me.is == dataTypePrimitive && me.canonical == TokenBoolean
+}
+
 func (me *datatype) isArray() bool {
 	return me.is == dataTypeArray || (me.is == dataTypePrimitive && me.canonical == TokenString)
 }
@@ -101,6 +111,10 @@ func (me *datatype) isIndexable() bool {
 	return me.is == dataTypeString || me.isArrayOrSlice()
 }
 
+func (me *datatype) isPointer() bool {
+	return me.pointer
+}
+
 func (me *datatype) isPointerInC() bool {
 	if me.isPrimitive() {
 		return false
@@ -110,6 +124,25 @@ func (me *datatype) isPointerInC() bool {
 
 func (me *datatype) isPrimitive() bool {
 	return me.is == dataTypePrimitive || me.is == dataTypeString
+}
+
+func (me *datatype) isInt() bool {
+	return me.is == dataTypePrimitive && me.canonical == TokenInt
+}
+
+func (me *datatype) isQuestion() bool {
+	return me.is == dataTypeUnknown && me.canonical == "?"
+}
+
+func (me *datatype) isVoid() bool {
+	return me.is == dataTypeUnknown && me.canonical == "void"
+}
+
+func (me *datatype) canCastToNumber() bool {
+	if me.is == dataTypePrimitive {
+		return canCastToNumber(me.canonical)
+	}
+	return false
 }
 
 func (me *datatype) isClass() (*class, bool) {
@@ -124,6 +157,15 @@ func (me *datatype) isEnum() (*enum, *union, bool) {
 		return nil, nil, false
 	}
 	return me.enum, me.union, true
+}
+
+func (me *datatype) isFunction(name string) (*function, bool) {
+	if me.module != nil {
+		f, ok := me.module.getFunction(name)
+		return f, ok
+	}
+	f, ok := me.hmlib.functions[name]
+	return f, ok
 }
 
 func (me *datatype) postfixConst() bool {
@@ -151,13 +193,26 @@ func (me *datatype) noConst() bool {
 	return false
 }
 
-func (me *datatype) setOnStackNotPointer() {
-	me.pointer = false
-	me.heap = false
+func (me *datatype) setIsOnStack(flag bool) {
+	me.heap = !flag
 }
 
 func (me *datatype) setIsPointer(flag bool) {
 	me.pointer = flag
+}
+
+func (me *datatype) setOnStackNotPointer() {
+	me.setIsPointer(false)
+	me.setIsOnStack(true)
+}
+
+func (me *datatype) arraySize() string {
+	return me.size
+}
+
+func (me *datatype) convertArrayToSlice() {
+	me.is = dataTypeSlice
+	me.size = ""
 }
 
 func (me *datatype) memoryGet() string {
@@ -168,19 +223,110 @@ func (me *datatype) memoryGet() string {
 }
 
 func (me *datatype) equals(b *datatype) bool {
-	return me.standard() == b.standard()
+	switch me.is {
+	case dataTypeClass:
+		fallthrough
+	case dataTypeEnum:
+		fallthrough
+	case dataTypeUnknown:
+		fallthrough
+	case dataTypeString:
+		fallthrough
+	case dataTypePrimitive:
+		{
+			if b.is == dataTypeMaybe {
+				b = b.member
+			}
+			if me.is != b.is {
+				return false
+			}
+			if me.canonical != b.canonical {
+				return false
+			}
+			if me.generics != nil || b.generics != nil {
+				if me.generics == nil || b.generics == nil {
+					return false
+				}
+				if len(me.generics) != len(b.generics) {
+					return false
+				}
+				for i, ga := range me.generics {
+					gb := b.generics[i]
+					if ga.notEquals(gb) {
+						return false
+					}
+				}
+			}
+		}
+	case dataTypeNone:
+		{
+			return b.is == dataTypeNone || b.is == dataTypeMaybe
+		}
+	case dataTypeMaybe:
+		{
+			if b.is == dataTypeNone {
+				return true
+			}
+			if me.member.notEquals(b) {
+				return false
+			}
+		}
+	case dataTypeSlice:
+		{
+			if b.is == dataTypeMaybe {
+				b = b.member
+			}
+			if b.is != dataTypeSlice {
+				return false
+			}
+			if me.member.notEquals(b.member) {
+				return false
+			}
+		}
+	case dataTypeArray:
+		{
+			if b.is == dataTypeMaybe {
+				b = b.member
+			}
+			if b.is != dataTypeArray {
+				return false
+			}
+			if me.size != b.size {
+				return false
+			}
+			if me.member.notEquals(b.member) {
+				return false
+			}
+		}
+	case dataTypeFunction:
+		{
+			if b.is == dataTypeMaybe {
+				b = b.member
+			}
+			if b.is != dataTypeFunction {
+				return false
+			}
+			if len(me.parameters) != len(b.parameters) {
+				return false
+			}
+			if me.returns.notEquals(b.returns) {
+				return false
+			}
+			for i, pa := range me.parameters {
+				pb := b.parameters[i]
+				if pa.notEquals(pb) {
+					return false
+				}
+			}
+		}
+	default:
+		panic("switch statement is missing data type \"" + me.nameIs() + "\"")
+	}
+	return true
 }
 
 func (me *datatype) notEquals(b *datatype) bool {
 	return !me.equals(b)
-}
-
-func (me *datatype) standard() string {
-	return me.output(false)
-}
-
-func (me *datatype) print() string {
-	return me.output(true)
 }
 
 func (me *datatype) nameIs() string {
@@ -248,7 +394,7 @@ func (me *datatype) cname() string {
 	}
 }
 
-func (me *datatype) output(expand bool) string {
+func (me *datatype) print() string {
 	switch me.is {
 	case dataTypeUnknown:
 		fallthrough
@@ -260,28 +406,22 @@ func (me *datatype) output(expand bool) string {
 		}
 	case dataTypeMaybe:
 		{
-			if expand {
-				return "maybe<" + me.member.output(expand) + ">"
-			}
-			return me.member.output(expand)
+			return "maybe<" + me.member.print() + ">"
 		}
 	case dataTypeNone:
 		{
 			if me.member != nil {
-				if expand {
-					return "none<" + me.member.output(expand) + ">"
-				}
-				return me.member.output(expand)
+				return "none<" + me.member.print() + ">"
 			}
 			return "none"
 		}
 	case dataTypeArray:
 		{
-			return "[" + me.size + "]" + me.member.output(expand)
+			return "[" + me.size + "]" + me.member.print()
 		}
 	case dataTypeSlice:
 		{
-			return "[]" + me.member.output(expand)
+			return "[]" + me.member.print()
 		}
 	case dataTypeFunction:
 		{
@@ -290,9 +430,9 @@ func (me *datatype) output(expand bool) string {
 				if i > 0 {
 					f += ","
 				}
-				f += p.output(expand)
+				f += p.print()
 			}
-			f += ") " + me.member.output(expand)
+			f += ") " + me.member.print()
 			return f
 		}
 	case dataTypeClass:
@@ -304,7 +444,7 @@ func (me *datatype) output(expand bool) string {
 					if i > 0 {
 						f += ","
 					}
-					f += g.output(expand)
+					f += g.print()
 				}
 				f += ">"
 			}
@@ -313,7 +453,7 @@ func (me *datatype) output(expand bool) string {
 	case dataTypeEnum:
 		{
 			f := me.enum.baseEnum().name
-			if expand && me.union != nil {
+			if me.union != nil {
 				f += "." + me.union.name
 			}
 			if len(me.generics) > 0 {
@@ -322,7 +462,7 @@ func (me *datatype) output(expand bool) string {
 					if i > 0 {
 						f += ","
 					}
-					f += g.output(expand)
+					f += g.print()
 				}
 				f += ">"
 			}
@@ -404,9 +544,9 @@ func newdataslice(member *datatype) *datatype {
 	return d
 }
 
-func newdatafunction(module *hmfile, parameters []*datatype, returns *datatype) *datatype {
+func newdatafunction(funcSig *fnSig, parameters []*datatype, returns *datatype) *datatype {
 	d := newdatatype(dataTypeFunction)
-	d.module = module
+	d.funcSig = funcSig
 	d.parameters = parameters
 	d.returns = returns
 	return d
@@ -442,6 +582,18 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		return newdataslice(getdatatype(me, member))
 	}
 
+	if checkIsFunction(typed) {
+		parameters, returns := functionSigType(typed)
+		list := make([]*datatype, len(parameters))
+		funcSig := fnSigInit(me)
+		for i, p := range parameters {
+			list[i] = getdatatype(me, p)
+			funcSig.args = append(funcSig.args, fnArgInit(typeToVarData(me, p).asVariable()))
+		}
+		funcSig.returns = typeToVarData(me, returns)
+		return newdatafunction(funcSig, list, getdatatype(me, returns))
+	}
+
 	if me == nil {
 		return newdataunknown(nil, typed, nil)
 	}
@@ -456,20 +608,11 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		}
 	}
 
-	if checkIsFunction(typed) {
-		parameters, returns := functionSigType(typed)
-		list := make([]*datatype, len(parameters))
-		for i, p := range parameters {
-			list[i] = getdatatype(me, p)
-		}
-		return newdatafunction(module, list, getdatatype(me, returns))
-	}
-
 	var base string
 	var glist []*datatype
 	g := strings.Index(typed, "<")
 	if g != -1 {
-		graw := me.getdatatypegenerics(typed)
+		graw := getdatatypegenerics(typed)
 		base = typed[0:g]
 		glist = make([]*datatype, len(graw))
 		for i, r := range graw {
@@ -500,7 +643,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	return newdataunknown(module, typed, glist)
 }
 
-func (me *hmfile) getdatatypegenerics(typed string) []string {
+func getdatatypegenerics(typed string) []string {
 	var order []string
 	stack := make([]*gstack, 0)
 	rest := typed
@@ -548,4 +691,119 @@ func (me *hmfile) getdatatypegenerics(typed string) []string {
 		}
 	}
 	return order
+}
+
+func (me *datatype) typeSigOf(name string, mutable bool) string {
+	code := ""
+	if me.is == dataTypeFunction {
+		code += fmtassignspace(me.returns.typeSig())
+		code += "(*"
+		if !mutable {
+			code += "const "
+		}
+		code += name
+		code += ")("
+		for ix, arg := range me.parameters {
+			if ix > 0 {
+				code += ", "
+			}
+			code += arg.typeSig()
+		}
+		code += ")"
+	} else {
+		sig := fmtassignspace(me.typeSig())
+		if mutable || me.noConst() {
+			code += sig
+		} else if me.postfixConst() {
+			code += sig + "const "
+		} else {
+			code += "const " + sig
+		}
+		code += name
+	}
+	return code
+}
+
+func (me *datatype) typeSig() string {
+	switch me.is {
+	case dataTypeClass:
+		{
+			out := me.class.cname
+			if me.heap && me.pointer {
+				out += " *"
+			}
+			return out
+		}
+	case dataTypeEnum:
+		{
+			return me.enum.typeSig()
+		}
+	case dataTypeNone:
+		fallthrough
+	case dataTypeMaybe:
+		{
+			return me.member.typeSig()
+		}
+	case dataTypeSlice:
+		fallthrough
+	case dataTypeArray:
+		{
+			return fmtptr(me.member.typeSig())
+		}
+	case dataTypeUnknown:
+		fallthrough
+	case dataTypeString:
+		fallthrough
+	case dataTypePrimitive:
+		{
+			if c, ok := getCName(me.canonical); ok {
+				return c
+			}
+			return me.canonical
+		}
+	default:
+		panic("switch statement is missing data type \"" + me.nameIs() + "\"")
+	}
+}
+
+func (me *datatype) noMallocTypeSig() string {
+	switch me.is {
+	case dataTypeClass:
+		{
+			return me.class.cname
+		}
+	case dataTypeEnum:
+		{
+			return me.enum.noMallocTypeSig()
+		}
+	case dataTypeNone:
+		fallthrough
+	case dataTypeMaybe:
+		{
+			return me.member.noMallocTypeSig()
+		}
+	case dataTypeSlice:
+		fallthrough
+	case dataTypeArray:
+		{
+			return fmtptr(me.member.noMallocTypeSig())
+		}
+	case dataTypeUnknown:
+		fallthrough
+	case dataTypeString:
+		fallthrough
+	case dataTypePrimitive:
+		{
+			if c, ok := getCName(me.canonical); ok {
+				return c
+			}
+			return me.canonical
+		}
+	default:
+		panic("switch statement is missing data type \"" + me.nameIs() + "\"")
+	}
+}
+
+func (me *datatype) plain() *plainType {
+	return &plainType{me.module, me.print()}
 }

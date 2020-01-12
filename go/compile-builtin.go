@@ -20,7 +20,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			cb.prepend(param1.pre)
 			return cb
 		}
-		panic("argument for push was not an array \"" + p.full + "\"")
+		panic("argument for push was not an array \"" + p.print() + "\"")
 	case libLength:
 		param := me.eval(parameters[0])
 		switch param.getType() {
@@ -152,7 +152,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			paramx := me.eval(param)
 			cb.prepend(paramx.pre)
 			pop := true
-			switch param.data().full {
+			switch param.data().print() {
 			case TokenChar:
 				code += "%c"
 			case "[]char":

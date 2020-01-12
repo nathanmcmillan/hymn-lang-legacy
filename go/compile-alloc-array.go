@@ -21,7 +21,7 @@ func (me *cfile) compileAllocArray(n *node) *codeblock {
 			}
 		}
 	} else {
-		size = sizeOfArray(n.data().full)
+		size = n.data().sizeOfArray()
 	}
 	if items != nil {
 		sizeint, er := strconv.Atoi(size)

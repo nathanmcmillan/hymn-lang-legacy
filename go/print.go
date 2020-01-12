@@ -65,17 +65,6 @@ func (me *datatype) string(lv int) string {
 	return s
 }
 
-func (me *varData) string(lv int) string {
-	lv++
-	s := "{\n"
-	s += fmc(lv) + "\"is\": \"" + me.full + "\",\n"
-	s += fmc(lv) + "\"pointer\": " + strconv.FormatBool(me.isptr) + ",\n"
-	s += fmc(lv) + "\"stack\": " + strconv.FormatBool(me.onStack) + "\n"
-	lv--
-	s += fmc(lv) + "}"
-	return s
-}
-
 func (me *variable) string(lv int) string {
 	s := "{\n"
 	lv++
@@ -149,7 +138,7 @@ func (me *cnode) string(lv int) string {
 		s += ", typed:" + me.typed
 	}
 	if me.data() != nil {
-		s += ", var:" + me.data().string(lv)
+		s += ", var:" + me.data().dtype.string(lv)
 	}
 	s += ", code:" + me.code
 	if len(me.has) > 0 {
@@ -190,7 +179,7 @@ func (me *class) string(lv int) string {
 		s += fmc(lv) + "{\n"
 		lv++
 		s += fmc(lv) + "\"name\": \"" + classVar.name + "\",\n" + fmc(lv)
-		s += "\"typed\": " + classVar.data().string(lv)
+		s += "\"typed\": " + classVar.data().dtype.string(lv)
 		lv--
 		s += "\n" + fmc(lv) + "}"
 		if i < end {

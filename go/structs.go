@@ -163,3 +163,15 @@ type allocData struct {
 	slice bool
 	size  int
 }
+
+func checkIsPrimitive(t string) bool {
+	_, ok := primitives[t]
+	return ok
+}
+
+func getCName(primitive string) (string, bool) {
+	if name, ok := typeToCName[primitive]; ok {
+		return name, true
+	}
+	return primitive, false
+}

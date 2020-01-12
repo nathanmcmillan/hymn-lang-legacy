@@ -78,7 +78,7 @@ func (me *parser) declareGeneric(implementation bool, base hasGenerics) []string
 			me.eat(",")
 		}
 		gimpl := me.declareType(implementation)
-		order = append(order, gimpl.full)
+		order = append(order, gimpl.print())
 	}
 	me.eat(">")
 	return order
@@ -121,7 +121,7 @@ func (me *parser) declareType(implementation bool) *varData {
 		me.eat("[")
 		if me.token.is != "]" {
 			sizeNode := me.calc(0)
-			if sizeNode.data().full != TokenInt || sizeNode.value == "" {
+			if sizeNode.value == "" || !sizeNode.data().dtype.isInt() {
 				panic(me.fail() + "array size must be constant integer")
 			}
 			size = sizeNode.value
@@ -141,14 +141,14 @@ func (me *parser) declareType(implementation bool) *varData {
 		me.eat("<")
 		option := me.declareType(implementation)
 		me.eat(">")
-		local += "maybe<" + option.full + ">"
+		local += "maybe<" + option.print() + ">"
 
 	} else if me.token.is == "none" {
 		me.eat("none")
 		local += "none"
 		if me.token.is == "<" {
 			me.eat("<")
-			option := me.declareType(implementation).full
+			option := me.declareType(implementation).print()
 			me.eat(">")
 			local += "<" + option + ">"
 		}
@@ -263,12 +263,17 @@ func functionSigType(typed string) ([]string, string) {
 
 	ret := typed[end+1:]
 	ret = strings.TrimSpace(ret)
+	if ret == "" {
+		ret = "void"
+	}
 
-	argd := typed[1:end]
+	argd := strings.TrimSpace(typed[1:end])
 	args := make([]string, 0)
 
-	for _, a := range strings.Split(argd, ",") {
-		args = append(args, strings.TrimSpace(a))
+	if argd != "" {
+		for _, a := range strings.Split(argd, ",") {
+			args = append(args, strings.TrimSpace(a))
+		}
 	}
 
 	return args, ret

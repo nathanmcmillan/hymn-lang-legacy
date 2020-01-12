@@ -92,9 +92,9 @@ func (me *parser) eatvar(from *hmfile) *node {
 					head = member
 				}
 			} else if data.checkIsSomeOrNone() {
-				panic(me.fail() + "unexpected maybe type \"" + head.data().full + "\" do you need a match statement?")
+				panic(me.fail() + "unexpected maybe type \"" + head.data().print() + "\" do you need a match statement?")
 			} else {
-				panic(me.fail() + "unexpected type \"" + head.data().full + "\"")
+				panic(me.fail() + "unexpected type \"" + head.data().print() + "\"")
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {
@@ -108,7 +108,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			me.eat("[")
 			if me.token.is == ":" {
 				if !head.data().array {
-					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().full + "\" is not an array")
+					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().print() + "\" is not an array")
 				}
 				me.eat(":")
 				member := nodeInit("array-to-slice")
@@ -118,7 +118,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head = member
 			} else {
 				if !head.data().checkIsIndexable() {
-					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().full + "\" is not indexable")
+					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().print() + "\" is not indexable")
 				}
 				member := nodeInit("array-member")
 				index := me.calc(0)

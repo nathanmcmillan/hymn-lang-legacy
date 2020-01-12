@@ -40,7 +40,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 	typeSize := len(unionDef.types)
 	if typeSize > 0 {
 		if me.token.is != "(" {
-			panic(me.fail() + "enum \"" + n.data().full + "\" requires parameters")
+			panic(me.fail() + "enum \"" + n.data().print() + "\" requires parameters")
 		}
 		me.eat("(")
 		gimpl := make(map[string]string)
@@ -49,11 +49,11 @@ func (me *parser) allocEnum(module *hmfile) *node {
 				me.eat(",")
 			}
 			param := me.calc(0)
-			if param.data().notEqual(unionType) {
-				if _, gok := gdict[unionType.full]; gok {
-					gimpl[unionType.full] = param.data().full
+			if param.data().dtype.notEquals(unionType.dtype) {
+				if _, gok := gdict[unionType.print()]; gok {
+					gimpl[unionType.print()] = param.data().print()
 				} else {
-					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.full + "\" but parameter was \"" + param.data().full + "\"")
+					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.print() + "\" but parameter was \"" + param.data().print() + "\"")
 				}
 			}
 			n.push(param)
@@ -91,22 +91,22 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 }
 
 func (me *parser) defaultValue(in *varData) *node {
-	d := nodeInit(in.full)
+	d := nodeInit(in.print())
 	d.copyData(in)
-	typed := in.full
-	if typed == TokenString {
+	data := in.dtype
+	if data.isString() {
 		d.value = ""
-	} else if typed == TokenChar {
+	} else if data.isChar() {
 		d.value = "\\0"
-	} else if isNumber(typed) {
+	} else if data.isNumber() {
 		d.value = "0"
-	} else if typed == TokenBoolean {
+	} else if data.isBoolean() {
 		d.value = "false"
-	} else if checkIsArray(typed) {
+	} else if data.isArray() {
 		t := nodeInit("array")
 		t.copyData(d.data())
 		d = t
-	} else if checkIsSlice(typed) {
+	} else if data.isSlice() {
 		t := nodeInit("slice")
 		t.copyData(d.data())
 		s := nodeInit(TokenInt)
@@ -114,18 +114,18 @@ func (me *parser) defaultValue(in *varData) *node {
 		s.value = "0"
 		t.push(s)
 		d = t
-	} else if _, ok := d.data().checkIsClass(); ok {
+	} else if _, ok := data.isClass(); ok {
 		t := nodeInit("new")
 		t.copyData(d.data())
 		me.pushAllDefaultClassParams(t)
 		d = t
-	} else if d.data().checkIsSomeOrNone() {
+	} else if data.isSomeOrNone() {
 		t := nodeInit("none")
 		t.copyData(d.data())
 		t.value = "NULL"
 		d = t
 	} else {
-		panic(me.fail() + "no default value for \"" + typed + "\"")
+		panic(me.fail() + "no default value for \"" + d.is + "\"")
 	}
 	return d
 }
@@ -211,10 +211,10 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 				}
 				gtypes = newtypes
 
-			} else if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
-				err := "parameter \"" + vname + "\" with type \"" + param.data().full
+			} else if param.data().notEqual(clsvar.data()) && !clsvar.data().isQuestion() {
+				err := "parameter \"" + vname + "\" with type \"" + param.data().print()
 				err += "\" does not match class variable \"" + base.name + "."
-				err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
+				err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
 				panic(me.fail() + err)
 			}
 			for i, v := range vars {
@@ -249,10 +249,10 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 					}
 					gtypes = newtypes
 
-				} else if param.data().notEqual(clsvar.data()) && clsvar.data().full != "?" {
-					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().full
+				} else if param.data().notEqual(clsvar.data()) && !clsvar.data().isQuestion() {
+					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().print()
 					err += "\" does not match class variable \"" + base.name + "."
-					err += clsvar.name + "\" with type \"" + clsvar.data().full + "\""
+					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
 					panic(me.fail() + err)
 				}
 				params[pix] = param
@@ -300,13 +300,13 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 			}
 		} else {
 			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
-			if assign.full != "?" {
+			if !assign.isQuestion() {
 				if assign.maybe {
-					typed = assign.memberType.full
+					typed = assign.memberType.print()
 				} else if assign.checkIsArrayOrSlice() {
-					typed = assign.memberType.full
+					typed = assign.memberType.print()
 				} else {
-					typed = assign.full
+					typed = assign.print()
 				}
 			}
 		}

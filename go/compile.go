@@ -160,7 +160,7 @@ func (me *cfile) compilePrefixNeg(n *node) *codeblock {
 }
 
 func (me *cfile) compileCast(n *node) *codeblock {
-	typ, _ := getCName(n.data().full)
+	typ := n.data().cname()
 	code := "(" + typ + ")" + me.eval(n.has[0]).code()
 	return codeBlockOne(n, code)
 }

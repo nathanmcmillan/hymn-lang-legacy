@@ -172,14 +172,14 @@ func (me *parser) parseReturn() *node {
 		ret := calc.data()
 		if ret.none {
 			if !fn.returns.maybe {
-				panic(me.fail() + "return type was \"" + ret.full + "\" but function is \"" + fn.returns.full + "\"")
-			} else if ret.memberType.full != "" {
+				panic(me.fail() + "return type was \"" + ret.print() + "\" but function is \"" + fn.returns.print() + "\"")
+			} else if ret.dtype.member != nil {
 				if calc.is == "none" {
 					panic(me.fail() + "unnecessary none definition for return " + calc.string(0))
 				}
 			}
 		} else if fn.returns.notEqual(ret) {
-			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.full + "\" but found \"" + ret.full + "\"")
+			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.print() + "\" but found \"" + ret.print() + "\"")
 		}
 	}
 	me.verify("line")
@@ -189,7 +189,7 @@ func (me *parser) parseReturn() *node {
 func (me *parser) forceassign(malloc, mutable bool) *node {
 	v := me.eatvar(me.hmfile)
 	if !me.assignable(v) {
-		panic(me.fail() + "expected variable for assignment but was \"" + v.data().full + "\"")
+		panic(me.fail() + "expected variable for assignment but was \"" + v.data().print() + "\"")
 	}
 	return me.assign(v, malloc, mutable)
 }
@@ -210,7 +210,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	right := me.calc(0)
 	me.hmfile.assignmentStack = me.hmfile.assignmentStack[0 : len(me.hmfile.assignmentStack)-1]
 	if mustBeInt {
-		if right.data().full != TokenInt {
+		if !right.data().isInt() {
 			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
 		}
 	} else if mustBeNumber {
@@ -228,9 +228,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 				if strings.HasPrefix(left.data().full, right.data().full) && strings.Index(left.data().full, "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
-					fmt.Println(left.string(0), "->", left.data().dtype.standard())
-					fmt.Println(right.string(0), "->", right.data().dtype.standard())
-					panic(me.fail() + "variable type \"" + left.data().full + "\" does not match expression type \"" + right.data().full + "\"")
+					panic(me.fail() + "variable type \"" + left.data().print() + "\" does not match expression type \"" + right.data().print() + "\"")
 				}
 			}
 		} else if mustBeInt || mustBeNumber {

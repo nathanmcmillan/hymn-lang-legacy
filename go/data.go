@@ -140,12 +140,12 @@ func typeToVarData(module *hmfile, typed string) *varData {
 		return data
 	}
 
-	if strings.HasPrefix(typed, "maybe") {
+	if strings.HasPrefix(typed, "maybe<") {
 		data.maybe = true
 		data.memberType = typeToVarData(module, typed[6:len(typed)-1])
 		return data
 
-	} else if strings.HasPrefix(typed, "none") {
+	} else if strings.HasPrefix(typed, "none<") {
 		if len(typed) > 4 {
 			data.memberType = typeToVarData(module, typed[5:len(typed)-1])
 			typed = "maybe" + typed[4:len(typed)]
@@ -289,28 +289,22 @@ func (me *varData) checkIsEnum() (*enum, *union, bool) {
 }
 
 func (me *varData) postfixConst() bool {
-	if me.checkIsArrayOrSlice() {
-		return true
-	}
-	if me.checkIsSomeOrNone() {
-		return me.memberType.postfixConst()
-	}
-	if _, ok := me.checkIsClass(); ok {
-		return true
-	}
-	if _, _, ok := me.checkIsEnum(); ok {
-		return true
-	}
-	return false
+	return me.dtype.postfixConst()
 }
 
 func (me *varData) noConst() bool {
-	if !me.checkIsPrimitive() {
-		if me.onStack || !me.isptr {
-			return true
-		}
-	}
-	return false
+	return me.dtype.noConst()
+}
+
+func (me *varData) setOnStackNotPointer() {
+	me.isptr = false
+	me.onStack = true
+	me.dtype.setOnStackNotPointer()
+}
+
+func (me *varData) setIsPointer(flag bool) {
+	me.isptr = flag
+	me.dtype.setIsPointer(flag)
 }
 
 func (me *varData) typeSigOf(name string, mutable bool) string {

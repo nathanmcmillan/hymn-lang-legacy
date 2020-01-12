@@ -242,7 +242,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			}
 			if !malloc {
 				left.attributes["global"] = "true"
-				right.data().isptr = false
+				right.data().setIsPointer(false)
 			}
 			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)
 		}
@@ -292,6 +292,9 @@ func (me *parser) free() *node {
 func (me *parser) extern() *node {
 	ext := me.token
 	me.eat("id")
+	if me.token.is != "." {
+		panic(me.fail() + "expecting \".\" after module name")
+	}
 	me.eat(".")
 	extname := ext.value
 	id := me.token

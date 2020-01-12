@@ -72,6 +72,8 @@ hashset clear()
 	self.size = 0
 
 main
+	echo("--- start ---")
+
 	m = hashset(
 		capacity: 12
 		get_code: string_hashcode
@@ -118,4 +120,4 @@ main
 	m.clear()
 	if m.has("banana") : echo("bad")
 	echo("size: " + to_str(m.size))
-	echo("---")
+	echo("--- end ---")

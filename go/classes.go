@@ -38,7 +38,15 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 
 func (me *class) initMembers(variableOrder []string, variables map[string]*variable) {
 	me.variableOrder = variableOrder
-	me.variables = variables
+	me.variables =
+		variables
+}
+
+func (me *class) baseClass() *class {
+	if me.base == nil {
+		return me
+	}
+	return me.base.baseClass()
 }
 
 func (me *class) getGenerics() []string {

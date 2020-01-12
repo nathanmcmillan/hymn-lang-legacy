@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -104,7 +103,6 @@ func (me *cfile) dependencyGraph(d *datatype) {
 		}
 	case dataTypeClass:
 		name := d.print()
-		fmt.Println("dependency ::", name)
 		if cl, ok := me.hmfile.classes[name]; ok {
 			if !cl.doNotDefine() {
 				me.dependencyReq.add(cl.location)

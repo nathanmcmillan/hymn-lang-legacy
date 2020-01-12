@@ -126,6 +126,40 @@ func (me *datatype) isEnum() (*enum, *union, bool) {
 	return me.enum, me.union, true
 }
 
+func (me *datatype) postfixConst() bool {
+	if me.isArrayOrSlice() {
+		return true
+	}
+	if me.isSomeOrNone() {
+		return me.member.postfixConst()
+	}
+	if _, ok := me.isClass(); ok {
+		return true
+	}
+	if _, _, ok := me.isEnum(); ok {
+		return true
+	}
+	return false
+}
+
+func (me *datatype) noConst() bool {
+	if !me.isPrimitive() {
+		if !me.heap || !me.pointer {
+			return true
+		}
+	}
+	return false
+}
+
+func (me *datatype) setOnStackNotPointer() {
+	me.pointer = false
+	me.heap = false
+}
+
+func (me *datatype) setIsPointer(flag bool) {
+	me.pointer = flag
+}
+
 func (me *datatype) standard() string {
 	return me.output(false)
 }
@@ -194,14 +228,6 @@ func (me *datatype) cname() string {
 		{
 			return me.class.cname
 		}
-	case dataTypeEnum:
-		{
-			panic("todo")
-			if me.union != nil {
-				return me.union.name
-			}
-			return me.enum.cname
-		}
 	default:
 		panic("missing data type")
 	}
@@ -256,24 +282,35 @@ func (me *datatype) output(expand bool) string {
 		}
 	case dataTypeClass:
 		{
-			return me.class.name
+			f := me.class.baseClass().name
+			if len(me.generics) > 0 {
+				f += "<"
+				for i, g := range me.generics {
+					if i > 0 {
+						f += ","
+					}
+					f += g.output(expand)
+				}
+				f += ">"
+			}
+			return f
 		}
 	case dataTypeEnum:
 		{
-			f := me.enum.name
+			f := me.enum.baseEnum().name
 			if expand && me.union != nil {
 				f += "." + me.union.name
 			}
-			// if len(me.generics) > 0 {
-			// 	f += "<"
-			// 	for i, g := range me.generics {
-			// 		if i > 0 {
-			// 			f += ","
-			// 		}
-			// 		f += g.output(expand)
-			// 	}
-			// 	f += ">"
-			// }
+			if len(me.generics) > 0 {
+				f += "<"
+				for i, g := range me.generics {
+					if i > 0 {
+						f += ","
+					}
+					f += g.output(expand)
+				}
+				f += ">"
+			}
 			return f
 		}
 	default:

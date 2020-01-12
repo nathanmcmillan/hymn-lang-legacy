@@ -32,11 +32,34 @@ func TestCompile(t *testing.T) {
 		flags.writeTo = folder + "/out/" + nameNum
 		stdout, err := execCompile(flags)
 		if err != nil {
-			t.Errorf("compile error for " + info.Name() + " :: " + err.Error())
+			t.Errorf("compile error for " + info.Name() + ". " + err.Error())
 		}
 		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {
-			t.Errorf("assert failed for " + info.Name())
+			outln := strings.Split(stdout, "\n")
+			expectln := strings.Split(expected, "\n")
+			min := len(outln)
+			temp := len(expectln)
+			if temp < min {
+				min = temp
+			}
+			var i int
+			badln := false
+			for i = 0; i < min; i++ {
+				if outln[i] != expectln[i] {
+					badln = true
+					break
+				}
+			}
+			e := "assert failed for " + info.Name()
+			if badln {
+				e += " on line " + strconv.Itoa(i+1) + ". expected <[" + expectln[i] + "]> but was <[" + outln[i] + "]>"
+			} else if min == temp {
+				e += ". expected output was shorter than actual output."
+			} else {
+				e += ". actual output was shorter than expected output."
+			}
+			t.Errorf(e)
 		}
 	}
 }

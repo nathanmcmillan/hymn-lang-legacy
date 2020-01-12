@@ -14,13 +14,17 @@ type poo
 hello(f foo) int
   return f.data + 1
 
+load() poo
+  p = poo()
+  p.z.data = 24
+  p.w.y = 25
+  return p
+
 main
   f = $foo(22)
   echo(f.data)
   echo(hello(f))
 
-  p = poo()
-  p.z.data = 24
-  p.w.y = 25
+  p = load()
   echo(p.z.data)
   echo(p.w.y)

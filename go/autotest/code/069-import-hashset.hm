@@ -1,10 +1,12 @@
 import "hashset"
 
 main
-	m = hashset(
+	echo("--- start hashset import ---")
+
+	m = hashset.hashset(
 		capacity: 12
-		get_code: string_hashcode
-		table: [12:]maybe<hashset_item<string>>)
+		get_code: hashset.string_hashcode
+		table: [12:]maybe<hashset.hashset_item<string>>)
 
 	m.add("kiwi")
 	if not m.has("kiwi") : echo("bad")
@@ -47,4 +49,4 @@ main
 	m.clear()
 	if m.has("banana") : echo("bad")
 	echo("size: " + to_str(m.size))
-	echo("---")
+	echo("--- end ---")

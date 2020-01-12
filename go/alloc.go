@@ -92,7 +92,6 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 
 func (me *parser) defaultValue(in *varData) *node {
 	d := nodeInit(in.full)
-	fmt.Println("default value ::", in.full)
 	d.copyData(in)
 	typed := in.full
 	if typed == TokenString {
@@ -296,7 +295,6 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(true, base)
 			typed = name + "<" + strings.Join(gtypes, ",") + ">"
-			fmt.Println("define ::", typed)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				me.defineClassImplGeneric(base, typed, gtypes)
 			}
@@ -314,7 +312,6 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 		}
 	}
 	if n != nil {
-		fmt.Println("class params ::", typed)
 		typed = me.classParams(n, module, typed, depth)
 	}
 	if me.hmfile != module {
@@ -332,8 +329,7 @@ func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n.copyData(data)
 	if alloc != nil && alloc.stack {
 		n.attributes["stack"] = "true"
-		n.data().isptr = false
-		n.data().onStack = true
+		n.data().setOnStackNotPointer()
 	}
 	return n
 }

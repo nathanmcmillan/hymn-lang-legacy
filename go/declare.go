@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -41,8 +40,6 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	for k, v := range base.variables {
 		memberMap[k] = v.copy()
 	}
-
-	fmt.Println("class impl generic ::", impl)
 
 	module := base.module
 
@@ -134,7 +131,7 @@ func (me *parser) declareType(implementation bool) *varData {
 	}
 
 	module := me.hmfile
-	typed := ""
+	local := ""
 
 	if me.token.is == "(" {
 		return me.declareFn()
@@ -144,67 +141,70 @@ func (me *parser) declareType(implementation bool) *varData {
 		me.eat("<")
 		option := me.declareType(implementation)
 		me.eat(">")
-		typed += "maybe<" + option.full + ">"
+		local += "maybe<" + option.full + ">"
 
 	} else if me.token.is == "none" {
 		me.eat("none")
-		typed += "none"
+		local += "none"
 		if me.token.is == "<" {
 			me.eat("<")
 			option := me.declareType(implementation).full
 			me.eat(">")
-			typed += "<" + option + ">"
+			local += "<" + option + ">"
 		}
 	} else {
-		typed += me.token.value
+		local += me.token.value
 		me.wordOrPrimitive()
 	}
 
-	if _, ok := me.hmfile.imports[typed]; ok {
+	if m, ok := me.hmfile.imports[local]; ok {
 		me.eat(".")
-		typed += "."
-		typed += me.token.value
+		module = m
+		local = me.token.value
 		me.eat("id")
 	}
 
-	if _, ok := me.hmfile.enums[typed]; ok && me.token.is == "." {
+	if _, ok := module.enums[local]; ok && me.token.is == "." {
 		me.eat(".")
-		typed += "."
-		typed += me.token.value
+		local += "." + me.token.value
 		me.eat("id")
-	}
 
-	if fn, ok := me.hmfile.functions[typed]; ok {
+	} else if fn, ok := module.functions[local]; ok {
 		return me.declareFnPtr(fn)
 	}
 
 	if me.token.is == "<" {
-		if base, ok := module.classes[typed]; ok {
+		if base, ok := module.classes[local]; ok {
 			gtypes := me.declareGeneric(implementation, base)
-			typed += "<" + strings.Join(gtypes, ",") + ">"
+			local += "<" + strings.Join(gtypes, ",") + ">"
 			if implementation {
-				if _, ok := module.classes[typed]; !ok {
-					me.defineClassImplGeneric(base, typed, gtypes)
+				if _, ok := module.classes[local]; !ok {
+					me.defineClassImplGeneric(base, local, gtypes)
 				}
 			}
-		} else if base, ok := module.enums[typed]; ok {
+		} else if base, ok := module.enums[local]; ok {
 			gtypes := me.declareGeneric(implementation, base)
-			typed += "<" + strings.Join(gtypes, ",") + ">"
+			local += "<" + strings.Join(gtypes, ",") + ">"
 			if implementation {
-				if _, ok := module.enums[typed]; !ok {
-					me.defineEnumImplGeneric(base, typed, gtypes)
+				if _, ok := module.enums[local]; !ok {
+					me.defineEnumImplGeneric(base, local, gtypes)
 				}
 			}
 		} else {
-			panic(me.fail() + "type \"" + typed + "\" does not exist")
+			panic(me.fail() + "type \"" + local + "\" does not exist in module \"" + module.name + "\"")
 		}
 	}
 
 	if array {
-		typed = "[" + size + "]" + typed
+		local = "[" + size + "]" + local
 	}
 
-	return typeToVarData(module, typed)
+	qualified := local
+	if module != me.hmfile {
+		qualified = module.name + "." + qualified
+	}
+
+	return typeToVarData(me.hmfile, qualified)
 }
 
 func sizeOfArray(typed string) string {

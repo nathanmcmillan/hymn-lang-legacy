@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path"
 	"strconv"
@@ -10,6 +11,21 @@ import (
 )
 
 func TestCompile(t *testing.T) {
+	args := os.Args
+	min := 0
+	max := int(math.MaxUint32 >> 1)
+	if len(args) > 3 {
+		temp, err := strconv.Atoi(args[3])
+		if err == nil {
+			min = temp
+		}
+		if len(args) > 4 {
+			temp, err := strconv.Atoi(args[4])
+			if err == nil {
+				max = temp
+			}
+		}
+	}
 	debug = false
 	flags := &flags{}
 	flags.cc = "gcc"
@@ -23,8 +39,11 @@ func TestCompile(t *testing.T) {
 	for _, info := range source {
 		name := strings.TrimSuffix(info.Name(), ".hm")
 		nameNum := strings.Split(name, "-")[0]
-		_, err := strconv.Atoi(nameNum)
+		number, err := strconv.Atoi(nameNum)
 		if err != nil {
+			continue
+		}
+		if number < min || number > max {
 			continue
 		}
 		fmt.Println("====================================================================== test", info.Name())

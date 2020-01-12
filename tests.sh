@@ -2,5 +2,5 @@
 cd "$(dirname "$0")"
 
 cd go
-go test -v
+go test -v -args $@
 cd ..

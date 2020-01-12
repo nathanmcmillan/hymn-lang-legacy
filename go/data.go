@@ -307,6 +307,10 @@ func (me *varData) setIsPointer(flag bool) {
 	me.dtype.setIsPointer(flag)
 }
 
+func (me *varData) memPtr() string {
+	return me.dtype.memoryGet()
+}
+
 func (me *varData) typeSigOf(name string, mutable bool) string {
 	code := ""
 	if me.fn != nil {
@@ -384,13 +388,6 @@ func (me *varData) noMallocTypeSig() string {
 	return me.full
 }
 
-func (me *varData) memPtr() string {
-	if me.isptr {
-		return "->"
-	}
-	return "."
-}
-
 func (me *varData) getFunction(name string) (*function, bool) {
 	if me.module != nil {
 		f, ok := me.module.getFunction(name)
@@ -401,6 +398,7 @@ func (me *varData) getFunction(name string) (*function, bool) {
 }
 
 func (me *varData) typeEqual(b *varData) bool {
+	// return me.dtype.equals(b.dtype)
 	if me.full == b.full {
 		return true
 	}
@@ -413,8 +411,9 @@ func (me *varData) typeEqual(b *varData) bool {
 	return me.dtype.standard() == b.dtype.standard()
 }
 
-func (me *varData) notEqual(other *varData) bool {
-	return !me.typeEqual(other)
+func (me *varData) notEqual(b *varData) bool {
+	// return me.dtype.notEquals(b.dtype)
+	return !me.typeEqual(b)
 }
 
 func (me *parser) typeEqual(one, two string) bool {

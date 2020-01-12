@@ -9,7 +9,7 @@ main
 		date = substring(date, 0, size - 1)
 	path = pwd + "/" + date + ".txt"
 	content = "hello file\n"
-	echo("path:", path)
 	echo("content:", content)
 	write(path, content)
+	echo("read:", cat(path))
 	echo("done!")

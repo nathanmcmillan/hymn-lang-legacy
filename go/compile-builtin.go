@@ -344,6 +344,13 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "exit("+param.pop()+")", param.pre)
 		}
 		panic("argument for exit was " + param.string(0))
+	case libChdir:
+		me.stdReq.add(CStdUnistd)
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return codeBlockMerge(n, "chdir("+param.pop()+")", param.pre)
+		}
+		panic("argument for chdir was " + param.string(0))
 	default:
 		return nil
 	}

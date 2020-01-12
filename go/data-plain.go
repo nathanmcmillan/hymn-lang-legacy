@@ -160,6 +160,21 @@ func (me *datatype) setIsPointer(flag bool) {
 	me.pointer = flag
 }
 
+func (me *datatype) memoryGet() string {
+	if me.pointer {
+		return "->"
+	}
+	return "."
+}
+
+func (me *datatype) equals(b *datatype) bool {
+	return me.standard() == b.standard()
+}
+
+func (me *datatype) notEquals(b *datatype) bool {
+	return !me.equals(b)
+}
+
 func (me *datatype) standard() string {
 	return me.output(false)
 }

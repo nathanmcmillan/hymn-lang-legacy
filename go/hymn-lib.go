@@ -31,6 +31,7 @@ const (
 	libCapacity  = "cap"
 	libPush      = "push"
 	libExit      = "exit"
+	libChdir     = "chdir"
 	libSubstring = "substring"
 )
 
@@ -152,6 +153,7 @@ func (me *hmlib) libs() {
 	me.functions = make(map[string]*function)
 
 	me.newLibSimpleIn(libExit, TokenInt, "void")
+	me.newLibSimpleIn(libChdir, TokenString, "void")
 
 	me.newLibSimpleVardiac(libEcho, "void")
 	me.newLibSimpleVardiac(libFormat, TokenString)

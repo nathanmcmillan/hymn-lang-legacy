@@ -1,8 +1,6 @@
 main
-	p = system("pwd")
+	mutable p = system("pwd")
+	size = len(p) 
+	if p[size - 1] == '\n'
+		p = substring(p, 0, size - 1)
 	echo("pwd: " + p)
-	(* echo("---")
-	echo(system("ls"))
-	echo("---")
-	echo(system("cat klsdfjsdljfdsl"))
-	echo("---") *)

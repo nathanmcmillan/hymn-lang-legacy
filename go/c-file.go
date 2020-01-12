@@ -92,7 +92,7 @@ func (me *cfile) head() string {
 
 func (me *cfile) includeLibs() {
 	for _, name := range me.stdReq.order {
-		me.headStdIncludeSection.WriteString("\n#include <" + name + ">")
+		me.headStdIncludeSection.WriteString("\n#include <" + name + ".h>")
 	}
 	for _, name := range me.libReq.order {
 		location := me.hmfile.program.hmlibmap[name]

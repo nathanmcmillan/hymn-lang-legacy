@@ -1,5 +1,7 @@
 main
-	content = cat("run.sh")
+	chdir("../../../../")
+	echo(system("pwd"))
+	content = cat("CNAME")
 	echo(content)
 	iterate i, c in content
 		echo(to_str(i) + ": " + to_str(c))

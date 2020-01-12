@@ -7,3 +7,8 @@ const (
 	HmLibString = "hmlib_string"
 	HmLibSystem = "hmlib_system"
 )
+
+// C Standard Library
+const (
+	CStdUnistd = "unistd"
+)

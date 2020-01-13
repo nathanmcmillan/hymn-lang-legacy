@@ -126,6 +126,10 @@ func (me *datatype) isPrimitive() bool {
 	return me.is == dataTypePrimitive || me.is == dataTypeString
 }
 
+func (me *datatype) isAnyIntegerType() bool {
+	return me.is == dataTypePrimitive && isAnyIntegerType(me.canonical)
+}
+
 func (me *datatype) isInt() bool {
 	return me.is == dataTypePrimitive && me.canonical == TokenInt
 }
@@ -363,7 +367,10 @@ func (me *datatype) cname() string {
 		fallthrough
 	case dataTypePrimitive:
 		{
-			return simpleCapitalize(me.canonical)
+			if c, ok := getCName(me.canonical); ok {
+				return c
+			}
+			return me.canonical
 		}
 	case dataTypeArray:
 		{

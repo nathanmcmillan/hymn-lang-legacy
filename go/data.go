@@ -5,22 +5,26 @@ import (
 	"strings"
 )
 
-// type plainType struct {
-// 	module *hmfile
-// 	typed  string
-// }
+//// TODO ::
+type plainType struct {
+	module *hmfile
+	typed  string
+}
 
-// func (me *plainType) print() string {
-// 	return me.module.name + "." + me.typed
-// }
+func (me *plainType) print() string {
+	return me.module.name + "." + me.typed
+}
 
-// func (me *varData) plain() *plainType {
-// 	return me.dtype.plain()
-// }
+func (me *varData) plain() *plainType {
+	// return me.dtype.plain()
+	return &plainType{me.module, me.getRaw()}
+}
 
-// func (me *datatype) plain() *plainType {
-// 	return &plainType{me.module, me.print()}
-// }
+func (me *datatype) plain() *plainType {
+	return &plainType{me.module, me.print()}
+}
+
+/////////////////
 
 type varData struct {
 	hmlib      *hmlib
@@ -60,6 +64,7 @@ func (me *varData) set(in *varData) {
 	me.un = in.un
 	me.cl = in.cl
 	me.fn = in.fn
+	me.raw = in.raw
 }
 
 func (me *varData) copy() *varData {
@@ -84,6 +89,7 @@ func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[strin
 func (me *hmlib) literalType(typed string) *varData {
 	data := &varData{}
 	data.hmlib = me
+	data.raw = typed
 	data.dtype = getdatatype(nil, typed)
 	return data
 }
@@ -102,6 +108,7 @@ func typeToVarData(module *hmfile, typed string) *varData {
 	data.mutable = true
 	data.isptr = true
 	data.heap = true
+	data.raw = typed
 
 	dot := strings.Split(typed, ".")
 	if len(dot) != 1 {
@@ -134,6 +141,7 @@ func typeToVarData(module *hmfile, typed string) *varData {
 			typed = "maybe" + typed[4:len(typed)]
 			data.dtype = getdatatype(module, typed)
 			data.maybe = true
+			data.raw = typed
 		} else {
 			data.none = true
 			data.memberType = typeToVarData(module, "")
@@ -193,8 +201,11 @@ func (me *varData) merge(hint *allocData) {
 		member.slice = false
 		me.memberType = member
 		if me.array {
+			size := "[" + strconv.Itoa(hint.size) + "]"
+			me.raw = size + member.raw
 			me.dtype = newdataarray(strconv.Itoa(hint.size), me.dtype)
 		} else {
+			me.raw = "[]" + member.raw
 			me.dtype = newdataslice(me.dtype)
 		}
 	}
@@ -209,6 +220,8 @@ func (me *varData) sizeOfArray() string {
 func (me *varData) arrayToSlice() {
 	me.array = false
 	me.slice = true
+	index := strings.Index(me.raw, "]")
+	me.raw = "[]" + me.raw[index+1:]
 	me.dtype.convertArrayToSlice()
 }
 
@@ -233,6 +246,10 @@ func (me *varData) checkIsSlice() bool {
 }
 
 func (me *varData) checkIsArrayOrSlice() bool {
+	return me.dtype.isArrayOrSlice()
+}
+
+func (me *varData) isArrayOrSlice() bool {
 	return me.dtype.isArrayOrSlice()
 }
 
@@ -319,6 +336,10 @@ func (me *varData) cname() string {
 	return me.dtype.cname()
 }
 
+func (me *varData) isAnyIntegerType() bool {
+	return me.dtype.isAnyIntegerType()
+}
+
 func (me *varData) isInt() bool {
 	return me.dtype.isInt()
 }
@@ -333,4 +354,8 @@ func (me *varData) isBoolean() bool {
 
 func (me *varData) equals(b *varData) bool {
 	return me.dtype.equals(b.dtype)
+}
+
+func (me *varData) getRaw() string {
+	return me.raw
 }

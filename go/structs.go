@@ -152,7 +152,7 @@ func canCastToNumber(t string) bool {
 	return ok
 }
 
-func isInteger(t string) bool {
+func isAnyIntegerType(t string) bool {
 	_, ok := integerTypes[t]
 	return ok
 }

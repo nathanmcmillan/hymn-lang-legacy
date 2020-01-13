@@ -32,7 +32,7 @@ func (me *cnode) copyTypeFromVar(other *variable) {
 
 func (me *cnode) getType() string {
 	if me.data() != nil {
-		return me.data().print()
+		return me.data().getRaw()
 	}
 	return me.typed
 }

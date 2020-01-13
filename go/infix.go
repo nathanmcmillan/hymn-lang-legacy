@@ -48,7 +48,7 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
-	if !left.data().isInt() || !right.data().isInt() {
+	if !left.data().isAnyIntegerType() || !right.data().isAnyIntegerType() || left.data().notEqual(right.data()) {
 		err := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
@@ -87,7 +87,7 @@ func infixTernary(me *parser, condition *node, op string) *node {
 	node.push(one)
 	me.eat(":")
 	two := me.calc(getInfixPrecedence(op))
-	if one.data().equals(two.data()) {
+	if one.data().notEqual(two.data()) {
 		panic(me.fail() + "left \"" + one.data().print() + "\" and right \"" + two.data().print() + "\" types do not match")
 	}
 	node.push(two)

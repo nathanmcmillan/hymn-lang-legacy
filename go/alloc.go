@@ -50,8 +50,8 @@ func (me *parser) allocEnum(module *hmfile) *node {
 			}
 			param := me.calc(0)
 			if param.data().dtype.notEquals(unionType.dtype) {
-				if _, gok := gdict[unionType.print()]; gok {
-					gimpl[unionType.print()] = param.data().print()
+				if _, gok := gdict[unionType.getRaw()]; gok {
+					gimpl[unionType.getRaw()] = param.data().getRaw()
 				} else {
 					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.print() + "\" but parameter was \"" + param.data().print() + "\"")
 				}
@@ -91,7 +91,7 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 }
 
 func (me *parser) defaultValue(in *varData) *node {
-	d := nodeInit(in.print())
+	d := nodeInit(in.getRaw())
 	d.copyData(in)
 	data := in.dtype
 	if data.isString() {
@@ -147,7 +147,6 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	if me.token.is == "line" {
 		me.eat("line")
 	}
-	fmt.Println("class params ::", typed)
 	base := module.classes[typed]
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
@@ -284,7 +283,6 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 
 func (me *parser) buildClass(n *node, module *hmfile) *varData {
 	name := me.token.value
-	fmt.Println("build class ::", name)
 	depth := me.token.depth
 	me.eat("id")
 	base, ok := module.classes[name]
@@ -297,7 +295,6 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(true, base)
 			typed = name + "<" + strings.Join(gtypes, ",") + ">"
-			fmt.Println("concat ::", typed)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				me.defineClassImplGeneric(base, typed, gtypes)
 			}
@@ -305,12 +302,11 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
 			if !assign.isQuestion() {
 				if assign.maybe {
-					typed = assign.memberType.print()
-					fmt.Println("maybe ::", assign.print())
+					typed = assign.memberType.getRaw()
 				} else if assign.checkIsArrayOrSlice() {
-					typed = assign.memberType.print()
+					typed = assign.memberType.getRaw()
 				} else {
-					typed = assign.print()
+					typed = assign.getRaw()
 				}
 			}
 		}

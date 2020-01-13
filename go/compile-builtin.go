@@ -152,7 +152,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			paramx := me.eval(param)
 			cb.prepend(paramx.pre)
 			pop := true
-			switch param.data().print() {
+			switch param.data().getRaw() {
 			case TokenChar:
 				code += "%c"
 			case "[]char":

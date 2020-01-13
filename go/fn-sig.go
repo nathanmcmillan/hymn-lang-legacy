@@ -20,18 +20,18 @@ func (me *fnSig) print() string {
 		if ix > 0 {
 			sig += ", "
 		}
-		sig += arg.data().print()
+		sig += arg.data().getRaw()
 	}
 	if me.argVariadic != nil {
 		if len(me.args) > 0 {
 			sig += ", "
 		}
-		sig += "..." + me.argVariadic.data().print()
+		sig += "..." + me.argVariadic.data().getRaw()
 	}
 	sig += ")"
 	if !me.returns.isVoid() {
 		sig += " "
-		sig += me.returns.print()
+		sig += me.returns.getRaw()
 	}
 	return sig
 }
@@ -41,6 +41,7 @@ func (me *fnSig) data() *varData {
 	d := &varData{}
 	d.fn = me
 	d.module = me.module
+	d.raw = sig
 	d.dtype = getdatatype(nil, sig)
 	return d
 }

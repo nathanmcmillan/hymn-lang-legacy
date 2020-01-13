@@ -225,7 +225,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
 			if !right.data().isQuestion() && left.data().notEqual(right.data()) {
-				if strings.HasPrefix(left.data().print(), right.data().print()) && strings.Index(left.data().print(), "<") != -1 {
+				if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
 					panic(me.fail() + "variable type \"" + left.data().print() + "\" does not match expression type \"" + right.data().print() + "\"")
@@ -246,10 +246,10 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
 		if !right.data().isQuestion() && left.data().notEqual(right.data()) {
-			if strings.HasPrefix(left.data().print(), right.data().print()) && strings.Index(left.data().print(), "<") != -1 {
+			if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {
-				panic(me.fail() + "member variable type \"" + left.data().print() + "\" does not match expression type \"" + right.data().print() + "\"")
+				panic(me.fail() + "member variable type \"" + left.data().getRaw() + "\" does not match expression type \"" + right.data().getRaw() + "\"")
 			}
 		}
 	} else {

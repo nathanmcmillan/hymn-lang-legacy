@@ -30,7 +30,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, typed := range un.types {
-			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed.dtype, gmapper))
+			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed.plain(), gmapper))
 		}
 	}
 }
@@ -61,7 +61,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem.update(module, me.genericsReplacer(mem.data().dtype, gmapper))
+		mem.update(module, me.genericsReplacer(mem.data().plain(), gmapper))
 	}
 
 	for _, fn := range base.functionOrder {
@@ -78,7 +78,7 @@ func (me *parser) declareGeneric(implementation bool, base hasGenerics) []string
 			me.eat(",")
 		}
 		gimpl := me.declareType(implementation)
-		order = append(order, gimpl.print())
+		order = append(order, gimpl.getRaw())
 	}
 	me.eat(">")
 	return order
@@ -141,14 +141,14 @@ func (me *parser) declareType(implementation bool) *varData {
 		me.eat("<")
 		option := me.declareType(implementation)
 		me.eat(">")
-		local += "maybe<" + option.print() + ">"
+		local += "maybe<" + option.getRaw() + ">"
 
 	} else if me.token.is == "none" {
 		me.eat("none")
 		local += "none"
 		if me.token.is == "<" {
 			me.eat("<")
-			option := me.declareType(implementation).print()
+			option := me.declareType(implementation).getRaw()
 			me.eat(">")
 			local += "<" + option + ">"
 		}

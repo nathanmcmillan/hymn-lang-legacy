@@ -147,6 +147,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	if me.token.is == "line" {
 		me.eat("line")
 	}
+	fmt.Println("class params ::", typed)
 	base := module.classes[typed]
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
@@ -283,6 +284,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 
 func (me *parser) buildClass(n *node, module *hmfile) *varData {
 	name := me.token.value
+	fmt.Println("build class ::", name)
 	depth := me.token.depth
 	me.eat("id")
 	base, ok := module.classes[name]
@@ -295,6 +297,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(true, base)
 			typed = name + "<" + strings.Join(gtypes, ",") + ">"
+			fmt.Println("concat ::", typed)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				me.defineClassImplGeneric(base, typed, gtypes)
 			}
@@ -303,6 +306,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 			if !assign.isQuestion() {
 				if assign.maybe {
 					typed = assign.memberType.print()
+					fmt.Println("maybe ::", assign.print())
 				} else if assign.checkIsArrayOrSlice() {
 					typed = assign.memberType.print()
 				} else {
@@ -317,9 +321,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 	if me.hmfile != module {
 		typed = module.name + "." + typed
 	}
-
-	data := typeToVarData(me.hmfile, typed)
-	return data
+	return typeToVarData(me.hmfile, typed)
 }
 
 func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {

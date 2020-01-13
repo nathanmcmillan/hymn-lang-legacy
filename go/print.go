@@ -203,7 +203,7 @@ func (me *enum) string(lv int) string {
 				if ix > 0 {
 					types += ", "
 				}
-				types += "\"" + typ.string(lv) + "\""
+				types += "\"" + typ.dtype.string(lv) + "\""
 			}
 			s += fmc(lv) + "{\"name\": \"" + unionType.name + "\", \"unions\": [" + types + "]}"
 		} else {

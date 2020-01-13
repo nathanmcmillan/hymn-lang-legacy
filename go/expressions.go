@@ -214,7 +214,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
 		}
 	} else if mustBeNumber {
-		if !isNumber(right.data().full) {
+		if !right.data().isNumber() {
 			panic(me.fail() + "assign operation \"" + op + "\" requires number type")
 		}
 	}
@@ -224,8 +224,8 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if !sv.mutable {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
-			if right.data().full != "?" && left.data().notEqual(right.data()) {
-				if strings.HasPrefix(left.data().full, right.data().full) && strings.Index(left.data().full, "<") != -1 {
+			if !right.data().isQuestion() && left.data().notEqual(right.data()) {
+				if strings.HasPrefix(left.data().print(), right.data().print()) && strings.Index(left.data().print(), "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
 					panic(me.fail() + "variable type \"" + left.data().print() + "\" does not match expression type \"" + right.data().print() + "\"")
@@ -245,11 +245,11 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
-		if right.data().full != "?" && left.data().notEqual(right.data()) {
-			if strings.HasPrefix(left.data().full, right.data().full) && strings.Index(left.data().full, "<") != -1 {
+		if !right.data().isQuestion() && left.data().notEqual(right.data()) {
+			if strings.HasPrefix(left.data().print(), right.data().print()) && strings.Index(left.data().print(), "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {
-				panic(me.fail() + "member variable type \"" + left.data().full + "\" does not match expression type \"" + right.data().full + "\"")
+				panic(me.fail() + "member variable type \"" + left.data().print() + "\" does not match expression type \"" + right.data().print() + "\"")
 			}
 		}
 	} else {
@@ -333,7 +333,7 @@ blockEnd:
 
 func (me *parser) calcBool() *node {
 	n := me.calc(0)
-	if n.data().full != "bool" {
+	if !n.data().isBoolean() {
 		panic(me.fail() + "must be boolean expression")
 	}
 	return n

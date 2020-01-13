@@ -217,9 +217,9 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 				if defaultValue != "" {
 					defaultTypeVarData := typeToVarData(module, defaultType)
 					if typed.notEqual(defaultTypeVarData) {
-						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.full + "\" do not match")
+						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.print() + "\" do not match")
 					}
-					defaultNode := nodeInit(defaultTypeVarData.full)
+					defaultNode := nodeInit(defaultTypeVarData.print())
 					defaultNode.copyData(defaultTypeVarData)
 					defaultNode.value = defaultValue
 					fnArg.defaultNode = defaultNode

@@ -159,7 +159,7 @@ func (me *datatype) isEnum() (*enum, *union, bool) {
 	return me.enum, me.union, true
 }
 
-func (me *datatype) isFunction(name string) (*function, bool) {
+func (me *datatype) getFunction(name string) (*function, bool) {
 	if me.module != nil {
 		f, ok := me.module.getFunction(name)
 		return f, ok
@@ -802,8 +802,4 @@ func (me *datatype) noMallocTypeSig() string {
 	default:
 		panic("switch statement is missing data type \"" + me.nameIs() + "\"")
 	}
-}
-
-func (me *datatype) plain() *plainType {
-	return &plainType{me.module, me.print()}
 }

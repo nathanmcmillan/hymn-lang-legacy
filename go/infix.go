@@ -8,7 +8,7 @@ func (me *parser) infixConcat(left *node) *node {
 		me.eat("+")
 		right := me.calc(getInfixPrecedence("+"))
 		if !right.data().checkIsString() {
-			err := me.fail() + "concatenation operation must be strings but found \"" + left.data().full + "\" and \"" + right.data().full + "\""
+			err := me.fail() + "concatenation operation must be strings but found \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 			panic(err)
 		}
@@ -28,13 +28,13 @@ func infixBinary(me *parser, left *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
-	if !isNumber(left.data().full) || !isNumber(right.data().full) {
-		err := me.fail() + "operation expected numbers but was \"" + left.data().full + "\" and \"" + right.data().full + "\""
+	if !left.data().isNumber() || !right.data().isNumber() {
+		err := me.fail() + "operation expected numbers but was \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\n\nleft: " + left.string(0) + "\n\nright: " + right.string(0)
 		panic(err)
 	}
 	if leftdata.notEqual(right.data()) {
-		err := me.fail() + "number types do not match \"" + left.data().full + "\" and \"" + right.data().full + "\""
+		err := me.fail() + "number types do not match \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		panic(err)
 	}
 	node.push(left)
@@ -48,13 +48,8 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
-	if !isInteger(left.data().full) || !isInteger(right.data().full) {
-		err := me.fail() + "operation requires discrete integers \"" + left.data().full + "\" and \"" + right.data().full + "\""
-		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
-		panic(err)
-	}
-	if left.data().full != right.data().full {
-		err := me.fail() + "operation types do not match \"" + left.data().full + "\" and \"" + right.data().full + "\""
+	if !left.data().isInt() || !right.data().isInt() {
+		err := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
 	}
@@ -85,15 +80,15 @@ func infixTernary(me *parser, condition *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	one := me.calc(getInfixPrecedence(op))
-	if one.data().full == "void" {
+	if one.data().isVoid() {
 		panic(me.fail() + "left type cannot be void")
 	}
 	node.push(condition)
 	node.push(one)
 	me.eat(":")
 	two := me.calc(getInfixPrecedence(op))
-	if one.data().full != two.data().full {
-		panic(me.fail() + "left \"" + one.data().full + "\" and right \"" + two.data().full + "\" types do not match")
+	if one.data().equals(two.data()) {
+		panic(me.fail() + "left \"" + one.data().print() + "\" and right \"" + two.data().print() + "\" types do not match")
 	}
 	node.push(two)
 	node.copyDataOfNode(one)

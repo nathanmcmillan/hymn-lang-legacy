@@ -5,14 +5,22 @@ import (
 	"strings"
 )
 
-type plainType struct {
-	module *hmfile
-	typed  string
-}
+// type plainType struct {
+// 	module *hmfile
+// 	typed  string
+// }
 
-func (me *plainType) print() string {
-	return me.module.name + "." + me.typed
-}
+// func (me *plainType) print() string {
+// 	return me.module.name + "." + me.typed
+// }
+
+// func (me *varData) plain() *plainType {
+// 	return me.dtype.plain()
+// }
+
+// func (me *datatype) plain() *plainType {
+// 	return &plainType{me.module, me.print()}
+// }
 
 type varData struct {
 	hmlib      *hmlib
@@ -31,6 +39,7 @@ type varData struct {
 	un         *union
 	cl         *class
 	fn         *fnSig
+	raw        string
 }
 
 func (me *varData) set(in *varData) {
@@ -77,10 +86,6 @@ func (me *hmlib) literalType(typed string) *varData {
 	data.hmlib = me
 	data.dtype = getdatatype(nil, typed)
 	return data
-}
-
-func (me *varData) plain() *plainType {
-	return me.dtype.plain()
 }
 
 func typeToVarData(module *hmfile, typed string) *varData {
@@ -188,7 +193,6 @@ func (me *varData) merge(hint *allocData) {
 		member.slice = false
 		me.memberType = member
 		if me.array {
-			size := "[" + strconv.Itoa(hint.size) + "]"
 			me.dtype = newdataarray(strconv.Itoa(hint.size), me.dtype)
 		} else {
 			me.dtype = newdataslice(me.dtype)
@@ -253,7 +257,7 @@ func (me *varData) checkIsEnum() (*enum, *union, bool) {
 }
 
 func (me *varData) getFunction(name string) (*function, bool) {
-	return me.dtype.isFunction(name)
+	return me.dtype.getFunction(name)
 }
 
 func (me *varData) postfixConst() bool {
@@ -317,4 +321,16 @@ func (me *varData) cname() string {
 
 func (me *varData) isInt() bool {
 	return me.dtype.isInt()
+}
+
+func (me *varData) isNumber() bool {
+	return me.dtype.isNumber()
+}
+
+func (me *varData) isBoolean() bool {
+	return me.dtype.isBoolean()
+}
+
+func (me *varData) equals(b *varData) bool {
+	return me.dtype.equals(b.dtype)
 }

@@ -35,12 +35,3 @@ func (me *fnSig) print() string {
 	}
 	return sig
 }
-
-func (me *fnSig) data() *varData {
-	sig := me.print()
-	d := &varData{}
-	d.fn = me
-	d.module = me.module
-	d.dtype = getdatatype(nil, sig)
-	return d
-}

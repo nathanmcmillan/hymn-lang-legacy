@@ -68,7 +68,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		matchBaseEnum, matchBaseUn, _ := caseOf.data().checkIsEnum()
 		matchBaseEnum = matchBaseEnum.baseEnum()
 		enNameSpace := matchBaseEnum.cname
-		code += using.data().module.enumTypeName(enNameSpace, matchBaseUn.name)
+		code += using.data().getmodule().enumTypeName(enNameSpace, matchBaseUn.name)
 	} else {
 		compare := me.eval(caseOf)
 		if compare.data() == nil {
@@ -139,7 +139,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 					}
 					me.scope.renaming[idata] = tempname
 				}
-				code += fmc(me.depth) + "case " + using.data().module.enumTypeName(enNameSpace, caseOf.is) + ": {\n"
+				code += fmc(me.depth) + "case " + using.data().getmodule().enumTypeName(enNameSpace, caseOf.is) + ": {\n"
 
 			} else {
 				code += fmc(me.depth) + "case " + caseOf.is + ":\n"

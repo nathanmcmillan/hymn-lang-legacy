@@ -145,7 +145,7 @@ func (me *parser) genericsReplacer(vdata *varData, gmapper map[string]string) st
 	correct := true
 	if correct {
 		typed := vdata.getRaw()
-		module := vdata.module
+		module := vdata.getmodule()
 		if checkIsArrayOrSlice(typed) {
 			size, typeOfMem := typeOfArrayOrSlice(typed)
 			if checkHasGeneric(typed) {

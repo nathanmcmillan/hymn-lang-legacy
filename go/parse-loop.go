@@ -80,7 +80,7 @@ func (me *parser) iterloop() *node {
 		d.idata.name = var2
 	}
 
-	itermint := me.hmfile.varInitFromData(using.data().memberType, d.idata.name, false)
+	itermint := me.hmfile.varInitFromData(using.data().getmember(), d.idata.name, false)
 	me.hmfile.scope.variables[itermint.name] = itermint
 	d.copyData(itermint.data())
 

@@ -7,7 +7,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		param0 := me.eval(parameters[0])
 		p := param0.data()
 		if p.checkIsSlice() {
-			uses := p.memberType
+			uses := p.getmember()
 			param1 := me.eval(parameters[1])
 			if uses.checkIsPointerInC() {
 				cb := codeBlockOne(n, "hmlib_slice_push("+param0.pop()+", "+param1.pop()+")")

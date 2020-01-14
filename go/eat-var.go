@@ -53,7 +53,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				} else {
 					funcVar, ok := data.getFunction(nameOfClassFunc(rootClass.name, dotName))
 					if ok {
-						member = me.callClassFunction(data.module, head, rootClass, funcVar)
+						member = me.callClassFunction(data.getmodule(), head, rootClass, funcVar)
 					} else {
 						panic(me.fail() + "class \"" + rootClass.name + "\" does not have variable or function \"" + dotName + "\"")
 					}
@@ -122,7 +122,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				}
 				member := nodeInit("array-member")
 				index := me.calc(0)
-				member.copyData(head.data().memberType)
+				member.copyData(head.data().getmember())
 				member.push(index)
 				member.push(head)
 				head = member
@@ -135,10 +135,10 @@ func (me *parser) eatvar(from *hmfile) *node {
 				if sv == nil {
 					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
 				}
-				sig = sv.data().fn
+				sig = sv.data().functionSignature()
 
 			} else if head.is == "member-variable" {
-				sig = head.data().fn
+				sig = head.data().functionSignature()
 			}
 			member := nodeInit("call")
 			member.copyData(sig.returns)

@@ -107,7 +107,7 @@ func (me *parser) declareFn() *varData {
 		fn.returns = typeToVarData(me.hmfile, "void")
 	}
 
-	return fn.data()
+	return functionSigToVarData(fn)
 }
 
 func (me *parser) declareFnPtr(fn *function) *varData {

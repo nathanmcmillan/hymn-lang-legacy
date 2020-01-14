@@ -27,7 +27,7 @@ func (me *cfile) compileDeclare(n *node) string {
 		newVar := me.hmfile.varInitFromData(data, name, mutable)
 		me.scope.variables[name] = newVar
 		if global {
-			newVar.cName = data.module.varNameSpace(name)
+			newVar.cName = data.getmodule().varNameSpace(name)
 			code += fmtassignspace(data.noMallocTypeSig())
 			code += newVar.cName
 		} else if useStack {

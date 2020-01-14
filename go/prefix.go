@@ -181,7 +181,7 @@ func prefixArray(me *parser, op string) *node {
 		for {
 			item := me.calc(0)
 			if item.data().notEqual(data) {
-				panic(me.fail() + "array member type \"" + item.data().print() + "\" does not match array type \"" + no.data().memberType.print() + "\"")
+				panic(me.fail() + "array member type \"" + item.data().print() + "\" does not match array type \"" + no.data().getmember().print() + "\"")
 			}
 			items.push(item)
 			if me.token.is == ")" {

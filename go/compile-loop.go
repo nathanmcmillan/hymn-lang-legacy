@@ -124,7 +124,7 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 	code += "for (" + index + " = 0; " + index + " < " + getlen + "; " + index + "++) {\n"
 	if item != "" {
 		code += fmc(me.depth + 1)
-		code += fmtassignspace(array.data().memberType.typeSig()) + item + " = " + arrayname + "[" + index + "];\n"
+		code += fmtassignspace(array.data().getmember().typeSig()) + item + " = " + arrayname + "[" + index + "];\n"
 	}
 	code += block.code()
 	code += me.maybeNewLine(code) + fmc(me.depth) + "}"

@@ -70,7 +70,7 @@ func (me *function) asSig() *fnSig {
 }
 
 func (me *function) data() *varData {
-	return me.asSig().data()
+	return functionSigToVarData(me.asSig())
 }
 
 func nameOfClassFunc(cl, fn string) string {

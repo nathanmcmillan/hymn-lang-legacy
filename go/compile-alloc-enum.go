@@ -9,7 +9,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 		return codeBlockOne(n, "")
 	}
 	data := n.data()
-	module := data.module
+	module := data.getmodule()
 	en, un, _ := data.checkIsEnum()
 	enumType := un.name
 	if en.simple {

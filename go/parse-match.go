@@ -38,7 +38,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				temp := me.token.value
 				me.eat("id")
 				me.eat(")")
-				tempd := me.hmfile.varInitFromData(left.data().memberType, temp, false)
+				tempd := me.hmfile.varInitFromData(left.data().getmember(), temp, false)
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}
 				tempv.idata.module = me.hmfile
@@ -75,8 +75,8 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			baseEnum, _, _ := left.data().checkIsEnum()
 			if un, ok := baseEnum.types[name]; ok {
 				prefix := ""
-				if me.hmfile != left.data().module {
-					prefix = left.data().module.name + "."
+				if me.hmfile != left.data().getmodule() {
+					prefix = left.data().getmodule().name + "."
 				}
 				me.eat("id")
 				right = nodeInit("match-enum")
@@ -202,7 +202,7 @@ func (me *parser) parseMatch() *node {
 			some := nodeInit("some")
 			n.push(some)
 			if temp != "" {
-				tempd := me.hmfile.varInitFromData(matchType.memberType, temp, false)
+				tempd := me.hmfile.varInitFromData(matchType.getmember(), temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
 				tempv.idata = &idData{}

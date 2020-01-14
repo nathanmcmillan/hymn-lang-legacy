@@ -206,8 +206,8 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 				vr = me.getvar(head.idata.name)
 				cname = vr.cName
 			} else {
-				vr = data.module.getStatic(head.idata.name)
-				cname = data.module.varNameSpace(head.idata.name)
+				vr = data.getmodule().getStatic(head.idata.name)
+				cname = data.getmodule().varNameSpace(head.idata.name)
 			}
 			if data.checkIsArrayOrSlice() {
 				code = cname + code

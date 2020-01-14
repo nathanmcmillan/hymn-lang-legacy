@@ -6,14 +6,9 @@ import (
 )
 
 type varData struct {
-	hmlib      *hmlib
 	module     *hmfile
 	dtype      *datatype
 	memberType *varData
-	en         *enum
-	un         *union
-	cl         *class
-	fn         *fnSig
 }
 
 func (me *varData) set(in *varData) {
@@ -22,10 +17,6 @@ func (me *varData) set(in *varData) {
 	if in.memberType != nil {
 		me.memberType = in.memberType.copy()
 	}
-	me.en = in.en
-	me.un = in.un
-	me.cl = in.cl
-	me.fn = in.fn
 }
 
 func (me *varData) copy() *varData {
@@ -38,6 +29,15 @@ func (me *varData) print() string {
 	return me.dtype.print()
 }
 
+func functionSigToVarData(fsig *fnSig) *varData {
+	sig := fsig.print()
+	d := &varData{}
+	d.module = fsig.module
+	d.dtype = getdatatype(nil, sig)
+	d.dtype.module = fsig.module
+	return d
+}
+
 func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[string]string) *varData {
 	data := typeToVarData(me, typed)
 	if _, ok := attributes["stack"]; ok {
@@ -48,7 +48,6 @@ func (me *hmfile) typeToVarDataWithAttributes(typed string, attributes map[strin
 
 func (me *hmlib) literalType(typed string) *varData {
 	data := &varData{}
-	data.hmlib = me
 	data.dtype = getdatatype(nil, typed)
 	return data
 }
@@ -111,7 +110,6 @@ func typeToVarData(module *hmfile, typed string) *varData {
 			fn.args = append(fn.args, fnArgInit(t.asVariable()))
 		}
 		fn.returns = typeToVarData(module, ret)
-		data.fn = fn
 	}
 
 	dot = strings.Split(typed, ".")
@@ -304,4 +302,17 @@ func (me *varData) equals(b *varData) bool {
 
 func (me *varData) getRaw() string {
 	return me.print()
+}
+
+func (me *varData) functionSignature() *fnSig {
+	return me.dtype.functionSignature()
+}
+
+func (me *varData) getmember() *varData {
+	return me.memberType
+}
+
+func (me *varData) getmodule() *hmfile {
+	// return me.module
+	return me.dtype.module
 }

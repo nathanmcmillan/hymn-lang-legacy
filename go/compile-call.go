@@ -4,7 +4,7 @@ func (me *cfile) compileCall(node *node) *codeblock {
 	fn := node.fn
 	if fn == nil {
 		head := node.has[0]
-		sig := head.data().fn
+		sig := head.data().functionSignature()
 		code := "(*" + me.eval(head).code() + ")("
 		parameters := node.has[1:len(node.has)]
 		fnsize := len(sig.args)

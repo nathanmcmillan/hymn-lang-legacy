@@ -20,6 +20,7 @@ const (
 
 type datatype struct {
 	origin     *hmfile // TODO :: remove "origin"
+	hmlib      *hmlib
 	module     *hmfile
 	is         int
 	canonical  string
@@ -28,7 +29,6 @@ type datatype struct {
 	parameters []*datatype
 	returns    *datatype
 	generics   []*datatype
-	hmlib      *hmlib
 	mutable    bool
 	heap       bool
 	pointer    bool
@@ -170,6 +170,10 @@ func (me *datatype) missingCase() bool {
 	panic("switch statement is missing data type \"" + me.nameIs() + "\"")
 }
 
+func (me *datatype) getmember() *datatype {
+	return me.member
+}
+
 func (me *datatype) isOnStack() bool {
 	return !me.heap
 }
@@ -251,6 +255,10 @@ func (me *datatype) isVoid() bool {
 
 func (me *datatype) isFunction() bool {
 	return me.is == dataTypeFunction
+}
+
+func (me *datatype) functionSignature() *fnSig {
+	return me.funcSig
 }
 
 func (me *datatype) canCastToNumber() bool {

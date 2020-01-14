@@ -16,10 +16,8 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
 	return mapped
 }
 
-func (me *parser) buildImplGeneric(plain *plainType, gmapper map[string]string) string {
+func (me *parser) buildImplGeneric(module *hmfile, typed string, gmapper map[string]string) string {
 
-	module := plain.module
-	typed := plain.typed
 	base := typed[0:strings.Index(typed, "<")]
 
 	var baseEnum *enum
@@ -30,7 +28,7 @@ func (me *parser) buildImplGeneric(plain *plainType, gmapper map[string]string) 
 		panic(me.fail() + "type \"" + base + "\" does not exist")
 	}
 
-	order := me.mapGenerics(plain, gmapper)
+	order := me.mapGenerics(module, typed, gmapper)
 	impl := base + "<" + strings.Join(order, ",") + ">"
 
 	if okc {
@@ -51,13 +49,11 @@ type gstack struct {
 	order []string
 }
 
-func (me *parser) mapGenerics(plain *plainType, gmapper map[string]string) []string {
-
+func (me *parser) mapGenerics(module *hmfile, typed string, gmapper map[string]string) []string {
 	var order []string
 	stack := make([]*gstack, 0)
 
-	module := plain.module
-	rest := plain.typed
+	rest := typed
 
 	for {
 		begin := strings.Index(rest, "<")
@@ -116,7 +112,7 @@ func (me *parser) mapGenerics(plain *plainType, gmapper map[string]string) []str
 			rest = rest[comma+1:]
 
 		} else {
-			panic(me.fail() + "could not parse impl of type \"" + plain.print() + "\"")
+			panic(me.fail() + "could not parse impl of type \"" + typed + "\"")
 		}
 	}
 
@@ -144,7 +140,7 @@ func (me *parser) mapGenericFunctionSig(typed string, gmapper map[string]string)
 	return sig
 }
 
-func (me *parser) genericsReplacer(plain *plainType, gmapper map[string]string) string {
+func (me *parser) genericsReplacer(module *hmfile, typed string, gmapper map[string]string) string {
 	// data := vdata.dtype
 	// if data.isArrayOrSlice() {
 	// 	if data.member != nil && data.member.generics != nil {
@@ -157,15 +153,15 @@ func (me *parser) genericsReplacer(plain *plainType, gmapper map[string]string) 
 	// 	return me.mapGenericFunctionSig(vdata.getRaw(), gmapper)
 	// }
 	// return me.mapGenericSingle(vdata.getRaw(), gmapper)
-	typed := plain.typed
+
 	if checkIsArrayOrSlice(typed) {
 		size, typeOfMem := typeOfArrayOrSlice(typed)
 		if checkHasGeneric(typed) {
-			return "[" + size + "]" + me.buildImplGeneric(&plainType{plain.module, typeOfMem}, gmapper)
+			return "[" + size + "]" + me.buildImplGeneric(module, typeOfMem, gmapper)
 		}
 		return "[" + size + "]" + me.mapGenericSingle(typeOfMem, gmapper)
 	} else if checkHasGeneric(typed) {
-		return me.buildImplGeneric(plain, gmapper)
+		return me.buildImplGeneric(module, typed, gmapper)
 	} else if checkIsFunction(typed) {
 		return me.mapGenericFunctionSig(typed, gmapper)
 	}

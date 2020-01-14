@@ -5,27 +5,6 @@ import (
 	"strings"
 )
 
-//// TODO ::
-type plainType struct {
-	module *hmfile
-	typed  string
-}
-
-func (me *plainType) print() string {
-	return me.module.name + "." + me.typed
-}
-
-func (me *varData) plain() *plainType {
-	// return me.dtype.plain()
-	return &plainType{me.module, me.getRaw()}
-}
-
-func (me *datatype) plain() *plainType {
-	return &plainType{me.module, me.print()}
-}
-
-/////////////////
-
 type varData struct {
 	hmlib      *hmlib
 	module     *hmfile

@@ -73,7 +73,7 @@ func (me *parser) mapGenerics(module *hmfile, typed string, gmapper map[string]s
 			if end == 0 {
 			} else {
 				sub := rest[:end]
-				current.order = append(current.order, me.mapGenericSingle(sub, gmapper))
+				current.order = append(current.order, mapGenericSingle(sub, gmapper))
 			}
 			stack = stack[:size]
 			if size == 0 {
@@ -108,7 +108,7 @@ func (me *parser) mapGenerics(module *hmfile, typed string, gmapper map[string]s
 				continue
 			}
 			sub := rest[:comma]
-			current.order = append(current.order, me.mapGenericSingle(sub, gmapper))
+			current.order = append(current.order, mapGenericSingle(sub, gmapper))
 			rest = rest[comma+1:]
 
 		} else {
@@ -119,7 +119,7 @@ func (me *parser) mapGenerics(module *hmfile, typed string, gmapper map[string]s
 	return order
 }
 
-func (me *parser) mapGenericSingle(mem string, gmapper map[string]string) string {
+func mapGenericSingle(mem string, gmapper map[string]string) string {
 	impl, ok := gmapper[mem]
 	if ok {
 		return impl
@@ -134,38 +134,89 @@ func (me *parser) mapGenericFunctionSig(typed string, gmapper map[string]string)
 		if i > 0 {
 			sig += ", "
 		}
-		sig += me.mapGenericSingle(a, gmapper)
+		sig += mapGenericSingle(a, gmapper)
 	}
-	sig += ") " + me.mapGenericSingle(ret, gmapper)
+	sig += ") " + mapGenericSingle(ret, gmapper)
 	return sig
 }
 
-func (me *parser) genericsReplacer(module *hmfile, typed string, gmapper map[string]string) string {
-	// data := vdata.dtype
-	// if data.isArrayOrSlice() {
-	// 	if data.member != nil && data.member.generics != nil {
-	// 		return "[" + data.arraySize() + "]" + me.buildImplGeneric(vdata.memberType, gmapper)
-	// 	}
-	// 	return "[" + data.arraySize() + "]" + me.mapGenericSingle(vdata.memberType.getRaw(), gmapper)
-	// } else if data.generics != nil {
-	// 	return me.buildImplGeneric(vdata, gmapper)
-	// } else if checkIsFunction(vdata.getRaw()) {
-	// 	return me.mapGenericFunctionSig(vdata.getRaw(), gmapper)
-	// }
-	// return me.mapGenericSingle(vdata.getRaw(), gmapper)
+func (me *parser) genericsReplacer(data *varData, gmapper map[string]string) string {
 
-	if checkIsArrayOrSlice(typed) {
-		size, typeOfMem := typeOfArrayOrSlice(typed)
-		if checkHasGeneric(typed) {
-			return "[" + size + "]" + me.buildImplGeneric(module, typeOfMem, gmapper)
+	correct := true
+	if correct {
+		typed := data.getRaw()
+		module := data.module
+		if checkIsArrayOrSlice(typed) {
+			size, typeOfMem := typeOfArrayOrSlice(typed)
+			if checkHasGeneric(typed) {
+				return "[" + size + "]" + me.buildImplGeneric(module, typeOfMem, gmapper)
+			}
+			return "[" + size + "]" + mapGenericSingle(typeOfMem, gmapper)
+		} else if checkHasGeneric(typed) {
+			return me.buildImplGeneric(module, typed, gmapper)
+		} else if checkIsFunction(typed) {
+			return me.mapGenericFunctionSig(typed, gmapper)
 		}
-		return "[" + size + "]" + me.mapGenericSingle(typeOfMem, gmapper)
-	} else if checkHasGeneric(typed) {
-		return me.buildImplGeneric(module, typed, gmapper)
-	} else if checkIsFunction(typed) {
-		return me.mapGenericFunctionSig(typed, gmapper)
+		return mapGenericSingle(typed, gmapper)
 	}
-	return me.mapGenericSingle(typed, gmapper)
+
+	// if data.isSome() {
+	// 	member := data.member
+	// 	return "maybe<" + me.buildImplGeneric(member.module, member.print(), gmapper) + ">"
+	// } else if data.isNone() {
+	// 	member := data.member
+	// 	if member == nil {
+	// 		return "none"
+	// 	}
+	// 	return "none<" + me.buildImplGeneric(member.module, member.print(), gmapper) + ">"
+	// } else if data.isArrayOrSlice() {
+	// 	member := data.member
+	// 	if member.generics != nil {
+	// 		return "[" + data.arraySize() + "]" + me.buildImplGeneric(member.module, member.print(), gmapper)
+	// 	}
+	// 	return "[" + data.arraySize() + "]" + mapGenericSingle(member.print(), gmapper)
+	// } else if data.generics != nil {
+	// 	return me.buildImplGeneric(data.module, data.print(), gmapper)
+	// } else if data.isFunction() {
+	// 	return me.mapGenericFunctionSig(data.print(), gmapper)
+	// }
+	// return mapGenericSingle(data.print(), gmapper)
+
+	// switch me.is {
+	// case dataTypeMaybe:
+	// 	{
+	// 		return "maybe<" + parser.buildImplGeneric(me.module, me.member.print(), gmapper) + ">"
+	// 	}
+	// case dataTypeNone:
+	// 	{
+	// 		if me.member != nil {
+	// 			return "none<" + parser.buildImplGeneric(me.module, me.member.print(), gmapper) + ">"
+	// 		}
+	// 		return "none"
+	// 	}
+	// case dataTypeArray:
+	// 	{
+	// 		return "[" + me.size + "]" + me.member.print()
+	// 	}
+	// case dataTypeSlice:
+	// 	{
+	// 		return "[]" + me.member.print()
+	// 	}
+	// case dataTypeFunction:
+	// 	{
+	// 		return parser.mapGenericFunctionSig(me.print(), gmapper)
+	// 	}
+	// case dataTypeClass:
+	// 	{
+	// 		return ""
+	// 	}
+	// case dataTypeEnum:
+	// 	{
+	// 		return ""
+	// 	}
+	// default:
+	// 	return mapGenericSingle(me.print(), gmapper)
+	// }
 }
 
 func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]*datatype) bool {
@@ -260,10 +311,8 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 }
 
 func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) map[string]*datatype {
-	a := data.dtype.copy()
-	b := gdata.dtype.copy()
 	update := make(map[string]*datatype)
-	ok := hintRecursiveReplace(a, b, gindex, update)
+	ok := hintRecursiveReplace(data.dtype, gdata.dtype, gindex, update)
 	if !ok {
 		return nil
 	}

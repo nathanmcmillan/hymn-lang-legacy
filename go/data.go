@@ -336,5 +336,5 @@ func (me *varData) equals(b *varData) bool {
 }
 
 func (me *varData) getRaw() string {
-	return me.raw
+	return me.print()
 }

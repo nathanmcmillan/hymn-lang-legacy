@@ -16,7 +16,7 @@ func (me *cfile) compileDeclare(n *node) string {
 		if _, ok := n.attributes["global"]; ok {
 			global = true
 		}
-		if _, ok := n.attributes["stack"]; ok || n.data().onStack {
+		if _, ok := n.attributes["stack"]; ok || n.data().isOnStack() {
 			useStack = true
 		}
 		mutable := false

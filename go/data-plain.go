@@ -170,6 +170,10 @@ func (me *datatype) missingCase() bool {
 	panic("switch statement is missing data type \"" + me.nameIs() + "\"")
 }
 
+func (me *datatype) isOnStack() bool {
+	return !me.heap
+}
+
 func (me *datatype) isSome() bool {
 	return me.is == dataTypeMaybe
 }

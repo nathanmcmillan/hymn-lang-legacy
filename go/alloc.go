@@ -301,7 +301,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 		} else {
 			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
 			if !assign.isQuestion() {
-				if assign.maybe {
+				if assign.isSome() {
 					typed = assign.memberType.getRaw()
 				} else if assign.checkIsArrayOrSlice() {
 					typed = assign.memberType.getRaw()

@@ -39,7 +39,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 		params := n.has
 		for i, p := range params {
 			clv := cl.variables[cl.variableOrder[i]]
-			if !clv.data().isptr {
+			if !clv.data().isPointer() {
 				p.attributes["stack"] = "true"
 			}
 			cassign := ";\n" + fmc(me.depth) + assign + memberRef + clv.name + " = "
@@ -54,7 +54,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 				decl := me.compileDeclare(d)
 				value := me.eval(p).code()
 				code2 := ";\n" + fmc(me.depth) + decl
-				if clv.data().isptr {
+				if clv.data().isPointer() {
 					code2 += " = "
 				}
 				code2 += value

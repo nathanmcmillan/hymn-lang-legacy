@@ -41,7 +41,6 @@ func (me *fnSig) data() *varData {
 	d := &varData{}
 	d.fn = me
 	d.module = me.module
-	d.raw = sig
 	d.dtype = getdatatype(nil, sig)
 	return d
 }

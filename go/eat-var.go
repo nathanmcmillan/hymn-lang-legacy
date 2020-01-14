@@ -107,7 +107,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			}
 			me.eat("[")
 			if me.token.is == ":" {
-				if !head.data().array {
+				if !head.data().isArray() {
 					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().print() + "\" is not an array")
 				}
 				me.eat(":")

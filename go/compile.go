@@ -257,7 +257,7 @@ func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
 			v = me.getvar(name)
 		}
 		code = v.cName
-		if hint != nil && hint.isptr && !v.data().isptr {
+		if hint != nil && hint.isPointer() && !v.data().isPointer() {
 			code = "&" + code
 		}
 	} else {

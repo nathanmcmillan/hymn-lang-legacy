@@ -170,8 +170,8 @@ func (me *parser) parseReturn() *node {
 		n.push(calc)
 		fn := me.hmfile.scope.fn
 		ret := calc.data()
-		if ret.none {
-			if !fn.returns.maybe {
+		if ret.isNone() {
+			if !fn.returns.isSome() {
 				panic(me.fail() + "return type was \"" + ret.print() + "\" but function is \"" + fn.returns.print() + "\"")
 			} else if ret.dtype.member != nil {
 				if calc.is == "none" {

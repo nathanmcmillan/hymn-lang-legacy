@@ -2,6 +2,7 @@ package main
 
 type function struct {
 	name          string
+	cname         string
 	start         *parsepoint
 	module        *hmfile
 	forClass      *class
@@ -22,6 +23,9 @@ func funcInit(module *hmfile, name string) *function {
 	f := &function{}
 	f.module = module
 	f.name = name
+	if module != nil {
+		f.cname = module.funcNameSpace(name)
+	}
 	f.args = make([]*funcArg, 0)
 	f.argDict = make(map[string]int)
 	f.expressions = make([]*node, 0)
@@ -44,6 +48,10 @@ func (me *function) copy() *function {
 	}
 	f.returns = me.returns.copy()
 	return f
+}
+
+func (me *function) getcname() string {
+	return me.cname
 }
 
 func (me *function) canonical() string {

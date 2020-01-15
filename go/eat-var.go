@@ -7,9 +7,7 @@ import (
 func (me *parser) eatvar(from *hmfile) *node {
 	head := nodeInit("variable")
 	localvarname := me.token.value
-	head.idata = &idData{}
-	head.idata.module = from
-	head.idata.name = localvarname
+	head.idata = newidvariable(from, localvarname)
 	if from == me.hmfile {
 		sv := from.getvar(localvarname)
 		if sv == nil {
@@ -46,9 +44,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				if ok {
 					member = nodeInit("member-variable")
 					member.copyData(classOf.data())
-					member.idata = &idData{}
-					member.idata.module = from
-					member.idata.name = dotName
+					member.idata = newidvariable(from, dotName)
 					member.push(head)
 				} else {
 					funcVar, ok := data.getFunction(nameOfClassFunc(rootClass.name, dotName))
@@ -68,9 +64,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 						me.eat("id")
 						member := nodeInit("member-variable")
 						member.copyData(typeToVarData(me.hmfile, TokenInt))
-						member.idata = &idData{}
-						member.idata.module = from
-						member.idata.name = "type"
+						member.idata = newidvariable(from, "type")
 						member.push(head)
 						head = member
 					} else {

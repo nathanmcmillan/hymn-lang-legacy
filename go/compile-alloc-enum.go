@@ -9,12 +9,11 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 		return codeBlockOne(n, "")
 	}
 	data := n.data()
-	module := data.getmodule()
 	en, un, _ := data.checkIsEnum()
 	enumType := un.name
 	if en.simple {
 		enumBase := en.cname
-		globalName := module.enumTypeName(enumBase, enumType)
+		globalName := enumTypeName(enumBase, enumType)
 		return codeBlockOne(n, globalName)
 	}
 
@@ -38,7 +37,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 		if !useStack {
 			code += "malloc(sizeof(" + unionName + "))"
 		}
-		code += ";\n" + fmc(me.depth) + assign + memberRef + "type = " + module.enumTypeName(baseEnumName, un.name)
+		code += ";\n" + fmc(me.depth) + assign + memberRef + "type = " + enumTypeName(baseEnumName, un.name)
 		xvar := len(un.types) > 1
 		for i, v := range un.types {
 			p := n.has[i]
@@ -54,9 +53,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 				temp := me.temp()
 				p.attributes["assign"] = temp
 				d := nodeInit("variable")
-				d.idata = &idData{}
-				d.idata.module = me.hmfile
-				d.idata.name = temp
+				d.idata = newidvariable(me.hmfile, temp)
 				d.copyDataOfNode(p)
 				decl := me.compileDeclare(d)
 				value := me.eval(p).code()
@@ -80,9 +77,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 		cb.current = codeNode(n, temp)
 		n.attributes["assign"] = temp
 		d := nodeInit("variable")
-		d.idata = &idData{}
-		d.idata.module = me.hmfile
-		d.idata.name = temp
+		d.idata = newidvariable(me.hmfile, temp)
 		d.copyDataOfNode(n)
 		decl := me.compileDeclare(d)
 		value := me.eval(n).code()

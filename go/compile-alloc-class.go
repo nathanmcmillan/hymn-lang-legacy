@@ -47,9 +47,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 				temp := me.temp()
 				p.attributes["assign"] = temp
 				d := nodeInit("variable")
-				d.idata = &idData{}
-				d.idata.module = me.hmfile
-				d.idata.name = temp
+				d.idata = newidvariable(me.hmfile, temp)
 				d.copyDataOfNode(p)
 				decl := me.compileDeclare(d)
 				value := me.eval(p).code()
@@ -73,9 +71,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 		cb.current = codeNode(n, temp)
 		n.attributes["assign"] = temp
 		d := nodeInit("variable")
-		d.idata = &idData{}
-		d.idata.module = me.hmfile
-		d.idata.name = temp
+		d.idata = newidvariable(me.hmfile, temp)
 		d.copyDataOfNode(n)
 		decl := me.compileDeclare(d)
 		value := me.eval(n).code()

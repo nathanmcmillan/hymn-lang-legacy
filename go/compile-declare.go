@@ -8,7 +8,8 @@ func (me *cfile) compileDeclare(n *node) string {
 		return ""
 	}
 	code := ""
-	name := n.idata.name
+	idata := n.idata
+	name := idata.name
 	v := me.getvar(name)
 	if v == nil {
 		global := false
@@ -27,7 +28,7 @@ func (me *cfile) compileDeclare(n *node) string {
 		newVar := me.hmfile.varInitFromData(data, name, mutable)
 		me.scope.variables[name] = newVar
 		if global {
-			newVar.cName = data.getmodule().varNameSpace(name)
+			newVar.cName = idata.getcname()
 			code += fmtassignspace(data.noMallocTypeSig())
 			code += newVar.cName
 		} else if useStack {

@@ -29,6 +29,10 @@ func (me *varData) print() string {
 	return me.dtype.print()
 }
 
+func (me *varData) getRaw() string {
+	return me.print()
+}
+
 func functionSigToVarData(fsig *fnSig) *varData {
 	sig := fsig.print()
 	d := &varData{}
@@ -300,10 +304,6 @@ func (me *varData) equals(b *varData) bool {
 	return me.dtype.equals(b.dtype)
 }
 
-func (me *varData) getRaw() string {
-	return me.print()
-}
-
 func (me *varData) functionSignature() *fnSig {
 	return me.dtype.functionSignature()
 }
@@ -313,6 +313,6 @@ func (me *varData) getmember() *varData {
 }
 
 func (me *varData) getmodule() *hmfile {
-	// return me.module
-	return me.dtype.module
+	return me.module
+	// return me.dtype.module
 }

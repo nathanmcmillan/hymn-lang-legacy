@@ -207,7 +207,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 				cname = vr.cName
 			} else {
 				vr = data.getmodule().getStatic(head.idata.name)
-				cname = data.getmodule().varNameSpace(head.idata.name)
+				cname = head.idata.getcname()
 			}
 			if data.checkIsArrayOrSlice() {
 				code = cname + code
@@ -236,7 +236,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 func (me *cfile) compileFnPtr(n *node, hint *varData) *codeblock {
 	code := ""
 	fn := n.fn
-	code += "&" + fn.module.funcNameSpace(fn.name)
+	code += "&" + fn.getcname()
 	return codeBlockOne(n, code)
 }
 
@@ -261,7 +261,7 @@ func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
 			code = "&" + code
 		}
 	} else {
-		code = n.idata.module.varNameSpace(n.idata.name)
+		code = n.idata.getcname()
 	}
 	return codeBlockOne(n, code)
 }

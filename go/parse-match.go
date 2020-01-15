@@ -40,9 +40,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				me.eat(")")
 				tempd := me.hmfile.varInitFromData(left.data().getmember(), temp, false)
 				tempv := nodeInit("variable")
-				tempv.idata = &idData{}
-				tempv.idata.module = me.hmfile
-				tempv.idata.name = tempd.name
+				tempv.idata = newidvariable(me.hmfile, tempd.name)
 				tempv.copyData(tempd.data())
 				tempv.push(left)
 				varnode := &variableNode{tempv, tempd}
@@ -50,9 +48,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 
 				// TODO :: cleanup the above enumIsStack
 				tempvv := nodeInit("variable")
-				tempvv.idata = &idData{}
-				tempvv.idata.module = me.hmfile
-				tempvv.idata.name = tempd.name
+				tempvv.idata = newidvariable(me.hmfile, tempd.name)
 				tempvv.copyData(tempd.data())
 				right.push(tempvv)
 				//
@@ -88,9 +84,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 					me.eat(")")
 					tempd := me.hmfile.varInitFromData(right.data(), temp, false)
 					tempv := nodeInit("variable")
-					tempv.idata = &idData{}
-					tempv.idata.module = me.hmfile
-					tempv.idata.name = tempd.name
+					tempv.idata = newidvariable(me.hmfile, tempd.name)
 					tempv.copyData(tempd.data())
 					tempv.push(left)
 					varnode := &variableNode{tempv, tempd}
@@ -98,9 +92,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 
 					// TODO :: cleanup the above enumIsStack
 					tempvv := nodeInit("variable")
-					tempvv.idata = &idData{}
-					tempvv.idata.module = me.hmfile
-					tempvv.idata.name = tempd.name
+					tempvv.idata = newidvariable(me.hmfile, tempd.name)
 					tempvv.copyData(tempd.data())
 					right.push(tempvv)
 					//
@@ -166,9 +158,7 @@ func (me *parser) parseMatch() *node {
 				tempd := me.hmfile.varInit(en.name+"."+name, temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
-				tempv.idata = &idData{}
-				tempv.idata.module = me.hmfile
-				tempv.idata.name = temp
+				tempv.idata = newidvariable(me.hmfile, temp)
 				tempv.copyData(tempd.data())
 				caseNode.push(tempv)
 			}
@@ -205,9 +195,7 @@ func (me *parser) parseMatch() *node {
 				tempd := me.hmfile.varInitFromData(matchType.getmember(), temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
-				tempv.idata = &idData{}
-				tempv.idata.module = me.hmfile
-				tempv.idata.name = temp
+				tempv.idata = newidvariable(me.hmfile, temp)
 				tempv.copyData(tempd.data())
 				some.push(tempv)
 			}

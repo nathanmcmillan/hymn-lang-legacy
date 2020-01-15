@@ -23,7 +23,6 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		code += ")"
 		return codeBlockOne(node, code)
 	}
-	module := fn.module
 	name := fn.name
 	parameters := node.has
 	cb := me.compileBuiltin(node, name, parameters)
@@ -32,7 +31,7 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		if fn.forClass != nil {
 			name = fn.nameOfClassFunc()
 		}
-		code := module.funcNameSpace(name) + "("
+		code := fn.getcname() + "("
 		fnsize := len(node.fn.args)
 		for ix, parameter := range parameters {
 			if ix > 0 {

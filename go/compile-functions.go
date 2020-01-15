@@ -59,7 +59,7 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	me.popScope()
 	var code strings.Builder
 	code.WriteString("\n")
-	code.WriteString(fmtassignspace(returns.typeSig()) + me.hmfile.funcNameSpace(name) + "(")
+	code.WriteString(fmtassignspace(returns.typeSig()) + fn.getcname() + "(")
 	me.dependencyGraph(returns.dtype)
 	for ix, arg := range args {
 		me.dependencyGraph(arg.data().dtype)

@@ -63,17 +63,13 @@ func (me *parser) iterloop() *node {
 	no := nodeInit("iterate")
 
 	d := nodeInit("variable")
-	d.idata = &idData{}
-	d.idata.module = me.hmfile
-	d.idata.name = var1
+	d.idata = newidvariable(me.hmfile, var1)
 
 	if var2 != "" {
 		iterid := me.hmfile.varInit("int", var1, false)
 		me.hmfile.scope.variables[iterid.name] = iterid
 		e := nodeInit("variable")
-		e.idata = &idData{}
-		e.idata.module = me.hmfile
-		e.idata.name = iterid.name
+		e.idata = newidvariable(me.hmfile, iterid.name)
 		e.copyData(iterid.data())
 		no.push(e)
 

@@ -15,9 +15,9 @@ func (me *cfile) defineEnum(enum *enum) {
 		code := "\nenum " + hmBaseEnumName + " {\n"
 		for ix, enumUnion := range enum.typesOrder {
 			if ix == 0 {
-				code += fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
+				code += fmc(1) + enumTypeName(hmBaseEnumName, enumUnion.name)
 			} else {
-				code += ",\n" + fmc(1) + me.hmfile.enumTypeName(hmBaseEnumName, enumUnion.name)
+				code += ",\n" + fmc(1) + enumTypeName(hmBaseEnumName, enumUnion.name)
 			}
 		}
 		code += "\n};\n"

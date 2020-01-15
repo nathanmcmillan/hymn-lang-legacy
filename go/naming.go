@@ -55,8 +55,22 @@ func (me *hmfile) defNameSpace(root, name string) string {
 	return definePrefix + root + name + "_H"
 }
 
-func (me *hmfile) varNameSpace(id string) string {
-	return globalVarPrefix + me.varPrefix + capital(id)
+func enumTypeName(base, name string) string {
+	return base + capital(name)
+}
+
+func (me *hmfile) prefixes(name string) {
+	name = strings.ReplaceAll(name, "-", "_")
+
+	me.funcPrefix = name + "_"
+	me.classPrefix = capital(name)
+	me.enumPrefix = me.classPrefix
+	me.unionPrefix = me.classPrefix + "Union"
+	me.varPrefix = me.classPrefix
+}
+
+func (me *hmfile) varNameSpace(name string) string {
+	return globalVarPrefix + me.varPrefix + capital(name)
 }
 
 func (me *hmfile) funcNameSpace(name string) string {
@@ -73,18 +87,4 @@ func (me *hmfile) enumNameSpace(name string) string {
 
 func (me *hmfile) unionNameSpace(name string) string {
 	return globalUnionPrefix + me.unionPrefix + capital(name)
-}
-
-func (me *hmfile) enumTypeName(base, name string) string {
-	return base + capital(name)
-}
-
-func (me *hmfile) prefixes(name string) {
-	name = strings.ReplaceAll(name, "-", "_")
-
-	me.funcPrefix = name + "_"
-	me.classPrefix = capital(name)
-	me.enumPrefix = me.classPrefix
-	me.unionPrefix = me.classPrefix + "Union"
-	me.varPrefix = me.classPrefix
 }

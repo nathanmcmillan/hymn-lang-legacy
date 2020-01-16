@@ -117,12 +117,11 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 
 func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {
 	n := nodeInit("call")
-	name := fn.nameOfClassFunc()
 	n.fn = fn
 	n.copyData(fn.returns)
 	params := make([]*node, len(fn.args))
 	params[0] = root
-	me.pushParams(name, n, 1, params, fn)
+	me.pushParams(fn.getclsname(), n, 1, params, fn)
 	return n
 }
 

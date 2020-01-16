@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -42,6 +43,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	}
 
 	module := base.module
+	fmt.Println("define class implementation ::", module.name, "::", impl)
 
 	module.namespace[impl] = "type"
 	module.types[impl] = ""

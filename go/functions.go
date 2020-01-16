@@ -2,6 +2,7 @@ package main
 
 type function struct {
 	name          string
+	clsname       string
 	cname         string
 	start         *parsepoint
 	module        *hmfile
@@ -19,17 +20,25 @@ type function struct {
 	impls         []*function
 }
 
-func funcInit(module *hmfile, name string) *function {
+func funcInit(module *hmfile, name string, class *class) *function {
 	f := &function{}
 	f.module = module
 	f.name = name
+	if class != nil {
+		f.clsname = nameOfClassFunc(class.name, name)
+	}
 	if module != nil {
-		f.cname = module.funcNameSpace(name)
+		if class == nil {
+			f.cname = module.funcNameSpace(name)
+		} else {
+			f.cname = module.funcNameSpace(f.clsname)
+		}
 	}
 	f.args = make([]*funcArg, 0)
 	f.argDict = make(map[string]int)
 	f.expressions = make([]*node, 0)
 	f.aliasing = make(map[string]string)
+	f.forClass = class
 	return f
 }
 
@@ -50,17 +59,23 @@ func (me *function) copy() *function {
 	return f
 }
 
+func (me *function) getname() string {
+	if me.forClass == nil {
+		return me.name
+	}
+	return me.clsname
+}
+
 func (me *function) getcname() string {
 	return me.cname
 }
 
+func (me *function) getclsname() string {
+	return me.clsname
+}
+
 func (me *function) canonical() string {
-	name := ""
-	if me.forClass != nil {
-		name = me.nameOfClassFunc()
-	} else {
-		name = me.name
-	}
+	name := me.getname()
 	if me.module != nil {
 		name = me.module.name + "." + name
 	}
@@ -83,10 +98,6 @@ func (me *function) data() *varData {
 
 func nameOfClassFunc(cl, fn string) string {
 	return cl + "_" + fn
-}
-
-func (me *function) nameOfClassFunc() string {
-	return nameOfClassFunc(me.forClass.name, me.name)
 }
 
 func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
@@ -117,10 +128,9 @@ func remapClassFunctionImpl(class *class, original *function) {
 	fn := parsing.defineFunction(funcName, nil, nil, class)
 	parsing.jump(pos)
 	fn.start = original.start
-	fn.forClass = class
 	class.functions[fn.name] = fn
 	class.functionOrder = append(class.functionOrder, fn)
-	parsing.pushFunction(fn.nameOfClassFunc(), module, fn)
+	parsing.pushFunction(fn.getname(), module, fn)
 }
 
 func (me *parser) defineClassFunction() {
@@ -138,7 +148,6 @@ func (me *parser) defineClassFunction() {
 		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
 	}
 	fn := me.defineFunction(funcName, nil, nil, class)
-	fn.forClass = class
 	class.functions[funcName] = fn
 	class.functionOrder = append(class.functionOrder, fn)
 	me.pushFunction(globalFuncName, module, fn)
@@ -166,7 +175,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 	} else if self != nil {
 		module = self.module
 	}
-	fn := funcInit(module, name)
+	fn := funcInit(module, name, self)
 	module.pushScope()
 	module.scope.fn = fn
 	fname := name

@@ -220,11 +220,7 @@ func (me *enum) string(lv int) string {
 
 func (me *function) string(lv int) string {
 	s := fmc(lv) + "\""
-	if me.forClass != nil {
-		s += me.nameOfClassFunc()
-	} else {
-		s += me.name
-	}
+	s += me.getname()
 	s += "\": {\n"
 	lv++
 	comma := false

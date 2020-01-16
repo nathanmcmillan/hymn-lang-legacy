@@ -28,9 +28,6 @@ func (me *cfile) compileCall(node *node) *codeblock {
 	cb := me.compileBuiltin(node, name, parameters)
 	if cb == nil {
 		cb = &codeblock{}
-		if fn.forClass != nil {
-			name = fn.nameOfClassFunc()
-		}
 		code := fn.getcname() + "("
 		fnsize := len(node.fn.args)
 		for ix, parameter := range parameters {

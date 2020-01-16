@@ -49,7 +49,7 @@ type hmlib struct {
 }
 
 func (me *hmlib) newLibSimple(name string, ret string, params ...string) {
-	fn := funcInit(nil, name)
+	fn := funcInit(nil, name, nil)
 	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit("?", "s", false))
 	if params != nil {
@@ -60,7 +60,7 @@ func (me *hmlib) newLibSimple(name string, ret string, params ...string) {
 }
 
 func (me *hmlib) newLibRegular(name string, ret string, params ...string) {
-	fn := funcInit(nil, name)
+	fn := funcInit(nil, name, nil)
 	fn.returns = typeToVarData(nil, ret)
 	if params != nil {
 		for ix, p := range params {
@@ -72,7 +72,7 @@ func (me *hmlib) newLibRegular(name string, ret string, params ...string) {
 }
 
 func (me *hmlib) newLibSimpleIn(name string, in string, ret string) {
-	fn := funcInit(nil, name)
+	fn := funcInit(nil, name, nil)
 	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit(in, "s", false))
 	me.functions[name] = fn
@@ -80,7 +80,7 @@ func (me *hmlib) newLibSimpleIn(name string, in string, ret string) {
 }
 
 func (me *hmlib) newLibSimpleVardiac(name string, ret string) {
-	fn := funcInit(nil, name)
+	fn := funcInit(nil, name, nil)
 	fn.returns = typeToVarData(nil, ret)
 	fn.argVariadic = me.fnArgInit("?", "a", false)
 	me.functions[name] = fn
@@ -88,7 +88,7 @@ func (me *hmlib) newLibSimpleVardiac(name string, ret string) {
 }
 
 func (me *hmlib) newLibSimplePrint(name string, ret string) {
-	fn := funcInit(nil, name)
+	fn := funcInit(nil, name, nil)
 	fn.returns = typeToVarData(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "a", false))
 	fn.argVariadic = me.fnArgInit("?", "b", false)
@@ -97,7 +97,7 @@ func (me *hmlib) newLibSimplePrint(name string, ret string) {
 }
 
 func (me *hmlib) initPush() {
-	fn := funcInit(nil, libPush)
+	fn := funcInit(nil, libPush, nil)
 	fn.returns = me.literalType("?")
 	fn.args = append(fn.args, me.fnArgInit("?", "a", false))
 	fn.args = append(fn.args, me.fnArgInit("?", "v", false))
@@ -112,7 +112,7 @@ func (me *hmlib) initIO() {
 	classDef := classInit(nil, TokenLibFile, order, dict)
 	me.classes[TokenLibFile] = classDef
 
-	fn := funcInit(nil, libOpen)
+	fn := funcInit(nil, libOpen, nil)
 	fn.returns = me.literalType(TokenLibFile)
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "path", false))
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "mode", false))
@@ -120,31 +120,25 @@ func (me *hmlib) initIO() {
 	me.types[libOpen] = ""
 
 	fnName := "read"
-	fn = funcInit(nil, fnName)
+	fn = funcInit(nil, fnName, classDef)
 	fn.returns = me.literalType(TokenInt)
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
-	fn.forClass = classDef
-	name := nameOfClassFunc(TokenLibFile, fnName)
-	me.functions[name] = fn
-	me.types[name] = ""
+	me.functions[fn.getname()] = fn
+	me.types[fn.getname()] = ""
 
 	fnName = "read_line"
-	fn = funcInit(nil, fnName)
+	fn = funcInit(nil, fnName, classDef)
 	fn.returns = me.literalType(TokenString)
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
-	fn.forClass = classDef
-	name = nameOfClassFunc(TokenLibFile, fnName)
-	me.functions[name] = fn
-	me.types[name] = ""
+	me.functions[fn.getname()] = fn
+	me.types[fn.getname()] = ""
 
 	fnName = "close"
-	fn = funcInit(nil, fnName)
+	fn = funcInit(nil, fnName, classDef)
 	fn.returns = me.literalType("void")
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
-	fn.forClass = classDef
-	name = nameOfClassFunc(TokenLibFile, fnName)
-	me.functions[name] = fn
-	me.types[name] = ""
+	me.functions[fn.getname()] = fn
+	me.types[fn.getname()] = ""
 }
 
 func (me *hmlib) libs() {

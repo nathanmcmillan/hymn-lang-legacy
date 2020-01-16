@@ -79,7 +79,6 @@ func typeToVarData(module *hmfile, typed string) *varData {
 	if checkIsPrimitive(typed) {
 		if typed == TokenString {
 			data.memberType = typeToVarData(module, TokenChar)
-		} else {
 		}
 		return data
 	}
@@ -104,24 +103,6 @@ func typeToVarData(module *hmfile, typed string) *varData {
 	if array || slice {
 		_, typed = typeOfArrayOrSlice(typed)
 		data.memberType = typeToVarData(module, typed)
-	}
-
-	if checkIsFunction(typed) {
-		args, ret := functionSigType(typed)
-		fn := fnSigInit(module)
-		for _, a := range args {
-			t := typeToVarData(module, a)
-			fn.args = append(fn.args, fnArgInit(t.asVariable()))
-		}
-		fn.returns = typeToVarData(module, ret)
-	}
-
-	dot = strings.Split(typed, ".")
-	if len(dot) != 1 {
-		if _, ok := data.module.enums[dot[0]]; ok {
-		} else {
-			panic("unknown type \"" + typed + "\"")
-		}
 	}
 
 	return data
@@ -313,6 +294,6 @@ func (me *varData) getmember() *varData {
 }
 
 func (me *varData) getmodule() *hmfile {
-	return me.module
-	// return me.dtype.module
+	// return me.module
+	return me.dtype.module
 }

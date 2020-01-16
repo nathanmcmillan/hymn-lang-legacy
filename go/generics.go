@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -16,7 +17,9 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
 	return mapped
 }
 
-func (me *parser) buildImplGeneric(module *hmfile, typed string, gmapper map[string]string) string {
+func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
+
+	module := me.hmfile
 
 	base := typed[0:strings.Index(typed, "<")]
 
@@ -87,6 +90,7 @@ func (me *parser) mapGenerics(module *hmfile, typed string, gmapper map[string]s
 						base := module.enums[current.name]
 						me.defineEnumImplGeneric(base, pop, current.order)
 					} else {
+						fmt.Println("generics ::", module.name, "::", current.name)
 						base := module.classes[current.name]
 						me.defineClassImplGeneric(base, pop, current.order)
 					}
@@ -145,15 +149,14 @@ func (me *parser) genericsReplacer(vdata *varData, gmapper map[string]string) st
 	correct := true
 	if correct {
 		typed := vdata.getRaw()
-		module := vdata.getmodule()
 		if checkIsArrayOrSlice(typed) {
 			size, typeOfMem := typeOfArrayOrSlice(typed)
 			if checkHasGeneric(typed) {
-				return "[" + size + "]" + me.buildImplGeneric(module, typeOfMem, gmapper)
+				return "[" + size + "]" + me.buildImplGeneric(typeOfMem, gmapper)
 			}
 			return "[" + size + "]" + mapGenericSingle(typeOfMem, gmapper)
 		} else if checkHasGeneric(typed) {
-			return me.buildImplGeneric(module, typed, gmapper)
+			return me.buildImplGeneric(typed, gmapper)
 		} else if checkIsFunction(typed) {
 			return me.mapGenericFunctionSig(typed, gmapper)
 		}
@@ -163,21 +166,21 @@ func (me *parser) genericsReplacer(vdata *varData, gmapper map[string]string) st
 	data := vdata.dtype
 	if data.isSome() {
 		member := data.member
-		return "maybe<" + me.buildImplGeneric(member.module, member.print(), gmapper) + ">"
+		return "maybe<" + me.buildImplGeneric(member.print(), gmapper) + ">"
 	} else if data.isNone() {
 		member := data.member
 		if member == nil {
 			return "none"
 		}
-		return "none<" + me.buildImplGeneric(member.module, member.print(), gmapper) + ">"
+		return "none<" + me.buildImplGeneric(member.print(), gmapper) + ">"
 	} else if data.isArrayOrSlice() {
 		member := data.member
 		if member.generics != nil {
-			return "[" + data.arraySize() + "]" + me.buildImplGeneric(member.module, member.print(), gmapper)
+			return "[" + data.arraySize() + "]" + me.buildImplGeneric(member.print(), gmapper)
 		}
 		return "[" + data.arraySize() + "]" + mapGenericSingle(member.print(), gmapper)
 	} else if data.generics != nil {
-		return me.buildImplGeneric(data.module, data.print(), gmapper)
+		return me.buildImplGeneric(data.print(), gmapper)
 	} else if data.isFunction() {
 		return me.mapGenericFunctionSig(data.print(), gmapper)
 	}

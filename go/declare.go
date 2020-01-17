@@ -90,7 +90,7 @@ func (me *parser) declareFn() *datatype {
 	if me.token.is != ")" {
 		for {
 			typed := me.declareType(true)
-			fn.args = append(fn.args, fnArgInit(typed.asVariable()))
+			fn.args = append(fn.args, fnArgInit(typed.getvariable()))
 			if me.token.is == ")" {
 				break
 			} else if me.token.is == "," {
@@ -107,7 +107,7 @@ func (me *parser) declareFn() *datatype {
 		fn.returns = typeToVarData(me.hmfile, "void")
 	}
 
-	return functionSigToVarData(fn)
+	return fn.newdatatype()
 }
 
 func (me *parser) declareFnPtr(fn *function) *datatype {

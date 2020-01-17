@@ -98,7 +98,7 @@ func (me *hmlib) newLibSimplePrint(name string, ret string) {
 
 func (me *hmlib) initPush() {
 	fn := funcInit(nil, libPush, nil)
-	fn.returns = me.literalType("?")
+	fn.returns = getdatatype(nil, "?")
 	fn.args = append(fn.args, me.fnArgInit("?", "a", false))
 	fn.args = append(fn.args, me.fnArgInit("?", "v", false))
 	me.functions[libPush] = fn
@@ -113,7 +113,7 @@ func (me *hmlib) initIO() {
 	me.classes[TokenLibFile] = classDef
 
 	fn := funcInit(nil, libOpen, nil)
-	fn.returns = me.literalType(TokenLibFile)
+	fn.returns = getdatatype(nil, TokenLibFile)
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "path", false))
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "mode", false))
 	me.functions[libOpen] = fn
@@ -121,21 +121,21 @@ func (me *hmlib) initIO() {
 
 	fnName := "read"
 	fn = funcInit(nil, fnName, classDef)
-	fn.returns = me.literalType(TokenInt)
+	fn.returns = getdatatype(nil, TokenInt)
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
 	me.functions[fn.getname()] = fn
 	me.types[fn.getname()] = ""
 
 	fnName = "read_line"
 	fn = funcInit(nil, fnName, classDef)
-	fn.returns = me.literalType(TokenString)
+	fn.returns = getdatatype(nil, TokenString)
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
 	me.functions[fn.getname()] = fn
 	me.types[fn.getname()] = ""
 
 	fnName = "close"
 	fn = funcInit(nil, fnName, classDef)
-	fn.returns = me.literalType("void")
+	fn.returns = getdatatype(nil, "void")
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
 	me.functions[fn.getname()] = fn
 	me.types[fn.getname()] = ""

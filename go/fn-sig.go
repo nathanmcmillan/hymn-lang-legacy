@@ -35,3 +35,7 @@ func (me *fnSig) print() string {
 	}
 	return sig
 }
+
+func (me *fnSig) newdatatype() *datatype {
+	return getdatatype(nil, me.print())
+}

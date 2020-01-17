@@ -144,3 +144,12 @@ func (me *hmfile) getEnum(name string) (*enum, bool) {
 	}
 	return nil, false
 }
+
+func (me *hmfile) alias(typed string) string {
+	if me.scope.fn != nil && me.scope.fn.aliasing != nil {
+		if alias, ok := me.scope.fn.aliasing[typed]; ok {
+			return alias
+		}
+	}
+	return typed
+}

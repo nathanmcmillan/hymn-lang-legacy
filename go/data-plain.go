@@ -80,6 +80,10 @@ func (me *datatype) copy() *datatype {
 
 func getdatatype(me *hmfile, typed string) *datatype {
 
+	if me != nil {
+		typed = me.alias(typed)
+	}
+
 	if typed == TokenString {
 		return newdatastring()
 	}
@@ -114,7 +118,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		funcSig := fnSigInit(me)
 		for i, p := range parameters {
 			list[i] = getdatatype(me, p)
-			funcSig.args = append(funcSig.args, fnArgInit(typeToVarData(me, p).asVariable()))
+			funcSig.args = append(funcSig.args, fnArgInit(typeToVarData(me, p).getvariable()))
 		}
 		funcSig.returns = typeToVarData(me, returns)
 		return newdatafunction(funcSig, list, getdatatype(me, returns))
@@ -877,4 +881,10 @@ func (me *datatype) merge(hint *allocData) *datatype {
 		return newdataslice(me)
 	}
 	return me
+}
+
+func (me *datatype) getvariable() *variable {
+	v := &variable{}
+	v.copyData(me)
+	return v
 }

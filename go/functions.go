@@ -93,7 +93,7 @@ func (me *function) asSig() *fnSig {
 }
 
 func (me *function) data() *datatype {
-	return functionSigToVarData(me.asSig())
+	return me.asSig().newdatatype()
 }
 
 func nameOfClassFunc(cl, fn string) string {

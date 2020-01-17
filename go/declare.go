@@ -29,8 +29,8 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 	}
 
 	for _, un := range unionList {
-		for i, typed := range un.types {
-			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed, gmapper))
+		for i, data := range un.types {
+			un.types[i] = getdatatype(me.hmfile, me.genericsReplacer(data, gmapper))
 		}
 	}
 }
@@ -104,14 +104,14 @@ func (me *parser) declareFn() *datatype {
 	if me.token.is != "line" && me.token.is != "," {
 		fn.returns = me.declareType(true)
 	} else {
-		fn.returns = typeToVarData(me.hmfile, "void")
+		fn.returns = getdatatype(me.hmfile, "void")
 	}
 
 	return fn.newdatatype()
 }
 
 func (me *parser) declareFnPtr(fn *function) *datatype {
-	return typeToVarData(me.hmfile, fn.name)
+	return getdatatype(me.hmfile, fn.name)
 }
 
 func (me *parser) declareType(implementation bool) *datatype {
@@ -204,7 +204,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 		qualified = module.name + "." + qualified
 	}
 
-	return typeToVarData(me.hmfile, qualified)
+	return getdatatype(me.hmfile, qualified)
 }
 
 func sizeOfArray(typed string) string {

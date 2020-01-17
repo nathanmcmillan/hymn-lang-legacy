@@ -11,7 +11,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 	if from == me.hmfile {
 		sv := from.getvar(localvarname)
 		if sv == nil {
-			head.copyData(typeToVarData(me.hmfile, "?"))
+			head.copyData(getdatatype(me.hmfile, "?"))
 		} else {
 			head.copyData(sv.data())
 		}
@@ -63,7 +63,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 						me.eat(".")
 						me.eat("id")
 						member := nodeInit("member-variable")
-						member.copyData(typeToVarData(me.hmfile, TokenInt))
+						member.copyData(getdatatype(me.hmfile, TokenInt))
 						member.idata = newidvariable(from, "type")
 						member.push(head)
 						head = member

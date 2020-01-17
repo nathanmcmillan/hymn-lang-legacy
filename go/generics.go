@@ -176,42 +176,6 @@ func (me *parser) genericsReplacer(data *datatype, gmapper map[string]string) st
 	// 	return me.mapGenericFunctionSig(data.print(), gmapper)
 	// }
 	// return mapGenericSingle(data.print(), gmapper)
-
-	// switch me.is {
-	// case dataTypeMaybe:
-	// 	{
-	// 		return "maybe<" + parser.buildImplGeneric(me.module, me.member.print(), gmapper) + ">"
-	// 	}
-	// case dataTypeNone:
-	// 	{
-	// 		if me.member != nil {
-	// 			return "none<" + parser.buildImplGeneric(me.module, me.member.print(), gmapper) + ">"
-	// 		}
-	// 		return "none"
-	// 	}
-	// case dataTypeArray:
-	// 	{
-	// 		return "[" + me.size + "]" + me.member.print()
-	// 	}
-	// case dataTypeSlice:
-	// 	{
-	// 		return "[]" + me.member.print()
-	// 	}
-	// case dataTypeFunction:
-	// 	{
-	// 		return parser.mapGenericFunctionSig(me.print(), gmapper)
-	// 	}
-	// case dataTypeClass:
-	// 	{
-	// 		return ""
-	// 	}
-	// case dataTypeEnum:
-	// 	{
-	// 		return ""
-	// 	}
-	// default:
-	// 	return mapGenericSingle(me.print(), gmapper)
-	// }
 }
 
 func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]*datatype) bool {

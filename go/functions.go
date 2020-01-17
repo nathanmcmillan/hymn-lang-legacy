@@ -232,7 +232,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 				fnArg := &funcArg{}
 				fnArg.variable = module.varInitFromData(typed, argname, false)
 				if defaultValue != "" {
-					defaultTypeVarData := typeToVarData(module, defaultType)
+					defaultTypeVarData := getdatatype(module, defaultType)
 					if typed.notEquals(defaultTypeVarData) {
 						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.print() + "\" do not match")
 					}
@@ -261,7 +261,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		}
 		fn.returns = me.declareType(true)
 	} else {
-		fn.returns = typeToVarData(module, "void")
+		fn.returns = getdatatype(module, "void")
 	}
 	me.eat("line")
 	for _, arg := range fn.args {

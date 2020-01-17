@@ -50,7 +50,7 @@ type hmlib struct {
 
 func (me *hmlib) newLibSimple(name string, ret string, params ...string) {
 	fn := funcInit(nil, name, nil)
-	fn.returns = typeToVarData(nil, ret)
+	fn.returns = getdatatype(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit("?", "s", false))
 	if params != nil {
 		fn.args = append(fn.args, me.fnArgInit("?", "s", false))
@@ -61,7 +61,7 @@ func (me *hmlib) newLibSimple(name string, ret string, params ...string) {
 
 func (me *hmlib) newLibRegular(name string, ret string, params ...string) {
 	fn := funcInit(nil, name, nil)
-	fn.returns = typeToVarData(nil, ret)
+	fn.returns = getdatatype(nil, ret)
 	if params != nil {
 		for ix, p := range params {
 			fn.args = append(fn.args, me.fnArgInit(p, "p"+strconv.Itoa(ix), false))
@@ -73,7 +73,7 @@ func (me *hmlib) newLibRegular(name string, ret string, params ...string) {
 
 func (me *hmlib) newLibSimpleIn(name string, in string, ret string) {
 	fn := funcInit(nil, name, nil)
-	fn.returns = typeToVarData(nil, ret)
+	fn.returns = getdatatype(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit(in, "s", false))
 	me.functions[name] = fn
 	me.types[name] = ""
@@ -81,7 +81,7 @@ func (me *hmlib) newLibSimpleIn(name string, in string, ret string) {
 
 func (me *hmlib) newLibSimpleVardiac(name string, ret string) {
 	fn := funcInit(nil, name, nil)
-	fn.returns = typeToVarData(nil, ret)
+	fn.returns = getdatatype(nil, ret)
 	fn.argVariadic = me.fnArgInit("?", "a", false)
 	me.functions[name] = fn
 	me.types[name] = ""
@@ -89,7 +89,7 @@ func (me *hmlib) newLibSimpleVardiac(name string, ret string) {
 
 func (me *hmlib) newLibSimplePrint(name string, ret string) {
 	fn := funcInit(nil, name, nil)
-	fn.returns = typeToVarData(nil, ret)
+	fn.returns = getdatatype(nil, ret)
 	fn.args = append(fn.args, me.fnArgInit(TokenString, "a", false))
 	fn.argVariadic = me.fnArgInit("?", "b", false)
 	me.functions[name] = fn

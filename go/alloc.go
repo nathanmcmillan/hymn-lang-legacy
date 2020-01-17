@@ -75,7 +75,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 		panic(me.fail() + "generic enum \"" + enumName + "\" has no impl for " + fmt.Sprint(enumDef.generics))
 	}
 
-	n.copyData(typeToVarData(module, enumName+"."+unionName))
+	n.copyData(getdatatype(module, enumName+"."+unionName))
 
 	return n
 }
@@ -110,7 +110,7 @@ func (me *parser) defaultValue(in *datatype) *node {
 		t := nodeInit("slice")
 		t.copyData(d.data())
 		s := nodeInit(TokenInt)
-		s.copyData(typeToVarData(me.hmfile, TokenInt))
+		s.copyData(getdatatype(me.hmfile, TokenInt))
 		s.value = "0"
 		t.push(s)
 		d = t
@@ -317,7 +317,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	if me.hmfile != module {
 		typed = module.name + "." + typed
 	}
-	return typeToVarData(me.hmfile, typed)
+	return getdatatype(me.hmfile, typed)
 }
 
 func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
@@ -327,7 +327,8 @@ func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n.copyData(data)
 	if alloc != nil && alloc.stack {
 		n.attributes["stack"] = "true"
-		n.data().setOnStackNotPointer()
+		n.data().setIsPointer(false)
+		n.data().setIsOnStack(true)
 	}
 	return n
 }

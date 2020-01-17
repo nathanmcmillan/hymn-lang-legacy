@@ -118,9 +118,9 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		funcSig := fnSigInit(me)
 		for i, p := range parameters {
 			list[i] = getdatatype(me, p)
-			funcSig.args = append(funcSig.args, fnArgInit(typeToVarData(me, p).getvariable()))
+			funcSig.args = append(funcSig.args, fnArgInit(getdatatype(me, p).getvariable()))
 		}
-		funcSig.returns = typeToVarData(me, returns)
+		funcSig.returns = getdatatype(me, returns)
 		return newdatafunction(funcSig, list, getdatatype(me, returns))
 	}
 
@@ -334,11 +334,6 @@ func (me *datatype) setIsOnStack(flag bool) {
 
 func (me *datatype) setIsPointer(flag bool) {
 	me.pointer = flag
-}
-
-func (me *datatype) setOnStackNotPointer() {
-	me.setIsPointer(false)
-	me.setIsOnStack(true)
 }
 
 func (me *datatype) arraySize() string {

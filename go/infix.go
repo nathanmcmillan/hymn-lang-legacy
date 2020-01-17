@@ -66,7 +66,7 @@ func infixCompare(me *parser, left *node, op string) *node {
 	right := me.calc(getInfixPrecedence(op))
 	node.push(left)
 	node.push(right)
-	node.copyData(typeToVarData(me.hmfile, "bool"))
+	node.copyData(getdatatype(me.hmfile, "bool"))
 	return node
 }
 

@@ -295,5 +295,5 @@ func (me *varData) getmember() *varData {
 
 func (me *varData) getmodule() *hmfile {
 	// return me.module
-	return me.dtype.module
+	return me.dtype.getmodule()
 }

@@ -17,10 +17,14 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
 	return mapped
 }
 
-func (me *parser) buildImplGeneric(typed string, gmapper map[string]string) string {
+func (me *parser) buildImplGeneric(data *datatype, gmapper map[string]string) string {
 
-	module := me.hmfile
+	module := data.module
+	if module == nil {
+		module = data.member.module
+	}
 
+	typed := data.print()
 	base := typed[0:strings.Index(typed, "<")]
 
 	var baseEnum *enum
@@ -144,47 +148,34 @@ func (me *parser) mapGenericFunctionSig(typed string, gmapper map[string]string)
 	return sig
 }
 
-func (me *parser) genericsReplacer(vdata *varData, gmapper map[string]string) string {
+func (me *parser) genericsReplacer(data *datatype, gmapper map[string]string) string {
 
-	correct := true
-	if correct {
-		typed := vdata.getRaw()
-		if checkIsArrayOrSlice(typed) {
-			size, typeOfMem := typeOfArrayOrSlice(typed)
-			if checkHasGeneric(typed) {
-				return "[" + size + "]" + me.buildImplGeneric(typeOfMem, gmapper)
-			}
-			return "[" + size + "]" + mapGenericSingle(typeOfMem, gmapper)
-		} else if checkHasGeneric(typed) {
-			return me.buildImplGeneric(typed, gmapper)
-		} else if checkIsFunction(typed) {
-			return me.mapGenericFunctionSig(typed, gmapper)
+	typed := data.print()
+	if checkIsArrayOrSlice(typed) {
+		size, typeOfMem := typeOfArrayOrSlice(typed)
+		if checkHasGeneric(typed) {
+			return "[" + size + "]" + me.buildImplGeneric(data.member, gmapper)
 		}
-		return mapGenericSingle(typed, gmapper)
+		return "[" + size + "]" + mapGenericSingle(typeOfMem, gmapper)
+	} else if checkHasGeneric(typed) {
+		return me.buildImplGeneric(data, gmapper)
+	} else if checkIsFunction(typed) {
+		return me.mapGenericFunctionSig(typed, gmapper)
 	}
+	return mapGenericSingle(typed, gmapper)
 
-	data := vdata.dtype
-	if data.isSome() {
-		member := data.member
-		return "maybe<" + me.buildImplGeneric(member.print(), gmapper) + ">"
-	} else if data.isNone() {
-		member := data.member
-		if member == nil {
-			return "none"
-		}
-		return "none<" + me.buildImplGeneric(member.print(), gmapper) + ">"
-	} else if data.isArrayOrSlice() {
-		member := data.member
-		if member.generics != nil {
-			return "[" + data.arraySize() + "]" + me.buildImplGeneric(member.print(), gmapper)
-		}
-		return "[" + data.arraySize() + "]" + mapGenericSingle(member.print(), gmapper)
-	} else if data.generics != nil {
-		return me.buildImplGeneric(data.print(), gmapper)
-	} else if data.isFunction() {
-		return me.mapGenericFunctionSig(data.print(), gmapper)
-	}
-	return mapGenericSingle(data.print(), gmapper)
+	// if data.isArrayOrSlice() {
+	// 	member := data.member
+	// 	if data.isSomeOrNone() || member.generics != nil {
+	// 		return "[" + data.arraySize() + "]" + me.buildImplGeneric(member, gmapper)
+	// 	}
+	// 	return "[" + data.arraySize() + "]" + mapGenericSingle(member.print(), gmapper)
+	// } else if data.isSomeOrNone() || data.generics != nil {
+	// 	return me.buildImplGeneric(data, gmapper)
+	// } else if data.isFunction() {
+	// 	return me.mapGenericFunctionSig(data.print(), gmapper)
+	// }
+	// return mapGenericSingle(data.print(), gmapper)
 
 	// switch me.is {
 	// case dataTypeMaybe:
@@ -314,9 +305,9 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 	return true
 }
 
-func (me *parser) hintGeneric(data *varData, gdata *varData, gindex map[string]int) map[string]*datatype {
+func (me *parser) hintGeneric(data *datatype, gdata *datatype, gindex map[string]int) map[string]*datatype {
 	update := make(map[string]*datatype)
-	ok := hintRecursiveReplace(data.dtype, gdata.dtype, gindex, update)
+	ok := hintRecursiveReplace(data, gdata, gindex, update)
 	if !ok {
 		return nil
 	}

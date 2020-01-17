@@ -183,7 +183,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 
 			var update map[string]*datatype
 			if len(gindex) > 0 {
-				update = me.hintGeneric(param.data(), clsvar.data(), gindex)
+				update = me.hintGeneric(param.data().dtype, clsvar.data().dtype, gindex)
 			}
 
 			if update != nil && len(update) > 0 {
@@ -237,7 +237,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 
 				var update map[string]*datatype
 				if len(gindex) > 0 {
-					update = me.hintGeneric(param.data(), clsvar.data(), gindex)
+					update = me.hintGeneric(param.data().dtype, clsvar.data().dtype, gindex)
 				}
 
 				if update != nil && len(update) > 0 {

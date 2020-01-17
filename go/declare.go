@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -31,7 +30,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, typed := range un.types {
-			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed, gmapper))
+			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed.dtype, gmapper))
 		}
 	}
 }
@@ -43,7 +42,6 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	}
 
 	module := base.module
-	fmt.Println("define class implementation ::", module.name, "::", impl)
 
 	module.namespace[impl] = "type"
 	module.types[impl] = ""
@@ -63,7 +61,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem.update(module, me.genericsReplacer(mem.data(), gmapper))
+		mem.update(module, me.genericsReplacer(mem.data().dtype, gmapper))
 	}
 
 	for _, fn := range base.functionOrder {

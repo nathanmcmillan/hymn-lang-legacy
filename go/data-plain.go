@@ -170,6 +170,10 @@ func (me *datatype) missingCase() bool {
 	panic("switch statement is missing data type \"" + me.nameIs() + "\"")
 }
 
+func (me *datatype) getmodule() *hmfile {
+	return me.module
+}
+
 func (me *datatype) getmember() *datatype {
 	return me.member
 }

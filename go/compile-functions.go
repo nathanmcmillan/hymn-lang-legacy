@@ -60,9 +60,9 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	var code strings.Builder
 	code.WriteString("\n")
 	code.WriteString(fmtassignspace(returns.typeSig()) + fn.getcname() + "(")
-	me.dependencyGraph(returns.dtype)
+	me.dependencyGraph(returns)
 	for ix, arg := range args {
-		me.dependencyGraph(arg.data().dtype)
+		me.dependencyGraph(arg.data())
 		if ix > 0 {
 			code.WriteString(", ")
 		}

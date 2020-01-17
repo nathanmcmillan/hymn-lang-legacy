@@ -7,7 +7,7 @@ func (me *parser) infixConcat(left *node) *node {
 	for me.token.is == "+" {
 		me.eat("+")
 		right := me.calc(getInfixPrecedence("+"))
-		if !right.data().checkIsString() {
+		if !right.data().isString() {
 			err := me.fail() + "concatenation operation must be strings but found \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 			panic(err)
@@ -20,7 +20,7 @@ func (me *parser) infixConcat(left *node) *node {
 func infixBinary(me *parser, left *node, op string) *node {
 	leftdata := left.data()
 	if op == "+" {
-		if leftdata.checkIsString() {
+		if leftdata.isString() {
 			return me.infixConcat(left)
 		}
 	}
@@ -33,7 +33,7 @@ func infixBinary(me *parser, left *node, op string) *node {
 		err += "\n\nleft: " + left.string(0) + "\n\nright: " + right.string(0)
 		panic(err)
 	}
-	if leftdata.notEqual(right.data()) {
+	if leftdata.notEquals(right.data()) {
 		err := me.fail() + "number types do not match \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		panic(err)
 	}
@@ -48,7 +48,7 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	node.value = me.token.value
 	me.eat(op)
 	right := me.calc(getInfixPrecedence(op))
-	if !left.data().isAnyIntegerType() || !right.data().isAnyIntegerType() || left.data().notEqual(right.data()) {
+	if !left.data().isAnyIntegerType() || !right.data().isAnyIntegerType() || left.data().notEquals(right.data()) {
 		err := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
 		panic(err)
@@ -87,7 +87,7 @@ func infixTernary(me *parser, condition *node, op string) *node {
 	node.push(one)
 	me.eat(":")
 	two := me.calc(getInfixPrecedence(op))
-	if one.data().notEqual(two.data()) {
+	if one.data().notEquals(two.data()) {
 		panic(me.fail() + "left \"" + one.data().print() + "\" and right \"" + two.data().print() + "\" types do not match")
 	}
 	node.push(two)

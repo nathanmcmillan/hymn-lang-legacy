@@ -103,8 +103,8 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 		}
 	}
 	getlen := ""
-	if array.data().checkIsArray() {
-		getlen = array.data().sizeOfArray()
+	if array.data().isArray() {
+		getlen = array.data().arraySize()
 	} else {
 		getlen = "size_" + me.temp()
 		lennode := nodeInit("call")

@@ -12,7 +12,7 @@ type function struct {
 	argVariadic   *funcArg
 	aliasing      map[string]string
 	expressions   []*node
-	returns       *varData
+	returns       *datatype
 	generics      map[string]int
 	genericsOrder []string
 	genericsAlias map[string]string
@@ -92,7 +92,7 @@ func (me *function) asSig() *fnSig {
 	return sig
 }
 
-func (me *function) data() *varData {
+func (me *function) data() *datatype {
 	return functionSigToVarData(me.asSig())
 }
 
@@ -233,7 +233,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 				fnArg.variable = module.varInitFromData(typed, argname, false)
 				if defaultValue != "" {
 					defaultTypeVarData := typeToVarData(module, defaultType)
-					if typed.notEqual(defaultTypeVarData) {
+					if typed.notEquals(defaultTypeVarData) {
 						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.print() + "\" do not match")
 					}
 					defaultNode := nodeInit(defaultTypeVarData.getRaw())

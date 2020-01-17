@@ -4,7 +4,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 	n.copyData(typeToVarData(me.hmfile, "bool"))
 	me.eat(op)
 	var right *node
-	if left.data().checkIsSomeOrNone() {
+	if left.data().isSomeOrNone() {
 		invert := false
 		if me.token.is == "not" {
 			invert = true
@@ -63,12 +63,12 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			}
 		}
 	} else {
-		if _, _, ok := left.data().checkIsEnum(); !ok {
+		if _, _, ok := left.data().isEnum(); !ok {
 			panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.data().print() + "\"")
 		}
 		if me.token.is == "id" {
 			name := me.token.value
-			baseEnum, _, _ := left.data().checkIsEnum()
+			baseEnum, _, _ := left.data().isEnum()
 			if un, ok := baseEnum.types[name]; ok {
 				prefix := ""
 				if me.hmfile != left.data().getmodule() {
@@ -119,7 +119,7 @@ func (me *parser) parseMatch() *node {
 	matching := me.calc(0)
 	matchType := matching.data()
 
-	_, un, ok := matchType.checkIsEnum()
+	_, un, ok := matchType.isEnum()
 	if ok && un != nil {
 		panic(me.fail() + "enum \"" + matchType.print() + "\" does not need a match expression.")
 	}
@@ -151,7 +151,7 @@ func (me *parser) parseMatch() *node {
 			me.eat("=>")
 			n.push(caseNode)
 			if temp != "" {
-				en, _, ok := matchType.checkIsEnum()
+				en, _, ok := matchType.isEnum()
 				if !ok {
 					panic(me.fail() + "only enums supported for matching")
 				}
@@ -177,7 +177,7 @@ func (me *parser) parseMatch() *node {
 		} else if me.token.is == "some" {
 			me.eat("some")
 			if matchVar != nil {
-				if !matchType.checkIsSomeOrNone() {
+				if !matchType.isSomeOrNone() {
 					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
 				}
 			}

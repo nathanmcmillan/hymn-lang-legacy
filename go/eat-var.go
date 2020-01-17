@@ -35,7 +35,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head.is = "root-variable"
 			}
 			data := head.data()
-			if rootClass, ok := data.checkIsClass(); ok {
+			if rootClass, ok := data.isClass(); ok {
 				me.eat(".")
 				dotName := me.token.value
 				me.eat("id")
@@ -56,7 +56,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				}
 				head = member
 
-			} else if rootEnum, rootUnion, ok := data.checkIsEnum(); ok {
+			} else if rootEnum, rootUnion, ok := data.isEnum(); ok {
 				if rootUnion == nil {
 					peek := me.peek().value
 					if peek == "index" {
@@ -85,7 +85,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.push(head)
 					head = member
 				}
-			} else if data.checkIsSomeOrNone() {
+			} else if data.isSomeOrNone() {
 				panic(me.fail() + "unexpected maybe type \"" + head.data().print() + "\" do you need a match statement?")
 			} else {
 				panic(me.fail() + "unexpected type \"" + head.data().print() + "\"")
@@ -107,11 +107,11 @@ func (me *parser) eatvar(from *hmfile) *node {
 				me.eat(":")
 				member := nodeInit("array-to-slice")
 				member.copyData(head.data())
-				member.data().arrayToSlice()
+				member.data().convertArrayToSlice()
 				member.push(head)
 				head = member
 			} else {
-				if !head.data().checkIsIndexable() {
+				if !head.data().isIndexable() {
 					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().print() + "\" is not indexable")
 				}
 				member := nodeInit("array-member")

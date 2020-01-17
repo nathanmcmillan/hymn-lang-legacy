@@ -41,12 +41,12 @@ func (me *cfile) defineEnum(enum *enum) {
 		num := len(enumUnion.types)
 		if num == 1 {
 			typed := enumUnion.types[0]
-			me.dependencyGraph(typed.dtype)
+			me.dependencyGraph(typed)
 			code += fmc(2) + fmtassignspace(typed.typeSig()) + enumUnion.name + ";\n"
 		} else if num != 0 {
 			code += fmc(2) + "struct {\n"
 			for ix, typed := range enumUnion.types {
-				me.dependencyGraph(typed.dtype)
+				me.dependencyGraph(typed)
 				code += fmc(3) + fmtassignspace(typed.typeSig()) + "var" + strconv.Itoa(ix) + ";\n"
 			}
 			code += fmc(2) + "} " + enumUnion.name + ";\n"
@@ -78,7 +78,7 @@ func (me *cfile) defineClass(c *class) {
 	code.WriteString("\nstruct " + hmName + " {\n")
 	for _, name := range c.variableOrder {
 		field := c.variables[name]
-		me.dependencyGraph(field.data().dtype)
+		me.dependencyGraph(field.data())
 		code.WriteString(fmc(1) + field.data().typeSigOf(field.name, true) + ";\n")
 	}
 	code.WriteString("};\n")

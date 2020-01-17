@@ -66,7 +66,7 @@ func prefixCast(me *parser, op string) *node {
 	node := nodeInit("cast")
 	node.copyData(typeToVarData(me.hmfile, op))
 	calc := me.calc(getPrefixPrecedence(op))
-	data := calc.data().dtype
+	data := calc.data()
 	if data.canCastToNumber() {
 		node.push(calc)
 		return node
@@ -97,7 +97,7 @@ func prefixIdent(me *parser, op string) *node {
 			alloc := &allocData{}
 			alloc.stack = useStack
 			no := me.allocEnum(module)
-			no._vdata.merge(alloc)
+			no._vdata = no._vdata.merge(alloc)
 			return no
 		}
 		if def, ok := module.defs[name]; ok {
@@ -134,7 +134,7 @@ func prefixArray(me *parser, op string) *node {
 		no = nodeInit("slice")
 		if me.token.is != "]" {
 			capacity := me.calc(0)
-			if !capacity.data().dtype.isInt() {
+			if !capacity.data().isInt() {
 				panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 			}
 			defaultSize := nodeInit(TokenInt)
@@ -145,7 +145,7 @@ func prefixArray(me *parser, op string) *node {
 		}
 	} else {
 		size = me.calc(0)
-		if !size.data().dtype.isInt() {
+		if !size.data().isInt() {
 			panic(me.fail() + "array or slice size " + size.string(0) + " is not an integer")
 		}
 		slice := false
@@ -155,7 +155,7 @@ func prefixArray(me *parser, op string) *node {
 			slice = true
 			if me.token.is != "]" {
 				capacity = me.calc(0)
-				if !capacity.data().dtype.isInt() {
+				if !capacity.data().isInt() {
 					panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 				}
 			}
@@ -180,7 +180,7 @@ func prefixArray(me *parser, op string) *node {
 		me.eat("(")
 		for {
 			item := me.calc(0)
-			if item.data().notEqual(data) {
+			if item.data().notEquals(data) {
 				panic(me.fail() + "array member type \"" + item.data().print() + "\" does not match array type \"" + no.data().getmember().print() + "\"")
 			}
 			items.push(item)
@@ -206,7 +206,7 @@ func prefixArray(me *parser, op string) *node {
 			alloc.size = len(items.has)
 		}
 	}
-	data.merge(alloc)
+	data = data.merge(alloc)
 	no._vdata = data
 
 	return no

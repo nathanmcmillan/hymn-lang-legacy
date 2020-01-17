@@ -10,7 +10,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 	using := n.has[0]
 	match := me.eval(using)
 
-	if match.data().checkIsSomeOrNone() {
+	if match.data().isSomeOrNone() {
 		caseOf := n.has[1]
 		if caseOf.is == "some" {
 			if len(caseOf.has) > 0 {
@@ -55,7 +55,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		me.scope.renaming[idata] = tempname
 	}
 
-	baseEnum, _, _ := using.data().checkIsEnum()
+	baseEnum, _, _ := using.data().isEnum()
 	if baseEnum.simple {
 		code += match.code()
 	} else {
@@ -65,7 +65,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 	code += " == "
 
 	if caseOf.is == "match-enum" {
-		matchBaseEnum, matchBaseUn, _ := caseOf.data().checkIsEnum()
+		matchBaseEnum, matchBaseUn, _ := caseOf.data().isEnum()
 		matchBaseEnum = matchBaseEnum.baseEnum()
 		enNameSpace := matchBaseEnum.cname
 		code += enumTypeName(enNameSpace, matchBaseUn.name)
@@ -74,7 +74,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		if compare.data() == nil {
 			panic("expected enum but was " + caseOf.string(0))
 		}
-		compareEnum, _, ok := compare.data().checkIsEnum()
+		compareEnum, _, ok := compare.data().isEnum()
 		if !ok {
 			panic("expected enum but was " + caseOf.string(0))
 		}
@@ -93,7 +93,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	using := n.has[0]
 	match := me.eval(using)
 
-	if match.data().checkIsSomeOrNone() {
+	if match.data().isSomeOrNone() {
 		return me.compileMatchNull(match, n, code)
 	}
 
@@ -105,7 +105,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 
 	if using.is == "variable" {
 		name := me.getvar(using.idata.name).cName
-		if baseEnum, _, ok := using.data().checkIsEnum(); ok {
+		if baseEnum, _, ok := using.data().isEnum(); ok {
 			isEnum = true
 			enNameSpace = baseEnum.cname
 			if !baseEnum.simple {

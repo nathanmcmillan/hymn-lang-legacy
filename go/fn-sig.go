@@ -4,7 +4,7 @@ type fnSig struct {
 	module      *hmfile
 	args        []*funcArg
 	argVariadic *funcArg
-	returns     *varData
+	returns     *datatype
 }
 
 func fnSigInit(module *hmfile) *fnSig {

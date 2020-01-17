@@ -173,12 +173,12 @@ func (me *parser) parseReturn() *node {
 		if ret.isNone() {
 			if !fn.returns.isSome() {
 				panic(me.fail() + "return type was \"" + ret.print() + "\" but function is \"" + fn.returns.print() + "\"")
-			} else if ret.dtype.member != nil {
+			} else if ret.getmember() != nil {
 				if calc.is == "none" {
 					panic(me.fail() + "unnecessary none definition for return " + calc.string(0))
 				}
 			}
-		} else if fn.returns.notEqual(ret) {
+		} else if fn.returns.notEquals(ret) {
 			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.print() + "\" but found \"" + ret.print() + "\"")
 		}
 	}
@@ -224,7 +224,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if !sv.mutable {
 				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
 			}
-			if !right.data().isQuestion() && left.data().notEqual(right.data()) {
+			if !right.data().isQuestion() && left.data().notEquals(right.data()) {
 				if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
@@ -245,7 +245,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
-		if !right.data().isQuestion() && left.data().notEqual(right.data()) {
+		if !right.data().isQuestion() && left.data().notEquals(right.data()) {
 			if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {

@@ -49,7 +49,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 				me.eat(",")
 			}
 			param := me.calc(0)
-			if param.data().dtype.notEquals(unionType.dtype) {
+			if param.data().notEquals(unionType) {
 				if _, gok := gdict[unionType.getRaw()]; gok {
 					gimpl[unionType.getRaw()] = param.data().getRaw()
 				} else {
@@ -81,7 +81,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 }
 
 func (me *parser) pushAllDefaultClassParams(n *node) {
-	base, ok := n.data().checkIsClass()
+	base, ok := n.data().isClass()
 	if !ok {
 		panic(me.fail())
 	}
@@ -90,10 +90,10 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 	me.pushClassParams(n, base, params)
 }
 
-func (me *parser) defaultValue(in *varData) *node {
+func (me *parser) defaultValue(in *datatype) *node {
 	d := nodeInit(in.getRaw())
 	d.copyData(in)
-	data := in.dtype
+	data := in
 	if data.isString() {
 		d.value = ""
 	} else if data.isChar() {
@@ -183,7 +183,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 
 			var update map[string]*datatype
 			if len(gindex) > 0 {
-				update = me.hintGeneric(param.data().dtype, clsvar.data().dtype, gindex)
+				update = me.hintGeneric(param.data(), clsvar.data(), gindex)
 			}
 
 			if update != nil && len(update) > 0 {
@@ -211,7 +211,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 				}
 				gtypes = newtypes
 
-			} else if param.data().notEqual(clsvar.data()) && !clsvar.data().isQuestion() {
+			} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
 				err := "parameter \"" + vname + "\" with type \"" + param.data().print()
 				err += "\" does not match class variable \"" + base.name + "."
 				err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
@@ -237,7 +237,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 
 				var update map[string]*datatype
 				if len(gindex) > 0 {
-					update = me.hintGeneric(param.data().dtype, clsvar.data().dtype, gindex)
+					update = me.hintGeneric(param.data(), clsvar.data(), gindex)
 				}
 
 				if update != nil && len(update) > 0 {
@@ -249,7 +249,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 					}
 					gtypes = newtypes
 
-				} else if param.data().notEqual(clsvar.data()) && !clsvar.data().isQuestion() {
+				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
 					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().print()
 					err += "\" does not match class variable \"" + base.name + "."
 					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
@@ -281,7 +281,7 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 	return typed
 }
 
-func (me *parser) buildClass(n *node, module *hmfile) *varData {
+func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	name := me.token.value
 	depth := me.token.depth
 	me.eat("id")
@@ -303,7 +303,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 			if !assign.isQuestion() {
 				if assign.isSome() {
 					typed = assign.getmember().getRaw()
-				} else if assign.checkIsArrayOrSlice() {
+				} else if assign.isArrayOrSlice() {
 					typed = assign.getmember().getRaw()
 				} else {
 					typed = assign.getRaw()
@@ -323,7 +323,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *varData {
 func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
 	n := nodeInit("new")
 	data := me.buildClass(n, module)
-	data.merge(alloc)
+	data = data.merge(alloc)
 	n.copyData(data)
 	if alloc != nil && alloc.stack {
 		n.attributes["stack"] = "true"

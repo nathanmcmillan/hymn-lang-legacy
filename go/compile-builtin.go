@@ -6,10 +6,10 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		me.libReq.add(HmLibSlice)
 		param0 := me.eval(parameters[0])
 		p := param0.data()
-		if p.checkIsSlice() {
+		if p.isSlice() {
 			uses := p.getmember()
 			param1 := me.eval(parameters[1])
-			if uses.checkIsPointerInC() {
+			if uses.isPointerInC() {
 				cb := codeBlockOne(n, "hmlib_slice_push("+param0.pop()+", "+param1.pop()+")")
 				cb.prepend(param0.pre)
 				cb.prepend(param1.pre)
@@ -31,9 +31,9 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "hmlib_string_len("+param.pop()+")", param.pre)
 		}
 		p := param.data()
-		if p.checkIsArray() {
-			return codeBlockMerge(n, p.sizeOfArray(), param.pre)
-		} else if p.checkIsSlice() {
+		if p.isArray() {
+			return codeBlockMerge(n, p.arraySize(), param.pre)
+		} else if p.isSlice() {
 			me.libReq.add(HmLibSlice)
 			return codeBlockMerge(n, "hmlib_slice_len("+param.pop()+")", param.pre)
 		}
@@ -48,9 +48,9 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "hmlib_string_cap("+param.pop()+")", param.pre)
 		}
 		p := param.data()
-		if p.checkIsArray() {
-			return codeBlockMerge(n, p.sizeOfArray(), param.pre)
-		} else if p.checkIsSlice() {
+		if p.isArray() {
+			return codeBlockMerge(n, p.arraySize(), param.pre)
+		} else if p.isSlice() {
 			me.libReq.add(HmLibSlice)
 			return codeBlockMerge(n, "hmlib_slice_cap("+param.pop()+")", param.pre)
 		}

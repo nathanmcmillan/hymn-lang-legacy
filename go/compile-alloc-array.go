@@ -21,7 +21,7 @@ func (me *cfile) compileAllocArray(n *node) *codeblock {
 			}
 		}
 	} else {
-		size = n.data().sizeOfArray()
+		size = n.data().arraySize()
 	}
 	if items != nil {
 		sizeint, er := strconv.Atoi(size)
@@ -111,6 +111,6 @@ func (me *cfile) compileArrayToSlice(n *node) *codeblock {
 	array := n.has[0]
 	data := array.data()
 	me.libReq.add(HmLibSlice)
-	code := "hmlib_array_to_slice(" + array.idata.name + ", sizeof(" + data.getmember().typeSig() + "), " + data.sizeOfArray() + ")"
+	code := "hmlib_array_to_slice(" + array.idata.name + ", sizeof(" + data.getmember().typeSig() + "), " + data.arraySize() + ")"
 	return codeBlockOne(n, code)
 }

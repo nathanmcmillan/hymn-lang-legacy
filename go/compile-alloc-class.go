@@ -16,7 +16,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 	}
 
 	data := n.data()
-	typed := data.dtype.cname()
+	typed := data.cname()
 
 	_, useStack := n.attributes["stack"]
 	assign, local := n.attributes["assign"]
@@ -31,7 +31,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 	}
 
 	if local {
-		cl, _ := data.checkIsClass()
+		cl, _ := data.isClass()
 		code := ""
 		if !useStack {
 			code += "malloc(sizeof(" + typed + "))"

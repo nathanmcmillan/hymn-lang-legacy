@@ -68,7 +68,7 @@ func (me *datatype) string(lv int) string {
 func (me *variable) string(lv int) string {
 	s := "{\n"
 	lv++
-	s += fmc(lv) + "\"data\": " + me.data().dtype.string(lv) + ",\n"
+	s += fmc(lv) + "\"data\": " + me.data().string(lv) + ",\n"
 	// s += fmc(lv) + "\"data\": " + me.data().string(lv) + ",\n"
 	s += fmc(lv) + "\"name\": \"" + me.name + "\",\n"
 	s += fmc(lv) + "\"mutable\": " + strconv.FormatBool(me.mutable)
@@ -92,7 +92,7 @@ func (me *node) string(lv int) string {
 		s += ",\n" + fmc(lv) + "\"call\": \"" + me.fn.canonical() + "\""
 	}
 	if me.data() != nil {
-		s += ",\n" + fmc(lv) + "\"data\": " + me.data().dtype.string(lv)
+		s += ",\n" + fmc(lv) + "\"data\": " + me.data().string(lv)
 		// s += ",\n" + fmc(lv) + "\"data\": " + me.data().string(lv)
 	}
 	if len(me.attributes) > 0 {
@@ -138,7 +138,7 @@ func (me *cnode) string(lv int) string {
 		s += ", typed:" + me.typed
 	}
 	if me.data() != nil {
-		s += ", var:" + me.data().dtype.string(lv)
+		s += ", var:" + me.data().string(lv)
 	}
 	s += ", code:" + me.code
 	if len(me.has) > 0 {
@@ -179,7 +179,7 @@ func (me *class) string(lv int) string {
 		s += fmc(lv) + "{\n"
 		lv++
 		s += fmc(lv) + "\"name\": \"" + classVar.name + "\",\n" + fmc(lv)
-		s += "\"typed\": " + classVar.data().dtype.string(lv)
+		s += "\"typed\": " + classVar.data().string(lv)
 		lv--
 		s += "\n" + fmc(lv) + "}"
 		if i < end {
@@ -203,7 +203,7 @@ func (me *enum) string(lv int) string {
 				if ix > 0 {
 					types += ", "
 				}
-				types += "\"" + typ.dtype.string(lv) + "\""
+				types += "\"" + typ.string(lv) + "\""
 			}
 			s += fmc(lv) + "{\"name\": \"" + unionType.name + "\", \"unions\": [" + types + "]}"
 		} else {

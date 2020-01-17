@@ -19,7 +19,7 @@ const (
 )
 
 type datatype struct {
-	origin     *hmfile // TODO :: remove "origin"
+	origin     *hmfile
 	hmlib      *hmlib
 	module     *hmfile
 	is         int
@@ -38,39 +38,43 @@ type datatype struct {
 	funcSig    *fnSig
 }
 
+func (me *datatype) set(in *datatype) {
+	me.origin = in.origin
+	me.module = in.module
+	me.is = in.is
+	me.canonical = in.canonical
+	me.size = in.size
+	if in.member != nil {
+		me.member = in.member.copy()
+	}
+	if in.parameters != nil {
+		me.parameters = make([]*datatype, len(in.parameters))
+		for i, p := range in.parameters {
+			me.parameters[i] = p.copy()
+		}
+	}
+	if in.returns != nil {
+		me.returns = in.returns.copy()
+	}
+	if in.generics != nil {
+		me.generics = make([]*datatype, len(in.generics))
+		for i, g := range in.generics {
+			me.generics[i] = g.copy()
+		}
+	}
+	me.hmlib = in.hmlib
+	me.mutable = in.mutable
+	me.heap = in.heap
+	me.pointer = in.pointer
+	me.class = in.class
+	me.enum = in.enum
+	me.union = in.union
+	me.funcSig = in.funcSig
+}
+
 func (me *datatype) copy() *datatype {
 	c := &datatype{}
-	c.origin = me.origin
-	c.module = me.module
-	c.is = me.is
-	c.canonical = me.canonical
-	c.size = me.size
-	if me.member != nil {
-		c.member = me.member.copy()
-	}
-	if me.parameters != nil {
-		c.parameters = make([]*datatype, len(me.parameters))
-		for i, p := range me.parameters {
-			c.parameters[i] = p.copy()
-		}
-	}
-	if me.returns != nil {
-		c.returns = me.returns.copy()
-	}
-	if me.generics != nil {
-		c.generics = make([]*datatype, len(me.generics))
-		for i, g := range me.generics {
-			c.generics[i] = g.copy()
-		}
-	}
-	c.hmlib = me.hmlib
-	c.mutable = me.mutable
-	c.heap = me.heap
-	c.pointer = me.pointer
-	c.class = me.class
-	c.enum = me.enum
-	c.union = me.union
-	c.funcSig = me.funcSig
+	c.set(me)
 	return c
 }
 
@@ -525,6 +529,10 @@ func (me *datatype) cname() string {
 	return ""
 }
 
+func (me *datatype) getRaw() string {
+	return me.print()
+}
+
 func (me *datatype) print() string {
 	switch me.is {
 	case dataTypeUnknown:
@@ -631,6 +639,7 @@ func newdatanone() *datatype {
 func newdatastring() *datatype {
 	d := newdatatype(dataTypeString)
 	d.canonical = TokenString
+	d.member = newdataprimitive(TokenChar)
 	return d
 }
 
@@ -852,4 +861,20 @@ func getdatatypegenerics(typed string) []string {
 		}
 	}
 	return order
+}
+
+func (me *datatype) merge(hint *allocData) *datatype {
+	if hint == nil {
+		return me
+	}
+	if hint.array || hint.slice {
+		me.pointer = true
+	}
+	me.heap = !hint.stack
+	if hint.array {
+		return newdataarray(strconv.Itoa(hint.size), me)
+	} else if hint.slice {
+		return newdataslice(me)
+	}
+	return me
 }

@@ -30,7 +30,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, typed := range un.types {
-			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed.dtype, gmapper))
+			un.types[i] = typeToVarData(me.hmfile, me.genericsReplacer(typed, gmapper))
 		}
 	}
 }
@@ -61,7 +61,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem.update(module, me.genericsReplacer(mem.data().dtype, gmapper))
+		mem.update(module, me.genericsReplacer(mem.data(), gmapper))
 	}
 
 	for _, fn := range base.functionOrder {
@@ -84,7 +84,7 @@ func (me *parser) declareGeneric(implementation bool, base hasGenerics) []string
 	return order
 }
 
-func (me *parser) declareFn() *varData {
+func (me *parser) declareFn() *datatype {
 	me.eat("(")
 	fn := fnSigInit(me.hmfile)
 	if me.token.is != ")" {
@@ -110,18 +110,18 @@ func (me *parser) declareFn() *varData {
 	return functionSigToVarData(fn)
 }
 
-func (me *parser) declareFnPtr(fn *function) *varData {
+func (me *parser) declareFnPtr(fn *function) *datatype {
 	return typeToVarData(me.hmfile, fn.name)
 }
 
-func (me *parser) declareType(implementation bool) *varData {
+func (me *parser) declareType(implementation bool) *datatype {
 	array := false
 	size := ""
 	if me.token.is == "[" {
 		me.eat("[")
 		if me.token.is != "]" {
 			sizeNode := me.calc(0)
-			if sizeNode.value == "" || !sizeNode.data().dtype.isInt() {
+			if sizeNode.value == "" || !sizeNode.data().isInt() {
 				panic(me.fail() + "array size must be constant integer")
 			}
 			size = sizeNode.value

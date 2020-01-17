@@ -55,7 +55,7 @@ func (me *parser) iterloop() *node {
 	}
 	me.eat("in")
 	using := me.calc(0)
-	if !using.data().checkIsArrayOrSlice() && !using.data().checkIsString() {
+	if !using.data().isArrayOrSlice() && !using.data().isString() {
 		panic(me.fail() + "expected array, slice, string but was \"" + using.data().print() + "\"")
 	}
 	me.eat("line")

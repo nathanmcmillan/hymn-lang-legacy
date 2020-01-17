@@ -5,15 +5,15 @@ type cnode struct {
 	value  string
 	has    []*cnode
 	typed  string
-	_vdata *varData
+	_vdata *datatype
 	code   string
 }
 
-func (me *cnode) data() *varData {
+func (me *cnode) data() *datatype {
 	return me._vdata
 }
 
-func (me *cnode) copyData(data *varData) {
+func (me *cnode) copyData(data *datatype) {
 	if data == nil {
 		me._vdata = nil
 	} else {
@@ -83,7 +83,7 @@ func (me *codeblock) code() string {
 	return code
 }
 
-func (me *codeblock) data() *varData {
+func (me *codeblock) data() *datatype {
 	return me.current.data()
 }
 

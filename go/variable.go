@@ -4,7 +4,7 @@ type variable struct {
 	name    string
 	cName   string
 	mutable bool
-	_vdata  *varData
+	_vdata  *datatype
 }
 
 type variableNode struct {
@@ -12,15 +12,15 @@ type variableNode struct {
 	v *variable
 }
 
-func (me *variable) data() *varData {
+func (me *variable) data() *datatype {
 	return me._vdata
 }
 
-func (me *variable) copyData(data *varData) {
+func (me *variable) copyData(data *datatype) {
 	me._vdata = data.copy()
 }
 
-func (me *hmfile) varInitFromData(data *varData, name string, mutable bool) *variable {
+func (me *hmfile) varInitFromData(data *datatype, name string, mutable bool) *variable {
 	v := &variable{}
 	v.copyData(data)
 	v.name = name

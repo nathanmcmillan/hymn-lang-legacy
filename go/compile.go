@@ -184,7 +184,7 @@ func (me *cfile) compileTupleIndex(n *node) *codeblock {
 	dotIndexStr := n.value
 	root := me.eval(n.has[0])
 	data := root.data()
-	_, un, _ := data.checkIsEnum()
+	_, un, _ := data.isEnum()
 	code := root.code() + "->"
 	if len(un.types) == 1 {
 		code += un.name
@@ -209,10 +209,10 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 				vr = data.getmodule().getStatic(head.idata.name)
 				cname = head.idata.getcname()
 			}
-			if data.checkIsArrayOrSlice() {
+			if data.isArrayOrSlice() {
 				code = cname + code
 			} else {
-				code = cname + data.memPtr() + code
+				code = cname + data.memoryGet() + code
 			}
 			break
 		} else if head.is == "array-member" {
@@ -223,7 +223,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 			if code[0] == '[' {
 				code = head.idata.name + code
 			} else {
-				code = head.idata.name + head.data().memPtr() + code
+				code = head.idata.name + head.data().memoryGet() + code
 			}
 			head = head.has[0]
 		} else {
@@ -233,14 +233,14 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileFnPtr(n *node, hint *varData) *codeblock {
+func (me *cfile) compileFnPtr(n *node, hint *datatype) *codeblock {
 	code := ""
 	fn := n.fn
 	code += "&" + fn.getcname()
 	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileVariable(n *node, hint *varData) *codeblock {
+func (me *cfile) compileVariable(n *node, hint *datatype) *codeblock {
 	code := ""
 	if n.idata.module == me.hmfile {
 		name := n.idata.name
@@ -290,7 +290,7 @@ func (me *cfile) compileEqual(op string, n *node) *codeblock {
 	a := me.eval(n.has[0])
 	b := me.eval(n.has[1])
 	code := ""
-	if a.data().checkIsString() && b.data().checkIsString() {
+	if a.data().isString() && b.data().isString() {
 		me.libReq.add(HmLibString)
 		code = "hmlib_string_equal(" + a.code() + ", " + b.code() + ")"
 		if op == "not-equal" {

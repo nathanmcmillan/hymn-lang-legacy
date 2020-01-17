@@ -5,7 +5,7 @@ type node struct {
 	value      string
 	idata      *idData
 	fn         *function
-	_vdata     *varData
+	_vdata     *datatype
 	attributes map[string]string
 	parent     *node
 	has        []*node
@@ -61,10 +61,10 @@ func (me *node) copyTypeFromVar(other *variable) {
 	me._vdata = other.data().copy()
 }
 
-func (me *node) data() *varData {
+func (me *node) data() *datatype {
 	return me._vdata
 }
 
-func (me *node) copyData(data *varData) {
+func (me *node) copyData(data *datatype) {
 	me._vdata = data.copy()
 }

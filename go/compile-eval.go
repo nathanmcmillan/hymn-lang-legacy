@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (me *cfile) hintEval(n *node, hint *varData) *codeblock {
+func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 	op := n.is
 	if op == "=" || op == ":=" {
 		return me.compileAssign(n)

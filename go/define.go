@@ -71,7 +71,7 @@ func (me *parser) defineClass() {
 
 			mtype := me.declareType(false)
 			mtype.setIsPointer(isptr)
-			if mcl, ok := mtype.checkIsClass(); ok {
+			if mcl, ok := mtype.isClass(); ok {
 				if mcl == classDef {
 					panic(me.fail() + "recursive type definition for \"" + classDef.name + "\"")
 				}

@@ -1,1 +1,3 @@
-pwd: /home/nmm/Documents/programming/hymn-lang/go/autotest/out/072
+ls: 072-system
+072-system.c
+072-system.h

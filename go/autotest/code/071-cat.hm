@@ -1,6 +1,5 @@
 main
 	chdir("../../../../")
-	echo(system("pwd"))
 	content = cat("CNAME")
 	echo(content)
 	iterate i, c in content

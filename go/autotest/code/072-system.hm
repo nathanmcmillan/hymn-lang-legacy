@@ -1,6 +1,6 @@
 main
-	mutable p = system("pwd")
+	mutable p = system("ls")
 	size = len(p) 
 	if p[size - 1] == '\n'
 		p = substring(p, 0, size - 1)
-	echo("pwd: " + p)
+	echo("ls: " + p)

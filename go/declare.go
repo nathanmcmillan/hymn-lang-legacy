@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string) {
+func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string) *enum {
 
 	unionList := make([]*union, len(base.types))
 	unionDict := make(map[string]*union)
@@ -30,12 +30,14 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, data := range un.types {
-			un.types[i] = getdatatype(me.hmfile, me.genericsReplacer(data, gmapper))
+			un.types[i] = getdatatype(me.hmfile, me.improvedGenericsReplacer(data, gmapper).print())
 		}
 	}
+
+	return enumDef
 }
 
-func (me *parser) defineClassImplGeneric(base *class, impl string, order []string) {
+func (me *parser) defineClassImplGeneric(base *class, impl string, order []string) *class {
 	memberMap := make(map[string]*variable)
 	for k, v := range base.variables {
 		memberMap[k] = v.copy()
@@ -61,12 +63,14 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem.update(module, me.genericsReplacer(mem.data(), gmapper))
+		mem.update(module, me.improvedGenericsReplacer(mem.data(), gmapper).print())
 	}
 
 	for _, fn := range base.functionOrder {
 		remapClassFunctionImpl(classDef, fn)
 	}
+
+	return classDef
 }
 
 func (me *parser) declareGeneric(implementation bool, base hasGenerics) []string {

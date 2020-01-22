@@ -151,7 +151,7 @@ func (me *parser) mapGenericFunctionSig(typed string, gmapper map[string]string)
 func (me *parser) genericsReplacer(data *datatype, gmapper map[string]string) string {
 
 	typed := data.print()
-	if checkIsArrayOrSlice(typed) {
+	if data.isArrayOrSlice() {
 		size, typeOfMem := typeOfArrayOrSlice(typed)
 		if checkHasGeneric(typed) {
 			return "[" + size + "]" + me.buildImplGeneric(data.member, gmapper)

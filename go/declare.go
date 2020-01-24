@@ -30,7 +30,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, data := range un.types {
-			un.types[i] = me.genericsReplacer(data, gmapper)
+			un.types[i] = getdatatype(me.hmfile, me.genericsReplacer(data, gmapper).print())
 		}
 	}
 
@@ -63,7 +63,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem._vdata = me.genericsReplacer(mem.data(), gmapper)
+		mem._vdata = getdatatype(module, me.genericsReplacer(mem.data(), gmapper).print())
 	}
 
 	for _, fn := range base.functionOrder {
@@ -119,19 +119,19 @@ func (me *parser) declareFnPtr(fn *function) *datatype {
 }
 
 func (me *parser) declareType(implementation bool) *datatype {
-	array := false
-	size := ""
+
 	if me.token.is == "[" {
 		me.eat("[")
-		if me.token.is != "]" {
-			sizeNode := me.calc(0)
-			if sizeNode.value == "" || !sizeNode.data().isInt() {
-				panic(me.fail() + "array size must be constant integer")
-			}
-			size = sizeNode.value
+		if me.token.is == "]" {
+			me.eat("]")
+			return newdataslice(me.declareType(implementation))
+		}
+		sizeNode := me.calc(0)
+		if sizeNode.value == "" || !sizeNode.data().isInt() {
+			panic(me.fail() + "array size must be constant integer")
 		}
 		me.eat("]")
-		array = true
+		return newdataarray(sizeNode.value, me.declareType(implementation))
 	}
 
 	module := me.hmfile
@@ -145,17 +145,17 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.eat("<")
 		option := me.declareType(implementation)
 		me.eat(">")
-		local += "maybe<" + option.getRaw() + ">"
+		return newdatamaybe(option)
 
 	} else if me.token.is == "none" {
 		me.eat("none")
-		local += "none"
 		if me.token.is == "<" {
 			me.eat("<")
-			option := me.declareType(implementation).getRaw()
+			option := me.declareType(implementation)
 			me.eat(">")
-			local += "<" + option + ">"
+			return newdatamaybe(option)
 		}
+		return newdatanone()
 	} else {
 		local += me.token.value
 		me.wordOrPrimitive()
@@ -197,10 +197,6 @@ func (me *parser) declareType(implementation bool) *datatype {
 		} else {
 			panic(me.fail() + "type \"" + local + "\" does not exist in module \"" + module.name + "\"")
 		}
-	}
-
-	if array {
-		local = "[" + size + "]" + local
 	}
 
 	qualified := local

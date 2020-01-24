@@ -90,10 +90,9 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 	me.pushClassParams(n, base, params)
 }
 
-func (me *parser) defaultValue(in *datatype) *node {
-	d := nodeInit(in.getRaw())
-	d.copyData(in)
-	data := in
+func (me *parser) defaultValue(data *datatype) *node {
+	d := nodeInit(data.getRaw())
+	d.copyData(data)
 	if data.isString() {
 		d.value = ""
 	} else if data.isChar() {

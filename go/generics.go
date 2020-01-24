@@ -17,12 +17,12 @@ type gstack struct {
 	order []string
 }
 
-func mapGenericSingle(mem string, gmapper map[string]string) string {
-	impl, ok := gmapper[mem]
+func mapGenericSingle(typed string, gmapper map[string]string) string {
+	implementation, ok := gmapper[typed]
 	if ok {
-		return impl
+		return implementation
 	}
-	return mem
+	return typed
 }
 
 func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string) *datatype {
@@ -36,6 +36,9 @@ func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string
 		for i, p := range data.parameters {
 			data.parameters[i] = me.genericsReplacer(p, gmapper)
 		}
+	}
+	if data.variadic != nil {
+		data.variadic = me.genericsReplacer(data.variadic, gmapper)
 	}
 	if data.returns != nil {
 		data.returns = me.genericsReplacer(data.returns, gmapper)

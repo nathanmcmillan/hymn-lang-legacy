@@ -30,7 +30,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	for _, un := range unionList {
 		for i, data := range un.types {
-			un.types[i] = getdatatype(me.hmfile, me.improvedGenericsReplacer(data, gmapper).print())
+			un.types[i] = me.genericsReplacer(data, gmapper)
 		}
 	}
 
@@ -63,7 +63,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem.update(module, me.improvedGenericsReplacer(mem.data(), gmapper).print())
+		mem._vdata = me.genericsReplacer(mem.data(), gmapper)
 	}
 
 	for _, fn := range base.functionOrder {

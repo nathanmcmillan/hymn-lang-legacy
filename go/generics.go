@@ -25,23 +25,23 @@ func mapGenericSingle(mem string, gmapper map[string]string) string {
 	return mem
 }
 
-func (me *parser) improvedGenericsReplacer(original *datatype, gmapper map[string]string) *datatype {
+func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string) *datatype {
 	data := original.copy()
 	if data.generics != nil {
 		for i, g := range data.generics {
-			data.generics[i] = me.improvedGenericsReplacer(g, gmapper)
+			data.generics[i] = me.genericsReplacer(g, gmapper)
 		}
 	}
 	if data.parameters != nil {
 		for i, p := range data.parameters {
-			data.parameters[i] = me.improvedGenericsReplacer(p, gmapper)
+			data.parameters[i] = me.genericsReplacer(p, gmapper)
 		}
 	}
 	if data.returns != nil {
-		data.returns = me.improvedGenericsReplacer(data.returns, gmapper)
+		data.returns = me.genericsReplacer(data.returns, gmapper)
 	}
 	if data.member != nil {
-		data.member = me.improvedGenericsReplacer(data.member, gmapper)
+		data.member = me.genericsReplacer(data.member, gmapper)
 	}
 	data.canonical = mapGenericSingle(data.canonical, gmapper)
 	if data.generics != nil {

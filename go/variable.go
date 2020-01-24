@@ -34,12 +34,8 @@ func (me *hmfile) varInit(typed, name string, mutable bool) *variable {
 	v.name = name
 	v.cName = name
 	v.mutable = mutable
-	v.update(me, typed)
+	v._vdata = getdatatype(me, typed)
 	return v
-}
-
-func (me *variable) update(module *hmfile, typed string) {
-	me.copyData(getdatatype(module, typed))
 }
 
 func (me *variable) copy() *variable {

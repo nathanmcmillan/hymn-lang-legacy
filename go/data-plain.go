@@ -27,6 +27,7 @@ type datatype struct {
 	size       string
 	member     *datatype
 	parameters []*datatype
+	variadic   *datatype
 	returns    *datatype
 	generics   []*datatype
 	mutable    bool
@@ -52,6 +53,9 @@ func (me *datatype) set(in *datatype) {
 		for i, p := range in.parameters {
 			me.parameters[i] = p.copy()
 		}
+	}
+	if in.variadic != nil {
+		me.variadic = in.variadic.copy()
 	}
 	if in.returns != nil {
 		me.returns = in.returns.copy()
@@ -121,7 +125,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			funcSig.args = append(funcSig.args, fnArgInit(getdatatype(me, p).getvariable()))
 		}
 		funcSig.returns = getdatatype(me, returns)
-		return newdatafunction(funcSig, list, getdatatype(me, returns))
+		return newdatafunction(funcSig, list, nil, getdatatype(me, returns))
 	}
 
 	if me == nil {
@@ -439,6 +443,11 @@ func (me *datatype) equals(b *datatype) bool {
 			if len(me.parameters) != len(b.parameters) {
 				return false
 			}
+			if me.variadic != nil || b.variadic != nil {
+				if me.variadic == nil || b.variadic == nil || me.variadic.notEquals(b.variadic) {
+					return false
+				}
+			}
 			if me.returns.notEquals(b.returns) {
 				return false
 			}
@@ -515,6 +524,12 @@ func (me *datatype) cname() string {
 				}
 				f += p.cname()
 			}
+			if me.variadic != nil {
+				if len(me.parameters) > 0 {
+					f += ","
+				}
+				f += "..." + me.variadic.cname()
+			}
 			f += ") " + me.returns.cname()
 			return f
 		}
@@ -569,6 +584,12 @@ func (me *datatype) print() string {
 					f += ","
 				}
 				f += p.print()
+			}
+			if me.variadic != nil {
+				if len(me.parameters) > 0 {
+					f += ","
+				}
+				f += "..." + me.variadic.print()
 			}
 			f += ") " + me.returns.print()
 			return f
@@ -691,10 +712,11 @@ func newdataslice(member *datatype) *datatype {
 	return d
 }
 
-func newdatafunction(funcSig *fnSig, parameters []*datatype, returns *datatype) *datatype {
+func newdatafunction(funcSig *fnSig, parameters []*datatype, variadic *datatype, returns *datatype) *datatype {
 	d := newdatatype(dataTypeFunction)
 	d.funcSig = funcSig
 	d.parameters = parameters
+	d.variadic = variadic
 	d.returns = returns
 	return d
 }
@@ -714,6 +736,12 @@ func (me *datatype) typeSigOf(name string, mutable bool) string {
 				code += ", "
 			}
 			code += arg.typeSig()
+		}
+		if me.variadic != nil {
+			if len(me.parameters) > 0 {
+				code += ", "
+			}
+			code += "..." + me.variadic.typeSig()
 		}
 		code += ")"
 	} else {

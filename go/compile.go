@@ -22,6 +22,8 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	}
 
 	cfile := me.cFileInit()
+	cfile.master = true
+
 	guard := me.defNameSpace("", name)
 
 	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
@@ -91,20 +93,22 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	}
 
 	if len(me.statics) != 0 {
-		me.needInit = true
+		me.needStatic = true
 	}
 
-	if me.needInit {
+	if me.needStatic {
 		for _, s := range me.statics {
 			code.WriteString(cfile.declareStatic(s))
 		}
 		code.WriteString("\n\n")
 
-		cfile.headFuncSection.WriteString("\nvoid " + me.funcNameSpace("init") + "();")
-		code.WriteString("void " + me.funcNameSpace("init") + "() {\n")
+		cfile.headFuncSection.WriteString("\nvoid " + me.funcNameSpace("static") + "();")
+		code.WriteString("void " + me.funcNameSpace("static") + "() {\n")
+		cfile.depth++
 		for _, s := range me.statics {
-			code.WriteString(cfile.initStatic(s))
+			code.WriteString(cfile.happyOut(cfile.initStatic(s)))
 		}
+		cfile.depth--
 		code.WriteString("}\n")
 	}
 
@@ -240,6 +244,15 @@ func (me *cfile) compileFnPtr(n *node, hint *datatype) *codeblock {
 	return codeBlockOne(n, code)
 }
 
+func (me *cfile) compileRootVariable(n *node, hint *datatype) *codeblock {
+	v := me.getvar(n.idata.name)
+	code := v.cName
+	if hint != nil && hint.isPointer() && !v.data().isPointer() {
+		code = "&" + code
+	}
+	return codeBlockOne(n, code)
+}
+
 func (me *cfile) compileVariable(n *node, hint *datatype) *codeblock {
 	code := ""
 	if n.idata.module == me.hmfile {
@@ -277,8 +290,7 @@ func (me *cfile) compileString(n *node) *codeblock {
 }
 
 func (me *cfile) compileChar(n *node) *codeblock {
-	code := "'" + n.value + "'"
-	return codeBlockOne(n, code)
+	return codeBlockOne(n, n.value)
 }
 
 func (me *cfile) compileNone(n *node) *codeblock {
@@ -326,8 +338,6 @@ func (me *cfile) compileTernary(n *node) *codeblock {
 }
 
 func (me *cfile) compileAndOr(n *node) *codeblock {
-	// TODO remove me?
-	// _, paren := n.attributes["parenthesis"]
 	paren := true
 	if n.parent != nil && n.parent.is == "if" {
 		paren = false
@@ -347,23 +357,6 @@ func (me *cfile) compileAndOr(n *node) *codeblock {
 		code += ")"
 	}
 	return codeBlockOne(n, code)
-}
-
-func (me *cfile) initStatic(n *node) string {
-	left := n.has[0]
-	right := n.has[1]
-	right.attributes["global"] = "true"
-
-	declareCode := me.compileDeclare(left)
-	rightCode := me.eval(right)
-	setSign := me.maybeLet(rightCode.code(), right.attributes)
-
-	if setSign == "" {
-		return ""
-	}
-
-	code := fmc(1) + declareCode + setSign + rightCode.code() + ";\n"
-	return code
 }
 
 func (me *cfile) compileAssign(n *node) *codeblock {
@@ -397,6 +390,9 @@ func (me *cfile) compileAssign(n *node) *codeblock {
 func (me *cfile) assignmentUpdate(n *node) string {
 	left := me.eval(n.has[0])
 	right := me.eval(n.has[1])
+	if left.data().isString() {
+		return left.code() + " = hmlib_concat(" + left.code() + ", " + right.code() + ")"
+	}
 	return left.code() + " " + n.is + " " + right.code()
 }
 

@@ -11,15 +11,16 @@ func (me *cfile) temp() string {
 }
 
 func (me *cfile) compileAllocClass(n *node) *codeblock {
-	if _, ok := n.attributes["global"]; ok {
-		return codeBlockOne(n, "")
-	}
 
 	data := n.data()
 	typed := data.cname()
 
 	_, useStack := n.attributes["stack"]
-	assign, local := n.attributes["assign"]
+	assignName, local := n.attributes["assign"]
+	var assign *variable
+	if local {
+		assign = me.getvar(assignName)
+	}
 
 	cb := &codeblock{}
 
@@ -42,7 +43,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 			if !clv.data().isPointer() {
 				p.attributes["stack"] = "true"
 			}
-			cassign := ";\n" + fmc(me.depth) + assign + memberRef + clv.name + " = "
+			cassign := ";\n" + fmc(me.depth) + assign.cName + memberRef + clv.name + " = "
 			if p.is == "new" {
 				temp := me.temp()
 				p.attributes["assign"] = temp

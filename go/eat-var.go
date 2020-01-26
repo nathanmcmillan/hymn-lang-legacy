@@ -127,7 +127,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			if head.is == "variable" {
 				sv := me.hmfile.getvar(head.idata.name)
 				if sv == nil {
-					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
+					panic(me.fail() + "variable \"" + head.idata.name + "\" not found in scope.")
 				}
 				sig = sv.data().functionSignature()
 

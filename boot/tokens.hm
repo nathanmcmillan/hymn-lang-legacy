@@ -1,8 +1,24 @@
-immutable keywords = set<string>()
+import "hashset"
+
+new_hashset() hashset.hashset<string>
+	return hashset.hashset(
+		capacity: 12
+		get_code: hashset.string_hashcode
+		table: [12:]maybe<hashset.hashset_item<string>>)
+
+immutable words = new_hashset()
+
+immutable primitives = hashset.hashset(
+	capacity: 12
+	get_code: hashset.string_hashcode
+	table: [12:]maybe<hashset.hashset_item<string>>)
 
 init()
-	keywords.add("import")
-	keywords.add("macro")
+	words.add("import")
+	words.add("macro")
+
+	primitives.add("int")
+	primitives.add("float")
 
 type token
 	depth int
@@ -11,20 +27,25 @@ type token
 
 type tokenizer
 	tokens []token
+	depth  int
 
 token to_string() string
 	mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
 	if self.value != ""
 		s += ", value:" + self.value
-	s += "}" 
+	s += "}"
 	return s
 
-digit(c byte) bool
+digit(c char) bool
+	match c
+		'0' | '1' | '2' | '3' |
+		'4' | '5' | '6' | '7' |
+		'8' | '9' => return true
+		_ => pass
 	return false
 
-tokenizer simple_token(name string) token
-	return self.token_for(self.depth, name)
+token_for(depth int, name string) token
+	return token(depth:depth, name:name, value:"")
 
-tokenizer token_for(depth int, name string) token
-	t = token(depth:depth, name:name, value:"")
-	return t
+tokenizer simple_token(name string) token
+	return token_for(self.depth, name)

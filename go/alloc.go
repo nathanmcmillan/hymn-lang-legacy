@@ -141,12 +141,11 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node) {
 	}
 }
 
-func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) string {
+func (me *parser) classParams(n *node, base *class, depth int) string {
 	me.eat("(")
 	if me.token.is == "line" {
 		me.eat("line")
 	}
-	base := module.classes[typed]
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
 	pix := 0
@@ -259,6 +258,8 @@ func (me *parser) classParams(n *node, module *hmfile, typed string, depth int) 
 			pix++
 		}
 	}
+	module := base.module
+	typed := base.name
 	if lazyGenerics {
 		glist := make([]string, len(gtypes))
 		for k, v := range gtypes {
@@ -290,6 +291,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	}
 	typed := name
 	gsize := len(base.generics)
+	cl := module.classes[typed]
 	if gsize > 0 {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(true, base)
@@ -297,21 +299,24 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				me.defineClassImplGeneric(base, typed, gtypes)
 			}
+			cl = module.classes[typed]
 		} else {
-			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1].data()
+			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1]
 			if !assign.isQuestion() {
-				if assign.isSome() {
-					typed = assign.getmember().getRaw()
-				} else if assign.isArrayOrSlice() {
-					typed = assign.getmember().getRaw()
+				var d *datatype
+				if assign.isSome() || assign.isArrayOrSlice() {
+					d = assign.getmember()
 				} else {
-					typed = assign.getRaw()
+					d = assign
 				}
+				typed = d.getRaw()
+				module = d.getmodule()
+				cl = d.class
 			}
 		}
 	}
 	if n != nil {
-		typed = me.classParams(n, module, typed, depth)
+		typed = me.classParams(n, cl, depth)
 	}
 	if me.hmfile != module {
 		typed = module.name + "." + typed

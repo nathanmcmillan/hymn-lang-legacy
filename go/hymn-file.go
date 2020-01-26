@@ -1,7 +1,5 @@
 package main
 
-import "strings"
-
 type hmfile struct {
 	out             string
 	path            string
@@ -29,8 +27,8 @@ type hmfile struct {
 	enumPrefix      string
 	unionPrefix     string
 	varPrefix       string
-	needInit        bool
-	assignmentStack []*node
+	needStatic      bool
+	assignmentStack []*datatype
 	enumIsStack     []*variableNode
 }
 
@@ -53,7 +51,7 @@ func (program *program) hymnFileInit(name string) *hmfile {
 	hm.defineOrder = make([]string, 0)
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
-	hm.assignmentStack = make([]*node, 0)
+	hm.assignmentStack = make([]*datatype, 0)
 	hm.enumIsStack = make([]*variableNode, 0)
 	hm.prefixes(name)
 	return hm
@@ -66,20 +64,6 @@ func (me *hmfile) pushScope() {
 
 func (me *hmfile) popScope() {
 	me.scope = me.scope.root
-}
-
-func (me *hmfile) cFileInit() *cfile {
-	c := &cfile{}
-	c.hmfile = me
-	c.rootScope = scopeInit(nil)
-	c.scope = c.rootScope
-	c.codeFn = make([]strings.Builder, 0)
-	c.stdReq = newOrderSet()
-	c.libReq = newOrderSet()
-	c.dependencyReq = newOrderSet()
-	c.structReq = newOrderSet()
-	c.enumReq = newOrderSet()
-	return c
 }
 
 func (me *hmfile) getStatic(name string) *variable {

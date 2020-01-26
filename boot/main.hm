@@ -1,9 +1,9 @@
-(*                                        *)
-(*           The Hymn Compiler            *)
-(* Copyright 2019 Nathan Michael McMillan *)
-(*                                        *)
+--                                       
+--           The Hymn Compiler           
+-- Copyright 2019 Nathan Michael McMillan
+--                                       
 
-import tokens
+import "tokens"
 
 main
 	t = tokens.tokenizer()
@@ -17,3 +17,4 @@ main
 	echo("")
 	echo("    fmt      format a file")
 	echo("    build    compile a program")
+	echo("")

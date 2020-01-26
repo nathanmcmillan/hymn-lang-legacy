@@ -67,6 +67,7 @@ var (
 		TokenFloatLiteral:   TokenFloat,
 		TokenStringLiteral:  TokenString,
 		TokenBooleanLiteral: TokenBoolean,
+		TokenCharLiteral:    TokenChar,
 	}
 	numbers = map[string]bool{
 		TokenInt:     true,

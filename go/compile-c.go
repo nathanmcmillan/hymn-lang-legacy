@@ -28,13 +28,13 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 		typed := c[underscore+1:]
 		matching := name == filter
 		if typed == "type" {
-			cl := module.classes[name]
 			if matching {
+				cl := module.classes[name]
 				cfile.defineClass(cl)
 			}
 		} else if typed == "enum" {
-			en := module.enums[name]
 			if matching {
+				en := module.enums[name]
 				cfile.defineEnum(en)
 			}
 		} else {

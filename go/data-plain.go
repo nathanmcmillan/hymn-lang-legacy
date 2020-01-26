@@ -16,6 +16,7 @@ const (
 	dataTypeNone      = 7
 	dataTypeSlice     = 8
 	dataTypeString    = 9
+	dataTypeVoid      = 10
 )
 
 type datatype struct {
@@ -86,6 +87,10 @@ func getdatatype(me *hmfile, typed string) *datatype {
 
 	if me != nil {
 		typed = me.alias(typed)
+	}
+
+	if typed == "void" {
+		return newdatavoid()
 	}
 
 	if typed == TokenString {
@@ -266,7 +271,7 @@ func (me *datatype) isQuestion() bool {
 }
 
 func (me *datatype) isVoid() bool {
-	return me.is == dataTypeUnknown && me.canonical == "void"
+	return me.is == dataTypeVoid
 }
 
 func (me *datatype) isFunction() bool {
@@ -490,6 +495,8 @@ func (me *datatype) nameIs() string {
 		return "unknown"
 	case dataTypeNone:
 		return "none"
+	case dataTypeVoid:
+		return "void"
 	}
 	panic("missing data type " + strconv.Itoa(me.is))
 }
@@ -567,6 +574,10 @@ func (me *datatype) print() string {
 				return "none<" + me.member.print() + ">"
 			}
 			return "none"
+		}
+	case dataTypeVoid:
+		{
+			return "void"
 		}
 	case dataTypeArray:
 		{
@@ -656,6 +667,10 @@ func newdatanone() *datatype {
 	return newdatatype(dataTypeNone)
 }
 
+func newdatavoid() *datatype {
+	return newdatatype(dataTypeVoid)
+}
+
 func newdatastring() *datatype {
 	d := newdatatype(dataTypeString)
 	d.canonical = TokenString
@@ -723,7 +738,8 @@ func newdatafunction(funcSig *fnSig, parameters []*datatype, variadic *datatype,
 
 func (me *datatype) typeSigOf(name string, mutable bool) string {
 	code := ""
-	if me.is == dataTypeFunction {
+	switch me.is {
+	case dataTypeFunction:
 		code += fmtassignspace(me.returns.typeSig())
 		code += "(*"
 		if !mutable {
@@ -744,7 +760,7 @@ func (me *datatype) typeSigOf(name string, mutable bool) string {
 			code += "..." + me.variadic.typeSig()
 		}
 		code += ")"
-	} else {
+	default:
 		sig := fmtassignspace(me.typeSig())
 		if mutable || me.noConst() {
 			code += sig
@@ -794,6 +810,10 @@ func (me *datatype) typeSig() string {
 				return c
 			}
 			return me.canonical
+		}
+	case dataTypeVoid:
+		{
+			return "void"
 		}
 	default:
 		me.missingCase()

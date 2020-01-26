@@ -24,6 +24,14 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		return codeBlockOne(node, code)
 	}
 	name := fn.name
+	if !me.master {
+		if _, ok := me.functions[name]; !ok {
+			if _, ok2 := me.hmfile.functions[name]; ok2 {
+				me.functions[name] = fn
+				me.defineFunctionHead(fn)
+			}
+		}
+	}
 	parameters := node.has
 	cb := me.compileBuiltin(node, name, parameters)
 	if cb == nil {

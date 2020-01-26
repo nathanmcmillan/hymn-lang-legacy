@@ -31,6 +31,27 @@ func (me *cfile) happyOut(e *codeblock) string {
 	return block
 }
 
+func (me *cfile) defineFunctionHead(fn *function) {
+	me.headFuncSection.WriteString("\n" + me.functionHead(fn) + ";")
+}
+
+func (me *cfile) functionHead(fn *function) string {
+	args := fn.args
+	returns := fn.returns
+	var code strings.Builder
+	code.WriteString(fmtassignspace(returns.typeSig()) + fn.getcname() + "(")
+	me.dependencyGraph(returns)
+	for ix, arg := range args {
+		me.dependencyGraph(arg.data())
+		if ix > 0 {
+			code.WriteString(", ")
+		}
+		code.WriteString(arg.data().typeSigOf(arg.name, false))
+	}
+	code.WriteString(")")
+	return code.String()
+}
+
 func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	cls := fn.forClass
 	if cls != nil {
@@ -45,7 +66,6 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 
 	args := fn.args
 	expressions := fn.expressions
-	returns := fn.returns
 	var block strings.Builder
 	me.pushScope()
 	me.depth = 1
@@ -57,23 +77,15 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 		block.WriteString(me.happyOut(e))
 	}
 	me.popScope()
+	head := "\n" + me.functionHead(fn)
+
 	var code strings.Builder
-	code.WriteString("\n")
-	code.WriteString(fmtassignspace(returns.typeSig()) + fn.getcname() + "(")
-	me.dependencyGraph(returns)
-	for ix, arg := range args {
-		me.dependencyGraph(arg.data())
-		if ix > 0 {
-			code.WriteString(", ")
-		}
-		code.WriteString(arg.data().typeSigOf(arg.name, false))
-	}
-	head := code.String() + ");"
-	code.WriteString(") {\n")
+	code.WriteString(head)
+	code.WriteString(" {\n")
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 
-	me.headFuncSection.WriteString(head)
+	me.headFuncSection.WriteString(head + ";")
 	me.codeFn = append(me.codeFn, code)
 }
 
@@ -89,7 +101,10 @@ func (me *cfile) compileMain(fn *function) {
 	list := me.hmfile.program.hmorder
 	for x := len(list) - 1; x >= 0; x-- {
 		file := list[x]
-		if file.needInit {
+		if file.needStatic {
+			block.WriteString(fmc(me.depth) + file.funcNameSpace("static") + "();\n")
+		}
+		if _, ok := file.functions["init"]; ok {
 			block.WriteString(fmc(me.depth) + file.funcNameSpace("init") + "();\n")
 		}
 	}

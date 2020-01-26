@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 )
 
 func (me *parser) fileExpression() {
@@ -165,10 +164,11 @@ func (me *parser) parseReturn() *node {
 	me.eat("return")
 	n := nodeInit("return")
 	if me.token.is != "line" {
+		fn := me.hmfile.scope.fn
+		me.hmfile.assignmentStack = append(me.hmfile.assignmentStack, fn.returns)
 		calc := me.calc(0)
 		n.copyDataOfNode(calc)
 		n.push(calc)
-		fn := me.hmfile.scope.fn
 		ret := calc.data()
 		if ret.isNone() {
 			if !fn.returns.isSome() {
@@ -181,92 +181,9 @@ func (me *parser) parseReturn() *node {
 		} else if fn.returns.notEquals(ret) {
 			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.print() + "\" but found \"" + ret.print() + "\"")
 		}
+		me.hmfile.assignmentStack = me.hmfile.assignmentStack[0 : len(me.hmfile.assignmentStack)-1]
 	}
 	me.verify("line")
-	return n
-}
-
-func (me *parser) forceassign(malloc, mutable bool) *node {
-	v := me.eatvar(me.hmfile)
-	if !me.assignable(v) {
-		panic(me.fail() + "expected variable for assignment but was \"" + v.data().print() + "\"")
-	}
-	return me.assign(v, malloc, mutable)
-}
-
-func (me *parser) assign(left *node, malloc, mutable bool) *node {
-	op := me.token.is
-	mustBeInt := false
-	mustBeNumber := false
-	if op == "%=" || op == "&=" || op == "|=" || op == "^=" || op == "<<=" || op == ">>=" {
-		mustBeInt = true
-	} else if op == "+=" || op == "-=" || op == "*=" || op == "/=" {
-		mustBeNumber = true
-	} else if op != "=" && op != ":=" {
-		panic(me.fail() + "unknown assign operation \"" + op + "\"")
-	}
-	me.eat(op)
-	me.hmfile.assignmentStack = append(me.hmfile.assignmentStack, left)
-	right := me.calc(0)
-	me.hmfile.assignmentStack = me.hmfile.assignmentStack[0 : len(me.hmfile.assignmentStack)-1]
-	if mustBeInt {
-		if !right.data().isInt() {
-			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
-		}
-	} else if mustBeNumber {
-		if !right.data().isNumber() {
-			panic(me.fail() + "assign operation \"" + op + "\" requires number type")
-		}
-	}
-	if left.is == "variable" {
-		sv := me.hmfile.getvar(left.idata.name)
-		if sv != nil {
-			if !sv.mutable {
-				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
-			}
-			if !right.data().isQuestion() && left.data().notEquals(right.data()) {
-				if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
-					right.copyDataOfNode(left)
-				} else {
-					panic(me.fail() + "variable type \"" + left.data().print() + "\" does not match expression type \"" + right.data().print() + "\"")
-				}
-			}
-		} else if mustBeInt || mustBeNumber {
-			panic(me.fail() + "cannot operate \"" + op + "\" for variable \"" + left.idata.name + "\" does not exist")
-		} else {
-			left.copyDataOfNode(right)
-			if mutable {
-				left.attributes["mutable"] = "true"
-			}
-			if !malloc {
-				left.attributes["global"] = "true"
-				right.data().setIsPointer(false)
-			}
-			me.hmfile.scope.variables[left.idata.name] = me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)
-		}
-	} else if left.is == "member-variable" || left.is == "array-member" {
-		if !right.data().isQuestion() && left.data().notEquals(right.data()) {
-			if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
-				right.copyDataOfNode(left)
-			} else {
-				panic(me.fail() + "member variable type \"" + left.data().getRaw() + "\" does not match expression type \"" + right.data().getRaw() + "\"")
-			}
-		}
-	} else {
-		panic(me.fail() + "bad assignment \"" + left.is + "\"")
-	}
-	if left.idata != nil && left.is == "variable" {
-		right.attributes["assign"] = left.idata.name
-	}
-	if _, useStack := right.attributes["stack"]; useStack {
-		left.attributes["stack"] = "true"
-	}
-	n := nodeInit(op)
-	if op == ":=" {
-		n.copyDataOfNode(right)
-	}
-	n.push(left)
-	n.push(right)
 	return n
 }
 
@@ -364,11 +281,9 @@ func (me *parser) importing() {
 }
 
 func (me *parser) immutable() {
-	n := me.forceassign(false, false)
+	n := me.forceassign(true, true)
 	av := n.has[0]
-	if n.is != "=" || av.is != "variable" {
-		panic(me.fail() + "invalid static variable")
-	}
+	av.idata.setGlobal(true)
 	module := me.hmfile
 	module.statics = append(module.statics, n)
 	module.staticScope[av.idata.name] = module.scope.variables[av.idata.name]
@@ -376,11 +291,9 @@ func (me *parser) immutable() {
 }
 
 func (me *parser) mutable() {
-	n := me.forceassign(false, true)
+	n := me.forceassign(true, true)
 	av := n.has[0]
-	if n.is != "=" || av.is != "variable" {
-		panic(me.fail() + "invalid static variable")
-	}
+	av.idata.setGlobal(true)
 	module := me.hmfile
 	module.statics = append(module.statics, n)
 	module.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]

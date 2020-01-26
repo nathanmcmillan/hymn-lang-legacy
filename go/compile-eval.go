@@ -56,8 +56,7 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 		return me.compileVariable(n, hint)
 	}
 	if op == "root-variable" {
-		v := me.getvar(n.idata.name)
-		return codeBlockOne(n, v.cName)
+		return me.compileRootVariable(n, hint)
 	}
 	if op == "array-member" {
 		index := me.eval(n.has[0])

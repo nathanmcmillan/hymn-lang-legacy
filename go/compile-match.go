@@ -141,6 +141,15 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 				}
 				code += fmc(me.depth) + "case " + enumTypeName(enNameSpace, caseOf.is) + ": {\n"
 
+			} else if _, ok := literals[caseOf.is]; ok {
+				for hi, h := range caseOf.has {
+					code += fmc(me.depth) + "case " + h.is
+					if hi == len(caseOf.has)-1 {
+						code += ": {\n"
+					} else {
+						code += ":\n"
+					}
+				}
 			} else {
 				code += fmc(me.depth) + "case " + caseOf.is + ":\n"
 			}

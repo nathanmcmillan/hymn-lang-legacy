@@ -5,9 +5,7 @@ import (
 )
 
 func (me *cfile) compileAllocEnum(n *node) *codeblock {
-	if _, ok := n.attributes["global"]; ok {
-		return codeBlockOne(n, "")
-	}
+
 	data := n.data()
 	en, un, _ := data.isEnum()
 	enumType := un.name
@@ -21,7 +19,11 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 	unionName := en.ucname
 
 	_, useStack := n.attributes["stack"]
-	assign, local := n.attributes["assign"]
+	assignName, local := n.attributes["assign"]
+	var assign *variable
+	if local {
+		assign = me.getvar(assignName)
+	}
 
 	cb := &codeblock{}
 
@@ -37,14 +39,14 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 		if !useStack {
 			code += "malloc(sizeof(" + unionName + "))"
 		}
-		code += ";\n" + fmc(me.depth) + assign + memberRef + "type = " + enumTypeName(baseEnumName, un.name)
+		code += ";\n" + fmc(me.depth) + assign.cName + memberRef + "type = " + enumTypeName(baseEnumName, un.name)
 		xvar := len(un.types) > 1
 		for i, v := range un.types {
 			p := n.has[i]
 			if !v.isPointer() {
 				p.attributes["stack"] = "true"
 			}
-			cassign := ";\n" + fmc(me.depth) + assign + memberRef + un.name
+			cassign := ";\n" + fmc(me.depth) + assign.cName + memberRef + un.name
 			if xvar {
 				cassign += ".var" + strconv.Itoa(i)
 			}

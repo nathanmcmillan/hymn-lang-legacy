@@ -121,6 +121,8 @@ func (me *cfile) dependencyGraph(d *datatype) {
 		return
 	case dataTypeFunction:
 		return
+	case dataTypeVoid:
+		return
 	default:
 		panic("missing data type")
 	}

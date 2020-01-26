@@ -29,9 +29,7 @@ func (me *cfile) compileAllocArray(n *node) *codeblock {
 			size = strconv.Itoa(len(items.has))
 		}
 	}
-	if _, ok := n.attributes["global"]; ok {
-		return codeBlockOne(n, "["+size+"]")
-	}
+
 	memberType := n.data().getmember().typeSig()
 	code := "malloc("
 	if parenthesis {
@@ -85,16 +83,14 @@ func (me *cfile) compileAllocSlice(n *node) *codeblock {
 		}
 	}
 	code := ""
-	if _, ok := n.attributes["global"]; ok {
-		code = "[" + size + "]"
+
+	me.libReq.add(HmLibSlice)
+	if capacity != "" {
+		code = "hmlib_slice_init(sizeof(" + n.data().getmember().typeSig() + "), " + size + ", " + capacity + ")"
 	} else {
-		me.libReq.add(HmLibSlice)
-		if capacity != "" {
-			code = "hmlib_slice_init(sizeof(" + n.data().getmember().typeSig() + "), " + size + ", " + capacity + ")"
-		} else {
-			code = "hmlib_slice_simple_init(sizeof(" + n.data().getmember().typeSig() + "), " + size + ")"
-		}
+		code = "hmlib_slice_simple_init(sizeof(" + n.data().getmember().typeSig() + "), " + size + ")"
 	}
+
 	if items != nil {
 		name := n.attributes["assign"]
 		code += ";"

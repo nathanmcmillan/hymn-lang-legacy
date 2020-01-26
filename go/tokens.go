@@ -354,7 +354,7 @@ func (me *tokenizer) get(pos int) *token {
 			value += string(stream.peek())
 			stream.next()
 			stream.next()
-			token := me.valueToken(TokenCharLiteral, value)
+			token := me.valueToken(TokenCharLiteral, "'"+value+"'")
 			me.push(token)
 			return token
 		}

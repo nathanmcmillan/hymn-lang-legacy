@@ -237,8 +237,43 @@ func (me *parser) parseMatch() *node {
 			if me.token.is == "line" {
 				me.eat("line")
 			}
+		} else if literal, ok := literals[me.token.is]; ok {
+			if literal != matchType.print() {
+				panic(me.fail() + "Literal does not match type.")
+			}
+			value := me.token.value
+			caseNodes := nodeInit(me.token.is)
+			me.eat(me.token.is)
+			caseNodes.push(nodeInit(value))
+			for me.token.is == "|" {
+				me.eat("|")
+				if me.token.is == "line" {
+					me.eat("line")
+				}
+				literal, ok := literals[me.token.is]
+				if !ok {
+					panic(me.fail() + "Expecting matching type.")
+				}
+				if literal != matchType.print() {
+					panic(me.fail() + "Literal does not match type.")
+				}
+				value := me.token.value
+				me.eat(me.token.is)
+				caseNodes.push(nodeInit(value))
+			}
+			n.push(caseNodes)
+			me.eat("=>")
+			if me.token.is == "line" {
+				me.eat("line")
+				n.push(me.block())
+			} else {
+				n.push(me.expression())
+			}
+			if me.token.is == "line" {
+				me.eat("line")
+			}
 		} else {
-			panic(me.fail() + "unknown match expression")
+			panic(me.fail() + "Unknown match expression.")
 		}
 	}
 

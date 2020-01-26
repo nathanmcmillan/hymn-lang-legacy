@@ -26,6 +26,23 @@ type cfile struct {
 	rootScope                *scope
 	scope                    *scope
 	depth                    int
+	functions                map[string]*function
+	master                   bool
+}
+
+func (me *hmfile) cFileInit() *cfile {
+	c := &cfile{}
+	c.hmfile = me
+	c.rootScope = scopeInit(nil)
+	c.scope = c.rootScope
+	c.codeFn = make([]strings.Builder, 0)
+	c.stdReq = newOrderSet()
+	c.libReq = newOrderSet()
+	c.dependencyReq = newOrderSet()
+	c.structReq = newOrderSet()
+	c.enumReq = newOrderSet()
+	c.functions = make(map[string]*function)
+	return c
 }
 
 func (me *cfile) pushScope() {
@@ -99,8 +116,10 @@ func (me *cfile) includeLibs() {
 		me.hmfile.program.sources[name] = location
 		me.headLibIncludeSection.WriteString("\n#include \"" + name + ".h\"")
 	}
-	me.dependencyReq.delete(me.location)
-	for _, name := range me.dependencyReq.order {
-		me.headReqIncludeSection.WriteString("\n#include \"" + name + ".h\"")
+	if !me.master {
+		me.dependencyReq.delete(me.location)
+		for _, name := range me.dependencyReq.order {
+			me.headReqIncludeSection.WriteString("\n#include \"" + name + ".h\"")
+		}
 	}
 }

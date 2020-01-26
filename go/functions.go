@@ -161,7 +161,10 @@ func (me *parser) defineStaticFunction() {
 	token := me.token
 	name := token.value
 	if _, ok := module.functions[name]; ok {
-		panic(me.fail() + "function \"" + name + "\" is already defined")
+		panic(me.fail() + "Function \"" + name + "\" is already defined.")
+	}
+	if name == "static" {
+		panic(me.fail() + "Function \"" + name + "\" is reserved.")
 	}
 	me.eat("id")
 	fn := me.defineFunction(name, nil, nil, nil)
@@ -289,9 +292,9 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 fnEnd:
 	for _, arg := range fn.args {
 		if !arg.used {
-			er := me.fail() + "variable \"" + arg.name + "\" for function \"" + fname + "\" was unused."
+			er := me.fail() + "Variable \"" + arg.name + "\" for function \"" + fname + "\" was unused."
 			if arg.name == "self" {
-				er += " can this be a static function?"
+				er += " Can this be a static function?"
 			}
 			panic(er)
 

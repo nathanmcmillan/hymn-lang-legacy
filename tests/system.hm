@@ -1,8 +1,0 @@
-main
-	p = system("pwd")
-	echo("pwd: " + p)
-	(* echo("---")
-	echo(system("ls"))
-	echo("---")
-	echo(system("cat klsdfjsdljfdsl"))
-	echo("---") *)

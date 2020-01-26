@@ -4,6 +4,7 @@ type idData struct {
 	module *hmfile
 	name   string
 	cname  string
+	global bool
 }
 
 func (me *idData) copy() *idData {
@@ -28,4 +29,12 @@ func newidvariable(module *hmfile, name string) *idData {
 
 func (me *idData) string() string {
 	return me.module.name + "." + me.name
+}
+
+func (me *idData) isGlobal() bool {
+	return me.global
+}
+
+func (me *idData) setGlobal(flag bool) {
+	me.global = flag
 }

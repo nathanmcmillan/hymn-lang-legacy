@@ -142,6 +142,16 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	for _, cfn := range cfile.codeFn {
 		fileappend(fileCode, cfn.String())
 	}
+	if len(me.comments) > 0 {
+		code.Reset()
+		code.WriteString("\n")
+		for _, comment := range me.comments {
+			code.WriteString("//")
+			code.WriteString(comment)
+			code.WriteString("\n")
+		}
+		fileappend(fileCode, code.String())
+	}
 
 	cfile.headSuffix.WriteString("\n\n#endif\n")
 	write(folder+"/"+name+".h", cfile.head())
@@ -295,6 +305,11 @@ func (me *cfile) compileChar(n *node) *codeblock {
 
 func (me *cfile) compileNone(n *node) *codeblock {
 	code := "NULL"
+	return codeBlockOne(n, code)
+}
+
+func (me *cfile) compileComment(n *node) *codeblock {
+	code := "//" + n.value
 	return codeBlockOne(n, code)
 }
 

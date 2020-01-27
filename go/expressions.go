@@ -9,11 +9,9 @@ func (me *parser) fileExpression() {
 	op := token.is
 	if op == "import" {
 		me.importing()
-	} else if op == "immutable" {
-		me.eat(op)
+	} else if op == "const" {
 		me.immutable()
 	} else if op == "mutable" {
-		me.eat(op)
 		me.mutable()
 	} else if op == "id" {
 		name := token.value
@@ -35,7 +33,7 @@ func (me *parser) fileExpression() {
 	} else if op == "enddef" {
 		me.enddef()
 	} else if op == "comment" {
-		me.eat("comment")
+		me.topComment()
 	} else if op == "line" || op == "eof" {
 		return
 	} else {
@@ -195,6 +193,12 @@ func (me *parser) comment() *node {
 	return n
 }
 
+func (me *parser) topComment() {
+	token := me.token
+	me.eat("comment")
+	me.hmfile.comments = append(me.hmfile.comments, token.value)
+}
+
 func (me *parser) free() *node {
 	me.eat("free")
 	token := me.token
@@ -281,6 +285,7 @@ func (me *parser) importing() {
 }
 
 func (me *parser) immutable() {
+	me.eat("const")
 	n := me.forceassign(true, true)
 	av := n.has[0]
 	av.idata.setGlobal(true)
@@ -291,6 +296,7 @@ func (me *parser) immutable() {
 }
 
 func (me *parser) mutable() {
+	me.eat("mutable")
 	n := me.forceassign(true, true)
 	av := n.has[0]
 	av.idata.setGlobal(true)

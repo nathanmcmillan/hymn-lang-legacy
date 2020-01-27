@@ -1,0 +1,12 @@
+
+-- Foo comment
+foo()
+	echo("foo")
+
+-- Main comment
+main
+	foo()
+	-- I'm a comment!
+	echo("bar")
+
+-- Bottom!

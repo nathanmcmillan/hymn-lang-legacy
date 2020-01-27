@@ -6,9 +6,9 @@ func (me *parser) forloop() *node {
 	var templs []*variableNode
 	no = nodeInit("for")
 	no.push(me.forceassign(true, true))
-	me.eat(",")
+	me.eat(";")
 	no.push(me.calcBool())
-	me.eat(",")
+	me.eat(";")
 	no.push(me.forceassign(true, true))
 	me.eat("line")
 	no.push(me.block())

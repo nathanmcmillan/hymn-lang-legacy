@@ -18,6 +18,7 @@ type function struct {
 	genericsAlias map[string]string
 	base          *function
 	impls         []*function
+	comments      []string
 }
 
 func funcInit(module *hmfile, name string, class *class) *function {
@@ -179,6 +180,10 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		module = self.module
 	}
 	fn := funcInit(module, name, self)
+	if len(me.hmfile.comments) > 0 {
+		fn.comments = me.hmfile.comments
+		me.hmfile.comments = make([]string, 0)
+	}
 	module.pushScope()
 	module.scope.fn = fn
 	fname := name
@@ -282,9 +287,6 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		}
 		if me.token.depth == 0 {
 			goto fnEnd
-		}
-		if me.token.is == "comment" {
-			me.eat("comment")
 		}
 		expr := me.expression()
 		fn.expressions = append(fn.expressions, expr)

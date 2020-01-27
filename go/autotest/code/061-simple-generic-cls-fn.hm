@@ -2,7 +2,7 @@ type foo<k, v>
 	size k
 	name v
 
-immutable thingy = "foo!"
+const thingy = "foo!"
 
 foo set_name(name v)
 	echo(thingy)

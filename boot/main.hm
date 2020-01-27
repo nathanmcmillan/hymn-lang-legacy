@@ -1,9 +1,54 @@
---                                       
---           The Hymn Compiler           
+--
+--           The Hymn Compiler
 -- Copyright 2019 Nathan Michael McMillan
---                                       
+--
 
 import "tokens"
+
+const debug = true
+const debug_tokens = true
+const debug_ast = true
+
+type flags
+	cc               string
+	path             string
+	hmlib            string
+	write_to         string
+	help             bool
+	format           bool
+	library          bool
+	analysis         bool
+	memory_check     bool
+	sanitize_address bool
+	info             bool
+	optimize         bool
+	makefile         bool
+	do_not_compile   bool
+
+type error
+	code    string
+	message string
+
+type tuple<x, y>
+	a x
+	b x
+
+enum either<x, y>
+	one(x)
+	two(y)
+
+const space_char = '\t'
+const space_fmc = "\t"
+
+fmc(depth int) string
+	mutable space = ""
+	for i = 0; i < depth; i += 1
+		space += space_fmc
+	return space
+
+exec_compile(f flags) either<string, error>
+	echo(f.write_to)
+	return either<string, error>.one("")
 
 main
 	t = tokens.tokenizer()

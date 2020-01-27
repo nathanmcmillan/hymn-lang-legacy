@@ -160,6 +160,12 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 	if op == "if" {
 		return me.compileIf(n)
 	}
+	if op == "none" {
+		return me.compileNone(n)
+	}
+	if op == "comment" {
+		return me.compileComment(n)
+	}
 	if op == TokenRawString {
 		return me.compileRawString(n)
 	}
@@ -168,9 +174,6 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 	}
 	if op == TokenChar {
 		return me.compileChar(n)
-	}
-	if op == "none" {
-		return me.compileNone(n)
 	}
 	if checkIsPrimitive(op) {
 		return codeBlockOne(n, n.value)

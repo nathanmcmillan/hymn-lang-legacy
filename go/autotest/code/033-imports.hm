@@ -1,6 +1,6 @@
 import "math"
 
-immutable pi = "tasty"
+const pi = "tasty"
 
 power() string
   return "pow"

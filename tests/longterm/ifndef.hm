@@ -3,30 +3,30 @@ def num 84
 def foo
 
 ifdef foo
-immutable beans = "cool beans!"
+const beans = "cool beans!"
 elsedef
-immutable beans = bar
+const beans = bar
 enddef
 
 main
   echo(beans)
   echo(4 + num)
 
-(* ifdef foo *)
-(* defc *)
-(* #define NEW(x) malloc(sizeof(x)) *)
-(* endc *)
-(* enddef *)
+-- ifdef foo 
+-- defc 
+-- #define NEW(x) malloc(sizeof(x)) 
+-- endc 
+-- enddef 
 
-(* def print(x) *)
-(*   echo(x) *)
+-- def print(x) 
+--   echo(x) 
 
-(* def bar(x) *)
-(*   temp = x *)
-(*   print(temp) *)
+-- def bar(x) 
+--   temp = x 
+--   print(temp) 
 
-(* main *)
-(*   echo(beans) *)
-(*   print(beans) *)
-(*   bar(beans) *)
-(*   defc int *ptr = NEW(int); *)
+-- main 
+--   echo(beans) 
+--   print(beans) 
+--   bar(beans) 
+--   defc int *ptr = NEW(int); 

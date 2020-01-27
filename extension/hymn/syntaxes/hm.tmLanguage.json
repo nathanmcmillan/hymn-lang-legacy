@@ -41,7 +41,7 @@
 			}
 		},
 		{
-			"match": "\\b(mutable|immutable)\\b",
+			"match": "\\b(mutable|immutable|const)\\b",
 			"captures": {
 				"1": {
 					"name": "storage.modifier.hymn"
@@ -105,7 +105,7 @@
 			}
 		},
 		{
-			"match": "^(type|enum) +(\\w+)",
+			"match": "^(type|enum|function) +(\\w+)",
 			"captures": {
 				"1": {
 					"name": "keyword.struct.hymn"

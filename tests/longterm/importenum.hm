@@ -3,11 +3,11 @@ import
 
 main
   d = extfoo.bug<int>.bee
-  (* e = extfoo.bug.ant(true) *)
+  -- e = extfoo.bug.ant(true) 
 
-  (* a = extfoo.snake.cobra *)
-  (* if a = extfoo.snake.viper *)
-  (*   echo("bad!") *)
+  -- a = extfoo.snake.cobra 
+  -- if a = extfoo.snake.viper 
+  --   echo("bad!") 
 
-  (* b = extfoo.mammal.mouse(33) *)
-  (* c = extfoo.mammal.cat("woof") *)
+  -- b = extfoo.mammal.mouse(33) 
+  -- c = extfoo.mammal.cat("woof") 

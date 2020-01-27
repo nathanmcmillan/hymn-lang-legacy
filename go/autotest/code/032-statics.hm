@@ -1,13 +1,14 @@
 type foo
 	x string
 
-immutable name = "foo"
-immutable foo_pool = [3]foo
-immutable foo_single = foo()
+const name = "foo"
+const foo_pool = [3]foo
+const foo_single = foo()
 
 new_array() [6]foo
 	return [6]foo
-immutable foo_cool = new_array()
+
+const foo_cool = new_array()
 
 mutable next_id = 0
 

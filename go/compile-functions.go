@@ -77,15 +77,23 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 		block.WriteString(me.happyOut(e))
 	}
 	me.popScope()
-	head := "\n" + me.functionHead(fn)
 
 	var code strings.Builder
+	code.WriteString("\n")
+	if len(fn.comments) > 0 {
+		for _, comment := range fn.comments {
+			code.WriteString("//")
+			code.WriteString(comment)
+			code.WriteString("\n")
+		}
+	}
+	head := me.functionHead(fn)
 	code.WriteString(head)
 	code.WriteString(" {\n")
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 
-	me.headFuncSection.WriteString(head + ";")
+	me.headFuncSection.WriteString("\n" + head + ";")
 	me.codeFn = append(me.codeFn, code)
 }
 
@@ -124,7 +132,15 @@ func (me *cfile) compileMain(fn *function) {
 	}
 	me.popScope()
 	var code strings.Builder
-	code.WriteString("\nint main() {\n")
+	code.WriteString("\n")
+	if len(fn.comments) > 0 {
+		for _, comment := range fn.comments {
+			code.WriteString("//")
+			code.WriteString(comment)
+			code.WriteString("\n")
+		}
+	}
+	code.WriteString("int main() {\n")
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 

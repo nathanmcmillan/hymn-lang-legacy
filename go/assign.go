@@ -13,7 +13,10 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	} else if op == "-=" || op == "*=" || op == "/=" {
 		mustBeNumber = true
 	} else if op != "+=" && op != "=" && op != ":=" {
-		panic(me.fail() + "unknown assign operation \"" + op + "\"")
+		if op == "+" {
+			panic(me.fail() + "Use \"+= 1\" rather than \"++\".")
+		}
+		panic(me.fail() + "Unknown assign operation \"" + op + "\".")
 	}
 	me.eat(op)
 	me.hmfile.assignmentStack = append(me.hmfile.assignmentStack, left.data())

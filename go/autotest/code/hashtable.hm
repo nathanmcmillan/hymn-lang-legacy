@@ -1,4 +1,4 @@
-immutable uint64_max = uint64 2000000
+const uint64_max = uint64 2000000
 
 int_hashcode(key int) int
 	return key

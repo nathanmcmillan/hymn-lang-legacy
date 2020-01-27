@@ -28,7 +28,7 @@ enum either<u, v>
   one(u)
   two(v)
 
-immutable
+const
   example = vec
   snap = snake.viper
   woof = mammal.dog(7.2)
@@ -46,9 +46,9 @@ main
 
   c = mammal.cat("meow")
   d = mammal.cat("woof")
-  (* if match c and d *)
+  -- if match c and d 
   if c = d
-  (* if c.index = d.index *)
+  -- if c.index = d.index 
     echo("good")
   else 
     echo("bad")
@@ -67,30 +67,30 @@ main
   i = bug.ant(vec)
   j = bug.ant("buggie")
 
-  (* echo(snake.python.index)
-  echo(mammal.cat.index) *)
+  -- echo(snake.python.index)
+  -- echo(mammal.cat.index)
 
-  (* f = mammal.mouse(42, "yo", vec) *)
-  (* echo(f.0) *)
+  -- f = mammal.mouse(42, "yo", vec) 
+  -- echo(f.0) 
 
-  (* todo match scope replace variables *)
-  (* match f *)
-  (*   mouse(x, y, z) => echo(y) *)
-  (*   _ => echo("bad") *)
+  -- todo match scope replace variables 
+  -- match f 
+  --   mouse(x, y, z) => echo(y) 
+  --   _ => echo("bad") 
 
-(* todo functions for generic types *)
-(* bug<x>.has() bool *)
-(*   match self *)
-(*     is(v) => return true *)
-(*     none => return false *)
+-- todo functions for generic types 
+-- bug<x>.has() bool 
+--   match self 
+--     is(v) => return true 
+--     none => return false 
 
-(* bug<x>.unwrap() x *)
-(*   match self *)
-(*     is(v) => return v *)
-(*     none => panic *)
+-- bug<x>.unwrap() x 
+--   match self 
+--     is(v) => return v 
+--     none => panic 
 
-(* todo functions for impl of specific generic type *)
-(* bug<int>.unwrap() int *)
-(*   return self.0 *)
+-- todo functions for impl of specific generic type 
+-- bug<int>.unwrap() int 
+--   return self.0 
 
 

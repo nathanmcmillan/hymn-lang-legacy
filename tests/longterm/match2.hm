@@ -74,41 +74,41 @@ main
   f = foob()
   echo(f.0)
 
-  (* match n := noob() *)
-  (*   soda => echo(n.1) *)
-  (*   beer => pass *)
-  (*   wine => pass *)
+  -- match n := noob() 
+  --   soda => echo(n.1) 
+  --   beer => pass 
+  --   wine => pass 
 
-  (* match 2 *)
-  (*   0 => echo("zero") *)
-  (*   1 => echo("one") *)
-  (*   2 => echo("two") *)
-  (*   _ => pass *)
+  -- match 2 
+  --   0 => echo("zero") 
+  --   1 => echo("one") 
+  --   2 => echo("two") 
+  --   _ => pass 
 
-  (* match numby() *)
-  (*   200 => echo("two hundred") *)
-  (*   2 => echo("two") *)
-  (*   _ => pass *)
+  -- match numby() 
+  --   200 => echo("two hundred") 
+  --   2 => echo("two") 
+  --   _ => pass 
 
-  (* match x *)
-  (*   bee|ant => echo("bee or ant!") *)
-  (*   moth => echo("moth!") *)
+  -- match x 
+  --   bee|ant => echo("bee or ant!") 
+  --   moth => echo("moth!") 
 
-  (* echo(dog.woof.type) # 0 *)
-  (* echo(dog.woof.name) # "woof" *)
-  (* echo(bug.ant.type) # 0 *)
-  (* echo(bug.ant.name) # "ant" *)
-  (* echo(bug.ant(0).name) # "ant" *)
+  -- echo(dog.woof.type) # 0 
+  -- echo(dog.woof.name) # "woof" 
+  -- echo(bug.ant.type) # 0 
+  -- echo(bug.ant.name) # "ant" 
+  -- echo(bug.ant(0).name) # "ant" 
 
-  (* if x.type = y.type: echo("match!") *)
+  -- if x.type = y.type: echo("match!") 
 
-  (* if x.type = ant: echo(x.0) *)
+  -- if x.type = ant: echo(x.0) 
     
-  (* if x.type = ant *)
-  (*   echo(x.0) *)
+  -- if x.type = ant 
+  --   echo(x.0) 
 
-  (* for b in bug *)
-  (*   echo(b.type) *)
+  -- for b in bug 
+  --   echo(b.type) 
 
-  (* for d in dog *)
-  (*   echo(d) *)
+  -- for d in dog 
+  --   echo(d) 

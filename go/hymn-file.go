@@ -30,6 +30,7 @@ type hmfile struct {
 	needStatic      bool
 	assignmentStack []*datatype
 	enumIsStack     []*variableNode
+	comments        []string
 }
 
 func (program *program) hymnFileInit(name string) *hmfile {

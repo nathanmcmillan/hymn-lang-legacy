@@ -6,9 +6,9 @@ new_hashset() hashset.hashset<string>
 		get_code: hashset.string_hashcode
 		table: [12:]maybe<hashset.hashset_item<string>>)
 
-immutable words = new_hashset()
+const words = new_hashset()
 
-immutable primitives = hashset.hashset(
+const primitives = hashset.hashset(
 	capacity: 12
 	get_code: hashset.string_hashcode
 	table: [12:]maybe<hashset.hashset_item<string>>)

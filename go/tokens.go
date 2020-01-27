@@ -50,6 +50,7 @@ var keywords = map[string]bool{
 	"break":      true,
 	"mutable":    true,
 	"immutable":  true,
+	"const":      true,
 	"and":        true,
 	"or":         true,
 	"as":         true,
@@ -234,33 +235,6 @@ func (me *tokenizer) forLineComment() string {
 	return value.String()
 }
 
-func (me *tokenizer) forBlockComment() string {
-	stream := me.stream
-	value := &strings.Builder{}
-	nest := 1
-	for !stream.eof() {
-		c := stream.next()
-		if c == '(' {
-			c2 := stream.peek()
-			if c2 == '*' {
-				nest++
-			}
-		}
-		if c == '*' {
-			c2 := stream.peek()
-			if c2 == ')' {
-				nest--
-				if nest == 0 {
-					stream.next()
-					break
-				}
-			}
-		}
-		value.WriteByte(c)
-	}
-	return value.String()
-}
-
 func (me *tokenizer) push(t *token) {
 	me.tokens = append(me.tokens, t)
 	if me.file != nil {
@@ -314,22 +288,7 @@ func (me *tokenizer) get(pos int) *token {
 		return token
 	}
 	c := stream.peek()
-	if c == '(' {
-		stream.next()
-		peek := stream.peek()
-		if peek == '*' {
-			stream.next()
-			// value := me.forBlockComment()
-			// token := me.valueToken("comment", value)
-			// return token
-			me.forBlockComment()
-			return me.get(pos)
-		}
-		token := me.simpleToken("(")
-		me.push(token)
-		return token
-	}
-	if strings.IndexByte("$).[]_?,", c) >= 0 {
+	if strings.IndexByte("$().[]_?,;", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.push(token)
@@ -408,8 +367,10 @@ func (me *tokenizer) get(pos int) *token {
 			token = me.simpleToken("->")
 		} else if peek == '-' {
 			stream.next()
-			me.forLineComment()
-			return me.get(pos)
+			value := me.forLineComment()
+			token := me.valueToken("comment", value)
+			me.push(token)
+			return token
 		} else {
 			token = me.simpleToken("-")
 		}

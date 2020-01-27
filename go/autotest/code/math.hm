@@ -9,7 +9,7 @@ enum operation
 	multiply
 	divide
 
-immutable pi = 3.1415
+const pi = 3.1415
 
 power(x int) int
 	return x * x

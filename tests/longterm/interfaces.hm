@@ -2,17 +2,15 @@ interface expl
   get() int
   set(value int)
 
-(*
-  struct expl {
-    int (* func_get);
-    int (* func_get)(int value);
-  };
+  -- struct expl {
+  --   int  func_get);
+  --   int  func_get)(int value);
+  -- };
 
-  struct foo_expl {
-    int get(foo *self);
-    void set(foo *self, int value);
-  };
-*)
+  -- struct foo_expl {
+  --   int get(foo *self);
+  --   void set(foo *self, int value);
+  -- };
 
 type foo
   implement expl

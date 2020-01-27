@@ -37,6 +37,9 @@ func (me *cfile) maybeColon(code string) string {
 	if last == '}' || last == ':' || last == ';' || last == '\n' {
 		return ""
 	}
+	if size >= 2 && code[0] == '/' && code[1] == '/' {
+		return ""
+	}
 	return ";"
 }
 

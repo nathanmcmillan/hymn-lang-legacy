@@ -98,7 +98,7 @@ func (me *hmfile) parse(out, path string) {
 func (me *parser) next() {
 	me.pos++
 	me.token = me.tokens.get(me.pos)
-	if me.token.is == "line" {
+	if me.token.is == "line" || me.token.is == "comment" {
 		me.line++
 	}
 }

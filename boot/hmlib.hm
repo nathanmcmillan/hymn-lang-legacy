@@ -1,0 +1,8 @@
+import "hashmap"
+import "function"
+
+type hmlib
+	functions     hashmap.hashmap<string, function.function>
+	function_list []function.function
+	types         hashmap.hashmap<string, string>
+	classes       hashmap.hashmap<string, class>

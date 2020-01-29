@@ -1,0 +1,48 @@
+import "hashmap"
+import "hmlib"
+import "hmfile"
+
+type program
+	out         string
+	directory   string
+	libs        string
+	hmlib_map   hashmap.hashmap<string, string>
+	hmlibrary   hmlib.hmlib
+	hmfile_map  hashmap.hashmap<string, hmfile.hmfile>
+	hmfile_list []hmfile.hmfile
+	sources     hashmap.hashmap<string, string>
+
+new_program() program
+	a = hashmap.hashmap(
+		capacity: 12
+		get_code: hashmap.string_hashcode
+		table: [12:]maybe<hashmap.hashmap_item<string, string>>)
+
+	b = hashmap.hashmap(
+		capacity: 12
+		get_code: hashmap.string_hashcode
+		table: [12:]maybe<hashmap.hashmap_item<string, hmfile.hmfile>>)
+
+	c = hashmap.hashmap(
+		capacity: 12
+		get_code: hashmap.string_hashcode
+		table: [12:]maybe<hashmap.hashmap_item<string, string>>)
+
+	p = program(
+		hmlib_map: a
+		hmfile_map: b
+		sources: c)
+		
+	return p
+
+-- new_dict<k,v>(hash (k) int) hashmap.hashmap<k,v>
+-- 	return hashmap.hashmap(
+-- 		capacity: 12
+-- 		get_code: hash
+-- 		table: [0:12]maybe<hashmap.hashmap_item<k,v>>)
+
+-- new_program() program
+-- 	return program(
+-- 		hmlib_map: new_dict<string, string>(hashmap.string_hashcode)
+-- 		hmfile_map: new_dict<string, hmfile.hmfile>(hashmap.string_hashcode)
+-- 		sources: new_dict<string, string>(hashmap.string_hashcode))

@@ -75,6 +75,7 @@ var keywords = map[string]bool{
 	"is":         true,
 	"iterate":    true,
 	"in":         true,
+	"function":   true,
 	TokenInt:     true,
 	TokenInt8:    true,
 	TokenInt16:   true,

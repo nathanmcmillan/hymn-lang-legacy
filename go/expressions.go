@@ -13,13 +13,8 @@ func (me *parser) fileExpression() {
 		me.immutable()
 	} else if op == "mutable" {
 		me.mutable()
-	} else if op == "id" {
-		name := token.value
-		if _, ok := me.hmfile.classes[name]; ok {
-			me.defineClassFunction()
-		} else {
-			me.defineStaticFunction()
-		}
+	} else if op == "function" || op == "id" {
+		me.defineNewFunction()
 	} else if op == "type" {
 		me.defineClass()
 	} else if op == "enum" {
@@ -185,6 +180,18 @@ func (me *parser) parseReturn() *node {
 	return n
 }
 
+func (me *parser) defineNewFunction() {
+	if me.token.is == "function" {
+		me.eat("function")
+	}
+	name := me.token.value
+	if _, ok := me.hmfile.classes[name]; ok {
+		me.defineClassFunction()
+	} else {
+		me.defineStaticFunction()
+	}
+}
+
 func (me *parser) comment() *node {
 	token := me.token
 	me.eat("comment")
@@ -273,7 +280,7 @@ func (me *parser) importing() {
 		module.imports[name] = newmodule
 		module.importOrder = append(module.importOrder, name)
 		if debug {
-			fmt.Println("=== continuing " + module.name + " === ")
+			fmt.Println("=== " + module.name + " ===")
 		}
 	}
 	if me.token.is == "id" {

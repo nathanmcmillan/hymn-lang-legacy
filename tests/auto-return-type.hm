@@ -1,0 +1,13 @@
+
+enum either<x,y>
+	one(x)
+	two(y)
+
+exec_compile() either<string, error>
+	return either.one("")
+
+function main()
+    e = exec_compile()
+    match e
+        one(o) => echo(o.0)
+        two(t) => echo("oh no!")

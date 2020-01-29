@@ -1,0 +1,5 @@
+
+type hmfile
+	out  string
+	path string
+	libs string

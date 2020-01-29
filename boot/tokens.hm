@@ -7,11 +7,7 @@ new_hashset() hashset.hashset<string>
 		table: [12:]maybe<hashset.hashset_item<string>>)
 
 const words = new_hashset()
-
-const primitives = hashset.hashset(
-	capacity: 12
-	get_code: hashset.string_hashcode
-	table: [12:]maybe<hashset.hashset_item<string>>)
+const primitives = new_hashset()
 
 init()
 	words.add("import")
@@ -19,22 +15,6 @@ init()
 
 	primitives.add("int")
 	primitives.add("float")
-
-type token
-	depth int
-	name  string
-	value string
-
-type tokenizer
-	tokens []token
-	depth  int
-
-token to_string() string
-	mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
-	if self.value != ""
-		s += ", value:" + self.value
-	s += "}"
-	return s
 
 digit(c char) bool
 	match c
@@ -44,8 +24,33 @@ digit(c char) bool
 		_ => pass
 	return false
 
+type token
+	depth int
+	name  string
+	value string
+
 token_for(depth int, name string) token
-	return token(depth:depth, name:name, value:"")
+	return token(depth, name, "")
+
+token to_string() string
+	mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
+	if self.value != ""
+		s += ", value:" + self.value
+	s += "}"
+	return s
+
+type tokenizer
+	tokens []token
+	depth  int
+	eof    token
+
+new_tokenizer() tokenizer
+	return tokenizer()
 
 tokenizer simple_token(name string) token
 	return token_for(self.depth, name)
+
+tokenizer get(pos int) token
+	if pos < len(self.tokens)
+		return self.tokens[pos]
+	return self.eof

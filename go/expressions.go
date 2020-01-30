@@ -158,8 +158,7 @@ func (me *parser) parseReturn() *node {
 	n := nodeInit("return")
 	if me.token.is != "line" {
 		fn := me.hmfile.scope.fn
-		me.hmfile.assignmentStack = append(me.hmfile.assignmentStack, fn.returns)
-		calc := me.calc(0)
+		calc := me.calc(0, fn.returns)
 		n.copyDataOfNode(calc)
 		n.push(calc)
 		ret := calc.data()
@@ -174,7 +173,6 @@ func (me *parser) parseReturn() *node {
 		} else if fn.returns.notEquals(ret) {
 			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.print() + "\" but found \"" + ret.print() + "\"")
 		}
-		me.hmfile.assignmentStack = me.hmfile.assignmentStack[0 : len(me.hmfile.assignmentStack)-1]
 	}
 	me.verify("line")
 	return n
@@ -260,7 +258,7 @@ blockEnd:
 }
 
 func (me *parser) calcBool() *node {
-	n := me.calc(0)
+	n := me.calc(0, nil)
 	if !n.data().isBoolean() {
 		panic(me.fail() + "must be boolean expression")
 	}
@@ -270,7 +268,34 @@ func (me *parser) calcBool() *node {
 func (me *parser) importing() {
 	me.eat("import")
 	name := me.token.value
+	alias := name
 	me.eat(TokenStringLiteral)
+	if me.token.is == "as" {
+		me.eat("as")
+		alias = me.token.value
+		me.eat("id")
+	}
+	fmt.Println("import alias ::", name, "->", alias)
+	statics := make([]string, 0)
+	if me.token.is == "(" {
+		me.eat("(")
+		if me.token.is == "line" {
+			me.eat("line")
+		}
+		for me.token.is != ")" {
+			value := me.token.value
+			me.eat("id")
+			statics = append(statics, value)
+			if me.token.is == "line" {
+				me.eat("line")
+			} else {
+				me.eat(",")
+			}
+		}
+		me.eat(")")
+	}
+	fmt.Println("import static ::", name, "->", statics)
+
 	module := me.hmfile
 	_, ok := module.imports[name]
 	if !ok {
@@ -279,14 +304,27 @@ func (me *parser) importing() {
 		newmodule := module.program.parse(out, path, module.program.libs)
 		module.imports[name] = newmodule
 		module.importOrder = append(module.importOrder, name)
+		for _, s := range statics {
+			if cl, ok := newmodule.classes[s]; ok {
+				fmt.Println("import as static class ::", cl.name)
+				module.classes[cl.name] = cl
+
+			} else if en, ok := newmodule.enums[s]; ok {
+				fmt.Println("import as static enum ::", en.name)
+				module.enums[en.name] = en
+
+			} else if fn, ok := newmodule.functions[s]; ok {
+				fmt.Println("import as static function ::", fn.name)
+				module.functions[fn.name] = fn
+
+			} else if st, ok := newmodule.staticScope[s]; ok {
+				fmt.Println("import as static variable ::", st.name)
+				module.staticScope[st.name] = st
+			}
+		}
 		if debug {
 			fmt.Println("=== " + module.name + " ===")
 		}
-	}
-	if me.token.is == "id" {
-		fmt.Println("include specific type/enum/function/variable")
-	} else if me.token.is == "*" {
-		fmt.Println("include all of package")
 	}
 	me.eat("line")
 }

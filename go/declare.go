@@ -27,6 +27,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 	for ix, gname := range base.generics {
 		gmapper[gname] = order[ix]
 	}
+	enumDef.gmapper = gmapper
 
 	for _, un := range unionList {
 		for i, data := range un.types {
@@ -59,7 +60,6 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	for ix, gname := range base.generics {
 		gmapper[gname] = order[ix]
 	}
-
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
@@ -126,7 +126,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 			me.eat("]")
 			return newdataslice(me.declareType(implementation))
 		}
-		sizeNode := me.calc(0)
+		sizeNode := me.calc(0, nil)
 		if sizeNode.value == "" || !sizeNode.data().isInt() {
 			panic(me.fail() + "array size must be constant integer")
 		}

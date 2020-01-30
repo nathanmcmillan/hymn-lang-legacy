@@ -100,14 +100,12 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	test := match.code()
 	tempname := ""
 
-	isEnum := false
-	var enNameSpace string
+	var isEnum *enum
 
 	if using.is == "variable" {
 		name := me.getvar(using.idata.name).cName
 		if baseEnum, _, ok := using.data().isEnum(); ok {
-			isEnum = true
-			enNameSpace = baseEnum.cname
+			isEnum = baseEnum
 			if !baseEnum.simple {
 				test = name + "->type"
 			}
@@ -119,6 +117,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	ix := 1
 	size := len(n.has)
 	hasdefault := false
+	renaming := ""
 
 	for ix < size {
 		caseOf := n.has[ix]
@@ -127,7 +126,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 			hasdefault = true
 			code += fmc(me.depth) + "default: {\n"
 		} else {
-			if isEnum {
+			if isEnum != nil {
 				if len(caseOf.has) > 0 {
 					temphas := caseOf.has[0]
 					idata := temphas.idata.name
@@ -138,8 +137,9 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 						code = fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth) + code
 					}
 					me.scope.renaming[idata] = tempname
+					renaming = idata
 				}
-				code += fmc(me.depth) + "case " + enumTypeName(enNameSpace, caseOf.is) + ": {\n"
+				code += fmc(me.depth) + "case " + enumTypeName(isEnum.baseEnum().cname, caseOf.is) + ": {\n"
 
 			} else if _, ok := literals[caseOf.is]; ok {
 				for hi, h := range caseOf.has {
@@ -155,6 +155,9 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 			}
 		}
 		thenBlock := me.eval(thenDo).code()
+		if renaming != "" {
+			delete(me.scope.renaming, renaming)
+		}
 		me.depth++
 		if thenBlock != "" {
 			code += me.maybeFmc(thenBlock, me.depth) + thenBlock + me.maybeColon(thenBlock)

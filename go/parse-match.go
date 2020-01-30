@@ -98,7 +98,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 					//
 				}
 			} else {
-				right = me.calc(getInfixPrecedence(op))
+				right = me.calc(getInfixPrecedence(op), nil)
 			}
 		} else if checkIsPrimitive(me.token.is) {
 			panic(me.fail() + "can't match on a primitive. did you mean to use an enum implementation?")
@@ -116,7 +116,7 @@ func (me *parser) parseMatch() *node {
 	me.eat("match")
 	n := nodeInit("match")
 
-	matching := me.calc(0)
+	matching := me.calc(0, nil)
 	matchType := matching.data()
 
 	_, un, ok := matchType.isEnum()

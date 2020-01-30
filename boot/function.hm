@@ -1,4 +1,3 @@
-
 type function
 	name   string
 	c_name string

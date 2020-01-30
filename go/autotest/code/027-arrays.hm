@@ -1,7 +1,7 @@
 main
   a = [3]int
-  for i = 0, i < 3, i += 1
+  for i = 0; i < 3; i += 1
     a[i] = (i + 1) * 9
-  for i = 0, i < 3, i += 1
+  for i = 0; i < 3; i += 1
     echo(a[i])
 

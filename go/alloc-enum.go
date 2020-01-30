@@ -13,6 +13,12 @@ func (me *parser) allocEnum(module *hmfile) *node {
 		panic(me.fail() + "enum \"" + enumName + "\" does not exist")
 	}
 
+	assign := me.hmfile.peekAssignStack()
+	var assignEn *enum
+	if assign != nil && !assign.isQuestion() {
+		assignEn = assign.enum
+	}
+
 	gdict := enumDef.genericsDict
 	var order []string
 	if me.token.is == "<" {
@@ -45,9 +51,12 @@ func (me *parser) allocEnum(module *hmfile) *node {
 		gimpl := make(map[string]string)
 		for ix, unionType := range unionDef.types {
 			if ix != 0 {
+				if me.token.is != "," {
+					panic(me.fail() + "Expecting \"" + unionType.print() + "\" for enum \"" + enumName + "\".")
+				}
 				me.eat(",")
 			}
-			param := me.calc(0)
+			param := me.calc(0, nil)
 			if param.data().notEquals(unionType) {
 				if _, gok := gdict[unionType.getRaw()]; gok {
 					gimpl[unionType.getRaw()] = param.data().getRaw()
@@ -60,7 +69,19 @@ func (me *parser) allocEnum(module *hmfile) *node {
 		me.eat(")")
 		if len(order) == 0 {
 			if len(gimpl) != len(gdict) {
-				panic(me.fail() + "generic enum \"" + enumName + "\" with impl " + fmt.Sprint(gimpl) + " does not match " + fmt.Sprint(gdict))
+				if assignEn != nil {
+					for k, v := range assignEn.gmapper {
+						if nv, ok := gimpl[k]; ok {
+							if nv != v {
+								panic(me.fail() + "\"" + enumName + "\" with \"" + nv + "\" does not match \"" + v + "\"")
+							}
+						} else {
+							gimpl[k] = v
+						}
+					}
+				} else {
+					panic(me.fail() + "generic enum \"" + enumName + "\" with impl " + fmt.Sprint(gimpl) + " does not match " + fmt.Sprint(gdict))
+				}
 			}
 			if len(gimpl) > 0 {
 				order = me.mapUnionGenerics(enumDef, gimpl)

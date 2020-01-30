@@ -4,7 +4,7 @@
 --
 
 import "tokens"
--- import "program"
+import "program"
 
 const debug = true
 const debug_tokens = true
@@ -49,7 +49,6 @@ fmc(depth int) string
 
 exec_compile(f flags) either<string, error>
 	echo(f.write_to)
-	-- return either<string, error>.one("")
 	return either.one("")
 
 help()
@@ -69,5 +68,5 @@ function main()
 	t = tokens.new_tokenizer()
 	tok = t.get(0)
 	echo(tok.to_string())
-	-- p = program.new_program()
+	p = program.new_program()
 	help()

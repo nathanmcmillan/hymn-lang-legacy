@@ -8,7 +8,7 @@ func (me *parser) def() *node {
 	me.eat("id")
 	var value *node
 	if me.token.is != "line" {
-		value = me.calc(0)
+		value = me.calc(0, nil)
 		fmt.Println("NEW DEF IS", name, ":=", value.string(0))
 	} else {
 		fmt.Println("NEW DEF IS", name)

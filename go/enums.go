@@ -15,6 +15,7 @@ type enum struct {
 	typesOrder   []*union
 	generics     []string
 	genericsDict map[string]int
+	gmapper      map[string]string
 	base         *enum
 	impls        []*enum
 }

@@ -7,7 +7,7 @@ import (
 func prefixSign(me *parser, op string) *node {
 	node := nodeInit(getPrefixName(op))
 	me.eat(op)
-	right := me.calc(getPrefixPrecedence(op))
+	right := me.calc(getPrefixPrecedence(op), nil)
 	node.push(right)
 	node.copyDataOfNode(right)
 	return node
@@ -15,7 +15,7 @@ func prefixSign(me *parser, op string) *node {
 
 func prefixGroup(me *parser, op string) *node {
 	me.eat("(")
-	node := me.calc(0)
+	node := me.calc(0, nil)
 	node.attributes["parenthesis"] = "true"
 	me.eat(")")
 	return node
@@ -65,7 +65,7 @@ func prefixCast(me *parser, op string) *node {
 	me.eat(op)
 	node := nodeInit("cast")
 	node.copyData(getdatatype(me.hmfile, op))
-	calc := me.calc(getPrefixPrecedence(op))
+	calc := me.calc(getPrefixPrecedence(op), nil)
 	data := calc.data()
 	if data.canCastToNumber() {
 		node.push(calc)
@@ -133,7 +133,7 @@ func prefixArray(me *parser, op string) *node {
 		alloc.slice = true
 		no = nodeInit("slice")
 		if me.token.is != "]" {
-			capacity := me.calc(0)
+			capacity := me.calc(0, nil)
 			if !capacity.data().isInt() {
 				panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 			}
@@ -144,7 +144,7 @@ func prefixArray(me *parser, op string) *node {
 			no.push(capacity)
 		}
 	} else {
-		size = me.calc(0)
+		size = me.calc(0, nil)
 		if !size.data().isInt() {
 			panic(me.fail() + "array or slice size " + size.string(0) + " is not an integer")
 		}
@@ -154,7 +154,7 @@ func prefixArray(me *parser, op string) *node {
 			me.eat(":")
 			slice = true
 			if me.token.is != "]" {
-				capacity = me.calc(0)
+				capacity = me.calc(0, nil)
 				if !capacity.data().isInt() {
 					panic(me.fail() + "slice capacity " + capacity.string(0) + " is not an integer")
 				}
@@ -179,7 +179,7 @@ func prefixArray(me *parser, op string) *node {
 		items := nodeInit("items")
 		me.eat("(")
 		for {
-			item := me.calc(0)
+			item := me.calc(0, data)
 			if item.data().notEquals(data) {
 				panic(me.fail() + "array member type \"" + item.data().print() + "\" does not match array type \"" + no.data().getmember().print() + "\"")
 			}

@@ -115,7 +115,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().print() + "\" is not indexable")
 				}
 				member := nodeInit("array-member")
-				index := me.calc(0)
+				index := me.calc(0, nil)
 				member.copyData(head.data().getmember())
 				member.push(index)
 				member.push(head)

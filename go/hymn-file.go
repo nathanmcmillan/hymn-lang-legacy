@@ -138,3 +138,18 @@ func (me *hmfile) alias(typed string) string {
 	}
 	return typed
 }
+
+func (me *hmfile) pushAssignStack(data *datatype) {
+	me.assignmentStack = append(me.assignmentStack, data)
+}
+
+func (me *hmfile) popAssignStack() {
+	me.assignmentStack = me.assignmentStack[0 : len(me.assignmentStack)-1]
+}
+
+func (me *hmfile) peekAssignStack() *datatype {
+	if len(me.assignmentStack) == 0 {
+		return nil
+	}
+	return me.assignmentStack[len(me.assignmentStack)-1]
+}

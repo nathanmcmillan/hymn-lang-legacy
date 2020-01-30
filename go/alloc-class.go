@@ -22,7 +22,7 @@ func (me *parser) defaultValue(data *datatype) *node {
 	if data.isString() {
 		d.value = ""
 	} else if data.isChar() {
-		d.value = "\\0"
+		d.value = "'\\0'"
 	} else if data.isNumber() {
 		d.value = "0"
 	} else if data.isBoolean() {
@@ -99,7 +99,7 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 			vname := me.token.value
 			me.eat("id")
 			me.eat(":")
-			param := me.calc(0)
+			param := me.calc(0, nil)
 			clsvar, ok := base.variables[vname]
 			if !ok {
 				panic(me.fail() + "member variable \"" + vname + "\" does not exist for class \"" + base.name + "\"")
@@ -157,7 +157,7 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 				me.eat("_")
 				params[pix] = nil
 			} else {
-				param := me.calc(0)
+				param := me.calc(0, nil)
 
 				var update map[string]*datatype
 				if len(gindex) > 0 {
@@ -227,8 +227,8 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			}
 			cl = module.classes[typed]
 		} else {
-			assign := me.hmfile.assignmentStack[len(me.hmfile.assignmentStack)-1]
-			if !assign.isQuestion() {
+			assign := me.hmfile.peekAssignStack()
+			if assign != nil && !assign.isQuestion() {
 				var d *datatype
 				if assign.isSome() || assign.isArrayOrSlice() {
 					d = assign.getmember()

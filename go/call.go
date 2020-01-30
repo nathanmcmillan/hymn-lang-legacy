@@ -16,8 +16,8 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 		} else if ix > 0 {
 			me.eat(",")
 		}
-		param := me.calc(0)
 		arg := sig.args[ix]
+		param := me.calc(0, arg.data())
 		if param.data().notEquals(arg.data()) && !arg.data().isQuestion() {
 			err := "parameter \"" + param.data().print()
 			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().print() + "\" of function signature \"" + sig.print() + "\""
@@ -45,7 +45,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			argname := me.token.value
 			me.eat("id")
 			me.eat(":")
-			param := me.calc(0)
+			param := me.calc(0, nil)
 			aix := fn.argDict[argname]
 			arg := fn.args[aix]
 			if param.data().notEquals(arg.data()) && !arg.data().isQuestion() {
@@ -82,7 +82,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 				}
 				params[pix] = param
 			} else {
-				param := me.calc(0)
+				param := me.calc(0, nil)
 				if arg == nil {
 					arg = fn.args[pix]
 				}

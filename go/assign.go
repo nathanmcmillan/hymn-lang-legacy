@@ -19,9 +19,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		panic(me.fail() + "Unknown assign operation \"" + op + "\".")
 	}
 	me.eat(op)
-	me.hmfile.assignmentStack = append(me.hmfile.assignmentStack, left.data())
-	right := me.calc(0)
-	me.hmfile.assignmentStack = me.hmfile.assignmentStack[0 : len(me.hmfile.assignmentStack)-1]
+	right := me.calc(0, left.data())
 	if mustBeInt {
 		if !right.data().isInt() {
 			panic(me.fail() + "assign operation \"" + op + "\" requires int type")

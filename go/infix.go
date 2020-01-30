@@ -6,7 +6,7 @@ func (me *parser) infixConcat(left *node) *node {
 	node.push(left)
 	for me.token.is == "+" {
 		me.eat("+")
-		right := me.calc(getInfixPrecedence("+"))
+		right := me.calc(getInfixPrecedence("+"), nil)
 		if !right.data().isString() {
 			err := me.fail() + "concatenation operation must be strings but found \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
@@ -27,7 +27,7 @@ func infixBinary(me *parser, left *node, op string) *node {
 	node := nodeInit(op)
 	node.value = me.token.value
 	me.eat(op)
-	right := me.calc(getInfixPrecedence(op))
+	right := me.calc(getInfixPrecedence(op), nil)
 	if !left.data().isNumber() || !right.data().isNumber() {
 		err := me.fail() + "operation expected numbers but was \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\n\nleft: " + left.string(0) + "\n\nright: " + right.string(0)
@@ -47,7 +47,7 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	node := nodeInit(op)
 	node.value = me.token.value
 	me.eat(op)
-	right := me.calc(getInfixPrecedence(op))
+	right := me.calc(getInfixPrecedence(op), nil)
 	if !left.data().isAnyIntegerType() || !right.data().isAnyIntegerType() || left.data().notEquals(right.data()) {
 		err := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
@@ -63,7 +63,7 @@ func infixCompare(me *parser, left *node, op string) *node {
 	node := nodeInit(getInfixName(op))
 	node.value = me.token.value
 	me.eat(op)
-	right := me.calc(getInfixPrecedence(op))
+	right := me.calc(getInfixPrecedence(op), nil)
 	node.push(left)
 	node.push(right)
 	node.copyData(getdatatype(me.hmfile, "bool"))
@@ -79,14 +79,14 @@ func infixTernary(me *parser, condition *node, op string) *node {
 	node := nodeInit(getInfixName(op))
 	node.value = me.token.value
 	me.eat(op)
-	one := me.calc(getInfixPrecedence(op))
+	one := me.calc(getInfixPrecedence(op), nil)
 	if one.data().isVoid() {
 		panic(me.fail() + "left type cannot be void")
 	}
 	node.push(condition)
 	node.push(one)
 	me.eat(":")
-	two := me.calc(getInfixPrecedence(op))
+	two := me.calc(getInfixPrecedence(op), nil)
 	if one.data().notEquals(two.data()) {
 		panic(me.fail() + "left \"" + one.data().print() + "\" and right \"" + two.data().print() + "\" types do not match")
 	}

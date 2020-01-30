@@ -16,7 +16,8 @@ func (me *parser) infix(left *node) *node {
 	panic(me.fail() + "unknown calc infix \"" + op + "\"")
 }
 
-func (me *parser) calc(precedence int) *node {
+func (me *parser) calc(precedence int, hint *datatype) *node {
+	me.hmfile.pushAssignStack(hint)
 	node := me.prefix()
 	for {
 		op := me.infixOp()
@@ -25,5 +26,6 @@ func (me *parser) calc(precedence int) *node {
 		}
 		node = me.infix(node)
 	}
+	me.hmfile.popAssignStack()
 	return node
 }

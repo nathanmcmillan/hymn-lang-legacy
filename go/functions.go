@@ -104,7 +104,7 @@ func nameOfClassFunc(cl, fn string) string {
 func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	module.functionOrder = append(module.functionOrder, name)
 	module.functions[name] = fn
-	module.types[name] = ""
+	module.types[name] = "function"
 	if me.file != nil {
 		me.file.WriteString(fn.string(0))
 	}

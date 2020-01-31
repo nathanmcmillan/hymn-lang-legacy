@@ -308,18 +308,26 @@ func (me *parser) importing() {
 			if cl, ok := newmodule.classes[s]; ok {
 				fmt.Println("import as static class ::", cl.name)
 				module.classes[cl.name] = cl
+				module.namespace[cl.name] = "class"
+				module.types[cl.name] = "class"
 
 			} else if en, ok := newmodule.enums[s]; ok {
 				fmt.Println("import as static enum ::", en.name)
 				module.enums[en.name] = en
+				module.namespace[en.name] = "enum"
+				module.types[en.name] = "enum"
 
 			} else if fn, ok := newmodule.functions[s]; ok {
 				fmt.Println("import as static function ::", fn.name)
 				module.functions[fn.name] = fn
+				module.namespace[fn.name] = "function"
+				module.types[fn.name] = "function"
 
 			} else if st, ok := newmodule.staticScope[s]; ok {
 				fmt.Println("import as static variable ::", st.name)
 				module.staticScope[st.name] = st
+				module.namespace[st.name] = "static"
+				module.types[st.name] = "static"
 			}
 		}
 		if debug {

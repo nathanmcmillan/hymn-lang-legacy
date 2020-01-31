@@ -15,7 +15,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 	}
 
 	me.hmfile.namespace[impl] = "enum"
-	me.hmfile.types[impl] = ""
+	me.hmfile.types[impl] = "enum"
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_enum")
 
 	enumDef := enumInit(base.module, impl, false, unionList, unionDict, nil, nil)
@@ -47,7 +47,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	module := base.module
 
 	module.namespace[impl] = "type"
-	module.types[impl] = ""
+	module.types[impl] = "class"
 	module.defineOrder = append(module.defineOrder, impl+"_type")
 
 	classDef := classInit(module, impl, nil, nil)

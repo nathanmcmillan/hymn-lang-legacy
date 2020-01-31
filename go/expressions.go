@@ -275,7 +275,6 @@ func (me *parser) importing() {
 		alias = me.token.value
 		me.eat("id")
 	}
-	fmt.Println("import alias ::", name, "->", alias)
 	statics := make([]string, 0)
 	if me.token.is == "(" {
 		me.eat("(")
@@ -294,7 +293,6 @@ func (me *parser) importing() {
 		}
 		me.eat(")")
 	}
-	fmt.Println("import static ::", name, "->", statics)
 
 	module := me.hmfile
 	_, ok := module.imports[name]
@@ -302,32 +300,43 @@ func (me *parser) importing() {
 		out := module.program.out + "/" + name
 		path := module.program.directory + "/" + name + ".hm"
 		newmodule := module.program.parse(out, path, module.program.libs)
-		module.imports[name] = newmodule
-		module.importOrder = append(module.importOrder, name)
+		module.imports[alias] = newmodule
+		module.importOrder = append(module.importOrder, alias)
+		newmodule.crossref[module] = alias
 		for _, s := range statics {
 			if cl, ok := newmodule.classes[s]; ok {
 				fmt.Println("import as static class ::", cl.name)
+				if _, ok := module.types[cl.name]; ok {
+					panic(me.fail() + "Cannot import class \"" + cl.name + "\". It is already defined.")
+				}
 				module.classes[cl.name] = cl
 				module.namespace[cl.name] = "class"
 				module.types[cl.name] = "class"
 
 			} else if en, ok := newmodule.enums[s]; ok {
 				fmt.Println("import as static enum ::", en.name)
+				if _, ok := module.types[en.name]; ok {
+					panic(me.fail() + "Cannot import enum \"" + cl.name + "\". It is already defined.")
+				}
 				module.enums[en.name] = en
 				module.namespace[en.name] = "enum"
 				module.types[en.name] = "enum"
 
 			} else if fn, ok := newmodule.functions[s]; ok {
 				fmt.Println("import as static function ::", fn.name)
+				if _, ok := module.types[fn.name]; ok {
+					panic(me.fail() + "Cannot import function \"" + cl.name + "\". It is already defined.")
+				}
 				module.functions[fn.name] = fn
 				module.namespace[fn.name] = "function"
 				module.types[fn.name] = "function"
 
 			} else if st, ok := newmodule.staticScope[s]; ok {
 				fmt.Println("import as static variable ::", st.name)
+				if _, ok := module.types[st.name]; ok {
+					panic(me.fail() + "Cannot import variable \"" + st.name + "\". It is already defined.")
+				}
 				module.staticScope[st.name] = st
-				module.namespace[st.name] = "static"
-				module.types[st.name] = "static"
 			}
 		}
 		if debug {

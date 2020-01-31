@@ -103,7 +103,7 @@ func prefixIdent(me *parser, op string) *node {
 		if def, ok := module.defs[name]; ok {
 			return me.exprDef(name, def)
 		}
-		panic(me.fail() + "bad type \"" + name + "\" definition")
+		panic(me.fail() + "Bad type \"" + name + "\" definition.")
 	} else if _, ok := module.imports[name]; ok {
 		return me.extern()
 	}

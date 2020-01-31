@@ -245,7 +245,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 		typed = me.classParams(n, cl, depth)
 	}
 	if me.hmfile != module {
-		typed = module.name + "." + typed
+		typed = module.cross(me.hmfile) + "." + typed
 	}
 	return getdatatype(me.hmfile, typed)
 }

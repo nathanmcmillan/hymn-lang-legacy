@@ -201,7 +201,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 
 	qualified := local
 	if module != me.hmfile {
-		qualified = module.name + "." + qualified
+		qualified = module.cross(me.hmfile) + "." + qualified
 	}
 
 	return getdatatype(me.hmfile, qualified)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -555,6 +556,7 @@ func (me *datatype) getRaw() string {
 }
 
 func (me *datatype) print() string {
+	fmt.Println("PRINT ::", me.nameIs(), me.canonical)
 	switch me.is {
 	case dataTypeUnknown:
 		fallthrough
@@ -609,7 +611,7 @@ func (me *datatype) print() string {
 		{
 			f := ""
 			if me.module != me.origin {
-				f += me.module.name + "."
+				f += me.module.cross(me.origin) + "."
 			}
 			f += me.class.baseClass().name
 			if len(me.generics) > 0 {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -66,6 +67,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 
 	if caseOf.is == "match-enum" {
 		matchBaseEnum, matchBaseUn, _ := caseOf.data().isEnum()
+		fmt.Println("...?", caseOf.data().print(), "->", matchBaseEnum)
 		matchBaseEnum = matchBaseEnum.baseEnum()
 		enNameSpace := matchBaseEnum.cname
 		code += enumTypeName(enNameSpace, matchBaseUn.name)

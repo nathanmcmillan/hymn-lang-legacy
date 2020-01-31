@@ -14,6 +14,7 @@ type hmfile struct {
 	namespace       map[string]string
 	imports         map[string]*hmfile
 	importOrder     []string
+	crossref        map[*hmfile]string
 	classes         map[string]*class
 	enums           map[string]*enum
 	defs            map[string]*node
@@ -45,6 +46,7 @@ func (program *program) hymnFileInit(name string) *hmfile {
 	hm.types = make(map[string]string)
 	hm.imports = make(map[string]*hmfile)
 	hm.importOrder = make([]string, 0)
+	hm.crossref = make(map[*hmfile]string)
 	hm.classes = make(map[string]*class)
 	hm.enums = make(map[string]*enum)
 	hm.defs = make(map[string]*node)
@@ -152,4 +154,8 @@ func (me *hmfile) peekAssignStack() *datatype {
 		return nil
 	}
 	return me.assignmentStack[len(me.assignmentStack)-1]
+}
+
+func (me *hmfile) cross(origin *hmfile) string {
+	return me.crossref[origin]
 }

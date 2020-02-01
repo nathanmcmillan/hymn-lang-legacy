@@ -17,7 +17,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 				temphas := caseOf.has[0]
 				idata := temphas.idata.name
 				tempname := "match_" + me.temp()
-				tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
+				tempv := temphas.data().getnamedvariable(tempname, false)
 				me.scope.renaming[idata] = tempname
 				me.scope.variables[tempname] = tempv
 				prepend := fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth)
@@ -48,7 +48,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		idata := temphas.idata.name
 		if tempname == "" {
 			tempname = "match_" + me.temp()
-			tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
+			tempv := temphas.data().getnamedvariable(tempname, false)
 			me.scope.variables[tempname] = tempv
 			code = fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth) + code
 		}
@@ -132,7 +132,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 					idata := temphas.idata.name
 					if tempname == "" {
 						tempname = "match_" + me.temp()
-						tempv := me.hmfile.varInitFromData(temphas.data(), tempname, false)
+						tempv := temphas.data().getnamedvariable(tempname, false)
 						me.scope.variables[tempname] = tempv
 						code = fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth) + code
 					}
@@ -201,7 +201,7 @@ func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeb
 				if tempname == "" {
 					tempname = "match_" + me.temp()
 					casename = tempname
-					tempv := me.hmfile.varInitFromData(temphas.data(), casename, false)
+					tempv := temphas.data().getnamedvariable(casename, false)
 					me.scope.variables[casename] = tempv
 				}
 				me.scope.renaming[idata] = tempname

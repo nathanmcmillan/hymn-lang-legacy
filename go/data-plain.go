@@ -933,3 +933,11 @@ func (me *datatype) getvariable() *variable {
 	v.copyData(me)
 	return v
 }
+
+func (me *datatype) getnamedvariable(name string, mutable bool) *variable {
+	v := me.getvariable()
+	v.name = name
+	v.cname = name
+	v.mutable = mutable
+	return v
+}

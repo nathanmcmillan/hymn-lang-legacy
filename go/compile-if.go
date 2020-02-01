@@ -13,7 +13,7 @@ func (me *cfile) compileIf(n *node) *codeblock {
 	for ix < hsize && n.has[ix].is == "variable" {
 		temp := n.has[ix]
 		tempname := temp.idata.name
-		tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
+		tempv := temp.data().getnamedvariable(tempname, false)
 		me.scope.variables[tempname] = tempv
 		ix++
 	}
@@ -32,7 +32,7 @@ func (me *cfile) compileIf(n *node) *codeblock {
 		for ixo < elsize && elif.has[ixo].is == "variable" {
 			temp := elif.has[ixo]
 			tempname := temp.idata.name
-			tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
+			tempv := temp.data().getnamedvariable(tempname, false)
 			me.scope.variables[tempname] = tempv
 			ixo++
 		}

@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func (me *cfile) compileDeclare(n *node) string {
 	if n.is != "variable" {
 		return me.eval(n).code()
@@ -27,7 +25,7 @@ func (me *cfile) compileDeclare(n *node) string {
 			mutable = true
 		}
 		data := n.data()
-		newVar := me.hmfile.varInitFromData(data, name, mutable)
+		newVar := data.getnamedvariable(name, mutable)
 		me.scope.variables[name] = newVar
 		if global {
 			newVar.cname = idata.getcname()
@@ -46,11 +44,11 @@ func (me *cfile) compileDeclare(n *node) string {
 	return code
 }
 
-func (me *cfile) declareExtern(v *variable) string {
+func (me *cfile) declareExtern(vnode *variableNode) string {
+	v := vnode.v
 	name := v.name
-	newv := me.hmfile.varInitFromData(v.data(), name, v.mutable)
-	newv.cname = idata.getcname()
+	newv := v.data().getnamedvariable(name, v.mutable)
+	newv.cname = vnode.n.has[0].idata.getcname()
 	me.scope.variables[name] = newv
-	fmt.Println("declare extern ::", v.name, "|", v.cname, "|", v.data().print())
 	return newv.data().typeSigOf(newv.cname, true)
 }

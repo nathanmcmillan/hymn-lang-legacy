@@ -20,15 +20,6 @@ func (me *variable) copyData(data *datatype) {
 	me._vdata = data.copy()
 }
 
-func (me *hmfile) varInitFromData(data *datatype, name string, mutable bool) *variable {
-	v := &variable{}
-	v.copyData(data)
-	v.name = name
-	v.cname = name
-	v.mutable = mutable
-	return v
-}
-
 func (me *hmfile) varInit(typed, name string, mutable bool) *variable {
 	v := &variable{}
 	v.name = name

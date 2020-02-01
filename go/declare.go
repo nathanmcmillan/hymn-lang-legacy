@@ -161,7 +161,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.wordOrPrimitive()
 	}
 
-	if m, ok := me.hmfile.imports[local]; ok {
+	if m, ok := me.hmfile.imports[local]; ok && me.token.is == "." {
 		me.eat(".")
 		module = m
 		local = me.token.value

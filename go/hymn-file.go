@@ -11,7 +11,7 @@ type hmfile struct {
 	rootScope       *scope
 	scope           *scope
 	statics         []*node
-	staticScope     map[string]*variable
+	staticScope     map[string]*variableNode
 	namespace       map[string]string
 	imports         map[string]*hmfile
 	importOrder     []string
@@ -41,7 +41,7 @@ func (program *program) hymnFileInit(name string) *hmfile {
 	hm.hmlib = program.hmlib
 	hm.rootScope = scopeInit(nil)
 	hm.scope = hm.rootScope
-	hm.staticScope = make(map[string]*variable)
+	hm.staticScope = make(map[string]*variableNode)
 	hm.namespace = make(map[string]string)
 	hm.types = make(map[string]string)
 	hm.imports = make(map[string]*hmfile)
@@ -71,7 +71,7 @@ func (me *hmfile) popScope() {
 
 func (me *hmfile) getStatic(name string) *variable {
 	if s, ok := me.staticScope[name]; ok {
-		return s
+		return s.v
 	}
 	return nil
 }

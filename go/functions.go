@@ -238,7 +238,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 				typed := me.declareType(true)
 				fn.argDict[argname] = len(fn.args)
 				fnArg := &funcArg{}
-				fnArg.variable = module.varInitFromData(typed, argname, false)
+				fnArg.variable = typed.getnamedvariable(argname, false)
 				if defaultValue != "" {
 					defaultTypeVarData := getdatatype(module, defaultType)
 					if typed.notEquals(defaultTypeVarData) {

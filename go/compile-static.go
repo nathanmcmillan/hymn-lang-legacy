@@ -22,7 +22,7 @@ func (me *cfile) declareStatic(n *node) string {
 	return declareCode + ";"
 }
 
-func (me *cfile) defineStatic(v *variable) {
+func (me *cfile) defineStatic(v *variableNode) {
 	// left := n.has[0]
 	// declareCode := me.compileDeclare(left)
 	// head := "\nextern " + declareCode + ";"

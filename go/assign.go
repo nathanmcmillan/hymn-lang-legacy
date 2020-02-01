@@ -52,7 +52,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 				right.data().setIsPointer(false)
 			}
 			left.copyDataOfNode(right)
-			varini := me.hmfile.varInitFromData(right.data(), left.idata.name, mutable)
+			varini := right.data().getnamedvariable(left.idata.name, mutable)
 			me.hmfile.scope.variables[left.idata.name] = varini
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {

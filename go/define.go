@@ -78,7 +78,7 @@ func (me *parser) defineClass() {
 			}
 			me.eat("line")
 			memberOrder = append(memberOrder, mname)
-			memberMap[mname] = me.hmfile.varInitFromData(mtype, mname, true)
+			memberMap[mname] = mtype.getnamedvariable(mname, true)
 			continue
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in class")

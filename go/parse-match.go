@@ -38,7 +38,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				temp := me.token.value
 				me.eat("id")
 				me.eat(")")
-				tempd := me.hmfile.varInitFromData(left.data().getmember(), temp, false)
+				tempd := left.data().getmember().getnamedvariable(temp, false)
 				tempv := nodeInit("variable")
 				tempv.idata = newidvariable(me.hmfile, tempd.name)
 				tempv.copyData(tempd.data())
@@ -82,7 +82,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 					temp := me.token.value
 					me.eat("id")
 					me.eat(")")
-					tempd := me.hmfile.varInitFromData(right.data(), temp, false)
+					tempd := right.data().getnamedvariable(temp, false)
 					tempv := nodeInit("variable")
 					tempv.idata = newidvariable(me.hmfile, tempd.name)
 					tempv.copyData(tempd.data())
@@ -192,7 +192,7 @@ func (me *parser) parseMatch() *node {
 			some := nodeInit("some")
 			n.push(some)
 			if temp != "" {
-				tempd := me.hmfile.varInitFromData(matchType.getmember(), temp, false)
+				tempd := matchType.getmember().getnamedvariable(temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
 				tempv.idata = newidvariable(me.hmfile, temp)

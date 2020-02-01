@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 )
 
 func (me *parser) fileExpression() {
@@ -267,9 +268,13 @@ func (me *parser) calcBool() *node {
 
 func (me *parser) importing() {
 	me.eat("import")
-	name := me.token.value
-	alias := name
+	value := me.token.value
 	me.eat(TokenStringLiteral)
+	absolute, err := filepath.Abs(value)
+	if err != nil {
+		panic(me.fail() + "Failed to parse import \"" + value + "\". " + err.Error())
+	}
+	alias := filepath.Base(absolute)
 	if me.token.is == "as" {
 		me.eat("as")
 		alias = me.token.value
@@ -295,10 +300,16 @@ func (me *parser) importing() {
 	}
 
 	module := me.hmfile
-	_, ok := module.imports[name]
+	_, ok := module.imports[absolute]
 	if !ok {
-		out := module.program.out + "/" + name
-		path := module.program.directory + "/" + name + ".hm"
+		out, err1 := filepath.Abs(module.program.out + "/" + value)
+		if err1 != nil {
+			panic(me.fail() + "Failed to parse import \"" + value + "\". " + err1.Error())
+		}
+		path, err2 := filepath.Abs(module.program.directory + "/" + value + ".hm")
+		if err2 != nil {
+			panic(me.fail() + "Failed to parse import \"" + value + "\". " + err2.Error())
+		}
 		newmodule := module.program.parse(out, path, module.program.libs)
 		module.imports[alias] = newmodule
 		module.importOrder = append(module.importOrder, alias)
@@ -329,11 +340,11 @@ func (me *parser) importing() {
 				module.types[fn.name] = "function"
 
 			} else if st, ok := newmodule.staticScope[s]; ok {
-				if _, ok := module.types[st.name]; ok {
-					panic(me.fail() + "Cannot import variable \"" + st.name + "\". It is already defined.")
+				if _, ok := module.types[st.v.name]; ok {
+					panic(me.fail() + "Cannot import variable \"" + st.v.name + "\". It is already defined.")
 				}
-				module.staticScope[st.name] = st
-				module.scope.variables[st.name] = st
+				module.staticScope[st.v.name] = st
+				module.scope.variables[st.v.name] = st.v
 			}
 		}
 		if debug {
@@ -354,7 +365,7 @@ func (me *parser) global(mutable bool) {
 	v.idata.setGlobal(true)
 	n := me.forceassign(v, true, mutable)
 	module.statics = append(module.statics, n)
-	module.staticScope[name] = me.hmfile.scope.variables[name]
+	module.staticScope[name] = &variableNode{n, me.hmfile.scope.variables[name]}
 	me.eat("line")
 }
 

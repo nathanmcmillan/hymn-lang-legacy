@@ -1,13 +1,13 @@
-import hashset (
+import "hashset" (
 	hashset
 	hashset_item
 )
 
-new_hashset() hashset.hashset<string>
-	return hashset.hashset(
+new_hashset() hashset<string>
+	return hashset(
 		capacity: 12
 		get_code: hashset.string_hashcode
-		table: [12:]maybe<hashset.hashset_item<string>>)
+		table: [12:]maybe<hashset_item<string>>)
 
 const words = new_hashset()
 const primitives = new_hashset()

@@ -84,6 +84,10 @@ func prefixIdent(me *parser, op string) *node {
 	name := me.token.value
 	module := me.hmfile
 
+	if _, ok := me.hmfile.imports[name]; ok && me.peek().is == "." {
+		return me.extern()
+	}
+
 	if _, ok := module.getType(name); ok {
 		if _, ok := module.getFunction(name); ok {
 			return me.parseFn(module)
@@ -104,9 +108,8 @@ func prefixIdent(me *parser, op string) *node {
 			return me.exprDef(name, def)
 		}
 		panic(me.fail() + "Bad type \"" + name + "\" definition.")
-	} else if _, ok := module.imports[name]; ok {
-		return me.extern()
 	}
+
 	v := module.getvar(name)
 	if me.peek().is == ":=" {
 		if v != nil && v.mutable == false {

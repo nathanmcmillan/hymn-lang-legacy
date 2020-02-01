@@ -24,7 +24,7 @@ func (me *cfile) compileWhile(op string, n *node) *codeblock {
 	for ix < size && n.has[ix].is == "variable" {
 		temp := n.has[ix]
 		tempname := temp.idata.name
-		tempv := me.hmfile.varInitFromData(temp.data(), tempname, false)
+		tempv := temp.data().getnamedvariable(tempname, false)
 		me.scope.variables[tempname] = tempv
 		ix++
 	}
@@ -67,20 +67,20 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 	size := len(n.has)
 	if size == 3 {
 		a := n.has[0]
-		me.scope.variables[a.idata.name] = me.hmfile.varInitFromData(a.data(), a.idata.name, false)
+		me.scope.variables[a.idata.name] = a.data().getnamedvariable(a.idata.name, false)
 		item = a.idata.name
 		var1 = a.idata.name
 		ix = 1
 	} else if size == 4 {
 		a := n.has[0]
 		me.scope.renaming[a.idata.name] = index
-		me.scope.variables[index] = me.hmfile.varInitFromData(a.data(), index, false)
+		me.scope.variables[index] = a.data().getnamedvariable(index, false)
 		var1 = a.idata.name
 		b := n.has[1]
 		if b.idata.name == "_" {
 			item = ""
 		} else {
-			me.scope.variables[b.idata.name] = me.hmfile.varInitFromData(b.data(), b.idata.name, false)
+			me.scope.variables[b.idata.name] = b.data().getnamedvariable(b.idata.name, false)
 			item = b.idata.name
 			var2 = b.idata.name
 		}
@@ -96,7 +96,7 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 		} else {
 			arrayname = "iterate_" + me.temp()
 			array.attributes["assign"] = arrayname
-			me.scope.variables[arrayname] = me.hmfile.varInitFromData(array.data(), arrayname, false)
+			me.scope.variables[arrayname] = array.data().getnamedvariable(arrayname, false)
 			code += array.data().typeSig() + arrayname + " = "
 			code += me.eval(array).code()
 			code += ";\n" + fmc(me.depth)

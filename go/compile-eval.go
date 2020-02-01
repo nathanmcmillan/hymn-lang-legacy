@@ -178,5 +178,5 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 	if checkIsPrimitive(op) {
 		return codeBlockOne(n, n.value)
 	}
-	panic("eval unknown operation " + n.string(0))
+	panic("Evaluating unknown operation: " + n.string(me.hmfile, 0))
 }

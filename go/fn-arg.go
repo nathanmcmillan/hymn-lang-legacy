@@ -31,7 +31,7 @@ func (me *hmlib) fnArgInit(typed, name string, mutable bool) *funcArg {
 	f := &funcArg{}
 	v := &variable{}
 	v.name = name
-	v.cName = name
+	v.cname = name
 	v.mutable = mutable
 	v.copyData(getdatatype(nil, typed))
 	f.variable = v

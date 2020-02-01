@@ -9,7 +9,7 @@ func (me *parser) def() *node {
 	var value *node
 	if me.token.is != "line" {
 		value = me.calc(0, nil)
-		fmt.Println("NEW DEF IS", name, ":=", value.string(0))
+		fmt.Println("NEW DEF IS", name, ":=", value.string(me.hmfile, 0))
 	} else {
 		fmt.Println("NEW DEF IS", name)
 	}
@@ -58,6 +58,6 @@ func (me *parser) enddef() *node {
 
 func (me *parser) exprDef(name string, def *node) *node {
 	me.eat("id")
-	fmt.Println("DEF", name, ":=", def.string(0))
+	fmt.Println("DEF", name, ":=", def.string(me.hmfile, 0))
 	return def
 }

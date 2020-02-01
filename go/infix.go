@@ -9,7 +9,7 @@ func (me *parser) infixConcat(left *node) *node {
 		right := me.calc(getInfixPrecedence("+"), nil)
 		if !right.data().isString() {
 			err := me.fail() + "concatenation operation must be strings but found \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
-			err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
+			err += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
 			panic(err)
 		}
 		node.push(right)
@@ -30,7 +30,7 @@ func infixBinary(me *parser, left *node, op string) *node {
 	right := me.calc(getInfixPrecedence(op), nil)
 	if !left.data().isNumber() || !right.data().isNumber() {
 		err := me.fail() + "operation expected numbers but was \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
-		err += "\n\nleft: " + left.string(0) + "\n\nright: " + right.string(0)
+		err += "\n\nleft: " + left.string(me.hmfile, 0) + "\n\nright: " + right.string(me.hmfile, 0)
 		panic(err)
 	}
 	if leftdata.notEquals(right.data()) {
@@ -50,7 +50,7 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	right := me.calc(getInfixPrecedence(op), nil)
 	if !left.data().isAnyIntegerType() || !right.data().isAnyIntegerType() || left.data().notEquals(right.data()) {
 		err := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
-		err += "\nleft: " + left.string(0) + "\nright: " + right.string(0)
+		err += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
 		panic(err)
 	}
 	node.push(left)

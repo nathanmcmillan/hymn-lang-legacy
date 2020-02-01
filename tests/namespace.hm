@@ -1,11 +1,13 @@
-import "math" as mathematics(
+import "math" as mathematics (
     vec
     pi
+    operation
+    power
 )
 
-const pi = "tasty"
+const self_pi = "tasty"
 
-power() string
+self_power() string
   return "pow"
 
 extra(fl float, mv vec) vec
@@ -13,12 +15,12 @@ extra(fl float, mv vec) vec
   return mv
 
 main
+  echo(self_pi)
   echo(pi)
-  echo(mathematics.pi)
   
-  s = power()
+  s = self_power()
   echo(s)
-  x = mathematics.power(3)
+  x = power(3)
   echo(x)
 
   v = vec()
@@ -40,5 +42,5 @@ main
   vl[1].init(5.0, 7.0, 9.0)
   echo(vl[1].x)
 
-  e = mathematics.operation.add
+  e = operation.add
 	if not e is add : echo("no!")

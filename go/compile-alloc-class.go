@@ -43,7 +43,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 			if !clv.data().isPointer() {
 				p.attributes["stack"] = "true"
 			}
-			cassign := ";\n" + fmc(me.depth) + assign.cName + memberRef + clv.name + " = "
+			cassign := ";\n" + fmc(me.depth) + assign.cname + memberRef + clv.name + " = "
 			if p.is == "new" {
 				temp := me.temp()
 				p.attributes["assign"] = temp

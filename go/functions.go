@@ -75,10 +75,10 @@ func (me *function) getclsname() string {
 	return me.clsname
 }
 
-func (me *function) canonical() string {
+func (me *function) canonical(current *hmfile) string {
 	name := me.getname()
 	if me.module != nil {
-		name = me.module.name + "." + name
+		name = me.module.cross(current) + "." + name
 	}
 	return name
 }
@@ -106,7 +106,7 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	module.functions[name] = fn
 	module.types[name] = "function"
 	if me.file != nil {
-		me.file.WriteString(fn.string(0))
+		me.file.WriteString(fn.string(me.hmfile, 0))
 	}
 }
 

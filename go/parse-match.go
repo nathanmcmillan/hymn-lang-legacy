@@ -72,7 +72,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			if un, ok := baseEnum.types[name]; ok {
 				prefix := ""
 				if me.hmfile != left.data().getmodule() {
-					prefix = left.data().getmodule().name + "."
+					prefix = left.data().getmodule().cross(me.hmfile) + "."
 				}
 				me.eat("id")
 				right = nodeInit("match-enum")

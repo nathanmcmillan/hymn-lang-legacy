@@ -22,10 +22,11 @@ func (me *cfile) declareStatic(n *node) string {
 	return declareCode + ";"
 }
 
-func (me *cfile) defineStatic(n *node) {
-	left := n.has[0]
-	declareCode := me.compileDeclare(left)
-	head := "\nextern " + declareCode + ";"
+func (me *cfile) defineStatic(v *variable) {
+	// left := n.has[0]
+	// declareCode := me.compileDeclare(left)
+	// head := "\nextern " + declareCode + ";"
+	head := "\nextern " + me.declareExtern(v) + ";"
 	me.headExternSection.WriteString(head)
 }
 

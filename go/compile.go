@@ -218,7 +218,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 			var cname string
 			if head.idata.module == me.hmfile {
 				vr = me.getvar(head.idata.name)
-				cname = vr.cName
+				cname = vr.cname
 			} else {
 				vr = data.getmodule().getStatic(head.idata.name)
 				cname = head.idata.getcname()
@@ -256,7 +256,7 @@ func (me *cfile) compileFnPtr(n *node, hint *datatype) *codeblock {
 
 func (me *cfile) compileRootVariable(n *node, hint *datatype) *codeblock {
 	v := me.getvar(n.idata.name)
-	code := v.cName
+	code := v.cname
 	if hint != nil && hint.isPointer() && !v.data().isPointer() {
 		code = "&" + code
 	}
@@ -270,16 +270,14 @@ func (me *cfile) compileVariable(n *node, hint *datatype) *codeblock {
 		v := me.getvar(name)
 		if v == nil {
 			module := me.hmfile
-			for _, s := range module.statics {
-				sname := s.has[0].idata.name
-				if sname == name {
-					me.defineStatic(s)
-					break
-				}
+			if st, ok := module.staticScope[name]; ok {
+				me.defineStatic(st)
+			} else {
+				panic("Could not find static variable \"" + name + "\"")
 			}
 			v = me.getvar(name)
 		}
-		code = v.cName
+		code = v.cname
 		if hint != nil && hint.isPointer() && !v.data().isPointer() {
 			code = "&" + code
 		}

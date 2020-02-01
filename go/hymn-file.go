@@ -10,6 +10,7 @@ type hmfile struct {
 	name            string
 	rootScope       *scope
 	scope           *scope
+	statics         []*node
 	staticScope     map[string]*variable
 	namespace       map[string]string
 	imports         map[string]*hmfile
@@ -18,7 +19,6 @@ type hmfile struct {
 	classes         map[string]*class
 	enums           map[string]*enum
 	defs            map[string]*node
-	statics         []*node
 	defineOrder     []string
 	functions       map[string]*function
 	functionOrder   []string
@@ -157,5 +157,8 @@ func (me *hmfile) peekAssignStack() *datatype {
 }
 
 func (me *hmfile) cross(origin *hmfile) string {
+	if me == origin {
+		return me.name
+	}
 	return me.crossref[origin]
 }

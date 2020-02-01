@@ -10,7 +10,7 @@ func (me *datatype) string(lv int) string {
 	s := "{\n"
 	s += fmc(lv) + "\"is\": \"" + me.nameIs() + "\""
 	if me.module != nil {
-		s += ",\n" + fmc(lv) + "\"module\": \"" + me.module.name + "\""
+		s += ",\n" + fmc(lv) + "\"module\": \"" + me.module.cross(me.origin) + "\""
 	}
 	if me.canonical != "" {
 		s += ",\n" + fmc(lv) + "\"canonical\": \"" + me.canonical + "\""
@@ -68,16 +68,15 @@ func (me *datatype) string(lv int) string {
 func (me *variable) string(lv int) string {
 	s := "{\n"
 	lv++
-	s += fmc(lv) + "\"data\": " + me.data().string(lv) + ",\n"
-	// s += fmc(lv) + "\"data\": " + me.data().string(lv) + ",\n"
 	s += fmc(lv) + "\"name\": \"" + me.name + "\",\n"
+	s += fmc(lv) + "\"data\": " + me.data().string(lv) + ",\n"
 	s += fmc(lv) + "\"mutable\": " + strconv.FormatBool(me.mutable)
 	lv--
 	s += "\n" + fmc(lv) + "}"
 	return s
 }
 
-func (me *node) string(lv int) string {
+func (me *node) string(current *hmfile, lv int) string {
 	s := ""
 	s += fmc(lv) + "{\n"
 	lv++
@@ -86,14 +85,13 @@ func (me *node) string(lv int) string {
 		s += ",\n" + fmc(lv) + "\"value\": \"" + me.value + "\""
 	}
 	if me.idata != nil {
-		s += ",\n" + fmc(lv) + "\"id\": \"" + me.idata.string() + "\""
+		s += ",\n" + fmc(lv) + "\"id\": \"" + me.idata.string(current) + "\""
 	}
 	if me.fn != nil {
-		s += ",\n" + fmc(lv) + "\"call\": \"" + me.fn.canonical() + "\""
+		s += ",\n" + fmc(lv) + "\"call\": \"" + me.fn.canonical(current) + "\""
 	}
 	if me.data() != nil {
 		s += ",\n" + fmc(lv) + "\"data\": " + me.data().string(lv)
-		// s += ",\n" + fmc(lv) + "\"data\": " + me.data().string(lv)
 	}
 	if len(me.attributes) > 0 {
 		s += ",\n" + fmc(lv) + "\"attributes\": {\n"
@@ -115,7 +113,7 @@ func (me *node) string(lv int) string {
 		lv++
 		end := len(me.has) - 1
 		for i, has := range me.has {
-			s += has.string(lv)
+			s += has.string(current, lv)
 			if i < end {
 				s += ",\n"
 			}
@@ -230,7 +228,7 @@ func (me *enum) string(lv int) string {
 	return s
 }
 
-func (me *function) string(lv int) string {
+func (me *function) string(current *hmfile, lv int) string {
 	s := fmc(lv) + "\""
 	s += me.getname()
 	s += "\": {\n"
@@ -260,7 +258,7 @@ func (me *function) string(lv int) string {
 		lv++
 		end := len(me.expressions) - 1
 		for i, expr := range me.expressions {
-			s += expr.string(lv)
+			s += expr.string(current, lv)
 			if i < end {
 				s += ",\n"
 			}
@@ -311,7 +309,7 @@ func (me *hmfile) string() string {
 		lv++
 		end := len(me.statics) - 1
 		for i, st := range me.statics {
-			s += st.string(lv) + "\n"
+			s += st.string(me, lv) + "\n"
 			if i < end {
 				s += ","
 			}
@@ -327,7 +325,7 @@ func (me *hmfile) string() string {
 	end := len(me.functionOrder) - 1
 	for i, name := range me.functionOrder {
 		fn := me.functions[name]
-		s += fn.string(lv)
+		s += fn.string(me, lv)
 		if i < end {
 			s += ",\n"
 		}

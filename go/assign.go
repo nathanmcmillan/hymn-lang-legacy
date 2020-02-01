@@ -33,7 +33,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		sv := me.hmfile.getvar(left.idata.name)
 		if sv != nil {
 			if !sv.mutable {
-				panic(me.fail() + "variable \"" + sv.name + "\" is not mutable")
+				panic(me.fail() + "Variable \"" + sv.name + "\" is not mutable.")
 			}
 			if !right.data().isQuestion() && left.data().notEquals(right.data()) {
 				if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
@@ -81,10 +81,9 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	return n
 }
 
-func (me *parser) forceassign(malloc, mutable bool) *node {
-	v := me.eatvar(me.hmfile)
+func (me *parser) forceassign(v *node, malloc, mutable bool) *node {
 	if !me.assignable(v) {
-		panic(me.fail() + "expected variable for assignment but was \"" + v.data().print() + "\"")
+		panic(me.fail() + "Expected variable for assignment but was \"" + v.data().print() + "\".")
 	}
 	return me.assign(v, malloc, mutable)
 }

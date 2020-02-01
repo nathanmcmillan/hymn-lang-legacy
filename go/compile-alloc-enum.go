@@ -39,14 +39,14 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 		if !useStack {
 			code += "malloc(sizeof(" + unionName + "))"
 		}
-		code += ";\n" + fmc(me.depth) + assign.cName + memberRef + "type = " + enumTypeName(baseEnumName, un.name)
+		code += ";\n" + fmc(me.depth) + assign.cname + memberRef + "type = " + enumTypeName(baseEnumName, un.name)
 		xvar := len(un.types) > 1
 		for i, v := range un.types {
 			p := n.has[i]
 			if !v.isPointer() {
 				p.attributes["stack"] = "true"
 			}
-			cassign := ";\n" + fmc(me.depth) + assign.cName + memberRef + un.name
+			cassign := ";\n" + fmc(me.depth) + assign.cname + memberRef + un.name
 			if xvar {
 				cassign += ".var" + strconv.Itoa(i)
 			}

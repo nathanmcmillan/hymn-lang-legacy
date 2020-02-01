@@ -41,7 +41,7 @@ func (me *parser) expression() *node {
 	op := token.is
 	if op == "mutable" {
 		me.eat(op)
-		n := me.forceassign(true, true)
+		n := me.forceassign(me.eatvar(me.hmfile), true, true)
 		me.verify("line")
 		return n
 	}
@@ -167,11 +167,11 @@ func (me *parser) parseReturn() *node {
 				panic(me.fail() + "return type was \"" + ret.print() + "\" but function is \"" + fn.returns.print() + "\"")
 			} else if ret.getmember() != nil {
 				if calc.is == "none" {
-					panic(me.fail() + "unnecessary none definition for return " + calc.string(0))
+					panic(me.fail() + "unnecessary none definition for return " + calc.string(me.hmfile, 0))
 				}
 			}
 		} else if fn.returns.notEquals(ret) {
-			panic(me.fail() + "function \"" + fn.canonical() + "\" returns \"" + fn.returns.print() + "\" but found \"" + ret.print() + "\"")
+			panic(me.fail() + "function \"" + fn.canonical(me.hmfile) + "\" returns \"" + fn.returns.print() + "\" but found \"" + ret.print() + "\"")
 		}
 	}
 	me.verify("line")
@@ -305,7 +305,6 @@ func (me *parser) importing() {
 		newmodule.crossref[module] = alias
 		for _, s := range statics {
 			if cl, ok := newmodule.classes[s]; ok {
-				fmt.Println("import as static class ::", cl.name)
 				if _, ok := module.types[cl.name]; ok {
 					panic(me.fail() + "Cannot import class \"" + cl.name + "\". It is already defined.")
 				}
@@ -314,7 +313,6 @@ func (me *parser) importing() {
 				module.types[cl.name] = "class"
 
 			} else if en, ok := newmodule.enums[s]; ok {
-				fmt.Println("import as static enum ::", en.name)
 				if _, ok := module.types[en.name]; ok {
 					panic(me.fail() + "Cannot import enum \"" + cl.name + "\". It is already defined.")
 				}
@@ -323,7 +321,6 @@ func (me *parser) importing() {
 				module.types[en.name] = "enum"
 
 			} else if fn, ok := newmodule.functions[s]; ok {
-				fmt.Println("import as static function ::", fn.name)
 				if _, ok := module.types[fn.name]; ok {
 					panic(me.fail() + "Cannot import function \"" + cl.name + "\". It is already defined.")
 				}
@@ -332,11 +329,11 @@ func (me *parser) importing() {
 				module.types[fn.name] = "function"
 
 			} else if st, ok := newmodule.staticScope[s]; ok {
-				fmt.Println("import as static variable ::", st.name)
 				if _, ok := module.types[st.name]; ok {
 					panic(me.fail() + "Cannot import variable \"" + st.name + "\". It is already defined.")
 				}
 				module.staticScope[st.name] = st
+				module.scope.variables[st.name] = st
 			}
 		}
 		if debug {
@@ -346,24 +343,27 @@ func (me *parser) importing() {
 	me.eat("line")
 }
 
+func (me *parser) global(mutable bool) {
+	module := me.hmfile
+	v := me.eatvar(me.hmfile)
+	name := v.idata.name
+	existing := module.getvar(name)
+	if existing != nil {
+		panic(me.fail() + "Variable \"" + name + "\" already defined.")
+	}
+	v.idata.setGlobal(true)
+	n := me.forceassign(v, true, mutable)
+	module.statics = append(module.statics, n)
+	module.staticScope[name] = me.hmfile.scope.variables[name]
+	me.eat("line")
+}
+
 func (me *parser) immutable() {
 	me.eat("const")
-	n := me.forceassign(true, true)
-	av := n.has[0]
-	av.idata.setGlobal(true)
-	module := me.hmfile
-	module.statics = append(module.statics, n)
-	module.staticScope[av.idata.name] = module.scope.variables[av.idata.name]
-	me.eat("line")
+	me.global(false)
 }
 
 func (me *parser) mutable() {
 	me.eat("mutable")
-	n := me.forceassign(true, true)
-	av := n.has[0]
-	av.idata.setGlobal(true)
-	module := me.hmfile
-	module.statics = append(module.statics, n)
-	module.staticScope[av.idata.name] = me.hmfile.scope.variables[av.idata.name]
-	me.eat("line")
+	me.global(true)
 }

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *cfile) compileDeclare(n *node) string {
 	if n.is != "variable" {
 		return me.eval(n).code()
@@ -28,10 +30,10 @@ func (me *cfile) compileDeclare(n *node) string {
 		newVar := me.hmfile.varInitFromData(data, name, mutable)
 		me.scope.variables[name] = newVar
 		if global {
-			newVar.cName = idata.getcname()
+			newVar.cname = idata.getcname()
 			// code += fmtassignspace(data.noMallocTypeSig())
 			// code += fmtassignspace(data.typeSig())
-			code += data.typeSigOf(newVar.cName, true)
+			code += data.typeSigOf(newVar.cname, true)
 		} else if useStack {
 			code += fmtassignspace(data.typeSig())
 			code += name
@@ -39,7 +41,16 @@ func (me *cfile) compileDeclare(n *node) string {
 			code += data.typeSigOf(name, mutable)
 		}
 	} else {
-		code += v.cName
+		code += v.cname
 	}
 	return code
+}
+
+func (me *cfile) declareExtern(v *variable) string {
+	name := v.name
+	newv := me.hmfile.varInitFromData(v.data(), name, v.mutable)
+	newv.cname = idata.getcname()
+	me.scope.variables[name] = newv
+	fmt.Println("declare extern ::", v.name, "|", v.cname, "|", v.data().print())
+	return newv.data().typeSigOf(newv.cname, true)
 }

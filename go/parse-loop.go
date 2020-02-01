@@ -5,11 +5,11 @@ func (me *parser) forloop() *node {
 	var no *node
 	var templs []*variableNode
 	no = nodeInit("for")
-	no.push(me.forceassign(true, true))
+	no.push(me.forceassign(me.eatvar(me.hmfile), true, true))
 	me.eat(";")
 	no.push(me.calcBool())
 	me.eat(";")
-	no.push(me.forceassign(true, true))
+	no.push(me.forceassign(me.eatvar(me.hmfile), true, true))
 	me.eat("line")
 	no.push(me.block())
 	if templs != nil {

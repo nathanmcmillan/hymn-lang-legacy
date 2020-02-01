@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -40,7 +39,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 	tempname := ""
 
 	if using.is == "variable" {
-		name := me.getvar(using.idata.name).cName
+		name := me.getvar(using.idata.name).cname
 		tempname = name
 	}
 
@@ -67,18 +66,17 @@ func (me *cfile) compileIs(n *node) *codeblock {
 
 	if caseOf.is == "match-enum" {
 		matchBaseEnum, matchBaseUn, _ := caseOf.data().isEnum()
-		fmt.Println("...?", caseOf.data().print(), "->", matchBaseEnum)
 		matchBaseEnum = matchBaseEnum.baseEnum()
 		enNameSpace := matchBaseEnum.cname
 		code += enumTypeName(enNameSpace, matchBaseUn.name)
 	} else {
 		compare := me.eval(caseOf)
 		if compare.data() == nil {
-			panic("expected enum but was " + caseOf.string(0))
+			panic("expected enum but was " + caseOf.string(me.hmfile, 0))
 		}
 		compareEnum, _, ok := compare.data().isEnum()
 		if !ok {
-			panic("expected enum but was " + caseOf.string(0))
+			panic("expected enum but was " + caseOf.string(me.hmfile, 0))
 		}
 		code += compare.code()
 		if !compareEnum.simple {
@@ -105,7 +103,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	var isEnum *enum
 
 	if using.is == "variable" {
-		name := me.getvar(using.idata.name).cName
+		name := me.getvar(using.idata.name).cname
 		if baseEnum, _, ok := using.data().isEnum(); ok {
 			isEnum = baseEnum
 			if !baseEnum.simple {
@@ -189,7 +187,7 @@ func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeb
 	tempname := ""
 	casename := ""
 	if using.is == "variable" {
-		name := me.getvar(using.idata.name).cName
+		name := me.getvar(using.idata.name).cname
 		tempname = name
 	}
 

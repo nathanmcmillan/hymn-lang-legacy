@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -32,7 +31,6 @@ type datatype struct {
 	variadic   *datatype
 	returns    *datatype
 	generics   []*datatype
-	mutable    bool
 	heap       bool
 	pointer    bool
 	class      *class
@@ -69,7 +67,6 @@ func (me *datatype) set(in *datatype) {
 		}
 	}
 	me.hmlib = in.hmlib
-	me.mutable = in.mutable
 	me.heap = in.heap
 	me.pointer = in.pointer
 	me.class = in.class
@@ -92,6 +89,10 @@ func getdatatype(me *hmfile, typed string) *datatype {
 
 	if typed == "void" {
 		return newdatavoid()
+	}
+
+	if typed == "?" {
+		return newdataunknown(nil, nil, typed, nil)
 	}
 
 	if typed == TokenString {
@@ -141,6 +142,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	origin := me
 	module := me
 	d := strings.Index(typed, ".")
+
 	if d != -1 {
 		base := typed[0:d]
 		if imp, ok := me.imports[base]; ok {
@@ -556,7 +558,6 @@ func (me *datatype) getRaw() string {
 }
 
 func (me *datatype) print() string {
-	fmt.Println("PRINT ::", me.nameIs(), me.canonical)
 	switch me.is {
 	case dataTypeUnknown:
 		fallthrough
@@ -653,7 +654,6 @@ func (me *datatype) print() string {
 func newdatatype(is int) *datatype {
 	d := &datatype{}
 	d.is = is
-	d.mutable = true
 	d.pointer = true
 	d.heap = true
 	return d

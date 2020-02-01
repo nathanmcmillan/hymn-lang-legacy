@@ -2,7 +2,7 @@ package main
 
 type variable struct {
 	name    string
-	cName   string
+	cname   string
 	mutable bool
 	_vdata  *datatype
 }
@@ -24,7 +24,7 @@ func (me *hmfile) varInitFromData(data *datatype, name string, mutable bool) *va
 	v := &variable{}
 	v.copyData(data)
 	v.name = name
-	v.cName = name
+	v.cname = name
 	v.mutable = mutable
 	return v
 }
@@ -32,7 +32,7 @@ func (me *hmfile) varInitFromData(data *datatype, name string, mutable bool) *va
 func (me *hmfile) varInit(typed, name string, mutable bool) *variable {
 	v := &variable{}
 	v.name = name
-	v.cName = name
+	v.cname = name
 	v.mutable = mutable
 	v._vdata = getdatatype(me, typed)
 	return v
@@ -41,7 +41,7 @@ func (me *hmfile) varInit(typed, name string, mutable bool) *variable {
 func (me *variable) copy() *variable {
 	v := &variable{}
 	v.name = me.name
-	v.cName = me.name
+	v.cname = me.name
 	v.mutable = me.mutable
 	v.copyData(me.data())
 	return v

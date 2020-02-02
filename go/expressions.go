@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (me *parser) fileExpression() {
@@ -270,6 +272,7 @@ func (me *parser) importing() {
 	me.eat("import")
 	value := me.token.value
 	me.eat(TokenStringLiteral)
+	value = variableSubstitution(value, me.hmfile.program.shellvar)
 	absolute, err := filepath.Abs(value)
 	if err != nil {
 		panic(me.fail() + "Failed to parse import \"" + value + "\". " + err.Error())
@@ -302,6 +305,21 @@ func (me *parser) importing() {
 	module := me.hmfile
 	_, ok := module.imports[absolute]
 	if !ok {
+		module.program.out, _ = filepath.Abs(module.program.out)
+
+		rel, err3 := filepath.Rel(module.program.out, value)
+		fmt.Println(rel)
+		fmt.Println(err3)
+
+		rel, err3 = filepath.Rel(value, module.program.out)
+		fmt.Println(rel)
+		fmt.Println(err3)
+
+		join := filepath.Join(module.program.out, value)
+		fmt.Println(join)
+
+		// TODO: this cannot rely on relative paths at all, must have some kind of generated short path
+
 		out, err1 := filepath.Abs(module.program.out + "/" + value)
 		if err1 != nil {
 			panic(me.fail() + "Failed to parse import \"" + value + "\". " + err1.Error())
@@ -377,4 +395,41 @@ func (me *parser) immutable() {
 func (me *parser) mutable() {
 	me.eat("mutable")
 	me.global(true)
+}
+
+func variableSubstitution(value string, variables map[string]string) string {
+	expanded := ""
+	index := 0
+	remainder := value
+	for true {
+		sign := strings.Index(remainder, "$")
+		if sign == -1 {
+			break
+		}
+		left := strings.Index(remainder, "{")
+		if left != sign+1 {
+			break
+		}
+		right := strings.Index(remainder, "}")
+		if right <= left+1 {
+			break
+		}
+		expanded += remainder[0:sign]
+		variable := remainder[left+1 : right]
+		var env string
+		if v, ok := variables[variable]; ok {
+			env = v
+		} else {
+			env = os.Getenv(variable)
+		}
+		if env != "" {
+			expanded += env
+		}
+		index = right + 1
+		remainder = remainder[index:]
+	}
+	if index < len(value)-1 {
+		expanded += remainder
+	}
+	return expanded
 }

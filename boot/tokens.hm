@@ -1,4 +1,18 @@
-import "hashset" (hashset, hashset_item)
+import "${PWD}/hashset" (hashset, hashset_item)
+
+-- parsing & compiling imports from abritrary directories and files
+-- parsing is completely finished before any compiling is done
+-- this means we can represent any given directory/module as a generic UID e.g a number 0, 1, 2, 3, etc
+-- only at the compilation phase must we convert this UID to actual unique directory/modules
+-- the compilation phase can determine path & naming conflicts and generate an ideally replicable unique name-space
+
+-- example: 
+--      --> import "hashmap" (hashmap)
+--      --> import "library" (library)
+--      --> x = hashmap<string,library>
+--      --> hashmap => /user/code/project/hashmap.hm => 0
+--      --> library => /user/code/modules/library.hm => 1
+--      --> %0.hashmap<string,%1.library>
 
 new_hashset() hashset<string>
 	return hashset(

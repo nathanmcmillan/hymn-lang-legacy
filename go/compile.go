@@ -69,6 +69,7 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 		}
 		fname := flatten(name)
 		fname = strings.ReplaceAll(fname, "_", "-")
+		fname = strings.ReplaceAll(fname, ".", "-")
 		filterOrder = append(filterOrder, name)
 		s := subc{fname: fname, subfolder: subfolder, base: base}
 		filters[name] = s

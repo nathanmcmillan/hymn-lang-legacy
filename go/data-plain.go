@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -624,6 +625,7 @@ func (me *datatype) print() string {
 		{
 			f := ""
 			if me.module != me.origin {
+				// TODO: f += "\"" + me.module.path + "\"."
 				f += me.module.cross(me.origin) + "."
 			}
 			f += me.class.baseClass().name
@@ -822,6 +824,9 @@ func (me *datatype) typeSig() string {
 		{
 			if c, ok := getCName(me.canonical); ok {
 				return c
+			}
+			if me.canonical == "hmfile.hmfile" {
+				fmt.Println("type sig cname canonical ::", me.origin.name, "::", me.module.name, "::", me.canonical)
 			}
 			return me.canonical
 		}

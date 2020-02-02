@@ -97,5 +97,6 @@ func (me *enum) getLocation() string {
 	name := me.name
 	name = flatten(name)
 	name = strings.ReplaceAll(name, "_", "-")
+	name = strings.ReplaceAll(name, ".", "-")
 	return name
 }

@@ -32,6 +32,7 @@ func capital(name string) string {
 	name = strings.ReplaceAll(name, "<", "_")
 	name = strings.ReplaceAll(name, ">", "")
 	name = strings.ReplaceAll(name, ",", "And")
+	name = upperSplit(name, ".")
 	name = upperSplit(name, "_")
 	name = upperSplit(name, "And")
 	return name
@@ -41,6 +42,7 @@ func flatten(name string) string {
 	name = strings.ReplaceAll(name, "<", "_")
 	name = strings.ReplaceAll(name, ">", "")
 	name = strings.ReplaceAll(name, ",", "_and_")
+	name = strings.ReplaceAll(name, ".", "_")
 	return name
 }
 

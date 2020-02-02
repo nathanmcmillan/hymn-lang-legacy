@@ -35,6 +35,7 @@ type flags struct {
 	optimize        bool
 	makefile        bool
 	doNotCompile    bool
+	variables       string
 }
 
 const (
@@ -69,6 +70,7 @@ func main() {
 	flag.StringVar(&flags.path, "p", "", "path to main hymn file")
 	flag.StringVar(&flags.hmlib, "d", "", "directory path of hmlib files")
 	flag.StringVar(&flags.writeTo, "w", "out", "write generated files to this directory")
+	flag.StringVar(&flags.variables, "v", "", "set of import expansion variables")
 	flag.BoolVar(&flags.help, "h", false, "show usage")
 	flag.BoolVar(&flags.format, "f", false, "format the given code")
 	flag.BoolVar(&flags.analysis, "a", false, "run static analysis on the generated binary")
@@ -97,6 +99,7 @@ func execCompile(flags *flags) (string, error) {
 	program.out = flags.writeTo
 	program.libs = flags.hmlib
 	program.directory = fileDir(flags.path)
+	program.shellvar = variableFlags(flags.variables)
 
 	program.loadlibs(flags.hmlib)
 
@@ -232,4 +235,22 @@ func app(flags *flags, name string) (string, error) {
 	}
 	fmt.Println("===")
 	return "", nil
+}
+
+func variableFlags(value string) map[string]string {
+	dict := make(map[string]string)
+	list := strings.Split(value, ":")
+	for _, item := range list {
+		eq := strings.Index(item, "=")
+		if eq <= 0 {
+			continue
+		}
+		key := item[0:eq]
+		is := item[eq+1:]
+		if key == "" || is == "" {
+			continue
+		}
+		dict[key] = is
+	}
+	return dict
 }

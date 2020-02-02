@@ -25,6 +25,7 @@ type program struct {
 	hmfiles   map[string]*hmfile
 	hmorder   []*hmfile
 	sources   map[string]string
+	shellvar  map[string]string
 }
 
 var (

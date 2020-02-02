@@ -38,8 +38,7 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 
 func (me *class) initMembers(variableOrder []string, variables map[string]*variable) {
 	me.variableOrder = variableOrder
-	me.variables =
-		variables
+	me.variables = variables
 }
 
 func (me *class) baseClass() *class {
@@ -54,14 +53,9 @@ func (me *class) getGenerics() []string {
 }
 
 func (me *class) getLocation() string {
-	// path := ""
 	name := me.name
-	// if strings.Index(name, "<") != -1 {
-	// 	path = name[0:strings.Index(name, "<")]
-	// } else {
-	// 	path = name
-	// }
 	name = flatten(name)
 	name = strings.ReplaceAll(name, "_", "-")
-	return name // path + "/" + name
+	name = strings.ReplaceAll(name, ".", "-")
+	return name
 }

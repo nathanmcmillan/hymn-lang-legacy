@@ -1,7 +1,4 @@
-import "hashset" (
-	hashset
-	hashset_item
-)
+import "hashset" (hashset, hashset_item)
 
 new_hashset() hashset<string>
 	return hashset(

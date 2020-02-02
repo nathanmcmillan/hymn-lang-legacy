@@ -292,7 +292,7 @@ func (me *parser) importing() {
 			statics = append(statics, value)
 			if me.token.is == "line" {
 				me.eat("line")
-			} else {
+			} else if me.token.is == "," {
 				me.eat(",")
 			}
 		}

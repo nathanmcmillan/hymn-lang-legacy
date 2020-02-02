@@ -12,7 +12,7 @@ type program
 	hmfile_list []hmfile.hmfile
 	sources     hashmap.hashmap<string, string>
 
-new_program() program
+function new_program() program
 	a = hashmap.hashmap(
 		capacity: 12
 		get_code: hashmap.string_hashcode

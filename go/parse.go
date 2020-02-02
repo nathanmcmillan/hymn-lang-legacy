@@ -20,7 +20,7 @@ type parsepoint struct {
 }
 
 func (me *parser) fail() string {
-	return fmt.Sprintf("line %d, token %s\n\n", me.line, me.tokens.get(me.pos).string())
+	return fmt.Sprintf("\nModule: %s\nLine: %d\nToken: %s\nError: ", me.hmfile.name, me.line, me.tokens.get(me.pos).string())
 }
 
 func (me *parser) skipLines() {

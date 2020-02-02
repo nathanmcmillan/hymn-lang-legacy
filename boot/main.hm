@@ -41,17 +41,17 @@ enum either<x,y>
 	one(x)
 	two(y)
 
-fmc(depth int) string
+function fmc(depth int) string
 	mutable space = ""
 	for i = 0; i < depth; i += 1
 		space += space_fmc
 	return space
 
-exec_compile(f flags) either<string, error>
+function exec_compile(f flags) either<string, error>
 	echo(f.write_to)
 	return either.one("")
 
-help()
+function help()
 	echo("Hymn command line interface.")
 	echo("")
 	echo("Usage:")

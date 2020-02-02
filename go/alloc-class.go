@@ -13,10 +13,10 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 	}
 	vars := base.variableOrder
 	params := make([]*node, len(vars))
-	me.pushClassParams(n, base, params)
+	me.pushClassParams(n, base, params, base.name)
 }
 
-func (me *parser) defaultValue(data *datatype) *node {
+func (me *parser) defaultValue(data *datatype, from string) *node {
 	d := nodeInit(data.getRaw())
 	d.copyData(data)
 	if data.isString() {
@@ -50,16 +50,21 @@ func (me *parser) defaultValue(data *datatype) *node {
 		t.value = "NULL"
 		d = t
 	} else {
-		panic(me.fail() + "no default value for \"" + d.is + "\"")
+		e := me.fail()
+		if from != "" {
+			e += "\nFrom: " + from
+		}
+		e += "\nType: " + d.is + "\nProblem: No default value available."
+		panic(e)
 	}
 	return d
 }
 
-func (me *parser) pushClassParams(n *node, base *class, params []*node) {
+func (me *parser) pushClassParams(n *node, base *class, params []*node, typed string) {
 	for i, param := range params {
 		if param == nil {
 			clsvar := base.variables[base.variableOrder[i]]
-			d := me.defaultValue(clsvar.data())
+			d := me.defaultValue(clsvar.data(), typed)
 			n.push(d)
 		} else {
 			n.push(param)
@@ -203,7 +208,7 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 		base = module.classes[lazy]
 		typed = lazy
 	}
-	me.pushClassParams(n, base, params)
+	me.pushClassParams(n, base, params, typed)
 	return typed
 }
 

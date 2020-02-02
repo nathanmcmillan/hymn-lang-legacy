@@ -78,7 +78,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 				if arg.defaultNode != nil {
 					param = arg.defaultNode
 				} else {
-					param = me.defaultValue(arg.data())
+					param = me.defaultValue(arg.data(), "")
 				}
 				params[pix] = param
 			} else {

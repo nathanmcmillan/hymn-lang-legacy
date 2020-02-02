@@ -54,11 +54,15 @@ func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string
 			order[i] = g.print()
 		}
 		if data.class != nil {
-			if _, ok := data.module.classes[implementation]; !ok {
+			if cl, ok := data.module.classes[implementation]; ok {
+				data.class = cl
+			} else {
 				data.class = me.defineClassImplGeneric(data.class, implementation, order)
 			}
 		} else if data.enum != nil {
-			if _, ok := data.module.enums[implementation]; !ok {
+			if en, ok := data.module.enums[implementation]; ok {
+				data.enum = en
+			} else {
 				data.enum = me.defineEnumImplGeneric(data.enum, implementation, order)
 			}
 		}

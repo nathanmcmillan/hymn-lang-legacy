@@ -86,9 +86,9 @@ func (me *parser) eatvar(from *hmfile) *node {
 					head = member
 				}
 			} else if data.isSomeOrNone() {
-				panic(me.fail() + "unexpected maybe type \"" + head.data().print() + "\" do you need a match statement?")
+				panic(me.fail() + "Unexpected maybe type \"" + head.data().print() + "\". Do you need a match statement?")
 			} else {
-				panic(me.fail() + "unexpected type \"" + head.data().print() + "\"")
+				panic(me.fail() + "Unknown type \"" + head.data().print() + "\"")
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {

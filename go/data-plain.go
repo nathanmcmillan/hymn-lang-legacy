@@ -164,22 +164,34 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	d = strings.Index(typed, ".")
-	if d != -1 {
+	if d != -1 && (g == -1 || d < g) {
 		base = typed[0:d]
 		if en, ok := module.enums[base]; ok {
 			un := en.types[typed[d+1:]]
-			return newdataenum(origin, module, en, un, glist)
+			return newdataenum(origin, en, un, glist)
 		}
 		return newdataunknown(origin, module, typed, glist)
 	}
 
 	if cl, ok := module.classes[typed]; ok {
-		return newdataclass(origin, module, cl, glist)
+		return newdataclass(origin, cl, glist)
 	} else if en, ok := module.enums[typed]; ok {
-		return newdataenum(origin, module, en, nil, glist)
+		return newdataenum(origin, en, nil, glist)
 	} else if base != typed {
 		if cl, ok := module.classes[base]; ok {
-			return newdataclass(origin, module, cl, glist)
+			if cl.module != module {
+				if cl, ok := cl.module.classes[typed]; ok {
+					return newdataclass(origin, cl, glist)
+				}
+			}
+			return newdataclass(origin, cl, glist)
+		} else if en, ok := module.enums[base]; ok {
+			if en.module != module {
+				if en, ok := en.module.enums[typed]; ok {
+					return newdataenum(origin, en, nil, glist)
+				}
+			}
+			return newdataenum(origin, en, nil, glist)
 		}
 	}
 
@@ -187,7 +199,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 }
 
 func (me *datatype) missingCase() bool {
-	panic("switch statement is missing data type \"" + me.nameIs() + "\"")
+	panic("Switch statement is missing data type \"" + me.nameIs() + "\".")
 }
 
 func (me *datatype) getmodule() *hmfile {
@@ -688,19 +700,19 @@ func newdataprimitive(canonical string) *datatype {
 	return d
 }
 
-func newdataclass(origin *hmfile, module *hmfile, class *class, generics []*datatype) *datatype {
+func newdataclass(origin *hmfile, class *class, generics []*datatype) *datatype {
 	d := newdatatype(dataTypeClass)
 	d.origin = origin
-	d.module = module
+	d.module = class.module
 	d.class = class
 	d.generics = generics
 	return d
 }
 
-func newdataenum(origin *hmfile, module *hmfile, enum *enum, union *union, generics []*datatype) *datatype {
+func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype) *datatype {
 	d := newdatatype(dataTypeEnum)
 	d.origin = origin
-	d.module = module
+	d.module = enum.module
 	d.enum = enum
 	d.union = union
 	d.generics = generics

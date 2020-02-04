@@ -3,6 +3,8 @@ cd "$(dirname "$0")"
 
 ./make.sh
 
+export HYMN_MODULES="root=$(pwd)"
+
 if [ -f bin/hymn ]; then
   lib="$PWD/lib"
   path="$1"

@@ -303,72 +303,79 @@ func (me *parser) importing() {
 	}
 
 	module := me.hmfile
-	_, ok := module.imports[absolute]
-	if !ok {
-		module.program.out, _ = filepath.Abs(module.program.out)
 
-		rel, err3 := filepath.Rel(module.program.out, value)
-		fmt.Println(rel)
-		fmt.Println(err3)
+	path, err2 := filepath.Abs(filepath.Join(module.program.directory, value+".hm"))
+	if err2 != nil {
+		panic(me.fail() + "Failed to parse import \"" + value + "\". " + err2.Error())
+	}
 
-		rel, err3 = filepath.Rel(value, module.program.out)
-		fmt.Println(rel)
-		fmt.Println(err3)
-
-		join := filepath.Join(module.program.out, value)
-		fmt.Println(join)
-
+	var newmodule *hmfile
+	found, ok := module.program.hmfiles[path]
+	if ok {
+		if _, ok := module.importPaths[path]; ok {
+			panic(me.fail() + "Module \"" + path + "\" was already imported.")
+		}
+		newmodule = found
+	} else {
 		// TODO: this cannot rely on relative paths at all, must have some kind of generated short path
 
-		out, err1 := filepath.Abs(module.program.out + "/" + value)
+		// rel, err3 := filepath.Rel(module.program.out, value)
+		// fmt.Println(rel)
+		// fmt.Println(err3)
+
+		// join := filepath.Join(module.program.out, value)
+		// fmt.Println(join)
+
+		out, err1 := filepath.Abs(filepath.Join(module.program.out, value))
 		if err1 != nil {
 			panic(me.fail() + "Failed to parse import \"" + value + "\". " + err1.Error())
 		}
-		path, err2 := filepath.Abs(module.program.directory + "/" + value + ".hm")
-		if err2 != nil {
-			panic(me.fail() + "Failed to parse import \"" + value + "\". " + err2.Error())
-		}
-		newmodule := module.program.parse(out, path, module.program.libs)
-		module.imports[alias] = newmodule
-		module.importOrder = append(module.importOrder, alias)
-		newmodule.crossref[module] = alias
-		for _, s := range statics {
-			if cl, ok := newmodule.classes[s]; ok {
-				if _, ok := module.types[cl.name]; ok {
-					panic(me.fail() + "Cannot import class \"" + cl.name + "\". It is already defined.")
-				}
-				module.classes[cl.name] = cl
-				module.namespace[cl.name] = "class"
-				module.types[cl.name] = "class"
 
-			} else if en, ok := newmodule.enums[s]; ok {
-				if _, ok := module.types[en.name]; ok {
-					panic(me.fail() + "Cannot import enum \"" + cl.name + "\". It is already defined.")
-				}
-				module.enums[en.name] = en
-				module.namespace[en.name] = "enum"
-				module.types[en.name] = "enum"
-
-			} else if fn, ok := newmodule.functions[s]; ok {
-				if _, ok := module.types[fn.name]; ok {
-					panic(me.fail() + "Cannot import function \"" + cl.name + "\". It is already defined.")
-				}
-				module.functions[fn.name] = fn
-				module.namespace[fn.name] = "function"
-				module.types[fn.name] = "function"
-
-			} else if st, ok := newmodule.staticScope[s]; ok {
-				if _, ok := module.types[st.v.name]; ok {
-					panic(me.fail() + "Cannot import variable \"" + st.v.name + "\". It is already defined.")
-				}
-				module.staticScope[st.v.name] = st
-				module.scope.variables[st.v.name] = st.v
-			}
-		}
+		newmodule = module.program.parse(out, path, module.program.libs)
 		if debug {
 			fmt.Println("=== " + module.name + " ===")
 		}
 	}
+
+	module.imports[alias] = newmodule
+	module.importPaths[path] = newmodule
+	module.importOrder = append(module.importOrder, alias)
+	newmodule.crossref[module] = alias
+
+	for _, s := range statics {
+		if cl, ok := newmodule.classes[s]; ok {
+			if _, ok := module.types[cl.name]; ok {
+				panic(me.fail() + "Cannot import class \"" + cl.name + "\". It is already defined.")
+			}
+			module.classes[cl.name] = cl
+			module.namespace[cl.name] = "class"
+			module.types[cl.name] = "class"
+
+		} else if en, ok := newmodule.enums[s]; ok {
+			if _, ok := module.types[en.name]; ok {
+				panic(me.fail() + "Cannot import enum \"" + cl.name + "\". It is already defined.")
+			}
+			module.enums[en.name] = en
+			module.namespace[en.name] = "enum"
+			module.types[en.name] = "enum"
+
+		} else if fn, ok := newmodule.functions[s]; ok {
+			if _, ok := module.types[fn.name]; ok {
+				panic(me.fail() + "Cannot import function \"" + cl.name + "\". It is already defined.")
+			}
+			module.functions[fn.name] = fn
+			module.namespace[fn.name] = "function"
+			module.types[fn.name] = "function"
+
+		} else if st, ok := newmodule.staticScope[s]; ok {
+			if _, ok := module.types[st.v.name]; ok {
+				panic(me.fail() + "Cannot import variable \"" + st.v.name + "\". It is already defined.")
+			}
+			module.staticScope[st.v.name] = st
+			module.scope.variables[st.v.name] = st.v
+		}
+	}
+
 	me.eat("line")
 }
 

@@ -1,4 +1,4 @@
-import "${PWD}/hashset" (hashset, hashset_item)
+import "hashset" (hashset, hashset_item)
 
 -- parsing & compiling imports from abritrary directories and files
 -- parsing is completely finished before any compiling is done

@@ -10,7 +10,7 @@ func (me *datatype) string(lv int) string {
 	s := "{\n"
 	s += fmc(lv) + "\"is\": \"" + me.nameIs() + "\""
 	if me.module != nil {
-		s += ",\n" + fmc(lv) + "\"module\": \"" + me.module.cross(me.origin) + "\""
+		s += ",\n" + fmc(lv) + "\"module\": \"" + me.module.uid + "." + me.module.cross(me.origin) + "\""
 	}
 	if me.canonical != "" {
 		s += ",\n" + fmc(lv) + "\"canonical\": \"" + me.canonical + "\""
@@ -274,9 +274,10 @@ func (me *function) string(current *hmfile, lv int) string {
 func (me *hmfile) string() string {
 	s := "{\n"
 	lv := 1
-	comma := false
+	s += fmc(lv) + "\"uid\": \"" + me.uid + "\",\n"
+	s += fmc(lv) + "\"name\": \"" + me.name + "\""
 	if len(me.defineOrder) > 0 {
-		comma = true
+		s += ",\n"
 		s += fmc(lv) + "\"define\": {\n"
 		lv++
 		end := len(me.defineOrder) - 1
@@ -300,11 +301,7 @@ func (me *hmfile) string() string {
 		s += fmc(lv) + "}"
 	}
 	if len(me.statics) > 0 {
-		if comma {
-			s += ",\n"
-		} else {
-			comma = true
-		}
+		s += ",\n"
 		s += fmc(lv) + "\"static\": [\n"
 		lv++
 		end := len(me.statics) - 1
@@ -317,9 +314,7 @@ func (me *hmfile) string() string {
 		lv--
 		s += fmc(lv) + "]"
 	}
-	if comma {
-		s += ",\n"
-	}
+	s += ",\n"
 	s += fmc(lv) + "\"functions\": {\n"
 	lv++
 	end := len(me.functionOrder) - 1

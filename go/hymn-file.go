@@ -1,6 +1,7 @@
 package main
 
 type hmfile struct {
+	uid             string
 	out             string
 	path            string
 	libs            string
@@ -14,6 +15,7 @@ type hmfile struct {
 	staticScope     map[string]*variableNode
 	namespace       map[string]string
 	imports         map[string]*hmfile
+	importPaths     map[string]*hmfile
 	importOrder     []string
 	crossref        map[*hmfile]string
 	classes         map[string]*class
@@ -34,8 +36,9 @@ type hmfile struct {
 	comments        []string
 }
 
-func (program *program) hymnFileInit(name string) *hmfile {
+func (program *program) hymnFileInit(uid string, name string) *hmfile {
 	hm := &hmfile{}
+	hm.uid = uid
 	hm.name = name
 	hm.program = program
 	hm.hmlib = program.hmlib
@@ -45,6 +48,7 @@ func (program *program) hymnFileInit(name string) *hmfile {
 	hm.namespace = make(map[string]string)
 	hm.types = make(map[string]string)
 	hm.imports = make(map[string]*hmfile)
+	hm.importPaths = make(map[string]*hmfile)
 	hm.importOrder = make([]string, 0)
 	hm.crossref = make(map[*hmfile]string)
 	hm.classes = make(map[string]*class)

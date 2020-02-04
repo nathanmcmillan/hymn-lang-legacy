@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -95,11 +96,18 @@ func main() {
 }
 
 func execCompile(flags *flags) (string, error) {
+	out, err := filepath.Abs(flags.writeTo)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	program := programInit()
-	program.out = flags.writeTo
+	program.out = out
 	program.libs = flags.hmlib
 	program.directory = fileDir(flags.path)
-	program.shellvar = variableFlags(flags.variables)
+
+	variableFlags(program.shellvar, os.Getenv("HYMN_MODULES"))
+	variableFlags(program.shellvar, flags.variables)
 
 	program.loadlibs(flags.hmlib)
 
@@ -123,14 +131,20 @@ func execCompile(flags *flags) (string, error) {
 }
 
 func (me *program) parse(out, path, libs string) *hmfile {
+	uid := strconv.Itoa(me.moduleUID)
+	me.moduleUID++
+
 	path, _ = filepath.Abs(path)
 	name := fileName(path)
-	module := me.hymnFileInit(name)
+	module := me.hymnFileInit(uid, name)
 	module.out = out
 	module.path = path
 	module.libs = libs
+
+	me.modules[uid] = module
 	me.hmfiles[path] = module
 	me.hmorder = append(me.hmorder, module)
+
 	module.parse(out, path)
 	return module
 }
@@ -141,7 +155,7 @@ func (me *program) compile() {
 		module := list[x]
 		os.MkdirAll(module.out, os.ModePerm)
 		source := module.generateC(module.out, fileName(module.path), module.libs)
-		me.sources[module.name] = source
+		me.sources[module.path] = source
 	}
 }
 
@@ -237,8 +251,7 @@ func app(flags *flags, name string) (string, error) {
 	return "", nil
 }
 
-func variableFlags(value string) map[string]string {
-	dict := make(map[string]string)
+func variableFlags(dict map[string]string, value string) {
 	list := strings.Split(value, ":")
 	for _, item := range list {
 		eq := strings.Index(item, "=")
@@ -252,5 +265,4 @@ func variableFlags(value string) map[string]string {
 		}
 		dict[key] = is
 	}
-	return dict
 }

@@ -25,6 +25,7 @@ Learn more at https://hymn-lang.org
 * slices and arrays
 * class functions with generics
 * "_" for default parameters during class allocation
+* $HYMN_MODULES environment variable
 
 ### todo
 * remove c files for header only necessary files

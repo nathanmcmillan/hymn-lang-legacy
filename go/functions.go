@@ -78,7 +78,7 @@ func (me *function) getclsname() string {
 func (me *function) canonical(current *hmfile) string {
 	name := me.getname()
 	if me.module != nil {
-		name = me.module.cross(current) + "." + name
+		name = me.module.uid + "." + name
 	}
 	return name
 }

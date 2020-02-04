@@ -146,7 +146,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 
 	if d != -1 {
 		base := typed[0:d]
-		if imp, ok := me.imports[base]; ok {
+		if imp, ok := me.program.modules[base]; ok {
 			module = imp
 			typed = typed[d+1:]
 		}
@@ -623,11 +623,7 @@ func (me *datatype) print() string {
 		}
 	case dataTypeClass:
 		{
-			f := ""
-			if me.module != me.origin {
-				// TODO: f += "\"" + me.module.path + "\"."
-				f += me.module.cross(me.origin) + "."
-			}
+			f := me.module.uid + "."
 			f += me.class.baseClass().name
 			if len(me.generics) > 0 {
 				f += "<"

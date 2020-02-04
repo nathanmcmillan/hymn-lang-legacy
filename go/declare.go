@@ -161,7 +161,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.wordOrPrimitive()
 	}
 
-	if m, ok := me.hmfile.imports[local]; ok && me.token.is == "." {
+	if m, ok := me.hmfile.program.modules[local]; ok && me.token.is == "." {
 		me.eat(".")
 		module = m
 		local = me.token.value
@@ -200,9 +200,8 @@ func (me *parser) declareType(implementation bool) *datatype {
 	}
 
 	qualified := local
-	if module != me.hmfile {
-		qualified = module.cross(me.hmfile) + "." + qualified
-	}
+
+	qualified = module.uid + "." + qualified
 
 	return getdatatype(me.hmfile, qualified)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -168,16 +169,20 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.eat("id")
 	}
 
+	nonprimitive := false
+
 	if _, ok := module.enums[local]; ok && me.token.is == "." {
 		me.eat(".")
 		local += "." + me.token.value
 		me.eat("id")
+		nonprimitive = true
 
 	} else if fn, ok := module.functions[local]; ok {
 		return me.declareFnPtr(fn)
 	}
 
 	if me.token.is == "<" {
+		nonprimitive = true
 		if base, ok := module.classes[local]; ok {
 			gtypes := me.declareGeneric(implementation, base)
 			local += "<" + strings.Join(gtypes, ",") + ">"
@@ -201,7 +206,11 @@ func (me *parser) declareType(implementation bool) *datatype {
 
 	qualified := local
 
-	qualified = module.uid + "." + qualified
+	if nonprimitive || module != me.hmfile {
+		qualified = module.uid + "." + qualified
+	}
+
+	fmt.Println("declare ::", qualified)
 
 	return getdatatype(me.hmfile, qualified)
 }

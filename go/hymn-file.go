@@ -38,7 +38,7 @@ type hmfile struct {
 
 func (program *program) hymnFileInit(uid string, name string) *hmfile {
 	hm := &hmfile{}
-	hm.uid = uid
+	hm.uid = "%" + uid
 	hm.name = name
 	hm.program = program
 	hm.hmlib = program.hmlib

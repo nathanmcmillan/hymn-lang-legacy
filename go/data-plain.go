@@ -84,6 +84,8 @@ func (me *datatype) copy() *datatype {
 
 func getdatatype(me *hmfile, typed string) *datatype {
 
+	fmt.Println("get data type ::", typed)
+
 	if me != nil {
 		typed = me.alias(typed)
 	}
@@ -623,8 +625,7 @@ func (me *datatype) print() string {
 		}
 	case dataTypeClass:
 		{
-			f := me.module.uid + "."
-			f += me.class.baseClass().name
+			f := me.module.uid + "." + me.class.baseClass().name
 			if len(me.generics) > 0 {
 				f += "<"
 				for i, g := range me.generics {

@@ -229,7 +229,7 @@ func (me *parser) extern() *node {
 		panic(me.fail() + "expecting id token after extern " + extname)
 	}
 	idname := id.value
-	module := me.hmfile.program.modules[extname]
+	module := me.hmfile.imports[extname]
 
 	if _, ok := module.functions[idname]; ok {
 		return me.parseFn(module)

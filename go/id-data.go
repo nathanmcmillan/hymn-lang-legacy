@@ -28,7 +28,10 @@ func newidvariable(module *hmfile, name string) *idData {
 }
 
 func (me *idData) string(current *hmfile) string {
-	return me.module.uid + "." + me.name
+	// TODO: UID
+	// return me.module.uid + "." + me.name
+
+	return me.module.cross(current) + "." + me.name
 }
 
 func (me *idData) isGlobal() bool {

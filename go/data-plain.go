@@ -144,12 +144,22 @@ func getdatatype(me *hmfile, typed string) *datatype {
 
 	origin := me
 	module := me
+
+	p := strings.Index(typed, "%")
 	d := strings.Index(typed, ".")
 
-	if d != -1 {
+	if p == 0 && d != -1 {
+		uid := typed[1:d]
+		if search, ok := me.program.modules[uid]; ok {
+			module = search
+			typed = typed[d+1:]
+		} else {
+			panic("Module UID \"" + uid + "\" not found.")
+		}
+	} else if d != -1 {
 		base := typed[0:d]
-		if imp, ok := me.program.modules[base]; ok {
-			module = imp
+		if search, ok := me.imports[base]; ok {
+			module = search
 			typed = typed[d+1:]
 		}
 	}
@@ -625,16 +635,24 @@ func (me *datatype) print() string {
 		}
 	case dataTypeClass:
 		{
-			f := me.module.uid + "." + me.class.baseClass().name
+			// TODO: UID
+			// f := me.module.uid + "." + me.class.baseClass().name
+
+			f := ""
+			if me.module != me.origin {
+				f += me.module.uid + "."
+			}
+			f += me.class.baseClass().name
+
+			// REGULAR
+			// f := ""
+			// if me.module != me.origin {
+			// 	f += me.module.cross(me.origin) + "."
+			// }
+			// f += me.class.baseClass().name
+
 			if len(me.generics) > 0 {
-				f += "<"
-				for i, g := range me.generics {
-					if i > 0 {
-						f += ","
-					}
-					f += g.print()
-				}
-				f += ">"
+				f += genericslist(me.generics)
 			}
 			return f
 		}
@@ -645,14 +663,7 @@ func (me *datatype) print() string {
 				f += "." + me.union.name
 			}
 			if len(me.generics) > 0 {
-				f += "<"
-				for i, g := range me.generics {
-					if i > 0 {
-						f += ","
-					}
-					f += g.print()
-				}
-				f += ">"
+				f += genericslist(me.generics)
 			}
 			return f
 		}
@@ -954,4 +965,16 @@ func (me *datatype) getnamedvariable(name string, mutable bool) *variable {
 	v.cname = name
 	v.mutable = mutable
 	return v
+}
+
+func genericslist(list []*datatype) string {
+	f := "<"
+	for i, g := range list {
+		if i > 0 {
+			f += ","
+		}
+		f += g.print()
+	}
+	f += ">"
+	return f
 }

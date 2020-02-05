@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 func (me *parser) pushAllDefaultClassParams(n *node) {
@@ -192,16 +191,13 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 	module := base.module
 	typed := base.name
 	if lazyGenerics {
-		glist := make([]string, len(gtypes))
-		for k, v := range gtypes {
-			i, _ := gindex[k]
-			glist[i] = v.print()
-		}
+		glist := make([]*datatype, len(gtypes))
+		gprint := genericslist(glist)
 		if len(glist) != len(base.generics) {
-			f := fmt.Sprint("missing generic for base class \""+base.name+"\"\nimplementation list was ", glist)
+			f := fmt.Sprint("missing generic for base class \""+base.name+"\"\nimplementation list was ", gprint)
 			panic(me.fail() + f)
 		}
-		lazy := typed + "<" + strings.Join(glist, ",") + ">"
+		lazy := typed + gprint
 		if _, ok := module.classes[lazy]; !ok {
 			me.defineClassImplGeneric(base, lazy, glist)
 		}
@@ -226,7 +222,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	if gsize > 0 {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(true, base)
-			typed = name + "<" + strings.Join(gtypes, ",") + ">"
+			typed = name + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				me.defineClassImplGeneric(base, typed, gtypes)
 			}
@@ -249,7 +245,11 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	if n != nil {
 		typed = me.classParams(n, cl, depth)
 	}
-	typed = module.uid + "." + typed
+	// TODO: UID
+	if me.hmfile != module {
+		typed = module.cross(me.hmfile) + "." + typed
+	}
+	// typed = module.uid + "." + typed
 	return getdatatype(me.hmfile, typed)
 }
 

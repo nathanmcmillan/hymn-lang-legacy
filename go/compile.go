@@ -16,15 +16,15 @@ func (me *subc) location() string {
 	return me.fname
 }
 
-func (me *hmfile) generateC(folder, name, hmlibs string) string {
+func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	if debug {
-		fmt.Println("=== " + name + " C ===")
+		fmt.Println("=== " + filename + " C ===")
 	}
 
 	cfile := me.cFileInit()
 	cfile.master = true
 
-	guard := me.defNameSpace("", name)
+	guard := me.defNameSpace("", filename)
 
 	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
 	cfile.headStdIncludeSection.WriteString("#define " + guard + "\n")
@@ -50,6 +50,9 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
 		name := c[0:underscore]
+		if name == filename {
+			continue
+		}
 		typed := c[underscore+1:]
 		subfolder := ""
 		base := false
@@ -77,7 +80,7 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	}
 
 	var code strings.Builder
-	code.WriteString("#include \"" + name + ".h\"\n")
+	code.WriteString("#include \"" + filename + ".h\"\n")
 
 	for _, c := range me.defineOrder {
 		underscore := strings.LastIndex(c, "_")
@@ -114,7 +117,7 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	}
 
 	for _, f := range me.functionOrder {
-		if _, ok := filters[name]; ok {
+		if _, ok := filters[filename]; ok {
 			continue
 		}
 		fun := me.functions[f]
@@ -130,14 +133,14 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 
 	for _, f := range filterOrder {
 		subc := filters[f]
-		cfile.subC(root, folder, name, hmlibs, f, &subc, filterOrder, filters)
+		cfile.subC(root, folder, filename, hmlibs, f, &subc, filterOrder, filters)
 	}
 
 	if debug {
 		fmt.Println("=== end C ===")
 	}
 
-	fileCode := folder + "/" + name + ".c"
+	fileCode := folder + "/" + filename + ".c"
 
 	write(fileCode, code.String())
 	for _, cfn := range cfile.codeFn {
@@ -155,7 +158,7 @@ func (me *hmfile) generateC(folder, name, hmlibs string) string {
 	}
 
 	cfile.headSuffix.WriteString("\n\n#endif\n")
-	write(folder+"/"+name+".h", cfile.head())
+	write(folder+"/"+filename+".h", cfile.head())
 
 	return fileCode
 }

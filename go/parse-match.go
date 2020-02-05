@@ -70,7 +70,14 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			name := me.token.value
 			baseEnum, _, _ := left.data().isEnum()
 			if un, ok := baseEnum.types[name]; ok {
-				prefix := left.data().getmodule().uid + "."
+
+				// TODO: UID
+				// prefix := left.data().getmodule().uid + "."
+
+				prefix := ""
+				if me.hmfile != left.data().getmodule() {
+					prefix = left.data().getmodule().cross(me.hmfile) + "."
+				}
 				me.eat("id")
 				right = nodeInit("match-enum")
 				right.copyData(getdatatype(me.hmfile, prefix+baseEnum.name+"."+un.name))

@@ -85,7 +85,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 			}
 			if len(gimpl) > 0 {
 				order = me.mapUnionGenerics(enumDef, gimpl)
-				enumName += "<" + strings.Join(order, ",") + ">"
+				enumName += genericslist(order)
 				if _, ok := module.enums[enumName]; !ok {
 					me.defineEnumImplGeneric(enumDef, enumName, order)
 				}

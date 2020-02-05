@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string) *enum {
+func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []*datatype) *enum {
 
 	unionList := make([]*union, len(base.types))
 	unionDict := make(map[string]*union)
@@ -26,7 +26,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 
 	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
-		gmapper[gname] = order[ix]
+		gmapper[gname] = order[ix].getRaw()
 	}
 	enumDef.gmapper = gmapper
 
@@ -39,7 +39,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []string)
 	return enumDef
 }
 
-func (me *parser) defineClassImplGeneric(base *class, impl string, order []string) *class {
+func (me *parser) defineClassImplGeneric(base *class, impl string, order []*datatype) *class {
 	memberMap := make(map[string]*variable)
 	for k, v := range base.variables {
 		memberMap[k] = v.copy()
@@ -59,7 +59,7 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 
 	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
-		gmapper[gname] = order[ix]
+		gmapper[gname] = order[ix].getRaw()
 	}
 	classDef.gmapper = gmapper
 
@@ -74,16 +74,16 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []strin
 	return classDef
 }
 
-func (me *parser) declareGeneric(implementation bool, base hasGenerics) []string {
+func (me *parser) declareGeneric(implementation bool, base hasGenerics) []*datatype {
 	me.eat("<")
 	gsize := len(base.getGenerics())
-	order := make([]string, 0)
+	order := make([]*datatype, 0)
 	for i := 0; i < gsize; i++ {
 		if i != 0 {
 			me.eat(",")
 		}
 		gimpl := me.declareType(implementation)
-		order = append(order, gimpl.getRaw())
+		order = append(order, gimpl)
 	}
 	me.eat(">")
 	return order
@@ -136,7 +136,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 	}
 
 	module := me.hmfile
-	local := ""
+	value := ""
 
 	if me.token.is == "(" {
 		return me.declareFn()
@@ -158,56 +158,70 @@ func (me *parser) declareType(implementation bool) *datatype {
 		}
 		return newdatanone()
 	} else {
-		local += me.token.value
+		value += me.token.value
 		me.wordOrPrimitive()
 	}
 
-	if m, ok := me.hmfile.program.modules[local]; ok && me.token.is == "." {
+	// TODO: UID
+	// if m, ok := me.hmfile.program.modules[value]; ok && me.token.is == "." {
+
+	if m, ok := me.hmfile.imports[value]; ok && me.token.is == "." {
 		me.eat(".")
 		module = m
-		local = me.token.value
+		value = me.token.value
 		me.eat("id")
 	}
 
-	nonprimitive := false
-
-	if _, ok := module.enums[local]; ok && me.token.is == "." {
+	if en, ok := module.enums[value]; ok && me.token.is == "." {
 		me.eat(".")
-		local += "." + me.token.value
+		value += "." + me.token.value
 		me.eat("id")
-		nonprimitive = true
 
-	} else if fn, ok := module.functions[local]; ok {
+		// TODO: WIP
+		gtypes := me.declareGeneric(implementation, en)
+		value += genericslist(gtypes)
+		if implementation {
+			if _, ok := module.enums[value]; !ok {
+				me.defineEnumImplGeneric(en, value, gtypes)
+			}
+		}
+		return newdataenum(me.hmfile, en, nil, gtypes)
+
+	} else if fn, ok := module.functions[value]; ok {
 		return me.declareFnPtr(fn)
 	}
 
+	// TODO: REMOVE ME
 	if me.token.is == "<" {
-		nonprimitive = true
-		if base, ok := module.classes[local]; ok {
+		if base, ok := module.classes[value]; ok {
 			gtypes := me.declareGeneric(implementation, base)
-			local += "<" + strings.Join(gtypes, ",") + ">"
+			value += genericslist(gtypes)
 			if implementation {
-				if _, ok := module.classes[local]; !ok {
-					me.defineClassImplGeneric(base, local, gtypes)
+				if _, ok := module.classes[value]; !ok {
+					me.defineClassImplGeneric(base, value, gtypes)
 				}
 			}
-		} else if base, ok := module.enums[local]; ok {
+		} else if base, ok := module.enums[value]; ok {
 			gtypes := me.declareGeneric(implementation, base)
-			local += "<" + strings.Join(gtypes, ",") + ">"
+			value += genericslist(gtypes)
 			if implementation {
-				if _, ok := module.enums[local]; !ok {
-					me.defineEnumImplGeneric(base, local, gtypes)
+				if _, ok := module.enums[value]; !ok {
+					me.defineEnumImplGeneric(base, value, gtypes)
 				}
 			}
 		} else {
-			panic(me.fail() + "type \"" + local + "\" does not exist in module \"" + module.name + "\"")
+			panic(me.fail() + "type \"" + value + "\" does not exist in module \"" + module.name + "\"")
 		}
 	}
 
-	qualified := local
+	qualified := value
 
-	if nonprimitive || module != me.hmfile {
-		qualified = module.uid + "." + qualified
+	if module != me.hmfile {
+		// TODO: UID
+		// qualified = module.uid + "." + qualified
+
+		// REGULAR
+		qualified = module.cross(me.hmfile) + "." + qualified
 	}
 
 	fmt.Println("declare ::", qualified)

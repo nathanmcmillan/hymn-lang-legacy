@@ -2,10 +2,8 @@ import "hashmap" (hashmap)
 import "function" (func)
 
 type hmlib
-	temp string
+	functions hashmap<string, func>
 
-	-- TODO: need a stack trace of names/data being assigned, for error output
-	-- functions     hashmap<string, func>
 	-- function_list []func
 	-- types         hashmap<string, string>
 	-- classes       hashmap<string, class>

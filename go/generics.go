@@ -1,13 +1,13 @@
 package main
 
-func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []string {
-	mapped := make([]string, len(en.generics))
+func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []*datatype {
+	mapped := make([]*datatype, len(en.generics))
 	for i, e := range en.generics {
 		to, ok := dict[e]
 		if !ok {
 			panic(me.fail() + "generic \"" + e + "\" not implemented for \"" + en.name + "\"")
 		}
-		mapped[i] = to
+		mapped[i] = getdatatype(me.hmfile, to)
 	}
 	return mapped
 }
@@ -49,21 +49,17 @@ func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string
 	data.canonical = mapGenericSingle(data.canonical, gmapper)
 	if data.generics != nil {
 		implementation := data.print()
-		order := make([]string, len(data.generics))
-		for i, g := range data.generics {
-			order[i] = g.print()
-		}
 		if data.class != nil {
 			if cl, ok := data.module.classes[implementation]; ok {
 				data.class = cl
 			} else {
-				data.class = me.defineClassImplGeneric(data.class, implementation, order)
+				data.class = me.defineClassImplGeneric(data.class, implementation, data.generics)
 			}
 		} else if data.enum != nil {
 			if en, ok := data.module.enums[implementation]; ok {
 				data.enum = en
 			} else {
-				data.enum = me.defineEnumImplGeneric(data.enum, implementation, order)
+				data.enum = me.defineEnumImplGeneric(data.enum, implementation, data.generics)
 			}
 		}
 	}

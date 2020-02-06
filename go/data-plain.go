@@ -914,7 +914,7 @@ func getdatatypegenerics(typed string) []string {
 				order = current.order
 				break
 			} else {
-				pop := current.name + "<" + strings.Join(current.order, ",") + ">"
+				pop := current.name + genericsliststr(current.order)
 				next := stack[len(stack)-1]
 				next.order = append(next.order, pop)
 			}
@@ -977,4 +977,16 @@ func genericslist(list []*datatype) string {
 	}
 	f += ">"
 	return f
+}
+
+func genericsliststr(list []string) string {
+	return "<" + strings.Join(list, ",") + ">"
+}
+
+func datatypels(data []*datatype) []string {
+	ls := make([]string, len(data))
+	for i, d := range data {
+		ls[i] = d.print()
+	}
+	return ls
 }

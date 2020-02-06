@@ -211,7 +211,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		order, dict := me.genericHeader()
 		me.verify("(")
 		fn.generics = dict
-		fn.genericsOrder = order
+		fn.genericsOrder = datatypels(order)
 	}
 	fn.start = me.save()
 	parenthesis := false

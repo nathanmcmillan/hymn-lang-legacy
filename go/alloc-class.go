@@ -192,12 +192,15 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 	typed := base.name
 	if lazyGenerics {
 		glist := make([]*datatype, len(gtypes))
-		gprint := genericslist(glist)
+		for k, v := range gtypes {
+			i, _ := gindex[k]
+			glist[i] = v
+		}
 		if len(glist) != len(base.generics) {
-			f := fmt.Sprint("missing generic for base class \""+base.name+"\"\nimplementation list was ", gprint)
+			f := fmt.Sprint("Missing generic for base class \""+base.name+"\"\nimplementation list was ", genericslist(glist))
 			panic(me.fail() + f)
 		}
-		lazy := typed + gprint
+		lazy := typed + genericslist(glist)
 		if _, ok := module.classes[lazy]; !ok {
 			me.defineClassImplGeneric(base, lazy, glist)
 		}

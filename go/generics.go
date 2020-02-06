@@ -5,7 +5,7 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []*datatype
 	for i, e := range en.generics {
 		to, ok := dict[e]
 		if !ok {
-			panic(me.fail() + "generic \"" + e + "\" not implemented for \"" + en.name + "\"")
+			panic(me.fail() + "Generic \"" + e + "\" not implemented for \"" + en.name + "\".")
 		}
 		mapped[i] = getdatatype(me.hmfile, to)
 	}

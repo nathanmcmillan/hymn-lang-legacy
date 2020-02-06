@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 )
 
 func (me *parser) allocEnum(module *hmfile) *node {
@@ -20,12 +19,12 @@ func (me *parser) allocEnum(module *hmfile) *node {
 	}
 
 	gdict := enumDef.genericsDict
-	var order []string
+	var order []*datatype
 	if me.token.is == "<" {
 		order, _ = me.genericHeader()
-		enumName += "<" + strings.Join(order, ",") + ">"
+		enumName += genericslist(order)
 		if len(order) != len(gdict) {
-			panic(me.fail() + "generic enum \"" + enumName + "\" with impl " + fmt.Sprint(order) + " does not match " + fmt.Sprint(gdict))
+			panic(me.fail() + "Generic enum \"" + enumName + "\" with implementation " + fmt.Sprint(order) + " does not match " + fmt.Sprint(gdict) + ".")
 		}
 		if _, ok := module.enums[enumName]; !ok {
 			me.defineEnumImplGeneric(enumDef, enumName, order)
@@ -84,7 +83,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 				}
 			}
 			if len(gimpl) > 0 {
-				order = me.mapUnionGenerics(enumDef, gimpl)
+				order := me.mapUnionGenerics(enumDef, gimpl)
 				enumName += genericslist(order)
 				if _, ok := module.enums[enumName]; !ok {
 					me.defineEnumImplGeneric(enumDef, enumName, order)

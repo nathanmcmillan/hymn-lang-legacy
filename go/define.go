@@ -1,7 +1,7 @@
 package main
 
-func (me *parser) genericHeader() ([]string, map[string]int) {
-	order := make([]string, 0)
+func (me *parser) genericHeader() ([]*datatype, map[string]int) {
+	order := make([]*datatype, 0)
 	dict := make(map[string]int)
 	if me.token.is == "<" {
 		me.eat("<")
@@ -9,7 +9,7 @@ func (me *parser) genericHeader() ([]string, map[string]int) {
 			gname := me.token.value
 			me.wordOrPrimitive()
 			dict[gname] = len(order)
-			order = append(order, gname)
+			order = append(order, newdataunknown(me.hmfile, nil, gname, nil))
 			if me.token.is == "," {
 				me.eat(",")
 				continue
@@ -40,7 +40,7 @@ func (me *parser) defineClass() {
 	me.hmfile.types[name] = "class"
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_type")
 
-	classDef := classInit(me.hmfile, name, genericsOrder, genericsDict)
+	classDef := classInit(me.hmfile, name, datatypels(genericsOrder), genericsDict)
 	me.hmfile.classes[name] = classDef
 
 	memberOrder := make([]string, 0)
@@ -154,5 +154,5 @@ func (me *parser) defineEnum() {
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
-	me.hmfile.enums[name] = enumInit(me.hmfile, name, isSimple, typesOrder, typesMap, genericsOrder, genericsDict)
+	me.hmfile.enums[name] = enumInit(me.hmfile, name, isSimple, typesOrder, typesMap, datatypels(genericsOrder), genericsDict)
 }

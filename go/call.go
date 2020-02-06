@@ -2,7 +2,6 @@ package main
 
 import (
 	"strconv"
-	"strings"
 )
 
 func (me *parser) pushSigParams(n *node, sig *fnSig) {
@@ -129,10 +128,10 @@ func (me *parser) call(module *hmfile) *node {
 	base := me.token.value
 	name := base
 	me.eat("id")
-	var order []string
+	var order []*datatype
 	if me.token.is == "<" {
 		order, _ = me.genericHeader()
-		name += "<" + strings.Join(order, ",") + ">"
+		name += genericslist(order)
 	}
 	fn, ok := module.getFunction(name)
 	if !ok {
@@ -142,7 +141,7 @@ func (me *parser) call(module *hmfile) *node {
 		}
 		alias := make(map[string]string)
 		for ix, gname := range fnbase.genericsOrder {
-			alias[gname] = order[ix]
+			alias[gname] = order[ix].print()
 		}
 		fn = me.remapFunctionImpl(name, alias, fnbase)
 	}

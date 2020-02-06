@@ -189,11 +189,11 @@ func (me *parser) declareType(implementation bool) *datatype {
 			gtypes = me.declareGeneric(implementation, en)
 			value += genericslist(gtypes)
 			if implementation {
-				if _, ok := module.enums[value]; !ok {
+				if _, ok := en.module.enums[value]; !ok {
 					me.defineEnumImplGeneric(en, value, gtypes)
 				}
 			}
-			if engen, ok := module.enums[value]; ok {
+			if engen, ok := en.module.enums[value]; ok {
 				en = engen
 			}
 		}
@@ -211,16 +211,17 @@ func (me *parser) declareType(implementation bool) *datatype {
 	}
 
 	if cl, ok := module.classes[value]; ok {
+		fmt.Println("declare class ::", value)
 		var gtypes []*datatype
 		if me.token.is == "<" {
 			gtypes = me.declareGeneric(implementation, cl)
 			value += genericslist(gtypes)
 			if implementation {
-				if _, ok := module.classes[value]; !ok {
+				if _, ok := cl.module.classes[value]; !ok {
 					me.defineClassImplGeneric(cl, value, gtypes)
 				}
 			}
-			if clgen, ok := module.classes[value]; ok {
+			if clgen, ok := cl.module.classes[value]; ok {
 				cl = clgen
 			}
 		}

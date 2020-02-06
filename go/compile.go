@@ -143,9 +143,14 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	fileCode := folder + "/" + filename + ".c"
 
 	write(fileCode, code.String())
-	for _, cfn := range cfile.codeFn {
-		fileappend(fileCode, cfn.String())
+
+	if len(cfile.codeFn) > 0 {
+		for _, cfn := range cfile.codeFn {
+			fileappend(fileCode, cfn.String())
+		}
+		cfile.headSuffix.WriteString("\n")
 	}
+
 	if len(me.comments) > 0 {
 		code.Reset()
 		code.WriteString("\n")
@@ -157,7 +162,7 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 		fileappend(fileCode, code.String())
 	}
 
-	cfile.headSuffix.WriteString("\n\n#endif\n")
+	cfile.headSuffix.WriteString("\n#endif\n")
 	write(folder+"/"+filename+".h", cfile.head())
 
 	return fileCode

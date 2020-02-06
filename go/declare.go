@@ -193,6 +193,9 @@ func (me *parser) declareType(implementation bool) *datatype {
 					me.defineEnumImplGeneric(en, value, gtypes)
 				}
 			}
+			if engen, ok := module.enums[value]; ok {
+				en = engen
+			}
 		}
 		var un *union
 		if me.token.is == "." {
@@ -216,6 +219,9 @@ func (me *parser) declareType(implementation bool) *datatype {
 				if _, ok := module.classes[value]; !ok {
 					me.defineClassImplGeneric(cl, value, gtypes)
 				}
+			}
+			if clgen, ok := module.classes[value]; ok {
+				cl = clgen
 			}
 		}
 		return newdataclass(me.hmfile, cl, gtypes)

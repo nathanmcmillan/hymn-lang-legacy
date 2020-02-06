@@ -194,7 +194,7 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
 			i, _ := gindex[k]
-			glist[i] = v
+			glist[i] = v.copy()
 		}
 		if len(glist) != len(base.generics) {
 			f := fmt.Sprint("Missing generic for base class \""+base.name+"\"\nimplementation list was ", genericslist(glist))

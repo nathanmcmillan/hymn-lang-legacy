@@ -252,6 +252,14 @@ func (me *function) string(current *hmfile, lv int) string {
 		lv--
 		s += "\n" + fmc(lv) + "]"
 	}
+	if me.returns != nil {
+		if comma {
+			s += ",\n"
+		} else {
+			comma = true
+		}
+		s += fmc(lv) + "\"returns\": " + me.returns.string(lv)
+	}
 	if len(me.expressions) > 0 {
 		if comma {
 			s += ",\n"

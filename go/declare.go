@@ -162,8 +162,15 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.wordOrPrimitive()
 	}
 
-	// TODO: UID
-	// if m, ok := me.hmfile.program.modules[value]; ok && me.token.is == "." {
+	if strings.HasPrefix(value, "%") {
+		fmt.Println("DECLARE MODULE ::", value)
+		if m, ok := me.hmfile.program.modules[value]; ok && me.token.is == "." {
+			me.eat(".")
+			module = m
+			value = me.token.value
+			me.eat("id")
+		}
+	}
 
 	if m, ok := me.hmfile.imports[value]; ok && me.token.is == "." {
 		me.eat(".")
@@ -172,61 +179,53 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.eat("id")
 	}
 
-	if en, ok := module.enums[value]; ok && me.token.is == "." {
-		me.eat(".")
-		value += "." + me.token.value
-		me.eat("id")
-
-		// TODO: WIP
-		gtypes := me.declareGeneric(implementation, en)
-		value += genericslist(gtypes)
-		if implementation {
-			if _, ok := module.enums[value]; !ok {
-				me.defineEnumImplGeneric(en, value, gtypes)
-			}
-		}
-		return newdataenum(me.hmfile, en, nil, gtypes)
-
-	} else if fn, ok := module.functions[value]; ok {
+	if fn, ok := module.functions[value]; ok {
 		return me.declareFnPtr(fn)
 	}
 
-	// TODO: REMOVE ME
-	if me.token.is == "<" {
-		if base, ok := module.classes[value]; ok {
-			gtypes := me.declareGeneric(implementation, base)
-			value += genericslist(gtypes)
-			if implementation {
-				if _, ok := module.classes[value]; !ok {
-					me.defineClassImplGeneric(base, value, gtypes)
-				}
-			}
-		} else if base, ok := module.enums[value]; ok {
-			gtypes := me.declareGeneric(implementation, base)
+	if en, ok := module.enums[value]; ok {
+		var gtypes []*datatype
+		if me.token.is == "<" {
+			gtypes = me.declareGeneric(implementation, en)
 			value += genericslist(gtypes)
 			if implementation {
 				if _, ok := module.enums[value]; !ok {
-					me.defineEnumImplGeneric(base, value, gtypes)
+					me.defineEnumImplGeneric(en, value, gtypes)
 				}
 			}
-		} else {
-			panic(me.fail() + "type \"" + value + "\" does not exist in module \"" + module.name + "\"")
 		}
+		var un *union
+		if me.token.is == "." {
+			var ok bool
+			me.eat(".")
+			un, ok = en.types[me.token.value]
+			if !ok {
+				panic(me.fail() + "Union type \"" + me.token.value + "\" not found for enum \"" + en.name + "\".")
+			}
+			me.eat("id")
+		}
+		return newdataenum(me.hmfile, en, un, gtypes)
 	}
 
-	qualified := value
+	if cl, ok := module.classes[value]; ok {
+		var gtypes []*datatype
+		if me.token.is == "<" {
+			gtypes = me.declareGeneric(implementation, cl)
+			value += genericslist(gtypes)
+			if implementation {
+				if _, ok := module.classes[value]; !ok {
+					me.defineClassImplGeneric(cl, value, gtypes)
+				}
+			}
+		}
+		return newdataclass(me.hmfile, cl, gtypes)
+	}
 
 	if module != me.hmfile {
-		// TODO: UID
-		// qualified = module.uid + "." + qualified
-
-		// REGULAR
-		qualified = module.cross(me.hmfile) + "." + qualified
+		panic(me.fail() + "Unknown declared type \"" + value + "\".")
 	}
 
-	fmt.Println("declare ::", qualified)
-
-	return getdatatype(me.hmfile, qualified)
+	return getdatatype(me.hmfile, value)
 }
 
 func sizeOfArray(typed string) string {

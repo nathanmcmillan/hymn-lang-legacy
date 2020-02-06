@@ -145,22 +145,22 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	origin := me
 	module := me
 
-	p := strings.Index(typed, "%")
 	d := strings.Index(typed, ".")
-
-	if p == 0 && d != -1 {
-		uid := typed[1:d]
-		if search, ok := me.program.modules[uid]; ok {
-			module = search
-			typed = typed[d+1:]
+	if d != -1 {
+		if strings.HasPrefix(typed, "%") {
+			uid := typed[1:d]
+			if search, ok := me.program.modules[uid]; ok {
+				module = search
+				typed = typed[d+1:]
+			} else {
+				panic("Module UID \"" + uid + "\" not found.")
+			}
 		} else {
-			panic("Module UID \"" + uid + "\" not found.")
-		}
-	} else if d != -1 {
-		base := typed[0:d]
-		if search, ok := me.imports[base]; ok {
-			module = search
-			typed = typed[d+1:]
+			base := typed[0:d]
+			if search, ok := me.imports[base]; ok {
+				module = search
+				typed = typed[d+1:]
+			}
 		}
 	}
 
@@ -177,7 +177,8 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	d = strings.Index(typed, ".")
-	if d != -1 && (g == -1 || d < g) {
+
+	if d != -1 {
 		base = typed[0:d]
 		if en, ok := module.enums[base]; ok {
 			un := en.types[typed[d+1:]]

@@ -9,7 +9,7 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int) {
 			gname := me.token.value
 			me.wordOrPrimitive()
 			dict[gname] = len(order)
-			order = append(order, newdataunknown(me.hmfile, nil, gname, nil))
+			order = append(order, getdatatype(me.hmfile, gname))
 			if me.token.is == "," {
 				me.eat(",")
 				continue
@@ -17,7 +17,7 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int) {
 			if me.token.is == ">" {
 				break
 			}
-			panic(me.fail() + "bad token \"" + me.token.is + "\" in class generic")
+			panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
 		}
 		me.eat(">")
 	}

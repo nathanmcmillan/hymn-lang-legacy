@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -9,8 +8,6 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 
 	data := n.data()
 	en, un, _ := data.isEnum()
-	fmt.Println("NODE ::", n.string(me.hmfile, 0))
-	fmt.Println("DEBUG ::", data.getRaw(), en == nil, un == nil)
 	enumType := un.name
 	if en.simple {
 		enumBase := en.cname

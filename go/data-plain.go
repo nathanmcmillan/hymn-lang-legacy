@@ -151,7 +151,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			uid := typed[1:d]
 			if search, ok := me.program.modules[uid]; ok {
 				module = search
-				typed = typed[d+1:]
+				// typed = typed[d+1:]
 			} else {
 				panic("Module UID \"" + uid + "\" not found.")
 			}
@@ -159,7 +159,9 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			base := typed[0:d]
 			if search, ok := me.imports[base]; ok {
 				module = search
-				typed = typed[d+1:]
+				// TODO: UID
+				// typed = typed[d+1:]
+				typed = module.uidref(typed[d+1:])
 			}
 		}
 	}
@@ -177,7 +179,6 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	d = strings.Index(typed, ".")
-
 	if d != -1 {
 		base = typed[0:d]
 		if en, ok := module.enums[base]; ok {
@@ -187,7 +188,12 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		return newdataunknown(origin, module, typed, glist)
 	}
 
+	fmt.Println("searching new data type ::", module.name, "--", typed)
+	for k := range module.classes {
+		fmt.Println("searching classes ::", k)
+	}
 	if cl, ok := module.classes[typed]; ok {
+		fmt.Println("found new data type class ::", module.name, "--", typed, "--", cl.name)
 		return newdataclass(origin, cl, glist)
 	} else if en, ok := module.enums[typed]; ok {
 		return newdataenum(origin, en, nil, glist)
@@ -636,25 +642,11 @@ func (me *datatype) print() string {
 		}
 	case dataTypeClass:
 		{
-			// TODO: UID
-			// f := me.module.uid + "." + me.class.baseClass().name
-
-			f := ""
-			if me.module != me.origin {
-				f += me.module.uid + "."
-			}
-			f += me.class.baseClass().name
-
-			// REGULAR
-			// f := ""
-			// if me.module != me.origin {
-			// 	f += me.module.cross(me.origin) + "."
-			// }
-			// f += me.class.baseClass().name
-
+			f := me.module.uid + "." + me.class.baseClass().name
 			if len(me.generics) > 0 {
 				f += genericslist(me.generics)
 			}
+			fmt.Println("data print class ::", f, "|", me.class.name)
 			return f
 		}
 	case dataTypeEnum:

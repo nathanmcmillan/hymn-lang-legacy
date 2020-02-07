@@ -195,7 +195,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		base.impls = append(base.impls, fn)
 		fn.aliasing = alias
 	} else if self != nil {
-		ref := module.fnArgInit(self.name, "self", false)
+		ref := module.fnArgInit(self.uid(), "self", false)
 		fn.argDict["self"] = 0
 		fn.args = append(fn.args, ref)
 		fn.aliasing = self.gmapper

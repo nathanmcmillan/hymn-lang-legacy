@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []*datatype {
 	mapped := make([]*datatype, len(en.generics))
 	for i, e := range en.generics {
@@ -49,11 +51,14 @@ func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string
 	data.canonical = mapGenericSingle(data.canonical, gmapper)
 	if data.generics != nil {
 		implementation := data.print()
+		fmt.Println(original.print(), "generics replacer ::", implementation)
 		if data.class != nil {
 			if cl, ok := data.module.classes[implementation]; ok {
 				data.class = cl
 			} else {
+				fmt.Println("generics replacer defining class ::", data.class.name, "->", implementation)
 				data.class = me.defineClassImplGeneric(data.class, implementation, data.generics)
+				fmt.Println("completed generics replacer defining class ::", data.class.name)
 			}
 		} else if data.enum != nil {
 			if en, ok := data.module.enums[implementation]; ok {

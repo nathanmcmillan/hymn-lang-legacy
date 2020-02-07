@@ -59,3 +59,7 @@ func (me *class) getLocation() string {
 	name = strings.ReplaceAll(name, ".", "-")
 	return name
 }
+
+func (me *class) uid() string {
+	return me.module.uid + "." + me.name
+}

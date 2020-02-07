@@ -27,7 +27,7 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int) {
 func (me *parser) defineClass() {
 	me.eat("type")
 	token := me.token
-	name := token.value
+	name := me.hmfile.uidref(token.value)
 	if _, ok := me.hmfile.namespace[name]; ok {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}

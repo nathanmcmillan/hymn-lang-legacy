@@ -100,3 +100,7 @@ func (me *enum) getLocation() string {
 	name = strings.ReplaceAll(name, ".", "-")
 	return name
 }
+
+func (me *enum) uid() string {
+	return me.module.uid + "." + me.name
+}

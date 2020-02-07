@@ -47,6 +47,8 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []*data
 
 	module := base.module
 
+	fmt.Println("inserting new class ::", impl)
+
 	module.namespace[impl] = "type"
 	module.types[impl] = "class"
 	module.defineOrder = append(module.defineOrder, impl+"_type")
@@ -59,12 +61,21 @@ func (me *parser) defineClassImplGeneric(base *class, impl string, order []*data
 
 	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
+		fmt.Println(impl, "generic map ::", gname, "<-", order[ix].getRaw())
 		gmapper[gname] = order[ix].getRaw()
 	}
 	classDef.gmapper = gmapper
 
 	for _, mem := range memberMap {
-		mem._vdata = getdatatype(module, me.genericsReplacer(mem.data(), gmapper).print())
+		replace := me.genericsReplacer(mem.data(), gmapper).print()
+		data := getdatatype(module, replace)
+		clname := ""
+		cl, ok := data.isClass()
+		if ok {
+			clname = " | " + cl.name
+		}
+		fmt.Println(impl, "replacing member ::", mem.name, "<-", data.print()+clname)
+		mem._vdata = data
 	}
 
 	for _, fn := range base.functionOrder {
@@ -162,22 +173,41 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.wordOrPrimitive()
 	}
 
+	if value == "void" {
+		return newdatavoid()
+	}
+
+	if value == "?" {
+		return newdataunknown(nil, nil, value, nil)
+	}
+
+	if value == TokenString {
+		return newdatastring()
+	}
+
+	if checkIsPrimitive(value) {
+		return newdataprimitive(value)
+	}
+
+	original := value
+
 	if strings.HasPrefix(value, "%") {
-		fmt.Println("DECLARE MODULE ::", value)
 		if m, ok := me.hmfile.program.modules[value]; ok && me.token.is == "." {
 			me.eat(".")
 			module = m
-			value = me.token.value
+			value = module.uidref(me.token.value)
 			me.eat("id")
 		}
-	}
-
-	if m, ok := me.hmfile.imports[value]; ok && me.token.is == "." {
+	} else if m, ok := me.hmfile.imports[value]; ok && me.token.is == "." {
 		me.eat(".")
 		module = m
-		value = me.token.value
+		value = module.uidref(me.token.value)
 		me.eat("id")
+	} else {
+		value = module.uidref(value)
 	}
+
+	fmt.Println("value ::", value)
 
 	if fn, ok := module.functions[value]; ok {
 		return me.declareFnPtr(fn)
@@ -211,7 +241,6 @@ func (me *parser) declareType(implementation bool) *datatype {
 	}
 
 	if cl, ok := module.classes[value]; ok {
-		fmt.Println("declare class ::", value)
 		var gtypes []*datatype
 		if me.token.is == "<" {
 			gtypes = me.declareGeneric(implementation, cl)
@@ -229,10 +258,12 @@ func (me *parser) declareType(implementation bool) *datatype {
 	}
 
 	if module != me.hmfile {
-		panic(me.fail() + "Unknown declared type \"" + value + "\".")
+		panic(me.fail() + "Unknown declared type \"" + original + "\".")
 	}
 
-	return getdatatype(me.hmfile, value)
+	// TODO: return newdataunknown(me.hmfile, original, nil)
+
+	return getdatatype(me.hmfile, original)
 }
 
 func sizeOfArray(typed string) string {

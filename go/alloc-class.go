@@ -6,13 +6,13 @@ import (
 )
 
 func (me *parser) pushAllDefaultClassParams(n *node) {
-	base, ok := n.data().isClass()
+	cl, ok := n.data().isClass()
 	if !ok {
 		panic(me.fail())
 	}
-	vars := base.variableOrder
+	vars := cl.variableOrder
 	params := make([]*node, len(vars))
-	me.pushClassParams(n, base, params, base.name)
+	me.pushClassParams(n, cl, params, cl.name)
 }
 
 func (me *parser) defaultValue(data *datatype, from string) *node {
@@ -39,6 +39,8 @@ func (me *parser) defaultValue(data *datatype, from string) *node {
 		t.push(s)
 		d = t
 	} else if _, ok := data.isClass(); ok {
+		cl, _ := data.isClass()
+		fmt.Println("all default class ::", from, "|", data.print(), "|", cl.name)
 		t := nodeInit("new")
 		t.copyData(d.data())
 		me.pushAllDefaultClassParams(t)
@@ -63,6 +65,7 @@ func (me *parser) pushClassParams(n *node, base *class, params []*node, typed st
 	for i, param := range params {
 		if param == nil {
 			clsvar := base.variables[base.variableOrder[i]]
+			fmt.Println("default value ::", base.name, "|", clsvar.data().print())
 			d := me.defaultValue(clsvar.data(), typed)
 			n.push(d)
 		} else {
@@ -212,7 +215,7 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 }
 
 func (me *parser) buildClass(n *node, module *hmfile) *datatype {
-	name := me.token.value
+	name := module.uidref(me.token.value)
 	depth := me.token.depth
 	me.eat("id")
 	base, ok := module.classes[name]
@@ -227,6 +230,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			gtypes := me.declareGeneric(true, base)
 			typed = name + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
+				fmt.Println("defining class ::", typed)
 				me.defineClassImplGeneric(base, typed, gtypes)
 			}
 			cl = module.classes[typed]
@@ -245,13 +249,11 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			}
 		}
 	}
+	fmt.Println("alloc class ::", typed)
 	if n != nil {
 		typed = me.classParams(n, cl, depth)
 	}
 	// TODO: UID
-	if me.hmfile != module {
-		typed = module.cross(me.hmfile) + "." + typed
-	}
 	// typed = module.uid + "." + typed
 	return getdatatype(me.hmfile, typed)
 }

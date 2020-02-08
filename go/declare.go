@@ -123,7 +123,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.eat("id")
 	}
 
-	fmt.Println("value ::", module.name, "::", value)
+	fmt.Println("declare value ::", module.name, "::", value)
 
 	if fn, ok := module.functions[value]; ok {
 		return me.declareFnPtr(fn)
@@ -157,10 +157,12 @@ func (me *parser) declareType(implementation bool) *datatype {
 	}
 
 	if cl, ok := module.classes[value]; ok {
+		fmt.Println("declare class ::", module.name, "::", value, "::", cl.name)
 		var gtypes []*datatype
 		if me.token.is == "<" {
 			gtypes = me.declareGeneric(implementation, cl)
 			value += genericslist(gtypes)
+			fmt.Println("declare class generic ::", module.name, "::", value, "::", cl.name, "::", implementation)
 			if implementation {
 				if _, ok := cl.module.classes[value]; !ok {
 					me.defineClassImplGeneric(cl, gtypes)

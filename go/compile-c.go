@@ -22,23 +22,17 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 
 	cfile.location = subc.location()
 
-	for _, c := range module.defineOrder {
-		underscore := strings.LastIndex(c, "_")
-		name := c[0:underscore]
-		typed := c[underscore+1:]
-		matching := name == filter
-		if typed == "type" {
-			if matching {
-				cl := module.classes[name]
-				cfile.defineClass(cl)
+	for _, def := range module.defineOrder {
+		if def.class != nil {
+			if def.class.name == filter {
+				cfile.defineClass(def.class)
 			}
-		} else if typed == "enum" {
-			if matching {
-				en := module.enums[name]
-				cfile.defineEnum(en)
+		} else if def.enum != nil {
+			if def.enum.name == filter {
+				cfile.defineEnum(def.enum)
 			}
 		} else {
-			panic("missing type")
+			panic("Missing definition")
 		}
 	}
 

@@ -47,31 +47,31 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	filterOrder := make([]string, 0)
 	filters := make(map[string]subc)
 
-	for _, c := range me.defineOrder {
-		underscore := strings.LastIndex(c, "_")
-		name := c[0:underscore]
+	for _, def := range me.defineOrder {
+		var name string
+		if def.class != nil {
+			if def.class.doNotDefine {
+				continue
+			}
+			name = def.class.name
+		} else if def.enum != nil {
+			name = def.enum.name
+		} else {
+			panic("Missing definition")
+		}
 		if name == filename {
 			continue
 		}
-		typed := c[underscore+1:]
-		subfolder := ""
+		var subfolder string
 		base := false
-		if typed == "type" {
-			if me.classes[name].doNotDefine() {
-				continue
-			}
-		} else if typed == "enum" {
-		} else {
-			panic("missing type")
-		}
 		if strings.Index(name, "<") == -1 {
 			subfolder = name
 			base = true
 		} else {
 			subfolder = name[0:strings.Index(name, "<")]
 		}
+		fmt.Println("compiling sub module ::", name)
 		fname := me.compileWithFileName(name)
-		fmt.Println("compiling ::", fname)
 		filterOrder = append(filterOrder, name)
 		s := subc{fname: fname, subfolder: subfolder, base: base}
 		filters[name] = s
@@ -81,17 +81,28 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	var code strings.Builder
 	code.WriteString("#include \"" + filename + ".h\"\n")
 
-	for _, c := range me.defineOrder {
-		underscore := strings.LastIndex(c, "_")
-		name := c[0:underscore]
-		if _, ok := filters[name]; ok {
-			continue
-		}
-		typed := c[underscore+1:]
-		if typed == "type" {
-			cfile.defineClass(me.classes[name])
-		} else if typed == "enum" {
-			cfile.defineEnum(me.enums[name])
+	for _, def := range me.defineOrder {
+		if def.class != nil {
+			if def.class.doNotDefine {
+				continue
+			}
+			name := def.class.name
+			if _, ok := filters[name]; ok {
+				continue
+			}
+			fmt.Println("compiling definition ::", name)
+			cfile.defineClass(def.class)
+
+		} else if def.enum != nil {
+			name := def.enum.name
+			if _, ok := filters[name]; ok {
+				continue
+			}
+			fmt.Println("compiling definition ::", name)
+			cfile.defineEnum(def.enum)
+
+		} else {
+			panic("Missing definition")
 		}
 	}
 

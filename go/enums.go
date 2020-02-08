@@ -14,6 +14,7 @@ type enum struct {
 	gmapper      map[string]string
 	base         *enum
 	impls        []*enum
+	doNotDefine  bool
 }
 
 type union struct {
@@ -63,6 +64,7 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 	e.genericsDict = genericsDict
 	if len(generics) > 0 {
 		e.impls = make([]*enum, 0)
+		e.doNotDefine = true
 	}
 	return e
 }

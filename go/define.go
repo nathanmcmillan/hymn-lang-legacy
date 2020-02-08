@@ -43,9 +43,9 @@ func (me *parser) defineClass() {
 	me.hmfile.namespace[name] = "type"
 	me.hmfile.types[name] = "class"
 
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_type")
-
 	classDef := classInit(me.hmfile, name, datatypels(genericsOrder), genericsDict)
+
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{class: classDef})
 
 	me.hmfile.classes[uid] = classDef
 	me.hmfile.classes[name] = classDef
@@ -107,7 +107,6 @@ func (me *parser) defineEnum() {
 
 	me.hmfile.namespace[name] = "enum"
 	me.hmfile.types[name] = "enum"
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_enum")
 
 	typesOrder := make([]*union, 0)
 	typesMap := make(map[string]*union)
@@ -161,5 +160,9 @@ func (me *parser) defineEnum() {
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
-	me.hmfile.enums[name] = enumInit(me.hmfile, name, isSimple, typesOrder, typesMap, datatypels(genericsOrder), genericsDict)
+
+	enumDef := enumInit(me.hmfile, name, isSimple, typesOrder, typesMap, datatypels(genericsOrder), genericsDict)
+
+	me.hmfile.enums[name] = enumDef
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{enum: enumDef})
 }

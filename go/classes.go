@@ -14,6 +14,7 @@ type class struct {
 	functionOrder []*function
 	base          *class
 	impls         []*class
+	doNotDefine   bool
 }
 
 func classInit(module *hmfile, name string, generics []string, genericsDict map[string]int) *class {
@@ -30,6 +31,7 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 	c.functionOrder = make([]*function, 0)
 	if len(generics) > 0 {
 		c.impls = make([]*class, 0)
+		c.doNotDefine = true
 	}
 	return c
 }

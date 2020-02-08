@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -70,7 +71,7 @@ func (me *cfile) typedefEnum(e *enum) string {
 }
 
 func (me *cfile) defineClass(c *class) {
-	if c.doNotDefine() {
+	if c.doNotDefine {
 		return
 	}
 	hmName := me.typedefClass(c)
@@ -85,12 +86,12 @@ func (me *cfile) defineClass(c *class) {
 	me.headStructSection.WriteString(code.String())
 }
 
-func (me *cfile) dependencyGraph(d *datatype) {
-	switch d.is {
+func (me *cfile) dependencyGraph(data *datatype) {
+	switch data.is {
 	case dataTypeNone:
 		{
-			if d.member != nil {
-				me.dependencyGraph(d.member)
+			if data.member != nil {
+				me.dependencyGraph(data.member)
 			}
 		}
 	case dataTypeMaybe:
@@ -99,17 +100,33 @@ func (me *cfile) dependencyGraph(d *datatype) {
 		fallthrough
 	case dataTypeSlice:
 		{
-			me.dependencyGraph(d.member)
+			me.dependencyGraph(data.member)
 		}
 	case dataTypeClass:
-		name := d.print()
-		if cl, ok := me.hmfile.classes[name]; ok {
-			if !cl.doNotDefine() {
-				me.dependencyReq.add(cl.location)
-			}
-		}
+
+		name := data.print()
+		fmt.Println("dependency graph ::", me.hmfile.name, "::", name)
+
+		me.dependencyReq.add(data.class.location)
+
+		// f := me.module.reference(me.class.baseClass().name)
+		// if len(data.generics) > 0 {
+		// 	f += genericslist(me.generics)
+		// } else {
+		// 	if cl, ok := me.hmfile.classes[name]; ok {
+		// 		if !cl.doNotDefine() {
+		// 			me.dependencyReq.add(cl.location)
+		// 		}
+		// 	}
+		// }
+
+		// if cl, ok := me.hmfile.classes[name]; ok {
+		// 	if !cl.doNotDefine() {
+		// 		me.dependencyReq.add(cl.location)
+		// 	}
+		// }
 	case dataTypeEnum:
-		name := d.print()
+		name := data.print()
 		if en, ok := me.hmfile.enums[name]; ok {
 			me.dependencyReq.add(en.location)
 		}
@@ -126,28 +143,4 @@ func (me *cfile) dependencyGraph(d *datatype) {
 	default:
 		panic("missing data type")
 	}
-}
-
-func (me *class) doNotDefine() bool {
-	if len(me.generics) > 0 {
-		return true
-	}
-	for k, v := range me.gmapper {
-		if k == v {
-			return true
-		}
-	}
-	return false
-}
-
-func (me *enum) doNotDefine() bool {
-	if len(me.generics) > 0 {
-		return true
-	}
-	for k, v := range me.genericsDict {
-		if k == me.generics[v] {
-			return true
-		}
-	}
-	return false
 }

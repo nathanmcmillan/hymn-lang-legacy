@@ -23,7 +23,7 @@ type hmfile struct {
 	classes         map[string]*class
 	enums           map[string]*enum
 	defs            map[string]*node
-	defineOrder     []string
+	defineOrder     []*defineType
 	functions       map[string]*function
 	functionOrder   []string
 	types           map[string]string
@@ -57,7 +57,7 @@ func (program *program) hymnFileInit(uid string, name string) *hmfile {
 	hm.enums = make(map[string]*enum)
 	hm.defs = make(map[string]*node)
 	hm.statics = make([]*node, 0)
-	hm.defineOrder = make([]string, 0)
+	hm.defineOrder = make([]*defineType, 0)
 	hm.functions = make(map[string]*function)
 	hm.functionOrder = make([]string, 0)
 	hm.assignmentStack = make([]*datatype, 0)

@@ -215,7 +215,6 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			gtypes := me.declareGeneric(true, cl)
 			typed = uid + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
-				fmt.Println("defining class ::", typed)
 				me.defineClassImplGeneric(cl, gtypes)
 			}
 			cl = module.classes[typed]

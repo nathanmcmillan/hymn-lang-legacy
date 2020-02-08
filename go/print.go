@@ -2,7 +2,6 @@ package main
 
 import (
 	"strconv"
-	"strings"
 )
 
 func (me *datatype) string(lv int) string {
@@ -294,15 +293,10 @@ func (me *hmfile) string() string {
 		lv++
 		end := len(me.defineOrder) - 1
 		for i, c := range me.defineOrder {
-			underscore := strings.LastIndex(c, "_")
-			name := c[0:underscore]
-			typed := c[underscore+1:]
-			if typed == "type" {
-				cl := me.classes[name]
-				s += cl.string(lv)
-			} else if typed == "enum" {
-				en := me.enums[name]
-				s += en.string(lv)
+			if c.class != nil {
+				s += c.class.string(lv)
+			} else if c.enum != nil {
+				s += c.enum.string(lv)
 			}
 			if i < end {
 				s += ","
@@ -334,8 +328,9 @@ func (me *hmfile) string() string {
 		fn := me.functions[name]
 		s += fn.string(me, lv)
 		if i < end {
-			s += ",\n"
+			s += ","
 		}
+		s += "\n"
 	}
 	lv--
 	s += fmc(lv) + "}\n}\n"

@@ -27,7 +27,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 			panic(me.fail() + "Generic enum \"" + enumName + "\" with implementation " + fmt.Sprint(order) + " does not match " + fmt.Sprint(gdict) + ".")
 		}
 		if _, ok := module.enums[enumName]; !ok {
-			me.defineEnumImplGeneric(enumDef, enumName, order)
+			me.defineEnumImplGeneric(enumDef, order)
 		}
 	}
 
@@ -86,7 +86,7 @@ func (me *parser) allocEnum(module *hmfile) *node {
 				order = me.mapUnionGenerics(enumDef, gimpl)
 				enumName += genericslist(order)
 				if _, ok := module.enums[enumName]; !ok {
-					me.defineEnumImplGeneric(enumDef, enumName, order)
+					me.defineEnumImplGeneric(enumDef, order)
 				}
 			}
 		}

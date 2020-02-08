@@ -151,7 +151,8 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			uid := typed[1:d]
 			if search, ok := me.program.modules[uid]; ok {
 				module = search
-				// typed = typed[d+1:]
+				// TODO: UID REF
+				typed = typed[d+1:]
 			} else {
 				panic("Module UID \"" + uid + "\" not found.")
 			}
@@ -160,8 +161,8 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			if search, ok := me.imports[base]; ok {
 				module = search
 				// TODO: UID
-				// typed = typed[d+1:]
-				typed = module.uidref(typed[d+1:])
+				typed = typed[d+1:]
+				// typed = module.uidref(typed[d+1:])
 			}
 		}
 	}
@@ -188,12 +189,15 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		return newdataunknown(origin, module, typed, glist)
 	}
 
-	fmt.Println("searching new data type ::", module.name, "--", typed)
-	for k := range module.classes {
+	fmt.Println("searching ::", module.name, "::", typed)
+	for k, cl := range module.classes {
 		fmt.Println("searching classes ::", k)
+		if k == typed {
+			fmt.Println("... found ::", module.name, "::", typed, "::", cl.name)
+			break
+		}
 	}
 	if cl, ok := module.classes[typed]; ok {
-		fmt.Println("found new data type class ::", module.name, "--", typed, "--", cl.name)
 		return newdataclass(origin, cl, glist)
 	} else if en, ok := module.enums[typed]; ok {
 		return newdataenum(origin, en, nil, glist)
@@ -642,16 +646,22 @@ func (me *datatype) print() string {
 		}
 	case dataTypeClass:
 		{
-			f := me.module.uid + "." + me.class.baseClass().name
+			f := me.class.baseClass().name
+			if me.origin != me.module {
+				f = me.module.reference(f)
+			}
 			if len(me.generics) > 0 {
 				f += genericslist(me.generics)
 			}
-			fmt.Println("data print class ::", f, "|", me.class.name)
+			fmt.Println("data print class ::", f, "::", me.class.name)
 			return f
 		}
 	case dataTypeEnum:
 		{
 			f := me.enum.baseEnum().name
+			if me.origin != me.module {
+				f = me.module.reference(f)
+			}
 			if me.union != nil {
 				f += "." + me.union.name
 			}
@@ -970,6 +980,17 @@ func genericslist(list []*datatype) string {
 	}
 	f += ">"
 	return f
+}
+
+func genericsmap(dict map[string]*datatype) string {
+	out := ""
+	for k, v := range dict {
+		if out != "" {
+			out += ", "
+		}
+		out += k + ":" + v.print()
+	}
+	return "{" + out + "}"
 }
 
 func genericsliststr(list []string) string {

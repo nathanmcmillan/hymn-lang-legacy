@@ -84,6 +84,16 @@ func prefixIdent(me *parser, op string) *node {
 	name := me.token.value
 	module := me.hmfile
 
+	v := module.getvar(name)
+	if v != nil {
+		if me.peek().is == ":=" {
+			if v.mutable == false {
+				panic(me.fail() + "Variable \"" + v.name + "\" is not mutable.")
+			}
+		}
+		return me.eatvar(module)
+	}
+
 	if _, ok := me.hmfile.imports[name]; ok && me.peek().is == "." {
 		return me.extern()
 	}
@@ -110,15 +120,7 @@ func prefixIdent(me *parser, op string) *node {
 		panic(me.fail() + "Bad type \"" + name + "\" definition.")
 	}
 
-	v := module.getvar(name)
-	if me.peek().is == ":=" {
-		if v != nil && v.mutable == false {
-			panic(me.fail() + "variable not mutable")
-		}
-	} else if v == nil {
-		panic(me.fail() + "variable \"" + name + "\" out of scope")
-	}
-	return me.eatvar(module)
+	panic(me.fail() + "Unknown value \"" + name + "\".")
 }
 
 func prefixArray(me *parser, op string) *node {

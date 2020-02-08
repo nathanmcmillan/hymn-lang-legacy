@@ -5,86 +5,6 @@ import (
 	"strings"
 )
 
-func (me *parser) defineEnumImplGeneric(base *enum, impl string, order []*datatype) *enum {
-
-	unionList := make([]*union, len(base.types))
-	unionDict := make(map[string]*union)
-	for i, v := range base.typesOrder {
-		cp := v.copy()
-		unionList[i] = cp
-		unionDict[cp.name] = cp
-	}
-
-	me.hmfile.namespace[impl] = "enum"
-	me.hmfile.types[impl] = "enum"
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, impl+"_enum")
-
-	enumDef := enumInit(base.module, impl, false, unionList, unionDict, nil, nil)
-	enumDef.base = base
-	base.impls = append(base.impls, enumDef)
-	me.hmfile.enums[impl] = enumDef
-
-	gmapper := make(map[string]string)
-	for ix, gname := range base.generics {
-		gmapper[gname] = order[ix].getRaw()
-	}
-	enumDef.gmapper = gmapper
-
-	for _, un := range unionList {
-		for i, data := range un.types {
-			un.types[i] = getdatatype(me.hmfile, me.genericsReplacer(data, gmapper).print())
-		}
-	}
-
-	return enumDef
-}
-
-func (me *parser) defineClassImplGeneric(base *class, impl string, order []*datatype) *class {
-	memberMap := make(map[string]*variable)
-	for k, v := range base.variables {
-		memberMap[k] = v.copy()
-	}
-
-	module := base.module
-
-	fmt.Println("inserting new class ::", impl)
-
-	module.namespace[impl] = "type"
-	module.types[impl] = "class"
-	module.defineOrder = append(module.defineOrder, impl+"_type")
-
-	classDef := classInit(module, impl, nil, nil)
-	classDef.base = base
-	base.impls = append(base.impls, classDef)
-	classDef.initMembers(base.variableOrder, memberMap)
-	module.classes[impl] = classDef
-
-	gmapper := make(map[string]string)
-	for ix, gname := range base.generics {
-		fmt.Println(impl, "generic map ::", gname, "<-", order[ix].getRaw())
-		gmapper[gname] = order[ix].getRaw()
-	}
-	classDef.gmapper = gmapper
-
-	for _, mem := range memberMap {
-		replace := me.genericsReplacer(mem.data(), gmapper).print()
-		data := getdatatype(module, replace)
-		clname := ""
-		cl, ok := data.isClass()
-		if ok {
-			clname = " | " + cl.name
-		}
-		fmt.Println(impl, "replacing member ::", mem.name, "<-", data.print()+clname)
-		mem._vdata = data
-	}
-
-	for _, fn := range base.functionOrder {
-		remapClassFunctionImpl(classDef, fn)
-	}
-
-	return classDef
-}
-
 func (me *parser) declareGeneric(implementation bool, base hasGenerics) []*datatype {
 	me.eat("<")
 	gsize := len(base.getGenerics())
@@ -189,22 +109,18 @@ func (me *parser) declareType(implementation bool) *datatype {
 		return newdataprimitive(value)
 	}
 
-	original := value
-
 	if strings.HasPrefix(value, "%") {
 		if m, ok := me.hmfile.program.modules[value]; ok && me.token.is == "." {
 			me.eat(".")
 			module = m
-			value = module.uidref(me.token.value)
+			value = me.token.value
 			me.eat("id")
 		}
 	} else if m, ok := me.hmfile.imports[value]; ok && me.token.is == "." {
 		me.eat(".")
 		module = m
-		value = module.uidref(me.token.value)
+		value = me.token.value
 		me.eat("id")
-	} else {
-		value = module.uidref(value)
 	}
 
 	fmt.Println("value ::", value)
@@ -220,7 +136,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 			value += genericslist(gtypes)
 			if implementation {
 				if _, ok := en.module.enums[value]; !ok {
-					me.defineEnumImplGeneric(en, value, gtypes)
+					me.defineEnumImplGeneric(en, gtypes)
 				}
 			}
 			if engen, ok := en.module.enums[value]; ok {
@@ -247,7 +163,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 			value += genericslist(gtypes)
 			if implementation {
 				if _, ok := cl.module.classes[value]; !ok {
-					me.defineClassImplGeneric(cl, value, gtypes)
+					me.defineClassImplGeneric(cl, gtypes)
 				}
 			}
 			if clgen, ok := cl.module.classes[value]; ok {
@@ -258,12 +174,10 @@ func (me *parser) declareType(implementation bool) *datatype {
 	}
 
 	if module != me.hmfile {
-		panic(me.fail() + "Unknown declared type \"" + original + "\".")
+		panic(me.fail() + "Unknown declared type \"" + value + "\".")
 	}
 
-	// TODO: return newdataunknown(me.hmfile, original, nil)
-
-	return getdatatype(me.hmfile, original)
+	return newdataunknown(me.hmfile, module, value, nil)
 }
 
 func sizeOfArray(typed string) string {

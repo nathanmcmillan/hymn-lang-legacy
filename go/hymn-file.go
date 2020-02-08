@@ -167,6 +167,6 @@ func (me *hmfile) cross(origin *hmfile) string {
 	return me.crossref[origin]
 }
 
-func (me *hmfile) uidref(value string) string {
+func (me *hmfile) reference(value string) string {
 	return me.uid + "." + value
 }

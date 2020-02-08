@@ -121,23 +121,9 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 				lazyGenerics = true
 				good, newtypes := mergeMaps(update, gtypes)
 				if !good {
-					a := ""
-					for k, v := range gtypes {
-						if a != "" {
-							a += ", "
-						}
-						a += k + ":" + v.print()
-					}
-					a = "map[" + a + "]"
-					b := ""
-					for k, v := range update {
-						if b != "" {
-							b += ", "
-						}
-						b += k + ":" + v.print()
-					}
-					b = "map[" + b + "]"
-					f := fmt.Sprint("lazy generic for class \""+base.name+"\" is ", a, " but found ", b)
+					a := genericsmap(gtypes)
+					b := genericsmap(update)
+					f := fmt.Sprint("Lazy generic for class \""+base.name+"\" is ", a, " but found ", b)
 					panic(me.fail() + f)
 				}
 				gtypes = newtypes
@@ -205,7 +191,7 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 		}
 		lazy := typed + genericslist(glist)
 		if _, ok := module.classes[lazy]; !ok {
-			me.defineClassImplGeneric(base, lazy, glist)
+			me.defineClassImplGeneric(base, glist)
 		}
 		base = module.classes[lazy]
 		typed = lazy
@@ -215,7 +201,7 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 }
 
 func (me *parser) buildClass(n *node, module *hmfile) *datatype {
-	name := module.uidref(me.token.value)
+	name := me.token.value
 	depth := me.token.depth
 	me.eat("id")
 	base, ok := module.classes[name]
@@ -231,7 +217,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			typed = name + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				fmt.Println("defining class ::", typed)
-				me.defineClassImplGeneric(base, typed, gtypes)
+				me.defineClassImplGeneric(base, gtypes)
 			}
 			cl = module.classes[typed]
 		} else {

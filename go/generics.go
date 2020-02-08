@@ -57,14 +57,14 @@ func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string
 				data.class = cl
 			} else {
 				fmt.Println("generics replacer defining class ::", data.class.name, "->", implementation)
-				data.class = me.defineClassImplGeneric(data.class, implementation, data.generics)
+				data.class = me.defineClassImplGeneric(data.class, data.generics)
 				fmt.Println("completed generics replacer defining class ::", data.class.name)
 			}
 		} else if data.enum != nil {
 			if en, ok := data.module.enums[implementation]; ok {
 				data.enum = en
 			} else {
-				data.enum = me.defineEnumImplGeneric(data.enum, implementation, data.generics)
+				data.enum = me.defineEnumImplGeneric(data.enum, data.generics)
 			}
 		}
 	}

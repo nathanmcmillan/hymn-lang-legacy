@@ -61,5 +61,5 @@ func (me *class) getLocation() string {
 }
 
 func (me *class) uid() string {
-	return me.module.uid + "." + me.name
+	return me.module.reference(me.name)
 }

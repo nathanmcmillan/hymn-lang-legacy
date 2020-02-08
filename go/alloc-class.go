@@ -238,6 +238,9 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	if n != nil {
 		typed = me.classParams(n, cl, depth)
 	}
+	if me.hmfile != module {
+		typed = module.reference(typed)
+	}
 	return getdatatype(me.hmfile, typed)
 }
 

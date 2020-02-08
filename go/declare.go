@@ -179,7 +179,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 
 	fmt.Println("declare unknown ::", value)
 
-	return newdataunknown(me.hmfile, module, value, nil)
+	return getdatatype(me.hmfile, value)
 }
 
 func sizeOfArray(typed string) string {

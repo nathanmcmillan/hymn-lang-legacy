@@ -174,7 +174,7 @@ func (me *parser) parseReturn() *node {
 				}
 			}
 		} else if fn.returns.notEquals(ret) {
-			panic(me.fail() + "function \"" + fn.canonical(me.hmfile) + "\" returns \"" + fn.returns.print() + "\" but found \"" + ret.print() + "\"")
+			panic(me.fail() + "Function " + fn.canonical(me.hmfile) + " returns " + fn.returns.error() + " but found " + ret.error())
 		}
 	}
 	me.verify("line")

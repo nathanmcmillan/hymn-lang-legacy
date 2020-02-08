@@ -60,7 +60,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {
-				panic(me.fail() + "member variable type \"" + left.data().getRaw() + "\" does not match expression type \"" + right.data().getRaw() + "\"")
+				panic(me.fail() + "Member variable: " + left.data().error() + " does not match expression: " + right.data().error())
 			}
 		}
 	} else {

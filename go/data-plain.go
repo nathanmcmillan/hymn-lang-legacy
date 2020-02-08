@@ -173,27 +173,37 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	if g != -1 {
 		graw := getdatatypegenerics(typed)
 		base = typed[0:g]
+		gt := strings.LastIndex(typed, ">") + 1
+		remainder := typed[gt:]
 		glist = make([]*datatype, len(graw))
 		for i, r := range graw {
 			glist[i] = getdatatype(me, r)
 		}
-	}
 
-	d = strings.Index(base, ".")
-	if d != -1 {
-		base = typed[0:d]
-		if en, ok := module.enums[base]; ok {
-			un := en.types[typed[d+1:]]
-			return newdataenum(origin, en, un, glist)
+		d = strings.Index(remainder, ".")
+		if d != -1 {
+			base = typed[0:gt]
+			fmt.Println("data enum generic ::", base)
+			if en, ok := module.enums[base]; ok {
+				un := en.types[remainder[d+1:]]
+				return newdataenum(origin, en, un, glist)
+			}
+			return newdataunknown(origin, module, typed, glist)
 		}
-		return newdataunknown(origin, module, typed, glist)
+	} else {
+		d = strings.Index(base, ".")
+		if d != -1 {
+			base = typed[0:d]
+			fmt.Println("data enum ::", base)
+			if en, ok := module.enums[base]; ok {
+				un := en.types[typed[d+1:]]
+				return newdataenum(origin, en, un, glist)
+			}
+			return newdataunknown(origin, module, typed, glist)
+		}
 	}
 
 	fmt.Println("searching ::", module.name, "::", typed)
-
-	if module.name != "math" && typed == "vec" {
-		panic("no!")
-	}
 
 	for k, cl := range module.classes {
 		fmt.Println("searching classes ::", k)
@@ -202,6 +212,15 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			break
 		}
 	}
+
+	for k, en := range module.enums {
+		fmt.Println("searching enums ::", k)
+		if k == typed {
+			fmt.Println("... found ::", module.name, "::", typed, "::", en.name)
+			break
+		}
+	}
+
 	if cl, ok := module.classes[typed]; ok {
 		return newdataclass(origin, cl, glist)
 	} else if en, ok := module.enums[typed]; ok {
@@ -223,8 +242,6 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			return newdataenum(origin, en, nil, glist)
 		}
 	}
-
-	fmt.Println("get unknown ::", typed)
 
 	return newdataunknown(origin, module, typed, glist)
 }
@@ -663,18 +680,19 @@ func (me *datatype) print() string {
 			if len(me.generics) > 0 {
 				f += genericslist(me.generics)
 			}
-			fmt.Println("data print class ::", f, "::", me.class.name)
+			fmt.Println("print data class ::", f, "::", me.class.name)
 			return f
 		}
 	case dataTypeEnum:
 		{
 			f := me.module.reference(me.enum.baseEnum().name)
-			if me.union != nil {
-				f += "." + me.union.name
-			}
 			if len(me.generics) > 0 {
 				f += genericslist(me.generics)
 			}
+			if me.union != nil {
+				f += "." + me.union.name
+			}
+			fmt.Println("print data enum ::", f, "::", me.enum.name)
 			return f
 		}
 	default:
@@ -740,6 +758,7 @@ func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype)
 }
 
 func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics []*datatype) *datatype {
+	fmt.Println("get unknown ::", canonical)
 	d := newdatatype(dataTypeUnknown)
 	d.origin = origin
 	d.module = module

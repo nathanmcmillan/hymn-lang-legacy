@@ -146,13 +146,15 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	module := me
 
 	d := strings.Index(typed, ".")
-	if d != -1 {
+	g := strings.Index(typed, "<")
+
+	if d != -1 && (g == -1 || d < g) {
 		if strings.HasPrefix(typed, "%") {
 			uid := typed[1:d]
 			if search, ok := me.program.modules[uid]; ok {
 				module = search
-				// TODO: UID REF
 				typed = typed[d+1:]
+				g = strings.Index(typed, "<")
 			} else {
 				panic("Module UID \"" + uid + "\" not found.")
 			}
@@ -160,16 +162,14 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			base := typed[0:d]
 			if search, ok := me.imports[base]; ok {
 				module = search
-				// TODO: UID
 				typed = typed[d+1:]
-				// typed = module.uidref(typed[d+1:])
+				g = strings.Index(typed, "<")
 			}
 		}
 	}
 
-	var base string
+	base := typed
 	var glist []*datatype
-	g := strings.Index(typed, "<")
 	if g != -1 {
 		graw := getdatatypegenerics(typed)
 		base = typed[0:g]
@@ -179,7 +179,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		}
 	}
 
-	d = strings.Index(typed, ".")
+	d = strings.Index(base, ".")
 	if d != -1 {
 		base = typed[0:d]
 		if en, ok := module.enums[base]; ok {
@@ -190,6 +190,11 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	fmt.Println("searching ::", module.name, "::", typed)
+
+	if module.name != "math" && typed == "vec" {
+		panic("no!")
+	}
+
 	for k, cl := range module.classes {
 		fmt.Println("searching classes ::", k)
 		if k == typed {
@@ -218,6 +223,8 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			return newdataenum(origin, en, nil, glist)
 		}
 	}
+
+	fmt.Println("get unknown ::", typed)
 
 	return newdataunknown(origin, module, typed, glist)
 }
@@ -593,6 +600,12 @@ func (me *datatype) getRaw() string {
 	return me.print()
 }
 
+func (me *datatype) error() string {
+	e := me.print()
+	e += " " + me.string(0)
+	return e
+}
+
 func (me *datatype) print() string {
 	switch me.is {
 	case dataTypeUnknown:
@@ -646,10 +659,7 @@ func (me *datatype) print() string {
 		}
 	case dataTypeClass:
 		{
-			f := me.class.baseClass().name
-			if me.origin != me.module {
-				f = me.module.reference(f)
-			}
+			f := me.module.reference(me.class.baseClass().name)
 			if len(me.generics) > 0 {
 				f += genericslist(me.generics)
 			}
@@ -658,10 +668,7 @@ func (me *datatype) print() string {
 		}
 	case dataTypeEnum:
 		{
-			f := me.enum.baseEnum().name
-			if me.origin != me.module {
-				f = me.module.reference(f)
-			}
+			f := me.module.reference(me.enum.baseEnum().name)
 			if me.union != nil {
 				f += "." + me.union.name
 			}

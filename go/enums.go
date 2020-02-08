@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strings"
-)
-
 type enum struct {
 	module       *hmfile
 	name         string
@@ -59,7 +55,7 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 		e.cname = module.enumNameSpace(name)
 		e.ucname = module.unionNameSpace(name)
 	}
-	e.location = e.getLocation()
+	e.location = e.enumFileName()
 	e.simple = simple
 	e.types = dict
 	e.typesOrder = order
@@ -91,14 +87,6 @@ func (me *enum) noMallocTypeSig() string {
 
 func (me *enum) getGenerics() []string {
 	return me.generics
-}
-
-func (me *enum) getLocation() string {
-	name := me.name
-	name = flatten(name)
-	name = strings.ReplaceAll(name, "_", "-")
-	name = strings.ReplaceAll(name, ".", "-")
-	return name
 }
 
 func (me *enum) uid() string {

@@ -1,7 +1,5 @@
 package main
 
-import "strings"
-
 type class struct {
 	module        *hmfile
 	name          string
@@ -25,7 +23,7 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 	if module != nil {
 		c.cname = module.classNameSpace(name)
 	}
-	c.location = c.getLocation()
+	c.location = c.classFileName()
 	c.generics = generics
 	c.genericsDict = genericsDict
 	c.functions = make(map[string]*function)
@@ -50,14 +48,6 @@ func (me *class) baseClass() *class {
 
 func (me *class) getGenerics() []string {
 	return me.generics
-}
-
-func (me *class) getLocation() string {
-	name := me.name
-	name = flatten(name)
-	name = strings.ReplaceAll(name, "_", "-")
-	name = strings.ReplaceAll(name, ".", "-")
-	return name
 }
 
 func (me *class) uid() string {

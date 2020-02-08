@@ -201,23 +201,22 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 }
 
 func (me *parser) buildClass(n *node, module *hmfile) *datatype {
-	name := me.token.value
+	typed := me.token.value
 	depth := me.token.depth
 	me.eat("id")
-	base, ok := module.classes[name]
+	cl, ok := module.classes[typed]
 	if !ok {
-		panic(me.fail() + "class \"" + name + "\" does not exist")
+		panic(me.fail() + "class \"" + typed + "\" does not exist")
 	}
-	typed := name
-	gsize := len(base.generics)
-	cl := module.classes[typed]
+	uid := module.reference(typed)
+	gsize := len(cl.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
-			gtypes := me.declareGeneric(true, base)
-			typed = name + genericslist(gtypes)
+			gtypes := me.declareGeneric(true, cl)
+			typed = uid + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				fmt.Println("defining class ::", typed)
-				me.defineClassImplGeneric(base, gtypes)
+				me.defineClassImplGeneric(cl, gtypes)
 			}
 			cl = module.classes[typed]
 		} else {
@@ -235,12 +234,10 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			}
 		}
 	}
-	fmt.Println("alloc class ::", typed)
+	fmt.Println("alloc class ::", module.name, "::", typed)
 	if n != nil {
 		typed = me.classParams(n, cl, depth)
 	}
-	// TODO: UID
-	// typed = module.uid + "." + typed
 	return getdatatype(me.hmfile, typed)
 }
 

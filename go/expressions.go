@@ -351,6 +351,10 @@ func (me *parser) importing() {
 			module.namespace[cl.name] = "class"
 			module.types[cl.name] = "class"
 
+			module.classes[cl.uid()] = cl
+			module.namespace[cl.uid()] = "class"
+			module.types[cl.uid()] = "class"
+
 		} else if en, ok := newmodule.enums[s]; ok {
 			if _, ok := module.types[en.name]; ok {
 				panic(me.fail() + "Cannot import enum \"" + cl.name + "\". It is already defined.")
@@ -358,6 +362,10 @@ func (me *parser) importing() {
 			module.enums[en.name] = en
 			module.namespace[en.name] = "enum"
 			module.types[en.name] = "enum"
+
+			module.enums[en.uid()] = en
+			module.namespace[en.uid()] = "enum"
+			module.types[en.uid()] = "enum"
 
 		} else if fn, ok := newmodule.functions[s]; ok {
 			if _, ok := module.types[fn.name]; ok {

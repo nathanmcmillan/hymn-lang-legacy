@@ -123,7 +123,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.eat("id")
 	}
 
-	fmt.Println("value ::", value)
+	fmt.Println("value ::", module.name, "::", value)
 
 	if fn, ok := module.functions[value]; ok {
 		return me.declareFnPtr(fn)
@@ -176,6 +176,8 @@ func (me *parser) declareType(implementation bool) *datatype {
 	if module != me.hmfile {
 		panic(me.fail() + "Unknown declared type \"" + value + "\".")
 	}
+
+	fmt.Println("declare unknown ::", value)
 
 	return newdataunknown(me.hmfile, module, value, nil)
 }

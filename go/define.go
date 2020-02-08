@@ -33,14 +33,21 @@ func (me *parser) defineClass() {
 	}
 	me.eat("id")
 
+	uid := me.hmfile.reference(name)
 	genericsOrder, genericsDict := me.genericHeader()
 	me.eat("line")
 
+	me.hmfile.namespace[uid] = "type"
+	me.hmfile.types[uid] = "class"
+
 	me.hmfile.namespace[name] = "type"
 	me.hmfile.types[name] = "class"
+
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, name+"_type")
 
 	classDef := classInit(me.hmfile, name, datatypels(genericsOrder), genericsDict)
+
+	me.hmfile.classes[uid] = classDef
 	me.hmfile.classes[name] = classDef
 
 	memberOrder := make([]string, 0)

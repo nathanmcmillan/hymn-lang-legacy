@@ -24,7 +24,7 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	cfile := me.cFileInit()
 	cfile.master = true
 
-	guard := me.defNameSpace("", filename)
+	guard := me.headerFileGuard("", filename)
 
 	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
 	cfile.headStdIncludeSection.WriteString("#define " + guard + "\n")
@@ -70,9 +70,8 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 		} else {
 			subfolder = name[0:strings.Index(name, "<")]
 		}
-		fname := flatten(name)
-		fname = strings.ReplaceAll(fname, "_", "-")
-		fname = strings.ReplaceAll(fname, ".", "-")
+		fname := me.compileWithFileName(name)
+		fmt.Println("compiling ::", fname)
 		filterOrder = append(filterOrder, name)
 		s := subc{fname: fname, subfolder: subfolder, base: base}
 		filters[name] = s

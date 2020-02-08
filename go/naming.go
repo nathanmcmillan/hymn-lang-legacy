@@ -46,12 +46,23 @@ func flatten(name string) string {
 	return name
 }
 
-func (me *hmfile) defNameSpace(root, name string) string {
+func (me *hmfile) nameSpaceModuleUID(name string) string {
+	module := strings.Index(name, "%")
+	for module != -1 {
+		dot := module + strings.Index(name[module:], ".")
+		name = name[0:module] + name[dot+1:]
+		module = strings.Index(name, "%")
+	}
+	return name
+}
+
+func (me *hmfile) headerFileGuard(root, name string) string {
 	if root != "" {
 		root = strings.ToUpper(root)
 		root = strings.ReplaceAll(root, "-", "_")
 		root += "_"
 	}
+	name = me.nameSpaceModuleUID(name)
 	name = strings.ToUpper(name)
 	name = strings.ReplaceAll(name, "-", "_")
 	return definePrefix + root + name + "_H"
@@ -63,7 +74,6 @@ func enumTypeName(base, name string) string {
 
 func (me *hmfile) prefixes(name string) {
 	name = strings.ReplaceAll(name, "-", "_")
-
 	me.funcPrefix = name + "_"
 	me.classPrefix = capital(name)
 	me.enumPrefix = me.classPrefix
@@ -76,17 +86,37 @@ func (me *hmfile) varNameSpace(name string) string {
 }
 
 func (me *hmfile) funcNameSpace(name string) string {
+	name = me.nameSpaceModuleUID(name)
 	return globalFuncPrefix + me.funcPrefix + flatten(name)
 }
 
 func (me *hmfile) classNameSpace(name string) string {
+	name = me.nameSpaceModuleUID(name)
 	return globalClassPrefix + me.classPrefix + capital(name)
 }
 
 func (me *hmfile) enumNameSpace(name string) string {
+	name = me.nameSpaceModuleUID(name)
 	return globalEnumPrefix + me.enumPrefix + capital(name)
 }
 
 func (me *hmfile) unionNameSpace(name string) string {
+	name = me.nameSpaceModuleUID(name)
 	return globalUnionPrefix + me.unionPrefix + capital(name)
+}
+
+func (me *hmfile) compileWithFileName(name string) string {
+	name = me.nameSpaceModuleUID(name)
+	name = flatten(name)
+	name = strings.ReplaceAll(name, "_", "-")
+	name = strings.ReplaceAll(name, ".", "-")
+	return name
+}
+
+func (me *class) classFileName() string {
+	return me.module.compileWithFileName(me.name)
+}
+
+func (me *enum) enumFileName() string {
+	return me.module.compileWithFileName(me.name)
 }

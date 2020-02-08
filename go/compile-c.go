@@ -15,7 +15,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 	module := me.hmfile
 
 	cfile := module.cFileInit()
-	guard := module.defNameSpace(rootname, name)
+	guard := module.headerFileGuard(rootname, name)
 
 	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
 	cfile.headStdIncludeSection.WriteString("#define " + guard)
@@ -44,7 +44,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 
 	for _, f := range module.functionOrder {
 		fun := module.functions[f]
-		if fun.forClass == nil || fun.forClass.getLocation() != name {
+		if fun.forClass == nil || fun.forClass.location != name {
 			continue
 		}
 		cfile.compileFunction(f, fun, true)

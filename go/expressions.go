@@ -333,7 +333,7 @@ func (me *parser) importing() {
 
 		newmodule = module.program.parse(out, path, module.program.libs)
 		if debug {
-			fmt.Println("=== " + module.name + " ===")
+			fmt.Println("=== parse: " + module.name + " ===")
 		}
 	}
 

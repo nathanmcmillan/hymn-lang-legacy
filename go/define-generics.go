@@ -14,23 +14,25 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 		unionDict[cp.name] = cp
 	}
 
+	module := base.module
+
 	implementation := base.name + genericslist(order)
 	uid := base.uid() + genericslist(order)
 
-	me.hmfile.namespace[uid] = "enum"
-	me.hmfile.types[uid] = "enum"
+	module.namespace[uid] = "enum"
+	module.types[uid] = "enum"
 
-	me.hmfile.namespace[implementation] = "enum"
-	me.hmfile.types[implementation] = "enum"
+	module.namespace[implementation] = "enum"
+	module.types[implementation] = "enum"
 
 	enumDef := enumInit(base.module, implementation, false, unionList, unionDict, nil, nil)
 	enumDef.base = base
 	base.impls = append(base.impls, enumDef)
 
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{enum: enumDef})
+	module.defineOrder = append(module.defineOrder, &defineType{enum: enumDef})
 
-	me.hmfile.enums[uid] = enumDef
-	me.hmfile.enums[implementation] = enumDef
+	module.enums[uid] = enumDef
+	module.enums[implementation] = enumDef
 
 	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
@@ -44,7 +46,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 
 	for _, un := range unionList {
 		for i, data := range un.types {
-			un.types[i] = getdatatype(me.hmfile, me.genericsReplacer(data, gmapper).print())
+			un.types[i] = getdatatype(module, me.genericsReplacer(data, gmapper).print())
 		}
 	}
 
@@ -75,7 +77,7 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 	base.impls = append(base.impls, classDef)
 	classDef.initMembers(base.variableOrder, memberMap)
 
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{class: classDef})
+	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})
 
 	module.classes[uid] = classDef
 	module.classes[implementation] = classDef

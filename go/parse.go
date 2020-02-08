@@ -42,7 +42,7 @@ func (me *hmfile) parse(out, path string) {
 
 	if debug {
 		os.MkdirAll(out, os.ModePerm)
-		fmt.Println("=== " + name + " parse ===")
+		fmt.Println("=== parse: " + name + " ===")
 
 		if debugTokens {
 			fileTokens := out + "/" + name + "-tokens.json"

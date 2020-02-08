@@ -9,7 +9,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 	name := subc.fname
 
 	if debug {
-		fmt.Println("=== " + subc.location() + " ===")
+		fmt.Println("=== compile: " + subc.location() + " ===")
 	}
 
 	module := me.hmfile
@@ -42,6 +42,10 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 			continue
 		}
 		cfile.compileFunction(f, fun, true)
+	}
+
+	if debug {
+		fmt.Println("=== compile: end ===")
 	}
 
 	if len(cfile.codeFn) > 0 {

@@ -18,7 +18,7 @@ func (me *subc) location() string {
 
 func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	if debug {
-		fmt.Println("=== " + filename + " C ===")
+		fmt.Println("=== compile: " + filename + " ===")
 	}
 
 	cfile := me.cFileInit()
@@ -147,7 +147,7 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	}
 
 	if debug {
-		fmt.Println("=== end C ===")
+		fmt.Println("=== compile: end ===")
 	}
 
 	fileCode := folder + "/" + filename + ".c"

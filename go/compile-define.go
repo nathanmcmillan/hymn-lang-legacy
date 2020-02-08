@@ -109,17 +109,6 @@ func (me *cfile) dependencyGraph(data *datatype) {
 
 		me.dependencyReq.add(data.class.location)
 
-		// f := me.module.reference(me.class.baseClass().name)
-		// if len(data.generics) > 0 {
-		// 	f += genericslist(me.generics)
-		// } else {
-		// 	if cl, ok := me.hmfile.classes[name]; ok {
-		// 		if !cl.doNotDefine() {
-		// 			me.dependencyReq.add(cl.location)
-		// 		}
-		// 	}
-		// }
-
 		// if cl, ok := me.hmfile.classes[name]; ok {
 		// 	if !cl.doNotDefine() {
 		// 		me.dependencyReq.add(cl.location)

@@ -84,9 +84,6 @@ func (me *datatype) copy() *datatype {
 
 func getdatatype(me *hmfile, typed string) *datatype {
 
-	// TODO: REMOVE ME
-	// fmt.Println("get data type ::", typed)
-
 	if me != nil {
 		typed = me.alias(typed)
 	}
@@ -815,13 +812,6 @@ func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype)
 }
 
 func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics []*datatype) *datatype {
-	// TODO: REMOVE ME
-	if canonical != "FILE" && canonical != "?" {
-		fmt.Println("get unknown ::", canonical)
-	}
-	if canonical == "float" {
-		panic("float..")
-	}
 	d := newdatatype(dataTypeUnknown)
 	d.origin = origin
 	d.module = module
@@ -1092,4 +1082,20 @@ func datatypels(data []*datatype) []string {
 		ls[i] = d.print()
 	}
 	return ls
+}
+
+func listofgenerics(module *hmfile, generics []string) []*datatype {
+	order := make([]*datatype, len(generics))
+	for i, g := range generics {
+		order[i] = getdatatype(module, g)
+	}
+	return order
+}
+
+func copydatalist(generics []*datatype) []*datatype {
+	order := make([]*datatype, len(generics))
+	for i, g := range generics {
+		order[i] = g.copy()
+	}
+	return order
 }

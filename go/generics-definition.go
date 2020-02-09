@@ -29,7 +29,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 
 	enumDef := enumInit(base.module, implementation, false, unionList, unionDict, nil, nil)
 	enumDef.base = base
-	base.impls = append(base.impls, enumDef)
+	base.implementations = append(base.implementations, enumDef)
 
 	module.defineOrder = append(module.defineOrder, &defineType{enum: enumDef})
 
@@ -48,8 +48,6 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 
 	for _, un := range unionList {
 		for i, data := range un.types {
-			// TODO:
-			// un.types[i] = getdatatype(module, me.genericsReplacer(data, gmapper).print())
 			un.types[i] = me.genericsReplacer(module, data, gmapper)
 		}
 	}
@@ -97,10 +95,7 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 		value := from.getRaw()
 		fmt.Println(implementation, "generic map ::", gname, "<-", value)
 		gmapper[gname] = value
-		if gname == value {
-			classDef.doNotDefine = true
-		} else if from.isRecursiveUnknown() {
-			fmt.Println("DO NOT DEFINE THIS CLASS BECAUSE OF ::", from.print())
+		if gname == value || from.isRecursiveUnknown() {
 			classDef.doNotDefine = true
 		}
 	}
@@ -127,9 +122,6 @@ func (me *parser) finishClassDefinition(classDef *class) {
 	}
 
 	for _, mem := range memberMap {
-		// TODO:
-		// replace := me.genericsReplacer(mem.data(), classDef.gmapper).print()
-		// data := getdatatype(classDef.module, replace)
 		data := me.genericsReplacer(classDef.module, mem.data(), classDef.gmapper)
 		mem._vdata = data
 	}

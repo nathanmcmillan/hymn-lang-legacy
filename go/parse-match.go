@@ -1,10 +1,11 @@
 package main
 
 func (me *parser) parseIs(left *node, op string, n *node) *node {
-	n.copyData(getdatatype(me.hmfile, "bool"))
+	n.copyData(newdataprimitive("bool"))
 	me.eat(op)
 	var right *node
-	if left.data().isSomeOrNone() {
+	data := left.data()
+	if data.isSomeOrNone() {
 		invert := false
 		if me.token.is == "not" {
 			invert = true
@@ -38,7 +39,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 				temp := me.token.value
 				me.eat("id")
 				me.eat(")")
-				tempd := left.data().getmember().getnamedvariable(temp, false)
+				tempd := data.getmember().getnamedvariable(temp, false)
 				tempv := nodeInit("variable")
 				tempv.idata = newidvariable(me.hmfile, tempd.name)
 				tempv.copyData(tempd.data())
@@ -63,24 +64,17 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			}
 		}
 	} else {
-		if _, _, ok := left.data().isEnum(); !ok {
-			panic(me.fail() + "left side of \"is\" must be enum but was \"" + left.data().print() + "\"")
+		baseEnum, _, ok := data.isEnum()
+		if !ok {
+			panic(me.fail() + "Left side of \"is\" must be enum but was: " + data.error())
 		}
 		if me.token.is == "id" {
 			name := me.token.value
-			baseEnum, _, _ := left.data().isEnum()
 			if un, ok := baseEnum.types[name]; ok {
-
-				// TODO: UID
-				// prefix := left.data().getmodule().uid + "."
-
-				prefix := ""
-				if me.hmfile != left.data().getmodule() {
-					prefix = left.data().getmodule().cross(me.hmfile) + "."
-				}
 				me.eat("id")
+				newenum := newdataenum(me.hmfile, baseEnum, un, copydatalist(data.generics))
 				right = nodeInit("match-enum")
-				right.copyData(getdatatype(me.hmfile, prefix+baseEnum.name+"."+un.name))
+				right.setData(newenum)
 				if me.token.is == "(" {
 					me.eat("(")
 					temp := me.token.value

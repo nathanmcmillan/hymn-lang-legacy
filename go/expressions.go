@@ -304,46 +304,37 @@ func (me *parser) importing() {
 
 	module := me.hmfile
 
-	path, err2 := filepath.Abs(filepath.Join(module.program.directory, value+".hm"))
-	if err2 != nil {
-		panic(me.fail() + "Failed to parse import \"" + value + "\". " + err2.Error())
+	path, err := filepath.Abs(filepath.Join(module.program.directory, value+".hm"))
+	if err != nil {
+		panic(me.fail() + "Failed to parse import \"" + value + "\". " + err.Error())
 	}
 
-	var newmodule *hmfile
+	var importing *hmfile
 	found, ok := module.program.hmfiles[path]
 	if ok {
 		if _, ok := module.importPaths[path]; ok {
 			panic(me.fail() + "Module \"" + path + "\" was already imported.")
 		}
-		newmodule = found
+		importing = found
 	} else {
-		// TODO: this cannot rely on relative paths at all, must have some kind of generated short path
-
-		// rel, err3 := filepath.Rel(module.program.out, value)
-		// fmt.Println(rel)
-		// fmt.Println(err3)
-
-		// join := filepath.Join(module.program.out, value)
-		// fmt.Println(join)
-
-		out, err1 := filepath.Abs(filepath.Join(module.program.out, value))
-		if err1 != nil {
-			panic(me.fail() + "Failed to parse import \"" + value + "\". " + err1.Error())
+		out, err := filepath.Abs(filepath.Join(module.program.out, value))
+		if err != nil {
+			panic(me.fail() + "Failed to parse import \"" + value + "\". " + err.Error())
 		}
 
-		newmodule = module.program.parse(out, path, module.program.libs)
+		importing = module.program.parse(out, path, module.program.libs)
 		if debug {
 			fmt.Println("=== parse: " + module.name + " ===")
 		}
 	}
 
-	module.imports[alias] = newmodule
-	module.importPaths[path] = newmodule
+	module.imports[alias] = importing
+	module.importPaths[path] = importing
 	module.importOrder = append(module.importOrder, alias)
-	newmodule.crossref[module] = alias
+	importing.crossref[module] = alias
 
 	for _, s := range statics {
-		if cl, ok := newmodule.classes[s]; ok {
+		if cl, ok := importing.classes[s]; ok {
 			if _, ok := module.types[cl.name]; ok {
 				panic(me.fail() + "Cannot import class \"" + cl.name + "\". It is already defined.")
 			}
@@ -355,7 +346,7 @@ func (me *parser) importing() {
 			module.namespace[cl.uid()] = "class"
 			module.types[cl.uid()] = "class"
 
-		} else if en, ok := newmodule.enums[s]; ok {
+		} else if en, ok := importing.enums[s]; ok {
 			if _, ok := module.types[en.name]; ok {
 				panic(me.fail() + "Cannot import enum \"" + cl.name + "\". It is already defined.")
 			}
@@ -367,7 +358,7 @@ func (me *parser) importing() {
 			module.namespace[en.uid()] = "enum"
 			module.types[en.uid()] = "enum"
 
-		} else if fn, ok := newmodule.functions[s]; ok {
+		} else if fn, ok := importing.functions[s]; ok {
 			if _, ok := module.types[fn.name]; ok {
 				panic(me.fail() + "Cannot import function \"" + cl.name + "\". It is already defined.")
 			}
@@ -375,7 +366,7 @@ func (me *parser) importing() {
 			module.namespace[fn.name] = "function"
 			module.types[fn.name] = "function"
 
-		} else if st, ok := newmodule.staticScope[s]; ok {
+		} else if st, ok := importing.staticScope[s]; ok {
 			if _, ok := module.types[st.v.name]; ok {
 				panic(me.fail() + "Cannot import variable \"" + st.v.name + "\". It is already defined.")
 			}

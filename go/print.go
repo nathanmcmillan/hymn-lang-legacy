@@ -9,11 +9,11 @@ func (me *datatype) string(lv int) string {
 	s := "{\n"
 	s += fmc(lv) + "\"is\": \"" + me.nameIs() + "\""
 	if me.module != nil {
-		cross := me.module.cross(me.origin)
-		if cross == "" {
-			cross = me.module.uid + "." + me.module.name
+		name := me.module.cross(me.origin)
+		if name == "" {
+			name = me.module.reference(me.module.name)
 		}
-		s += ",\n" + fmc(lv) + "\"module\": \"" + cross + "\""
+		s += ",\n" + fmc(lv) + "\"module\": \"" + name + "\""
 	}
 	if me.canonical != "" {
 		s += ",\n" + fmc(lv) + "\"canonical\": \"" + me.canonical + "\""

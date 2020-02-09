@@ -2,6 +2,30 @@ package main
 
 import "fmt"
 
+func (me *parser) genericHeader() ([]*datatype, map[string]int) {
+	order := make([]*datatype, 0)
+	dict := make(map[string]int)
+	if me.token.is == "<" {
+		me.eat("<")
+		for {
+			gname := me.token.value
+			me.wordOrPrimitive()
+			dict[gname] = len(order)
+			order = append(order, getdatatype(me.hmfile, gname))
+			if me.token.is == "," {
+				me.eat(",")
+				continue
+			}
+			if me.token.is == ">" {
+				break
+			}
+			panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
+		}
+		me.eat(">")
+	}
+	return order, dict
+}
+
 func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []*datatype {
 	mapped := make([]*datatype, len(en.generics))
 	for i, e := range en.generics {

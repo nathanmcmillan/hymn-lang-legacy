@@ -11,12 +11,18 @@ func (me *parser) defineEnum() {
 	genericsOrder, genericsDict := me.genericHeader()
 	me.eat("line")
 
+	uid := me.hmfile.reference(name)
+
+	me.hmfile.namespace[uid] = "enum"
+	me.hmfile.types[uid] = "enum"
+
 	me.hmfile.namespace[name] = "enum"
 	me.hmfile.types[name] = "enum"
 
 	typesOrder := make([]*union, 0)
 	typesMap := make(map[string]*union)
 	isSimple := true
+
 	for {
 		token := me.token
 		if token.is == "line" {
@@ -66,8 +72,6 @@ func (me *parser) defineEnum() {
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
-
-	// TODO: recursive enum pointer
 
 	enumDef := enumInit(me.hmfile, name, isSimple, typesOrder, typesMap, datatypels(genericsOrder), genericsDict)
 

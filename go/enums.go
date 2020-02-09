@@ -3,21 +3,21 @@ package main
 import "path/filepath"
 
 type enum struct {
-	module       *hmfile
-	name         string
-	cname        string
-	ucname       string
-	pathLocal    string
-	pathGlobal   string
-	simple       bool
-	types        map[string]*union
-	typesOrder   []*union
-	generics     []string
-	genericsDict map[string]int
-	gmapper      map[string]string
-	base         *enum
-	impls        []*enum
-	doNotDefine  bool
+	module          *hmfile
+	name            string
+	cname           string
+	ucname          string
+	pathLocal       string
+	pathGlobal      string
+	simple          bool
+	types           map[string]*union
+	typesOrder      []*union
+	generics        []string
+	genericsDict    map[string]int
+	gmapper         map[string]string
+	base            *enum
+	implementations []*enum
+	doNotDefine     bool
 }
 
 type union struct {
@@ -67,7 +67,7 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 	e.generics = generics
 	e.genericsDict = genericsDict
 	if len(generics) > 0 {
-		e.impls = make([]*enum, 0)
+		e.implementations = make([]*enum, 0)
 		e.doNotDefine = true
 	}
 	return e

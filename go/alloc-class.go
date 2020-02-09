@@ -212,7 +212,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	gsize := len(cl.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
-			gtypes := me.declareGeneric(true, cl)
+			gtypes := me.declareGeneric(cl)
 			typed = uid + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				me.defineClassImplGeneric(cl, gtypes)

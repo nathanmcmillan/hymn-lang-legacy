@@ -80,10 +80,7 @@ func (me *function) getclsname() string {
 func (me *function) canonical(current *hmfile) string {
 	name := me.getname()
 	if me.module != nil {
-		// TODO: UID
-		// name = me.module.uid + "." + name
-
-		name = me.module.cross(current) + "." + name
+		return me.module.reference(name)
 	}
 	return name
 }
@@ -241,7 +238,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 						panic(me.fail() + "only primitive literals allowed for parameter defaults. was \"" + me.token.is + "\"")
 					}
 				}
-				typed := me.declareType(true)
+				typed := me.declareType()
 				fn.argDict[argname] = len(fn.args)
 				fnArg := &funcArg{}
 				fnArg.variable = typed.getnamedvariable(argname, false)
@@ -273,7 +270,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		if !parenthesis {
 			panic(me.fail() + "function \"" + name + "\" returns a value and must include parenthesis")
 		}
-		fn.returns = me.declareType(true)
+		fn.returns = me.declareType()
 	} else {
 		fn.returns = getdatatype(module, "void")
 	}

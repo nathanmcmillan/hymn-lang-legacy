@@ -1,0 +1,79 @@
+const uint64_max = uint64 2000000
+
+int_hashcode(key int) int
+	return key
+
+string_hashcode(key string) int
+	mutable pos = 0
+	mutable value = uint64 0
+	length = len(key)
+	while value < uint64_max and pos < length
+		value = (value << uint64 8) + uint64 key[pos]
+		pos += 1
+	return int value
+
+type hashmap_item<k,v>
+	code  int
+	key   k
+	value v
+	next  maybe<hashmap_item<k,v>>
+
+type hashmap<k,v>
+	size     int
+	capacity int
+	get_code (k) int
+	table    []maybe<hashmap_item<k,v>>
+
+hashmap get_bin(code int) int
+	return code % self.capacity
+
+hashmap set(key k, value v)
+	code = self.get_code(key)
+	bin = self.get_bin(code)
+	mutable element = self.table[bin]
+	mutable previous = none<hashmap_item<k,v>>
+	while element is some(s)
+		if code == s.code
+			s.value = value
+			return
+		previous = element
+		element = s.next
+	item = hashmap_item(code, key, value, none)
+	match previous
+		some(s) => s.next = item
+		none => self.table[bin] = item
+	self.size += 1
+
+hashmap get(key k) maybe<v>
+	code = self.get_code(key)
+	bin = self.get_bin(code)
+	mutable element = self.table[bin]
+	while element is some(s)
+		if code == s.code
+			return s.value
+		element = s.next
+	return none
+
+hashmap has(key k) bool
+	return self.get(key) is some
+
+hashmap delete(key k) maybe<v>
+	code = self.get_code(key)
+	bin = self.get_bin(code)
+	mutable element = self.table[bin]
+	mutable previous = none<hashmap_item<k,v>>
+	while element is some(s)
+		if code == s.code
+			match previous
+				some(p) => p.next = s.next
+				none => self.table[bin] = s.next
+			self.size -= 1
+			return s.value
+		previous = element
+		element = s.next
+	return none
+
+hashmap clear()
+	iterate i, _ in self.table
+		self.table[i] = none
+	self.size = 0

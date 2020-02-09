@@ -1,0 +1,8 @@
+enum operation
+	add(operation)
+	subtract(operation)
+	multiply()
+
+function main()
+	e = operation.add(operation.multiply)
+	if e is not add : echo("no!")

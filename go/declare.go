@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (me *parser) declareGeneric(implementation bool, base hasGenerics) []*datatype {
+func (me *parser) declareGeneric(base hasGenerics) []*datatype {
 	me.eat("<")
 	gsize := len(base.getGenerics())
 	order := make([]*datatype, 0)
@@ -13,7 +13,7 @@ func (me *parser) declareGeneric(implementation bool, base hasGenerics) []*datat
 		if i != 0 {
 			me.eat(",")
 		}
-		gimpl := me.declareType(implementation)
+		gimpl := me.declareType()
 		order = append(order, gimpl)
 	}
 	me.eat(">")
@@ -25,7 +25,7 @@ func (me *parser) declareFn() *datatype {
 	fn := fnSigInit(me.hmfile)
 	if me.token.is != ")" {
 		for {
-			typed := me.declareType(true)
+			typed := me.declareType()
 			fn.args = append(fn.args, fnArgInit(typed.getvariable()))
 			if me.token.is == ")" {
 				break
@@ -38,7 +38,7 @@ func (me *parser) declareFn() *datatype {
 	}
 	me.eat(")")
 	if me.token.is != "line" && me.token.is != "," {
-		fn.returns = me.declareType(true)
+		fn.returns = me.declareType()
 	} else {
 		fn.returns = getdatatype(me.hmfile, "void")
 	}
@@ -50,20 +50,20 @@ func (me *parser) declareFnPtr(fn *function) *datatype {
 	return getdatatype(me.hmfile, fn.name)
 }
 
-func (me *parser) declareType(implementation bool) *datatype {
+func (me *parser) declareType() *datatype {
 
 	if me.token.is == "[" {
 		me.eat("[")
 		if me.token.is == "]" {
 			me.eat("]")
-			return newdataslice(me.declareType(implementation))
+			return newdataslice(me.declareType())
 		}
 		sizeNode := me.calc(0, nil)
 		if sizeNode.value == "" || !sizeNode.data().isInt() {
 			panic(me.fail() + "array size must be constant integer")
 		}
 		me.eat("]")
-		return newdataarray(sizeNode.value, me.declareType(implementation))
+		return newdataarray(sizeNode.value, me.declareType())
 	}
 
 	module := me.hmfile
@@ -75,7 +75,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 	} else if me.token.is == "maybe" {
 		me.eat("maybe")
 		me.eat("<")
-		option := me.declareType(implementation)
+		option := me.declareType()
 		me.eat(">")
 		return newdatamaybe(option)
 
@@ -83,7 +83,7 @@ func (me *parser) declareType(implementation bool) *datatype {
 		me.eat("none")
 		if me.token.is == "<" {
 			me.eat("<")
-			option := me.declareType(implementation)
+			option := me.declareType()
 			me.eat(">")
 			return newdatamaybe(option)
 		}
@@ -132,12 +132,10 @@ func (me *parser) declareType(implementation bool) *datatype {
 	if en, ok := module.enums[value]; ok {
 		var gtypes []*datatype
 		if me.token.is == "<" {
-			gtypes = me.declareGeneric(implementation, en)
+			gtypes = me.declareGeneric(en)
 			value += genericslist(gtypes)
-			if implementation {
-				if _, ok := en.module.enums[value]; !ok {
-					me.defineEnumImplGeneric(en, gtypes)
-				}
+			if _, ok := en.module.enums[value]; !ok {
+				me.defineEnumImplGeneric(en, gtypes)
 			}
 			if engen, ok := en.module.enums[value]; ok {
 				en = engen
@@ -160,15 +158,12 @@ func (me *parser) declareType(implementation bool) *datatype {
 		fmt.Println("declare class ::", module.name, "::", value, "::", cl.name)
 		var gtypes []*datatype
 		if me.token.is == "<" {
-			gtypes = me.declareGeneric(implementation, cl)
+			gtypes = me.declareGeneric(cl)
 			value += genericslist(gtypes)
-			fmt.Println("declare class generic ::", module.name, "::", value, "::", cl.name, "::", implementation)
-			// TODO: remove flag check
-			// if implementation {
+			fmt.Println("declare class generic ::", module.name, "::", value, "::", cl.name)
 			if _, ok := cl.module.classes[value]; !ok {
 				me.defineClassImplGeneric(cl, gtypes)
 			}
-			// }
 			if clgen, ok := cl.module.classes[value]; ok {
 				cl = clgen
 			}

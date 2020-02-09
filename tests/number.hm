@@ -1,0 +1,12 @@
+enum number
+	integer(int)
+	biginteger(int64)
+	real(float)
+
+enum operation
+	add
+	subtract
+	multiply
+	divide
+
+const pi = 3.1415

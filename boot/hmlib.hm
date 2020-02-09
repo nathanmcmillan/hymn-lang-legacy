@@ -1,12 +1,9 @@
 import "hashmap" (hashmap)
-import "func" (func)
+import "function" (hm_function)
+import "class" (hm_class)
 
 type hmlib
-	functions hashmap<string, func>
-
-	-- function_list []func
-	-- types         hashmap<string, string>
-	-- classes       hashmap<string, class>
-
-function do_stuff() maybe<hashmap<string, func>>
-	return none
+	functions     hashmap<string, hm_function>
+	function_list []hm_function
+	types         hashmap<string, string>
+	classes       hashmap<string, hm_class>

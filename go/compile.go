@@ -32,8 +32,8 @@ func (me *hmfile) generateC(module *hmfile) string {
 
 	if len(me.importOrder) > 0 {
 		for _, iname := range me.importOrder {
-			importmodule := me.imports[iname]
-			path := importmodule.name + "/" + importmodule.name
+			importing := me.imports[iname]
+			path := importing.name + "/" + importing.name
 			cfile.headReqIncludeSection.WriteString("\n#include \"" + path + ".h\"")
 		}
 	}

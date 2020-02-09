@@ -68,3 +68,7 @@ func (me *node) data() *datatype {
 func (me *node) copyData(data *datatype) {
 	me._vdata = data.copy()
 }
+
+func (me *node) setData(data *datatype) {
+	me._vdata = data
+}

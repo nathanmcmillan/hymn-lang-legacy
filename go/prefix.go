@@ -177,7 +177,7 @@ func prefixArray(me *parser, op string) *node {
 		}
 	}
 	me.eat("]")
-	data := me.declareType(true)
+	data := me.declareType()
 	if me.token.is == "(" {
 		items := nodeInit("items")
 		me.eat("(")
@@ -218,13 +218,13 @@ func prefixArray(me *parser, op string) *node {
 func prefixNone(me *parser, op string) *node {
 	me.verify("none")
 	n := nodeInit("none")
-	n._vdata = me.declareType(true)
+	n._vdata = me.declareType()
 	return n
 }
 
 func prefixMaybe(me *parser, op string) *node {
 	me.verify("maybe")
 	n := nodeInit("maybe")
-	n._vdata = me.declareType(true)
+	n._vdata = me.declareType()
 	return n
 }

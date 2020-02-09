@@ -8,15 +8,15 @@ func (me *parser) defineClass() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-
-	uid := me.hmfile.reference(name)
 	genericsOrder, genericsDict := me.genericHeader()
 	me.eat("line")
 
-	me.hmfile.namespace[uid] = "type"
+	uid := me.hmfile.reference(name)
+
+	me.hmfile.namespace[uid] = "class"
 	me.hmfile.types[uid] = "class"
 
-	me.hmfile.namespace[name] = "type"
+	me.hmfile.namespace[name] = "class"
 	me.hmfile.types[name] = "class"
 
 	classDef := classInit(me.hmfile, name, datatypels(genericsOrder), genericsDict)
@@ -52,7 +52,7 @@ func (me *parser) defineClass() {
 				isptr = false
 			}
 
-			mtype := me.declareType(false)
+			mtype := me.declareType()
 			mtype.setIsPointer(isptr)
 			if mcl, ok := mtype.isClass(); ok {
 				if mcl == classDef {
@@ -72,28 +72,4 @@ func (me *parser) defineClass() {
 	for _, implementation := range classDef.implementations {
 		me.finishClassDefinition(implementation)
 	}
-}
-
-func (me *parser) genericHeader() ([]*datatype, map[string]int) {
-	order := make([]*datatype, 0)
-	dict := make(map[string]int)
-	if me.token.is == "<" {
-		me.eat("<")
-		for {
-			gname := me.token.value
-			me.wordOrPrimitive()
-			dict[gname] = len(order)
-			order = append(order, getdatatype(me.hmfile, gname))
-			if me.token.is == "," {
-				me.eat(",")
-				continue
-			}
-			if me.token.is == ">" {
-				break
-			}
-			panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
-		}
-		me.eat(">")
-	}
-	return order, dict
 }

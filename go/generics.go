@@ -27,31 +27,30 @@ func mapGenericSingle(typed string, gmapper map[string]string) string {
 	return typed
 }
 
-func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string) *datatype {
+func (me *parser) genericsReplacer(module *hmfile, original *datatype, gmapper map[string]string) *datatype {
 	data := original.copy()
 	if data.generics != nil {
 		for i, g := range data.generics {
-			data.generics[i] = me.genericsReplacer(g, gmapper)
+			data.generics[i] = me.genericsReplacer(module, g, gmapper)
 		}
 	}
 	if data.parameters != nil {
 		for i, p := range data.parameters {
-			data.parameters[i] = me.genericsReplacer(p, gmapper)
+			data.parameters[i] = me.genericsReplacer(module, p, gmapper)
 		}
 	}
 	if data.variadic != nil {
-		data.variadic = me.genericsReplacer(data.variadic, gmapper)
+		data.variadic = me.genericsReplacer(module, data.variadic, gmapper)
 	}
 	if data.returns != nil {
-		data.returns = me.genericsReplacer(data.returns, gmapper)
+		data.returns = me.genericsReplacer(module, data.returns, gmapper)
 	}
 	if data.member != nil {
-		data.member = me.genericsReplacer(data.member, gmapper)
+		data.member = me.genericsReplacer(module, data.member, gmapper)
 	}
 	data.canonical = mapGenericSingle(data.canonical, gmapper)
 	if data.generics != nil {
 		implementation := data.print()
-		fmt.Println(original.print(), "generics replacer ::", implementation)
 		if data.class != nil {
 			if cl, ok := data.module.classes[implementation]; ok {
 				data.class = cl
@@ -64,11 +63,13 @@ func (me *parser) genericsReplacer(original *datatype, gmapper map[string]string
 			if en, ok := data.module.enums[implementation]; ok {
 				data.enum = en
 			} else {
+				fmt.Println("generics replacer defining enum ::", data.enum.name, "->", implementation)
 				data.enum = me.defineEnumImplGeneric(data.enum, data.generics)
+				fmt.Println("completed generics replacer defining enum ::", data.enum.name)
 			}
 		}
 	}
-	return data
+	return getdatatype(module, data.print())
 }
 
 func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]*datatype) bool {

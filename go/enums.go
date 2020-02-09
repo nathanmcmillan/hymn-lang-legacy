@@ -1,11 +1,14 @@
 package main
 
+import "path/filepath"
+
 type enum struct {
 	module       *hmfile
 	name         string
 	cname        string
 	ucname       string
-	location     string
+	pathLocal    string
+	pathGlobal   string
 	simple       bool
 	types        map[string]*union
 	typesOrder   []*union
@@ -52,11 +55,12 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 	e := &enum{}
 	e.module = module
 	e.name = name
+	e.pathLocal = e.enumFileName()
 	if module != nil {
 		e.cname = module.enumNameSpace(name)
 		e.ucname = module.unionNameSpace(name)
+		e.pathGlobal = filepath.Join(module.relativeOut, e.pathLocal)
 	}
-	e.location = e.enumFileName()
 	e.simple = simple
 	e.types = dict
 	e.typesOrder = order

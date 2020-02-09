@@ -1,36 +1,42 @@
 package main
 
+import (
+	"path/filepath"
+)
+
 type class struct {
-	module        *hmfile
-	name          string
-	cname         string
-	location      string
-	variables     map[string]*variable
-	variableOrder []string
-	generics      []string
-	genericsDict  map[string]int
-	gmapper       map[string]string
-	functions     map[string]*function
-	functionOrder []*function
-	base          *class
-	impls         []*class
-	doNotDefine   bool
+	module          *hmfile
+	name            string
+	cname           string
+	pathLocal       string
+	pathGlobal      string
+	variables       map[string]*variable
+	variableOrder   []string
+	generics        []string
+	genericsDict    map[string]int
+	gmapper         map[string]string
+	functions       map[string]*function
+	functionOrder   []*function
+	base            *class
+	implementations []*class
+	doNotDefine     bool
 }
 
 func classInit(module *hmfile, name string, generics []string, genericsDict map[string]int) *class {
 	c := &class{}
 	c.module = module
 	c.name = name
+	c.pathLocal = c.classFileName()
 	if module != nil {
 		c.cname = module.classNameSpace(name)
+		c.pathGlobal = filepath.Join(module.relativeOut, c.pathLocal)
 	}
-	c.location = c.classFileName()
 	c.generics = generics
 	c.genericsDict = genericsDict
 	c.functions = make(map[string]*function)
 	c.functionOrder = make([]*function, 0)
 	if len(generics) > 0 {
-		c.impls = make([]*class, 0)
+		c.implementations = make([]*class, 0)
 		c.doNotDefine = true
 	}
 	return c

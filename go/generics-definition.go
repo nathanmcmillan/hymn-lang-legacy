@@ -6,6 +6,8 @@ import (
 
 func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 
+	base = base.baseEnum()
+
 	unionList := make([]*union, len(base.types))
 	unionDict := make(map[string]*union)
 	for i, v := range base.typesOrder {
@@ -46,7 +48,9 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 
 	for _, un := range unionList {
 		for i, data := range un.types {
-			un.types[i] = getdatatype(module, me.genericsReplacer(data, gmapper).print())
+			// TODO:
+			// un.types[i] = getdatatype(module, me.genericsReplacer(data, gmapper).print())
+			un.types[i] = me.genericsReplacer(module, data, gmapper)
 		}
 	}
 
@@ -54,15 +58,16 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 }
 
 func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class {
-	memberMap := make(map[string]*variable)
-	for k, v := range base.variables {
-		memberMap[k] = v.copy()
-	}
 
+	base = base.baseClass()
 	module := base.module
 
 	implementation := base.name + genericslist(order)
 	uid := base.uid() + genericslist(order)
+
+	for k, v := range base.variables {
+		fmt.Println(uid+" base class variables ::", k, "::", v.data().print())
+	}
 
 	fmt.Println("inserting new class ::", module.name, "::", implementation, "(", uid, ")", "::", base.name, "::", genericslist(order))
 
@@ -74,8 +79,6 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 
 	classDef := classInit(module, implementation, nil, nil)
 	classDef.base = base
-	base.impls = append(base.impls, classDef)
-	classDef.initMembers(base.variableOrder, memberMap)
 
 	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})
 
@@ -83,35 +86,55 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 	module.classes[implementation] = classDef
 
 	for k := range module.classes {
-		fmt.Println("update module class list ::", k)
+		fmt.Println("updated module class list ::", k)
 	}
+
+	base.implementations = append(base.implementations, classDef)
 
 	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
-		value := order[ix].getRaw()
+		from := order[ix]
+		value := from.getRaw()
 		fmt.Println(implementation, "generic map ::", gname, "<-", value)
 		gmapper[gname] = value
 		if gname == value {
+			classDef.doNotDefine = true
+		} else if from.isRecursiveUnknown() {
+			fmt.Println("DO NOT DEFINE THIS CLASS BECAUSE OF ::", from.print())
 			classDef.doNotDefine = true
 		}
 	}
 	classDef.gmapper = gmapper
 
-	for _, mem := range memberMap {
-		replace := me.genericsReplacer(mem.data(), gmapper).print()
-		data := getdatatype(module, replace)
-		clname := ""
-		cl, ok := data.isClass()
-		if ok {
-			clname = " | " + cl.name
-		}
-		fmt.Println(implementation, "replacing member ::", mem.name, "<-", data.print()+clname)
-		mem._vdata = data
-	}
-
-	for _, fn := range base.functionOrder {
-		remapClassFunctionImpl(classDef, fn)
+	if base.variables != nil {
+		me.finishClassDefinition(classDef)
 	}
 
 	return classDef
+}
+
+func (me *parser) finishClassDefinition(classDef *class) {
+
+	memberMap := make(map[string]*variable)
+	for k, v := range classDef.base.variables {
+		memberMap[k] = v.copy()
+	}
+
+	classDef.initMembers(classDef.base.variableOrder, memberMap)
+
+	for k, v := range memberMap {
+		fmt.Println(classDef.name, "member map ::", k, "::", v.data().print())
+	}
+
+	for _, mem := range memberMap {
+		// TODO:
+		// replace := me.genericsReplacer(mem.data(), classDef.gmapper).print()
+		// data := getdatatype(classDef.module, replace)
+		data := me.genericsReplacer(classDef.module, mem.data(), classDef.gmapper)
+		mem._vdata = data
+	}
+
+	for _, fn := range classDef.base.functionOrder {
+		remapClassFunctionImpl(classDef, fn)
+	}
 }

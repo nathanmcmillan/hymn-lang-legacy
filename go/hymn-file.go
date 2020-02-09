@@ -1,10 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"path/filepath"
+)
 
 type hmfile struct {
 	uid             string
 	out             string
+	relativeOut     string
 	path            string
 	libs            string
 	parser          *parser
@@ -38,10 +41,14 @@ type hmfile struct {
 	comments        []string
 }
 
-func (program *program) hymnFileInit(uid string, name string) *hmfile {
+func (program *program) hymnFileInit(uid string, name, out, path, libs string) *hmfile {
 	hm := &hmfile{}
 	hm.uid = "%" + uid
 	hm.name = name
+	hm.out = out
+	hm.relativeOut, _ = filepath.Rel(program.out, out)
+	hm.path = path
+	hm.libs = libs
 	hm.program = program
 	hm.hmlib = program.hmlib
 	hm.rootScope = scopeInit(nil)
@@ -141,7 +148,6 @@ func (me *hmfile) getEnum(name string) (*enum, bool) {
 func (me *hmfile) alias(typed string) string {
 	if me.scope.fn != nil && me.scope.fn.aliasing != nil {
 		if alias, ok := me.scope.fn.aliasing[typed]; ok {
-			fmt.Println("alias mapped ::", typed, "--->", alias)
 			return alias
 		}
 	}

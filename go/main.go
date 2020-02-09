@@ -136,10 +136,7 @@ func (me *program) parse(out, path, libs string) *hmfile {
 
 	path, _ = filepath.Abs(path)
 	name := fileName(path)
-	module := me.hymnFileInit(uid, name)
-	module.out = out
-	module.path = path
-	module.libs = libs
+	module := me.hymnFileInit(uid, name, out, path, libs)
 
 	me.modules[uid] = module
 	me.hmfiles[path] = module
@@ -154,7 +151,7 @@ func (me *program) compile() {
 	for x := len(list) - 1; x >= 0; x-- {
 		module := list[x]
 		os.MkdirAll(module.out, os.ModePerm)
-		source := module.generateC(module.out, fileName(module.path), module.libs)
+		source := module.generateC(module)
 		me.sources[module.path] = source
 	}
 }

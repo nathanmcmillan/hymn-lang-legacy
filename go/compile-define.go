@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -30,7 +29,7 @@ func (me *cfile) defineEnum(enum *enum) {
 		return
 	}
 
-	me.dependencyReq.add(base.location)
+	me.dependencyReq.add(base.pathLocal)
 
 	code := ""
 	hmBaseUnionName := enum.ucname
@@ -103,21 +102,12 @@ func (me *cfile) dependencyGraph(data *datatype) {
 			me.dependencyGraph(data.member)
 		}
 	case dataTypeClass:
-
-		name := data.print()
-		fmt.Println("dependency graph ::", me.hmfile.name, "::", name)
-
-		me.dependencyReq.add(data.class.location)
-
-		// if cl, ok := me.hmfile.classes[name]; ok {
-		// 	if !cl.doNotDefine() {
-		// 		me.dependencyReq.add(cl.location)
-		// 	}
-		// }
+		if me.pathGlobal != data.class.pathGlobal {
+			me.dependencyReq.add(data.class.pathGlobal)
+		}
 	case dataTypeEnum:
-		name := data.print()
-		if en, ok := me.hmfile.enums[name]; ok {
-			me.dependencyReq.add(en.location)
+		if me.pathGlobal != data.enum.pathGlobal {
+			me.dependencyReq.add(data.enum.pathGlobal)
 		}
 	case dataTypeString:
 		me.libReq.add(HmLibString)
@@ -130,6 +120,6 @@ func (me *cfile) dependencyGraph(data *datatype) {
 	case dataTypeVoid:
 		return
 	default:
-		panic("missing data type")
+		data.missingCase()
 	}
 }

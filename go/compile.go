@@ -6,17 +6,12 @@ import (
 	"strings"
 )
 
-type subc struct {
-	fname     string
-	subfolder string
-	base      bool
-}
+func (me *hmfile) generateC(module *hmfile) string {
 
-func (me *subc) location() string {
-	return me.fname
-}
+	folder := module.out
+	filename := fileName(module.path)
+	hmlibs := module.libs
 
-func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	if debug {
 		fmt.Println("=== compile: " + filename + " ===")
 	}
@@ -37,45 +32,37 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 
 	if len(me.importOrder) > 0 {
 		for _, iname := range me.importOrder {
-			imp := me.imports[iname]
-			path := imp.name + "/" + imp.name
+			importmodule := me.imports[iname]
+			path := importmodule.name + "/" + importmodule.name
 			cfile.headReqIncludeSection.WriteString("\n#include \"" + path + ".h\"")
 		}
 	}
 
 	root, _ := filepath.Abs(folder)
 	filterOrder := make([]string, 0)
-	filters := make(map[string]subc)
+	filters := make(map[string]string)
 
 	for _, def := range me.defineOrder {
 		var name string
+		var fname string
 		if def.class != nil {
 			if def.class.doNotDefine {
 				continue
 			}
 			name = def.class.name
+			fname = def.class.pathLocal
 		} else if def.enum != nil {
 			name = def.enum.name
+			fname = def.enum.pathLocal
 		} else {
 			panic("Missing definition")
 		}
 		if name == filename {
 			continue
 		}
-		var subfolder string
-		base := false
-		if strings.Index(name, "<") == -1 {
-			subfolder = name
-			base = true
-		} else {
-			subfolder = name[0:strings.Index(name, "<")]
-		}
-		fmt.Println("compiling sub module ::", name)
-		fname := me.compileWithFileName(name)
 		filterOrder = append(filterOrder, name)
-		s := subc{fname: fname, subfolder: subfolder, base: base}
-		filters[name] = s
-		cfile.headReqIncludeSection.WriteString("\n#include \"" + s.location() + ".h\"")
+		filters[name] = fname
+		cfile.headReqIncludeSection.WriteString("\n#include \"" + fname + ".h\"")
 	}
 
 	var code strings.Builder
@@ -90,7 +77,6 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 			if _, ok := filters[name]; ok {
 				continue
 			}
-			fmt.Println("compiling definition ::", name)
 			cfile.defineClass(def.class)
 
 		} else if def.enum != nil {
@@ -98,7 +84,6 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 			if _, ok := filters[name]; ok {
 				continue
 			}
-			fmt.Println("compiling definition ::", name)
 			cfile.defineEnum(def.enum)
 
 		} else {
@@ -142,15 +127,14 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	}
 
 	for _, f := range filterOrder {
-		subc := filters[f]
-		cfile.subC(root, folder, filename, hmlibs, f, &subc, filterOrder, filters)
+		cfile.subC(root, folder, filename, hmlibs, f, filters[f])
 	}
 
 	if debug {
 		fmt.Println("=== compile: end ===")
 	}
 
-	fileCode := folder + "/" + filename + ".c"
+	fileCode := filepath.Join(folder, filename+".c")
 
 	write(fileCode, code.String())
 
@@ -173,7 +157,7 @@ func (me *hmfile) generateC(folder, filename, hmlibs string) string {
 	}
 
 	cfile.headSuffix.WriteString("\n#endif\n")
-	write(folder+"/"+filename+".h", cfile.head())
+	write(filepath.Join(folder, filename+".h"), cfile.head())
 
 	return fileCode
 }

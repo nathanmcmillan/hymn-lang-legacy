@@ -87,17 +87,29 @@ func (me *hmfile) varNameSpace(name string) string {
 
 func (me *hmfile) funcNameSpace(name string) string {
 	name = me.nameSpaceModuleUID(name)
-	return globalFuncPrefix + me.funcPrefix + flatten(name)
+	name = flatten(name)
+	if !strings.HasPrefix(name, me.funcPrefix) {
+		name = me.funcPrefix + name
+	}
+	return globalFuncPrefix + name
 }
 
 func (me *hmfile) classNameSpace(name string) string {
 	name = me.nameSpaceModuleUID(name)
-	return globalClassPrefix + me.classPrefix + capital(name)
+	name = capital(name)
+	if !strings.HasPrefix(name, me.classPrefix) {
+		name = me.classPrefix + name
+	}
+	return globalClassPrefix + name
 }
 
 func (me *hmfile) enumNameSpace(name string) string {
 	name = me.nameSpaceModuleUID(name)
-	return globalEnumPrefix + me.enumPrefix + capital(name)
+	name = capital(name)
+	if !strings.HasPrefix(name, me.enumPrefix) {
+		name = me.enumPrefix + name
+	}
+	return globalEnumPrefix + name
 }
 
 func (me *hmfile) unionNameSpace(name string) string {

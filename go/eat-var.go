@@ -40,19 +40,15 @@ func (me *parser) eatvar(from *hmfile) *node {
 				dotName := me.token.value
 				me.eat("id")
 				var member *node
-				classOf, ok := rootClass.variables[dotName]
-				if ok {
+				if classVar, ok := rootClass.variables[dotName]; ok {
 					member = nodeInit("member-variable")
-					member.copyData(classOf.data())
+					member.copyData(classVar.data())
 					member.idata = newidvariable(from, dotName)
 					member.push(head)
+				} else if classFunc, ok := rootClass.functions[dotName]; ok {
+					member = me.callClassFunction(data.getmodule(), head, rootClass, classFunc)
 				} else {
-					classFunc, ok := rootClass.functions[dotName]
-					if ok {
-						member = me.callClassFunction(data.getmodule(), head, rootClass, classFunc)
-					} else {
-						panic(me.fail() + "class \"" + rootClass.name + "\" does not have variable or function \"" + dotName + "\"")
-					}
+					panic(me.fail() + "Class: " + rootClass.name + " does not have variable or function: " + dotName)
 				}
 				head = member
 

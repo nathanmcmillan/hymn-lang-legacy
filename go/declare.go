@@ -163,15 +163,17 @@ func (me *parser) declareType(implementation bool) *datatype {
 			gtypes = me.declareGeneric(implementation, cl)
 			value += genericslist(gtypes)
 			fmt.Println("declare class generic ::", module.name, "::", value, "::", cl.name, "::", implementation)
-			if implementation {
-				if _, ok := cl.module.classes[value]; !ok {
-					me.defineClassImplGeneric(cl, gtypes)
-				}
+			// TODO: remove flag check
+			// if implementation {
+			if _, ok := cl.module.classes[value]; !ok {
+				me.defineClassImplGeneric(cl, gtypes)
 			}
+			// }
 			if clgen, ok := cl.module.classes[value]; ok {
 				cl = clgen
 			}
 		}
+		fmt.Println("declare class final ::", cl.name, "::", genericslist(gtypes))
 		return newdataclass(me.hmfile, cl, gtypes)
 	}
 

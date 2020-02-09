@@ -84,7 +84,8 @@ func (me *datatype) copy() *datatype {
 
 func getdatatype(me *hmfile, typed string) *datatype {
 
-	fmt.Println("get data type ::", typed)
+	// TODO: REMOVE ME
+	// fmt.Println("get data type ::", typed)
 
 	if me != nil {
 		typed = me.alias(typed)
@@ -205,21 +206,23 @@ func getdatatype(me *hmfile, typed string) *datatype {
 
 	fmt.Println("searching ::", module.name, "::", typed)
 
-	for k, cl := range module.classes {
-		fmt.Println("searching classes ::", k)
-		if k == typed {
-			fmt.Println("... found ::", module.name, "::", typed, "::", cl.name)
-			break
-		}
-	}
+	// TODO
 
-	for k, en := range module.enums {
-		fmt.Println("searching enums ::", k)
-		if k == typed {
-			fmt.Println("... found ::", module.name, "::", typed, "::", en.name)
-			break
-		}
-	}
+	// for k, cl := range module.classes {
+	// 	fmt.Println("searching classes ::", k)
+	// 	if k == typed {
+	// 		fmt.Println("... found ::", module.name, "::", typed, "::", cl.name)
+	// 		break
+	// 	}
+	// }
+
+	// for k, en := range module.enums {
+	// 	fmt.Println("searching enums ::", k)
+	// 	if k == typed {
+	// 		fmt.Println("... found ::", module.name, "::", typed, "::", en.name)
+	// 		break
+	// 	}
+	// }
 
 	if cl, ok := module.classes[typed]; ok {
 		return newdataclass(origin, cl, glist)
@@ -327,6 +330,40 @@ func (me *datatype) isAnyIntegerType() bool {
 
 func (me *datatype) isInt() bool {
 	return me.is == dataTypePrimitive && me.canonical == TokenInt
+}
+
+func (me *datatype) isUnknown() bool {
+	return me.is == dataTypeUnknown
+}
+
+func (me *datatype) isRecursiveUnknown() bool {
+	if me.isUnknown() {
+		return true
+	}
+	if me.generics != nil {
+		for _, g := range me.generics {
+			if g.isRecursiveUnknown() {
+				return true
+			}
+		}
+	}
+	if me.parameters != nil {
+		for _, p := range me.parameters {
+			if p.isRecursiveUnknown() {
+				return true
+			}
+		}
+	}
+	if me.variadic != nil && me.variadic.isRecursiveUnknown() {
+		return true
+	}
+	if me.returns != nil && me.returns.isRecursiveUnknown() {
+		return true
+	}
+	if me.member != nil && me.member.isRecursiveUnknown() {
+		return true
+	}
+	return false
 }
 
 func (me *datatype) isQuestion() bool {
@@ -680,7 +717,10 @@ func (me *datatype) print() string {
 			if len(me.generics) > 0 {
 				f += genericslist(me.generics)
 			}
-			fmt.Println("print data class ::", f, "::", me.class.name)
+			// fmt.Println("print data class ::", f, "::", me.module.reference(me.class.name))
+			// if f != me.module.reference(me.class.name) {
+			// 	panic("no match")
+			// }
 			return f
 		}
 	case dataTypeEnum:
@@ -744,6 +784,13 @@ func newdataclass(origin *hmfile, class *class, generics []*datatype) *datatype 
 	d.module = class.module
 	d.class = class
 	d.generics = generics
+
+	actual := d.print()
+	expected := class.module.reference(class.name)
+	if actual != expected {
+		panic("Parsing error: New class does not match: " + actual + " Expected: " + expected)
+	}
+
 	return d
 }
 
@@ -754,11 +801,27 @@ func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype)
 	d.enum = enum
 	d.union = union
 	d.generics = generics
+
+	actual := d.print()
+	expected := enum.module.reference(enum.name)
+	if union != nil {
+		expected += "." + union.name
+	}
+	if actual != expected {
+		panic("Parsing error: New enum does not match: " + actual + " Expected: " + expected)
+	}
+
 	return d
 }
 
 func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics []*datatype) *datatype {
-	fmt.Println("get unknown ::", canonical)
+	// TODO: REMOVE ME
+	if canonical != "FILE" && canonical != "?" {
+		fmt.Println("get unknown ::", canonical)
+	}
+	if canonical == "float" {
+		panic("float..")
+	}
 	d := newdatatype(dataTypeUnknown)
 	d.origin = origin
 	d.module = module

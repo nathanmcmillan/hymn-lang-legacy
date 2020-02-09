@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type function struct {
 	name          string
 	clsname       string
@@ -124,6 +126,7 @@ func (me *parser) remapFunctionImpl(funcName string, alias map[string]string, or
 }
 
 func remapClassFunctionImpl(class *class, original *function) {
+	fmt.Println("remapping class function ::", original.name, "--->", class.name)
 	module := class.module
 	parsing := module.parser
 	funcName := original.name
@@ -155,8 +158,8 @@ func (me *parser) defineClassFunction() {
 	class.functions[funcName] = fn
 	class.functionOrder = append(class.functionOrder, fn)
 	me.pushFunction(globalFuncName, module, fn)
-	for _, impl := range class.impls {
-		remapClassFunctionImpl(impl, fn)
+	for _, implementation := range class.implementations {
+		remapClassFunctionImpl(implementation, fn)
 	}
 }
 

@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
-func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc, filterOrder []string, filters map[string]subc) {
-	name := subc.fname
+func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string) {
 
 	if debug {
-		fmt.Println("=== compile: " + subc.location() + " ===")
+		fmt.Println("=== compile: " + name + " ===")
 	}
 
 	module := me.hmfile
@@ -20,7 +20,8 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
 	cfile.headStdIncludeSection.WriteString("#define " + guard)
 
-	cfile.location = subc.location()
+	cfile.pathLocal = name
+	cfile.pathGlobal, _ = filepath.Rel(module.program.out, filepath.Join(folder, cfile.pathLocal))
 
 	for _, def := range module.defineOrder {
 		if def.class != nil {
@@ -38,7 +39,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 
 	for _, f := range module.functionOrder {
 		fun := module.functions[f]
-		if fun.forClass == nil || fun.forClass.location != name {
+		if fun.forClass == nil || fun.forClass.pathLocal != name {
 			continue
 		}
 		cfile.compileFunction(f, fun, true)
@@ -49,7 +50,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 	}
 
 	if len(cfile.codeFn) > 0 {
-		cFile := folder + "/" + name + ".c"
+		cFile := filepath.Join(folder, name+".c")
 
 		module.program.sources[name] = cFile
 
@@ -65,5 +66,5 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, subc *subc,
 	}
 
 	cfile.headSuffix.WriteString("\n#endif\n")
-	write(folder+"/"+name+".h", cfile.head())
+	write(filepath.Join(folder, name+".h"), cfile.head())
 }

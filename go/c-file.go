@@ -5,7 +5,8 @@ import (
 )
 
 type cfile struct {
-	location                 string
+	pathLocal                string
+	pathGlobal               string
 	hmfile                   *hmfile
 	stdReq                   *OrderedSet
 	libReq                   *OrderedSet
@@ -117,7 +118,7 @@ func (me *cfile) includeLibs() {
 		me.headLibIncludeSection.WriteString("\n#include \"" + name + ".h\"")
 	}
 	if !me.master {
-		me.dependencyReq.delete(me.location)
+		me.dependencyReq.delete(me.pathLocal)
 		for _, name := range me.dependencyReq.order {
 			me.headReqIncludeSection.WriteString("\n#include \"" + name + ".h\"")
 		}

@@ -1,4 +1,4 @@
-type typ
+class typ
   ptr(int) int
 
 fun(ptr() int)

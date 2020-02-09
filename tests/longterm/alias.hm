@@ -1,4 +1,4 @@
-type zoo
+class zoo
 	s string
 
 alias echo = foo

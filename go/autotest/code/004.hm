@@ -1,8 +1,8 @@
-type foo
+class foo
 	a int
 	b string
 
-type bar
+class bar
 	c foo
 	d string
 

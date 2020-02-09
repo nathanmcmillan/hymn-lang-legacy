@@ -60,7 +60,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 						me.eat("id")
 						member := nodeInit("member-variable")
 						member.copyData(getdatatype(me.hmfile, TokenInt))
-						member.idata = newidvariable(from, "type")
+						member.idata = newidvariable(from, "class")
 						member.push(head)
 						head = member
 					} else {

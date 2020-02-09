@@ -1,8 +1,8 @@
-type vec
+class vec
   x int
   y int
 
-type exception
+class exception
   message string
   stack   string
 

@@ -9,12 +9,12 @@ string_hashcode(key string) int
 		pos += 1
 	return int value
 
-type hashset_item<i>
+class hashset_item<i>
 	code  int
 	key   i
 	next  maybe<hashset_item<i>>
 
-type hashset<i>
+class hashset<i>
 	size     int
 	capacity int
 	get_code (i) int

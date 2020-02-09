@@ -1,4 +1,4 @@
-type vec
+class vec
   a int
   b int
 

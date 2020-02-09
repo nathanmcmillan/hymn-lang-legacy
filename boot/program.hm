@@ -2,7 +2,7 @@ import "hashmap"
 import "hmlib"
 import "hmfile"
 
-type program
+class program
 	out         string
 	directory   string
 	libs        string

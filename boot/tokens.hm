@@ -38,7 +38,7 @@ digit(c char) bool
 		_ => pass
 	return false
 
-type token
+class token
 	depth int
 	name  string
 	value string
@@ -53,7 +53,7 @@ token to_string() string
 	s += "}"
 	return s
 
-type tokenizer
+class tokenizer
 	tokens []token
 	depth  int
 	eof    token

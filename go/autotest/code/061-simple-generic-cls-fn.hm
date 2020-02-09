@@ -1,4 +1,4 @@
-type foo<k,v>
+class foo<k,v>
 	size k
 	name v
 

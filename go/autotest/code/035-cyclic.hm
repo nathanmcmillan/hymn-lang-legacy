@@ -1,4 +1,4 @@
-type vec
+class vec
 	x    float
 	nest maybe<vec>
 

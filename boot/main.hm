@@ -13,7 +13,7 @@ const debug_ast = true
 const space_char = '\t'
 const space_fmc = "\t"
 
-type flags
+class flags
 	cc               string
 	path             string
 	hmlib            string
@@ -29,11 +29,11 @@ type flags
 	makefile         bool
 	do_not_compile   bool
 
-type error
+class error
 	code    string
 	message string
 
-type tuple<x,y>
+class tuple<x,y>
 	a x
 	b x
 

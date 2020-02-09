@@ -19,6 +19,13 @@ func (me *parser) defineEnum() {
 	me.hmfile.namespace[name] = "enum"
 	me.hmfile.types[name] = "enum"
 
+	enumDef := enumInit(me.hmfile, name)
+
+	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{enum: enumDef})
+
+	me.hmfile.enums[uid] = enumDef
+	me.hmfile.enums[name] = enumDef
+
 	typesOrder := make([]*union, 0)
 	typesMap := make(map[string]*union)
 	isSimple := true
@@ -73,8 +80,9 @@ func (me *parser) defineEnum() {
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
 
-	enumDef := enumInit(me.hmfile, name, isSimple, typesOrder, typesMap, datatypels(genericsOrder), genericsDict)
+	enumDef.finishInit(isSimple, typesOrder, typesMap, datatypels(genericsOrder), genericsDict)
 
-	me.hmfile.enums[name] = enumDef
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{enum: enumDef})
+	for _, implementation := range enumDef.implementations {
+		me.finishEnumGenericDefinition(implementation)
+	}
 }

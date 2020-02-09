@@ -2,7 +2,7 @@ import "hashmap" (hashmap)
 import "function" (hm_function)
 import "class" (hm_class)
 
-type hmlib
+class hmlib
 	functions     hashmap<string, hm_function>
 	function_list []hm_function
 	types         hashmap<string, string>

@@ -1,7 +1,7 @@
 package main
 
 func (me *parser) defineClass() {
-	me.eat("type")
+	me.eat("class")
 	token := me.token
 	name := token.value
 	if _, ok := me.hmfile.namespace[name]; ok {
@@ -70,6 +70,6 @@ func (me *parser) defineClass() {
 	classDef.initMembers(memberOrder, memberMap)
 
 	for _, implementation := range classDef.implementations {
-		me.finishClassDefinition(implementation)
+		me.finishClassGenericDefinition(implementation)
 	}
 }

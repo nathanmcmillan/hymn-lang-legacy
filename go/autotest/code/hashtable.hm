@@ -12,13 +12,13 @@ string_hashcode(key string) int
 		pos += 1
 	return int value
 
-type hashtable_item<k,v>
+class hashtable_item<k,v>
 	code  int
 	key   k
 	value v
 	next  maybe<hashtable_item<k,v>>
 
-type hashtable<k,v>
+class hashtable<k,v>
 	size     int
 	capacity int
 	get_code (k) int

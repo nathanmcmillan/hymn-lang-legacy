@@ -1,7 +1,7 @@
 import "hashmap" (hashmap)
 import "number" (number, operation)
 
-type lib
+class lib
 	s_to_num hashmap<string, number>
 	s_to_op  hashmap<string, operation>
 	num_to_s hashmap<number, string>

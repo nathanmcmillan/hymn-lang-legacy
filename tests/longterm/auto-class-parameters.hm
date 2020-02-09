@@ -1,5 +1,5 @@
 
-type foo
+class foo
 	total  int
 
 foo.convert_to_total(t float)

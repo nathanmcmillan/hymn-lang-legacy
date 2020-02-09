@@ -1,4 +1,4 @@
-type foo
+class foo
   val string
 
 main

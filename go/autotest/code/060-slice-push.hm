@@ -1,8 +1,8 @@
-type foo
+class foo
 	x float
 	y float
 
-type goobie
+class goobie
   x []int
 
 test_a

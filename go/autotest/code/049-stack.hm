@@ -1,13 +1,13 @@
-type foo
+class foo
   data int
 
-type boo
+class boo
   x foo
 
-type zoo
+class zoo
   y int
 
-type poo
+class poo
   z 'foo
   w 'zoo
 

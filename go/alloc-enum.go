@@ -56,11 +56,12 @@ func (me *parser) allocEnum(module *hmfile) *node {
 				me.eat(",")
 			}
 			param := me.calc(0, nil)
+			fmt.Println("equal ::", param.data().error(), "::::", unionType.error())
 			if param.data().notEquals(unionType) {
 				if _, gok := gdict[unionType.getRaw()]; gok {
 					gimpl[unionType.getRaw()] = param.data().getRaw()
 				} else {
-					panic(me.fail() + "enum \"" + enumName + "\" type \"" + unionName + "\" expects \"" + unionType.print() + "\" but parameter was \"" + param.data().print() + "\"")
+					panic(me.fail() + "Enum: " + enumName + "." + unionName + " expects: " + unionType.print() + " but parameter was: " + param.data().print())
 				}
 			}
 			n.push(param)

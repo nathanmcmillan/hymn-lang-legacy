@@ -51,7 +51,7 @@ func (me *union) copy() *union {
 	return u
 }
 
-func enumInit(module *hmfile, name string, simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]int) *enum {
+func enumInit(module *hmfile, name string) *enum {
 	e := &enum{}
 	e.module = module
 	e.name = name
@@ -61,16 +61,19 @@ func enumInit(module *hmfile, name string, simple bool, order []*union, dict map
 		e.ucname = module.unionNameSpace(name)
 		e.pathGlobal = filepath.Join(module.relativeOut, e.pathLocal)
 	}
-	e.simple = simple
-	e.types = dict
-	e.typesOrder = order
-	e.generics = generics
-	e.genericsDict = genericsDict
-	if len(generics) > 0 {
-		e.implementations = make([]*enum, 0)
-		e.doNotDefine = true
-	}
 	return e
+}
+
+func (me *enum) finishInit(simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]int) {
+	me.simple = simple
+	me.types = dict
+	me.typesOrder = order
+	me.generics = generics
+	me.genericsDict = genericsDict
+	if len(generics) > 0 {
+		me.implementations = make([]*enum, 0)
+		me.doNotDefine = true
+	}
 }
 
 func (me *enum) baseEnum() *enum {

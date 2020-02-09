@@ -12,7 +12,7 @@ interface expl
   --   void set(foo *self, int value);
   -- };
 
-type foo
+class foo
   implement expl
   x int
 
@@ -22,7 +22,7 @@ foo.get() int
 foo.set(value int)
   self.x = value
 
-type bar
+class bar
   implement expl
   y int
   
@@ -32,7 +32,7 @@ bar.get() int
 bar.set(value int)
   self.y = value
 
-type special
+class special
   one expl
   two expl
 

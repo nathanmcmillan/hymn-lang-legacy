@@ -1,9 +1,9 @@
-type vec
+class vec
 	x int 
 	y int
 	z int
 
-type bar
+class bar
 	ge maybe<vec>
 	ne maybe<bar>
 

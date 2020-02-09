@@ -97,7 +97,7 @@
 			}
 		},
 		{
-			"match": "\\b(if|elif|else|for|while|return|break|continue|and|or|not|match|is|pass|goto|label|iterate|in)\\b",
+			"match": "\\b(if|elif|else|for|while|return|break|continue|and|or|not|match|is|pass|goto|label|iterate|in|async|await|yield)\\b",
 			"captures": {
 				"1": {
 					"name": "keyword.control.hymn"
@@ -105,7 +105,7 @@
 			}
 		},
 		{
-			"match": "^(type|enum|function) +(\\w+)",
+			"match": "^(class|enum|function) +(\\w+)",
 			"captures": {
 				"1": {
 					"name": "keyword.struct.hymn"

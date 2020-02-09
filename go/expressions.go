@@ -18,7 +18,7 @@ func (me *parser) fileExpression() {
 		me.mutable()
 	} else if op == "function" || op == "id" {
 		me.defineNewFunction()
-	} else if op == "type" {
+	} else if op == "class" {
 		me.defineClass()
 	} else if op == "enum" {
 		me.defineEnum()

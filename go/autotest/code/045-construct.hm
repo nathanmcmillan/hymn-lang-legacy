@@ -1,8 +1,8 @@
-type attribute<v>
+class attribute<v>
 	on  bool
 	has v
 
-type vec
+class vec
 	x int 
 	y int
 	z int

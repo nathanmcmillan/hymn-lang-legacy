@@ -41,56 +41,9 @@ func (me *parser) allocEnum(module *hmfile) *node {
 
 	n := nodeInit("enum")
 
-	typeSize := len(unionDef.types)
+	typeSize := unionDef.types.size()
 	if typeSize > 0 {
-		if me.token.is != "(" {
-			panic(me.fail() + "enum \"" + n.data().print() + "\" requires parameters")
-		}
-		me.eat("(")
-		gimpl := make(map[string]string)
-		for ix, unionType := range unionDef.types {
-			if ix != 0 {
-				if me.token.is != "," {
-					panic(me.fail() + "Expecting \"" + unionType.print() + "\" for enum \"" + enumName + "\".")
-				}
-				me.eat(",")
-			}
-			param := me.calc(0, nil)
-			fmt.Println("equal ::", param.data().error(), "::::", unionType.error())
-			if param.data().notEquals(unionType) {
-				if _, gok := gdict[unionType.getRaw()]; gok {
-					gimpl[unionType.getRaw()] = param.data().getRaw()
-				} else {
-					panic(me.fail() + "Enum: " + enumName + "." + unionName + " expects: " + unionType.print() + " but parameter was: " + param.data().print())
-				}
-			}
-			n.push(param)
-		}
-		me.eat(")")
-		if len(order) == 0 {
-			if len(gimpl) != len(gdict) {
-				if assignEn != nil {
-					for k, v := range assignEn.gmapper {
-						if nv, ok := gimpl[k]; ok {
-							if nv != v {
-								panic(me.fail() + "\"" + enumName + "\" with \"" + nv + "\" does not match \"" + v + "\"")
-							}
-						} else {
-							gimpl[k] = v
-						}
-					}
-				} else {
-					panic(me.fail() + "generic enum \"" + enumName + "\" with impl " + fmt.Sprint(gimpl) + " does not match " + fmt.Sprint(gdict))
-				}
-			}
-			if len(gimpl) > 0 {
-				order = me.mapUnionGenerics(enumDef, gimpl)
-				enumName += genericslist(order)
-				if _, ok := module.enums[enumName]; !ok {
-					me.defineEnumImplGeneric(enumDef, order)
-				}
-			}
-		}
+		me.unionParameters()
 	} else if len(gdict) != 0 && len(order) == 0 {
 		panic(me.fail() + "generic enum \"" + enumName + "\" has no impl for " + fmt.Sprint(enumDef.generics))
 	}
@@ -98,4 +51,58 @@ func (me *parser) allocEnum(module *hmfile) *node {
 	n.copyData(getdatatype(module, enumName+"."+unionName))
 
 	return n
+}
+
+func (me *parser) unionParameters(n *node, unionDef *enum, params []*node, typed string) {
+	if me.token.is != "(" {
+		panic(me.fail() + "enum \"" + n.data().print() + "\" requires parameters")
+	}
+	me.eat("(")
+	if me.token.is == "line" {
+		me.eat("line")
+	}
+	gimpl := make(map[string]string)
+	for ix, unionKey := range unionDef.types.order {
+		unionType := unionDef.types.table[unionKey]
+		if ix != 0 {
+			if me.token.is != "," {
+				panic(me.fail() + "Expecting \"" + unionType.print() + "\" for enum \"" + enumName + "\".")
+			}
+			me.eat(",")
+		}
+		param := me.calc(0, nil)
+		if param.data().notEquals(unionType) {
+			if _, gok := gdict[unionType.getRaw()]; gok {
+				gimpl[unionType.getRaw()] = param.data().getRaw()
+			} else {
+				panic(me.fail() + "Enum: " + enumName + "." + unionName + " expects: " + unionType.print() + " but parameter was: " + param.data().print())
+			}
+		}
+		n.push(param)
+	}
+	me.eat(")")
+	if len(order) == 0 {
+		if len(gimpl) != len(gdict) {
+			if assignEn != nil {
+				for k, v := range assignEn.gmapper {
+					if nv, ok := gimpl[k]; ok {
+						if nv != v {
+							panic(me.fail() + "\"" + enumName + "\" with \"" + nv + "\" does not match \"" + v + "\"")
+						}
+					} else {
+						gimpl[k] = v
+					}
+				}
+			} else {
+				panic(me.fail() + "Enum: " + enumName + " with implementation: " + fmt.Sprint(gimpl) + " does not match: " + fmt.Sprint(gdict))
+			}
+		}
+		if len(gimpl) > 0 {
+			order = me.mapUnionGenerics(enumDef, gimpl)
+			enumName += genericslist(order)
+			if _, ok := module.enums[enumName]; !ok {
+				me.defineEnumImplGeneric(enumDef, order)
+			}
+		}
+	}
 }

@@ -45,34 +45,43 @@ func (me *parser) defineEnum() {
 			if _, ok := typesMap[typeName]; ok {
 				panic(me.fail() + "type name \"" + typeName + "\" already used")
 			}
-			unionList := make([]string, 0)
+			unionOrderedData := newordereddata()
 			unionGOrder := make([]string, 0)
 			if me.token.is == "(" {
-				isSimple = false
 				me.eat("(")
+				if me.token.is == ")" {
+					goto closing
+				}
+				isSimple = false
+				if me.token.is == "line" {
+					me.eat("line")
+				}
 				for {
 					if me.token.is == ")" {
 						break
 					}
+					key := me.token.value
+					me.eat("id")
+					declare := me.token.is
+					unionArgType := me.declareType()
+					if _, ok2 := genericsDict[declare]; ok2 {
+						unionGOrder = append(unionGOrder, declare)
+					}
+					unionOrderedData.push(key, unionArgType)
+
 					if me.token.is == "," {
 						me.eat(",")
-						continue
+					} else if me.token.is == "line" {
+						me.eat("line")
+					} else {
+						goto closing
 					}
-					unionArgType := me.token.value
-					me.wordOrPrimitive()
-					if _, ok := me.hmfile.getType(unionArgType); !ok {
-						if _, ok2 := genericsDict[unionArgType]; ok2 {
-							unionGOrder = append(unionGOrder, unionArgType)
-						} else {
-							panic(me.fail() + "union type name \"" + unionArgType + "\" does not exist")
-						}
-					}
-					unionList = append(unionList, unionArgType)
 				}
+			closing:
 				me.eat(")")
 			}
 			me.eat("line")
-			un := unionInit(me.hmfile, name, typeName, unionList, unionGOrder)
+			un := unionInit(me.hmfile, name, typeName, unionOrderedData, unionGOrder)
 			typesOrder = append(typesOrder, un)
 			typesMap[typeName] = un
 			continue

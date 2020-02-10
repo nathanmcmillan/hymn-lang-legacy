@@ -61,11 +61,11 @@ func (me *parser) defaultValue(data *datatype, from string) *node {
 	return d
 }
 
-func (me *parser) pushClassParams(n *node, base *class, params []*node, typed string) {
+func (me *parser) pushClassParams(n *node, classDef *class, params []*node, typed string) {
 	for i, param := range params {
 		if param == nil {
-			clsvar := base.variables[base.variableOrder[i]]
-			fmt.Println("default value ::", base.name, "|", clsvar.data().print())
+			clsvar := classDef.variables[classDef.variableOrder[i]]
+			fmt.Println("default value ::", classDef.name, "|", clsvar.data().print())
 			d := me.defaultValue(clsvar.data(), typed)
 			n.push(d)
 		} else {

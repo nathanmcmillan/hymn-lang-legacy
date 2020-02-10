@@ -7,6 +7,7 @@ import (
 func (me *cfile) compileAllocEnum(n *node) *codeblock {
 
 	data := n.data()
+
 	en, un, _ := data.isEnum()
 	enumType := un.name
 	if en.simple {
@@ -40,8 +41,9 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 			code += "malloc(sizeof(" + unionName + "))"
 		}
 		code += ";\n" + fmc(me.depth) + assign.cname + memberRef + "type = " + enumTypeName(baseEnumName, un.name)
-		xvar := len(un.types) > 1
-		for i, v := range un.types {
+		xvar := un.types.size() > 1
+		for i, typeKey := range un.types.order {
+			v := un.types.table[typeKey]
 			p := n.has[i]
 			if !v.isPointer() {
 				p.attributes["stack"] = "true"
@@ -51,7 +53,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 				cassign += ".var" + strconv.Itoa(i)
 			}
 			cassign += " = "
-			if p.is == "new" {
+			if p.is == "new" || (p.is == "enum" && p.data().union != nil) {
 				temp := me.temp()
 				p.attributes["assign"] = temp
 				d := nodeInit("variable")
@@ -72,8 +74,8 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 				code += cassign + me.eval(p).code()
 			}
 		}
-
 		cb.current = codeNode(n, code)
+
 	} else {
 		temp := me.temp()
 		cb.current = codeNode(n, temp)

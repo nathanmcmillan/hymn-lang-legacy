@@ -67,8 +67,8 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 	if op == "member-variable" {
 		return me.compileMemberVariable(n)
 	}
-	if op == "tuple-index" {
-		return me.compileTupleIndex(n)
+	if op == "union-member-variable" {
+		return me.compileUnionMemberVariable(n)
 	}
 	if op == "call" {
 		return me.compileCall(n)

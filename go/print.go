@@ -198,14 +198,16 @@ func (me *enum) string(lv int) string {
 	lv++
 	end := len(me.typesOrder) - 1
 	for i, unionType := range me.typesOrder {
-		if len(unionType.types) > 0 {
+		size := unionType.types.size()
+		if size > 0 {
 			s += fmc(lv) + "{\n"
 			lv++
 			s += fmc(lv) + "\"name\": \"" + unionType.name + "\",\n"
 			s += fmc(lv) + "\"unions\": [\n"
 			lv++
-			unionEnd := len(unionType.types) - 1
-			for ix, typ := range unionType.types {
+			unionEnd := size - 1
+			for ix, typeKey := range unionType.types.order {
+				typ := unionType.types.table[typeKey]
 				s += fmc(lv) + typ.string(lv)
 				if ix < unionEnd {
 					s += ",\n"

@@ -53,8 +53,9 @@ func (me *parser) finishEnumGenericDefinition(enumDef *enum) {
 	}
 
 	for _, un := range unionList {
-		for i, data := range un.types {
-			un.types[i] = me.genericsReplacer(enumDef.module, data, enumDef.gmapper)
+		for _, dataKey := range un.types.order {
+			data := un.types.table[dataKey]
+			un.types.table[dataKey] = me.genericsReplacer(enumDef.module, data, enumDef.gmapper)
 		}
 	}
 

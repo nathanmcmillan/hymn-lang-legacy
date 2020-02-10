@@ -44,7 +44,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 				p.attributes["stack"] = "true"
 			}
 			cassign := ";\n" + fmc(me.depth) + assign.cname + memberRef + clv.name + " = "
-			if p.is == "new" {
+			if p.is == "new" || (p.is == "enum" && p.data().union != nil) {
 				temp := me.temp()
 				p.attributes["assign"] = temp
 				d := nodeInit("variable")

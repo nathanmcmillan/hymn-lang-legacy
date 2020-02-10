@@ -3,12 +3,12 @@ Hymn is a programming language designed to make writing simple imperitive progra
 It compiles to efficient, readable C code.
 
 ```
-type foo<t>
-  data t
+class foo<t>
+    data t
 
-main
-  f = foo(data:"hello world")
-  echo(f.data)
+function main
+    f = foo(data:"hello world")
+    echo(f.data)
 ```
 
 Learn more at https://hymn-lang.org

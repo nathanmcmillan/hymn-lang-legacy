@@ -38,14 +38,15 @@ func (me *cfile) defineEnum(enum *enum) {
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
 	for _, enumUnion := range enum.typesOrder {
-		num := len(enumUnion.types)
+		num := enumUnion.types.size()
 		if num == 1 {
-			typed := enumUnion.types[0]
+			typed := enumUnion.types.get(0)
 			me.dependencyGraph(typed)
 			code += fmc(2) + fmtassignspace(typed.typeSig()) + enumUnion.name + ";\n"
 		} else if num != 0 {
 			code += fmc(2) + "struct {\n"
-			for ix, typed := range enumUnion.types {
+			for ix, typeKey := range enumUnion.types.order {
+				typed := enumUnion.types.table[typeKey]
 				me.dependencyGraph(typed)
 				code += fmc(3) + fmtassignspace(typed.typeSig()) + "var" + strconv.Itoa(ix) + ";\n"
 			}

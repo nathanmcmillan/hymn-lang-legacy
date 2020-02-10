@@ -458,41 +458,63 @@ func (me *datatype) memoryGet() string {
 	return "."
 }
 
+func (me *datatype) standardEquals(b *datatype) bool {
+	for b.is == dataTypeMaybe {
+		b = b.member
+	}
+	if me.is != b.is {
+		return false
+	}
+	if me.canonical != b.canonical {
+		return false
+	}
+	if me.generics != nil || b.generics != nil {
+		if me.generics == nil || b.generics == nil {
+			return false
+		}
+		if len(me.generics) != len(b.generics) {
+			return false
+		}
+		for i, ga := range me.generics {
+			gb := b.generics[i]
+			if ga.notEquals(gb) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (me *datatype) equals(b *datatype) bool {
 	switch me.is {
 	case dataTypeClass:
-		fallthrough
+		{
+			for b.is == dataTypeMaybe {
+				b = b.member
+			}
+			if me.class != b.class {
+				return false
+			}
+		}
 	case dataTypeEnum:
+		{
+			for b.is == dataTypeMaybe {
+				b = b.member
+			}
+			if me.enum != b.enum {
+				return false
+			}
+			if me.union != nil && b.union != nil && me.union != b.union {
+				return false
+			}
+		}
+	case dataTypeString:
 		fallthrough
 	case dataTypeUnknown:
 		fallthrough
-	case dataTypeString:
-		fallthrough
 	case dataTypePrimitive:
 		{
-			if b.is == dataTypeMaybe {
-				b = b.member
-			}
-			if me.is != b.is {
-				return false
-			}
-			if me.canonical != b.canonical {
-				return false
-			}
-			if me.generics != nil || b.generics != nil {
-				if me.generics == nil || b.generics == nil {
-					return false
-				}
-				if len(me.generics) != len(b.generics) {
-					return false
-				}
-				for i, ga := range me.generics {
-					gb := b.generics[i]
-					if ga.notEquals(gb) {
-						return false
-					}
-				}
-			}
+			return me.standardEquals(b)
 		}
 	case dataTypeNone:
 		{

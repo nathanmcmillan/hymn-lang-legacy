@@ -101,7 +101,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 		} else if checkIsPrimitive(me.token.is) {
 			panic(me.fail() + "can't match on a primitive. did you mean to use an enum implementation?")
 		} else {
-			panic(me.fail() + "unknown right side of \"is\"")
+			panic(me.fail() + "Unknown right side of is: " + me.token.is)
 		}
 	}
 	n.push(left)

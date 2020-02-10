@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strconv"
-)
-
 func (me *parser) eatvar(from *hmfile) *node {
 	head := nodeInit("variable")
 	localvarname := me.token.value
@@ -68,16 +64,15 @@ func (me *parser) eatvar(from *hmfile) *node {
 					}
 				} else {
 					me.eat(".")
-					dotIndexStr := me.token.value
-					me.eat(TokenIntLiteral)
-					dotIndex, _ := strconv.Atoi(dotIndexStr)
-					if dotIndex > len(rootUnion.types) {
-						panic(me.fail() + "index out of range for \"" + rootUnion.name + "\"")
+					key := me.token.value
+					me.eat("id")
+					typeInUnion, ok := rootUnion.types.table[key]
+					if !ok {
+						panic(me.fail() + "Union key: " + key + " does not exist for: " + rootUnion.name)
 					}
-					typeInUnion := rootUnion.types[dotIndex]
-					member := nodeInit("tuple-index")
+					member := nodeInit("union-member-variable")
 					member.copyData(typeInUnion)
-					member.value = dotIndexStr
+					member.value = key
 					member.push(head)
 					head = member
 				}

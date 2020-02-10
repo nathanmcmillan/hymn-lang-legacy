@@ -197,13 +197,13 @@ func (me *cfile) compileBinaryOp(n *node) *codeblock {
 	return codeBlockOne(n, code)
 }
 
-func (me *cfile) compileTupleIndex(n *node) *codeblock {
+func (me *cfile) compileUnionMemberVariable(n *node) *codeblock {
 	dotIndexStr := n.value
 	root := me.eval(n.has[0])
 	data := root.data()
 	_, un, _ := data.isEnum()
 	code := root.code() + "->"
-	if len(un.types) == 1 {
+	if un.types.size() == 1 {
 		code += un.name
 	} else {
 		code += un.name + ".var" + dotIndexStr

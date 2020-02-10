@@ -116,7 +116,7 @@
 			}
 		},
 		{
-			"match": "^(\\w+) (\\w+)($|\\(| )",
+			"match": "^(\\w+) (\\w+) *($|\\(| )",
 			"captures": {
 				"1": {
 					"name": "entity.name.function.hymn"
@@ -127,7 +127,7 @@
 			}
 		},
 		{
-			"match": "^(\\w+)($|\\(| )",
+			"match": "^(\\w+) *($|\\(| )",
 			"captures": {
 				"1": {
 					"name": "entity.name.function.hymn"
@@ -135,7 +135,7 @@
 			}
 		},
 		{
-			"match": "(\\w+)(\\(|<)",
+			"match": "(\\w+) *(\\(|<)",
 			"captures": {
 				"1": {
 					"name": "support.function.hymn"
@@ -143,7 +143,7 @@
 			}
 		},
 		{
-			"match": "\\.(\\w+)\\(",
+			"match": "\\.(\\w+) *\\(",
 			"captures": {
 				"1": {
 					"name": "support.function.hymn"

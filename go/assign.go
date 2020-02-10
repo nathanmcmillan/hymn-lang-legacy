@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -33,13 +34,17 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		sv := me.hmfile.getvar(left.idata.name)
 		if sv != nil {
 			if !sv.mutable {
-				panic(me.fail() + "Variable \"" + sv.name + "\" is not mutable.")
+				panic(me.fail() + "Variable: " + sv.name + " is not mutable.")
 			}
 			if !right.data().isQuestion() && left.data().notEquals(right.data()) {
-				if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
+				enleft, _, ok1 := left.data().isEnum()
+				enright, _, ok2 := right.data().isEnum()
+				if ok1 && ok2 && enleft == enright {
+					left.copyDataOfNode(right)
+				} else if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
-					panic(me.fail() + "variable type \"" + left.data().print() + "\" does not match expression type \"" + right.data().print() + "\"")
+					panic(me.fail() + "Variable: " + sv.name + " of type: " + left.data().print() + " does not match expression: " + right.data().print())
 				}
 			}
 		} else if mustBeInt || mustBeNumber || op == "+=" {
@@ -54,6 +59,11 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			left.copyDataOfNode(right)
 			varini := right.data().getnamedvariable(left.idata.name, mutable)
 			me.hmfile.scope.variables[left.idata.name] = varini
+
+			if mutable && left.idata.name == "e" {
+				fmt.Println("DEBUG ::", left.data().error())
+			}
+
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
 		if !right.data().isQuestion() && left.data().notEquals(right.data()) {

@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-func (me *hmfile) generateC(module *hmfile) string {
+func (me *hmfile) generateC() string {
 
-	folder := module.out
-	filename := fileName(module.path)
-	hmlibs := module.libs
+	folder := me.out
+	filename := fileName(me.path)
+	hmlibs := me.libs
 
 	if debug {
 		fmt.Println("=== compile: " + filename + " ===")

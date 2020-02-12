@@ -116,7 +116,11 @@ func execCompile(flags *flags) (string, error) {
 	program.hmlib = hmlib
 
 	program.parse(flags.writeTo, flags.path, flags.hmlib)
-	program.compile()
+	program.compile(flags.cc)
+
+	if flags.cc == "js" {
+		return "", nil
+	}
 
 	name := fileName(flags.path)
 	fileOut := flags.writeTo + "/" + name
@@ -127,7 +131,7 @@ func execCompile(flags *flags) (string, error) {
 		return "", nil
 	}
 	gcc(flags, program.sources, fileOut)
-	return app(flags, name)
+	return execBin(flags, name)
 }
 
 func (me *program) parse(out, path, libs string) *hmfile {
@@ -146,12 +150,17 @@ func (me *program) parse(out, path, libs string) *hmfile {
 	return module
 }
 
-func (me *program) compile() {
+func (me *program) compile(cc string) {
 	list := me.hmorder
 	for x := len(list) - 1; x >= 0; x-- {
 		module := list[x]
 		os.MkdirAll(module.out, os.ModePerm)
-		source := module.generateC(module)
+		var source string
+		if cc == "js" {
+			source = module.generateJavaScript()
+		} else {
+			source = module.generateC()
+		}
 		me.sources[module.path] = source
 	}
 }
@@ -222,7 +231,7 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	}
 }
 
-func app(flags *flags, name string) (string, error) {
+func execBin(flags *flags, name string) (string, error) {
 	path := flags.writeTo + "/" + name
 	if exists(path) {
 		if debug {

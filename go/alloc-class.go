@@ -15,57 +15,10 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 	me.pushClassParams(n, cl, params, cl.name)
 }
 
-func (me *parser) defaultValue(data *datatype, from string) *node {
-	d := nodeInit(data.getRaw())
-	d.copyData(data)
-	if data.isString() {
-		d.value = ""
-	} else if data.isChar() {
-		d.value = "'\\0'"
-	} else if data.isNumber() {
-		d.value = "0"
-	} else if data.isBoolean() {
-		d.value = "false"
-	} else if data.isArray() {
-		t := nodeInit("array")
-		t.copyData(d.data())
-		d = t
-	} else if data.isSlice() {
-		t := nodeInit("slice")
-		t.copyData(d.data())
-		s := nodeInit(TokenInt)
-		s.copyData(getdatatype(me.hmfile, TokenInt))
-		s.value = "0"
-		t.push(s)
-		d = t
-	} else if _, ok := data.isClass(); ok {
-		cl, _ := data.isClass()
-		fmt.Println("all default class ::", from, "|", data.print(), "|", cl.name)
-		t := nodeInit("new")
-		t.copyData(d.data())
-		me.pushAllDefaultClassParams(t)
-		d = t
-	} else if data.isSomeOrNone() {
-		t := nodeInit("none")
-		t.copyData(d.data())
-		t.value = "NULL"
-		d = t
-	} else {
-		e := me.fail()
-		if from != "" {
-			e += "\nFrom: " + from
-		}
-		e += "\nType: " + d.is + "\nProblem: No default value available."
-		panic(e)
-	}
-	return d
-}
-
 func (me *parser) pushClassParams(n *node, classDef *class, params []*node, typed string) {
 	for i, param := range params {
 		if param == nil {
 			clsvar := classDef.variables[classDef.variableOrder[i]]
-			fmt.Println("default value ::", classDef.name, "|", clsvar.data().print())
 			d := me.defaultValue(clsvar.data(), typed)
 			n.push(d)
 		} else {
@@ -74,18 +27,18 @@ func (me *parser) pushClassParams(n *node, classDef *class, params []*node, type
 	}
 }
 
-func (me *parser) classParams(n *node, base *class, depth int) string {
+func (me *parser) classParams(n *node, cl *class, depth int) string {
 	me.eat("(")
 	if me.token.is == "line" {
 		me.eat("line")
 	}
-	vars := base.variableOrder
+	vars := cl.variableOrder
 	params := make([]*node, len(vars))
 	pix := 0
 	dict := false
-	lazyGenerics := false
+	lazy := false
 	gtypes := make(map[string]*datatype)
-	gindex := base.genericsDict
+	gindex := cl.genericsDict
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
@@ -107,9 +60,9 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 			me.eat("id")
 			me.eat(":")
 			param := me.calc(0, nil)
-			clsvar, ok := base.variables[vname]
+			clsvar, ok := cl.variables[vname]
 			if !ok {
-				panic(me.fail() + "member variable \"" + vname + "\" does not exist for class \"" + base.name + "\"")
+				panic(me.fail() + "Member variable: " + vname + " does not exist for class: " + cl.name)
 			}
 
 			var update map[string]*datatype
@@ -118,19 +71,19 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 			}
 
 			if update != nil && len(update) > 0 {
-				lazyGenerics = true
+				lazy = true
 				good, newtypes := mergeMaps(update, gtypes)
 				if !good {
 					a := genericsmap(gtypes)
 					b := genericsmap(update)
-					f := fmt.Sprint("Lazy generic for class \""+base.name+"\" is ", a, " but found ", b)
+					f := fmt.Sprint("Lazy generic for class \""+cl.name+"\" is ", a, " but found ", b)
 					panic(me.fail() + f)
 				}
 				gtypes = newtypes
 
 			} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
 				err := "parameter \"" + vname + "\" with type \"" + param.data().print()
-				err += "\" does not match class variable \"" + base.name + "."
+				err += "\" does not match class variable \"" + cl.name + "."
 				err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
 				panic(me.fail() + err)
 			}
@@ -143,9 +96,9 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 			dict = true
 
 		} else if dict {
-			panic(me.fail() + "regular paramater found after mapped parameter")
+			panic(me.fail() + "Regular paramater found after mapped parameter")
 		} else {
-			clsvar := base.variables[vars[pix]]
+			clsvar := cl.variables[vars[pix]]
 			if me.token.is == "_" {
 				me.eat("_")
 				params[pix] = nil
@@ -158,17 +111,17 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 				}
 
 				if update != nil && len(update) > 0 {
-					lazyGenerics = true
+					lazy = true
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {
-						f := fmt.Sprint("lazy generic for class \""+base.name+"\" is ", gtypes, " but found ", update)
+						f := fmt.Sprint("lazy generic for class \""+cl.name+"\" is ", gtypes, " but found ", update)
 						panic(me.fail() + f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
 					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().print()
-					err += "\" does not match class variable \"" + base.name + "."
+					err += "\" does not match class variable \"" + cl.name + "."
 					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
 					panic(me.fail() + err)
 				}
@@ -177,26 +130,26 @@ func (me *parser) classParams(n *node, base *class, depth int) string {
 			pix++
 		}
 	}
-	module := base.module
-	typed := base.name
-	if lazyGenerics {
+	module := cl.module
+	typed := cl.name
+	if lazy {
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
 			i, _ := gindex[k]
 			glist[i] = v.copy()
 		}
-		if len(glist) != len(base.generics) {
-			f := fmt.Sprint("Missing generic for base class \""+base.name+"\"\nimplementation list was ", genericslist(glist))
+		if len(glist) != len(cl.generics) {
+			f := fmt.Sprint("Missing generic for class \""+cl.name+"\"\nimplementation list was ", genericslist(glist))
 			panic(me.fail() + f)
 		}
 		lazy := typed + genericslist(glist)
 		if _, ok := module.classes[lazy]; !ok {
-			me.defineClassImplGeneric(base, glist)
+			me.defineClassImplGeneric(cl, glist)
 		}
-		base = module.classes[lazy]
+		cl = module.classes[lazy]
 		typed = lazy
 	}
-	me.pushClassParams(n, base, params, typed)
+	me.pushClassParams(n, cl, params, typed)
 	return typed
 }
 
@@ -206,13 +159,16 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	me.eat("id")
 	cl, ok := module.classes[typed]
 	if !ok {
-		panic(me.fail() + "class \"" + typed + "\" does not exist")
+		panic(me.fail() + "Class: " + typed + " does not exist")
 	}
 	uid := module.reference(typed)
 	gsize := len(cl.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(cl)
+			if len(gtypes) != gsize {
+				panic(me.fail() + "Class:" + cl.name + " with implementation " + fmt.Sprint(gtypes) + " does not match " + fmt.Sprint(cl.generics))
+			}
 			typed = uid + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
 				me.defineClassImplGeneric(cl, gtypes)
@@ -243,12 +199,12 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	return getdatatype(me.hmfile, typed)
 }
 
-func (me *parser) allocClass(module *hmfile, alloc *allocData) *node {
+func (me *parser) allocClass(module *hmfile, hint *allocHint) *node {
 	n := nodeInit("new")
 	data := me.buildClass(n, module)
-	data = data.merge(alloc)
+	data = data.merge(hint)
 	n.copyData(data)
-	if alloc != nil && alloc.stack {
+	if hint != nil && hint.stack {
 		n.attributes["stack"] = "true"
 		n.data().setIsPointer(false)
 		n.data().setIsOnStack(true)

@@ -118,10 +118,6 @@ func execCompile(flags *flags) (string, error) {
 	program.parse(flags.writeTo, flags.path, flags.hmlib)
 	program.compile(flags.cc)
 
-	if flags.cc == "js" {
-		return "", nil
-	}
-
 	name := fileName(flags.path)
 	fileOut := flags.writeTo + "/" + name
 	if exists(fileOut) {
@@ -155,13 +151,7 @@ func (me *program) compile(cc string) {
 	for x := len(list) - 1; x >= 0; x-- {
 		module := list[x]
 		os.MkdirAll(module.out, os.ModePerm)
-		var source string
-		if cc == "js" {
-			source = module.generateJavaScript()
-		} else {
-			source = module.generateC()
-		}
-		me.sources[module.path] = source
+		me.sources[module.path] = module.generateC()
 	}
 }
 

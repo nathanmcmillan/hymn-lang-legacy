@@ -98,3 +98,7 @@ func (me *enum) getGenerics() []string {
 func (me *enum) uid() string {
 	return me.module.reference(me.name)
 }
+
+func (me *enum) join(un *union) string {
+	return me.name + "." + un.name
+}

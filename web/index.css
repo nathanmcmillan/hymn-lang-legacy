@@ -1,6 +1,5 @@
 :root {
     --font-name: 'Roboto';
-    --font-name-2: 'Noto Sans';
     --content: 64rem;
     --button-color: rgb(126, 214, 234);
     --button-color-hover: rgb(130, 220, 240);
@@ -169,7 +168,7 @@ footer {
 }
 
 .std_button {
-    font-family: var(--font-name-2);
+    font-family: var(--font-name);
     font-size: 0.75rem;
     text-align: center;
     font-weight: bold;
@@ -200,7 +199,7 @@ footer {
 }
 
 .big_button {
-    font-family: var(--font-name-2);
+    font-family: var(--font-name);
     font-size: 1.5rem;
     text-align: center;
     font-weight: bold;

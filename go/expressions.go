@@ -236,7 +236,7 @@ func (me *parser) extern() *node {
 	} else if _, ok := module.classes[idname]; ok {
 		return me.allocClass(module, nil)
 	} else if _, ok := module.enums[idname]; ok {
-		return me.allocEnum(module)
+		return me.allocEnum(module, nil)
 	} else if module.getStatic(idname) != nil {
 		return me.eatvar(module)
 	} else {

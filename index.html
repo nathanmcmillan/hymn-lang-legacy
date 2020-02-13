@@ -40,7 +40,7 @@
         <section class="code_section">
             <div class="code">
                 <pre>
-type vec&lt;t&gt;
+class vec&lt;t&gt;
     x t
     y t
     z t
@@ -54,7 +54,7 @@ hello(flag bool) maybe&lt;vec&lt;float32&gt;&gt;
 main
     v = hello(true)
     match v
-        some => echo(v.x)
+        some(s) => echo("x := " + s.x)
         none => _
                 </pre>
             </div>

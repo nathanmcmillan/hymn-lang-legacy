@@ -52,7 +52,7 @@ func isAnyIntegerType(t string) bool {
 	return ok
 }
 
-type allocData struct {
+type allocHint struct {
 	stack bool
 	array bool
 	slice bool

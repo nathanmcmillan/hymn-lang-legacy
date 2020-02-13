@@ -36,7 +36,7 @@ func (me *parser) ifexpr() *node {
 		me.eat("line")
 		n.push(me.block())
 	}
-	if me.peek().is == "elif" && me.peek().depth == depth && me.token.is == "line" {
+	if (me.peek().is == "elif" || me.peek().is == "else") && me.peek().depth == depth && me.token.is == "line" {
 		me.eat("line")
 	}
 	me.enumstackclr(templs)
@@ -56,7 +56,7 @@ func (me *parser) ifexpr() *node {
 		}
 		me.enumstackclr(templs)
 		n.push(elif)
-		if (me.peek().is == "elif" || me.peek().is == "else") && me.token.is == "line" {
+		if (me.peek().is == "elif" || me.peek().is == "else") && me.peek().depth == depth && me.token.is == "line" {
 			me.eat("line")
 		}
 	}

@@ -201,26 +201,6 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		}
 	}
 
-	fmt.Println("searching ::", module.name, "::", typed)
-
-	// TODO
-
-	// for k, cl := range module.classes {
-	// 	fmt.Println("searching classes ::", k)
-	// 	if k == typed {
-	// 		fmt.Println("... found ::", module.name, "::", typed, "::", cl.name)
-	// 		break
-	// 	}
-	// }
-
-	// for k, en := range module.enums {
-	// 	fmt.Println("searching enums ::", k)
-	// 	if k == typed {
-	// 		fmt.Println("... found ::", module.name, "::", typed, "::", en.name)
-	// 		break
-	// 	}
-	// }
-
 	if cl, ok := module.classes[typed]; ok {
 		return newdataclass(origin, cl, glist)
 	} else if en, ok := module.enums[typed]; ok {
@@ -1041,7 +1021,7 @@ func getdatatypegenerics(typed string) []string {
 	return order
 }
 
-func (me *datatype) merge(hint *allocData) *datatype {
+func (me *datatype) merge(hint *allocHint) *datatype {
 	if hint == nil {
 		return me
 	}

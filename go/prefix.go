@@ -93,16 +93,14 @@ func prefixIdent(me *parser, op string) *node {
 			return me.parseFn(module)
 		}
 		if _, ok := module.getClass(name); ok {
-			data := &allocData{}
-			data.stack = useStack
-			return me.allocClass(module, data)
+			hint := &allocHint{}
+			hint.stack = useStack
+			return me.allocClass(module, hint)
 		}
 		if _, ok := module.enums[name]; ok {
-			alloc := &allocData{}
-			alloc.stack = useStack
-			no := me.allocEnum(module)
-			no._vdata = no._vdata.merge(alloc)
-			return no
+			hint := &allocHint{}
+			hint.stack = useStack
+			return me.allocEnum(module, hint)
 		}
 		if def, ok := module.defs[name]; ok {
 			return me.exprDef(name, def)
@@ -123,17 +121,17 @@ func prefixIdent(me *parser, op string) *node {
 
 func prefixArray(me *parser, op string) *node {
 	me.eat("[")
-	alloc := &allocData{}
+	hint := &allocHint{}
 	var no *node
 	var size *node
 	simple := false
 	if me.token.is == "]" {
-		alloc.slice = true
+		hint.slice = true
 		no = nodeInit("slice")
 		simple = true
 	} else if me.token.is == ":" {
 		me.eat(":")
-		alloc.slice = true
+		hint.slice = true
 		no = nodeInit("slice")
 		if me.token.is != "]" {
 			capacity := me.calc(0, nil)
@@ -164,11 +162,11 @@ func prefixArray(me *parser, op string) *node {
 			}
 		}
 		if slice || size.is != TokenInt {
-			alloc.slice = true
+			hint.slice = true
 			no = nodeInit("slice")
 		} else {
-			alloc.array = true
-			alloc.size, _ = strconv.Atoi(size.value)
+			hint.array = true
+			hint.size, _ = strconv.Atoi(size.value)
 			no = nodeInit("array")
 		}
 		no.push(size)
@@ -204,12 +202,12 @@ func prefixArray(me *parser, op string) *node {
 
 		if simple {
 			no.is = "array"
-			alloc.array = true
-			alloc.slice = false
-			alloc.size = len(items.has)
+			hint.array = true
+			hint.slice = false
+			hint.size = len(items.has)
 		}
 	}
-	data = data.merge(alloc)
+	data = data.merge(hint)
 	no._vdata = data
 
 	return no

@@ -1,24 +1,24 @@
 class vec
-	x float
-	y float
-	z float
+    x float
+    y float
+    z float
 
 enum operation
-	add
-	subtract
-	multiply
-	divide
+    add
+    subtract
+    multiply
+    divide
 
 const pi = 3.1415
 
 power(x int) int
-	return x * x
+    return x * x
 
 vec dot() float
-	return self.x * self.y * self.z
+    return self.x * self.y * self.z
 
 vec init(x float, y float, z float) vec
-	self.x = x
-	self.y = y
-	self.z = z
-	return self
+    self.x = x
+    self.y = y
+    self.z = z
+    return self

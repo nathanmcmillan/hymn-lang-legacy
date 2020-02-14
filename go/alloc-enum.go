@@ -18,9 +18,6 @@ func (me *parser) pushEnumParams(n *node, un *union, params []*node, typed strin
 }
 
 func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
-	if un.types.size() == 0 {
-		return en.join(un)
-	}
 	if me.token.is != "(" {
 		panic(me.fail() + "Enum: " + n.data().print() + " requires parameters")
 	}
@@ -43,14 +40,15 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 		if pix > 0 || dict {
 			if me.token.is == "line" {
 				ndepth := me.peek().depth
-				if ndepth != depth+1 {
-					panic(me.fail() + "unexpected line indentation")
-				}
-				me.eat("line")
-				if me.token.is == ")" {
+				if ndepth == depth && me.peek().is == ")" {
+					me.eat("line")
 					me.eat(")")
 					break
 				}
+				if ndepth != depth+1 {
+					panic(me.fail() + "Unexpected line indentation")
+				}
+				me.eat("line")
 			} else {
 				me.eat(",")
 			}
@@ -131,7 +129,6 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 		}
 	}
 	module := en.module
-	typed := en.join(un)
 	if lazy {
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
@@ -142,13 +139,13 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 			f := fmt.Sprint("Missing generic for enum: " + en.join(un) + "\"\nImplementation list was " + genericslist(glist))
 			panic(me.fail() + f)
 		}
-		lazy := typed + genericslist(glist)
-		if _, ok := module.enums[lazy]; !ok {
+		typed := en.join(un) + genericslist(glist)
+		if _, ok := module.enums[typed]; !ok {
 			me.defineEnumImplGeneric(en, glist)
 		}
-		en = module.enums[lazy]
-		typed = lazy
+		en = module.enums[typed]
 	}
+	typed := en.join(un)
 	me.pushEnumParams(n, un, params, typed)
 	return typed
 
@@ -251,15 +248,17 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	if !ok {
 		panic(me.fail() + "Enum: " + en.name + " does not have type: " + unvalue)
 	}
-	fmt.Println("alloc enum ::", module.name, "::", typed, "::", un.name)
-	typed = typed + "." + un.name
-	if n != nil {
+	if n != nil && !en.simple {
 		typed = me.enumParams(n, en, un, depth)
+	} else {
+		typed = en.join(un)
 	}
 	if me.hmfile != module {
 		typed = module.reference(typed)
 	}
-	return getdatatype(module, typed)
+	data := getdatatype(module, typed)
+	fmt.Println("alloc enum || module:", module.name, "typed:", typed, "enum:", en.name, "union:", un.name, "data:", data.error())
+	return data
 }
 
 func (me *parser) allocEnum(module *hmfile, hint *allocHint) *node {

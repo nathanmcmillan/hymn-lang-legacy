@@ -133,9 +133,6 @@ func (me *tokenizer) forSpace() int {
 		if c == ' ' {
 			count++
 			stream.next()
-		} else if c == '\t' {
-			count += 2
-			stream.next()
 		} else {
 			break
 		}
@@ -244,7 +241,7 @@ func (me *tokenizer) push(t *token) {
 		if len(me.tokens) > 1 {
 			me.file.WriteString(",\n")
 		}
-		me.file.WriteString("\t\t" + t.string())
+		me.file.WriteString("        " + t.string())
 	}
 }
 
@@ -259,9 +256,9 @@ func (me *tokenizer) get(pos int) *token {
 	space := me.forSpace()
 	if me.updateDepth {
 		if space%2 != 0 {
-			panic("bad spacing " + stream.fail())
+			panic("Bad spacing " + stream.fail())
 		}
-		me.depth = space / 2
+		me.depth = space / 4
 		me.updateDepth = false
 	}
 	if stream.pos >= me.size {

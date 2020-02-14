@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strconv"
 	"strings"
 )
 
@@ -45,10 +44,10 @@ func (me *cfile) defineEnum(enum *enum) {
 			code += fmc(2) + fmtassignspace(typed.typeSig()) + enumUnion.name + ";\n"
 		} else if num != 0 {
 			code += fmc(2) + "struct {\n"
-			for ix, typeKey := range enumUnion.types.order {
+			for _, typeKey := range enumUnion.types.order {
 				typed := enumUnion.types.table[typeKey]
 				me.dependencyGraph(typed)
-				code += fmc(3) + fmtassignspace(typed.typeSig()) + "var" + strconv.Itoa(ix) + ";\n"
+				code += fmc(3) + fmtassignspace(typed.typeSig()) + typeKey + ";\n"
 			}
 			code += fmc(2) + "} " + enumUnion.name + ";\n"
 		}

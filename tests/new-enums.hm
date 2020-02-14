@@ -43,7 +43,7 @@ function calc_me(x int) either<int,float>
     if x < 10
         i = either<int,float>.one(first:6432)
         return i
-    f = either<int,float>.two(
+    f = either.two(
         second: 5329.5
     )
     return f
@@ -90,9 +90,9 @@ function main
         a: "x3"
         b: "y3"
     )
-    auto = mammal.dolphin()
+    blank = mammal.dolphin()
 
     echo(fin.a)
     echo(phin.a)
     echo(dol.a)
-    echo("auto [" + auto.a + "]")
+    echo("auto [" + blank.a + "]")

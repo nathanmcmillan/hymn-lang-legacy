@@ -139,7 +139,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 			f := fmt.Sprint("Missing generic for enum: " + en.join(un) + "\"\nImplementation list was " + genericslist(glist))
 			panic(me.fail() + f)
 		}
-		typed := en.join(un) + genericslist(glist)
+		typed := en.name + genericslist(glist)
 		if _, ok := module.enums[typed]; !ok {
 			me.defineEnumImplGeneric(en, glist)
 		}

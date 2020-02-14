@@ -198,7 +198,7 @@ func (me *cfile) compileBinaryOp(n *node) *codeblock {
 }
 
 func (me *cfile) compileUnionMemberVariable(n *node) *codeblock {
-	dotIndexStr := n.value
+	key := n.value
 	root := me.eval(n.has[0])
 	data := root.data()
 	_, un, _ := data.isEnum()
@@ -206,7 +206,7 @@ func (me *cfile) compileUnionMemberVariable(n *node) *codeblock {
 	if un.types.size() == 1 {
 		code += un.name
 	} else {
-		code += un.name + ".var" + dotIndexStr
+		code += un.name + "." + key
 	}
 	return codeBlockOne(n, code)
 }

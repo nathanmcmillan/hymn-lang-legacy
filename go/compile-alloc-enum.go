@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strconv"
-)
-
 func (me *cfile) compileAllocEnum(n *node) *codeblock {
 
 	data := n.data()
@@ -50,7 +46,7 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 			}
 			cassign := ";\n" + fmc(me.depth) + assign.cname + memberRef + un.name
 			if xvar {
-				cassign += ".var" + strconv.Itoa(i)
+				cassign += "." + typeKey
 			}
 			cassign += " = "
 			if p.is == "new" || (p.is == "enum" && p.data().union != nil) {

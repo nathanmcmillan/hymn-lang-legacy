@@ -13,7 +13,7 @@ function main
 
 Learn more at https://hymn-lang.org
 
-### features
+### Features
 * generics
 * goto + labels
 * enums + unions
@@ -27,29 +27,22 @@ Learn more at https://hymn-lang.org
 * "_" for default parameters during class allocation
 * $HYMN_MODULES environment variable
 
-### todo
-* remove c files for header only necessary files
-* split all structs / enums to separate folder/files ?
-* only include minimum necessary typedefs / include statements
-
-### timeline
-* generate makefiles
-* hash maps
-* file input / output
+### Timeline
 * bootstrapping compiler from golang to hymn
 * references to primitives
 * borrow checker
 * free heap space
 * interfaces / contraints (compile time check whether a class implements a set of functions)
 * threads / async await (split function in half for each await)
+* generate makefiles
 * macros / def
 * better error output
 * language server protocol
 * optimize printf for multiple strings to avoid concatenation 
 
-### bugs
+### Bugs
 * variable scoping
 
-### testing
+### Testing
 * need negative tests
-* need regex matching C code
+* need matching C code

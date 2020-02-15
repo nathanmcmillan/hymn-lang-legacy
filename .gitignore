@@ -2,7 +2,7 @@
 bin/
 out/
 example/
-go/autotest/out
+go/autotest/out/
 
 compiler
 

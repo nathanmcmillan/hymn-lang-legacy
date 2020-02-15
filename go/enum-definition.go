@@ -46,7 +46,6 @@ func (me *parser) defineEnum() {
 				panic(me.fail() + "type name \"" + typeName + "\" already used")
 			}
 			unionOrderedData := newordereddata()
-			unionGOrder := make([]string, 0)
 			if me.token.is == "(" {
 				me.eat("(")
 				if me.token.is == ")" {
@@ -62,11 +61,7 @@ func (me *parser) defineEnum() {
 					}
 					key := me.token.value
 					me.eat("id")
-					declare := me.token.is
 					unionArgType := me.declareType()
-					if _, ok2 := genericsDict[declare]; ok2 {
-						unionGOrder = append(unionGOrder, declare)
-					}
 					unionOrderedData.push(key, unionArgType)
 
 					if me.token.is == "," {
@@ -81,7 +76,7 @@ func (me *parser) defineEnum() {
 				me.eat(")")
 			}
 			me.eat("line")
-			un := unionInit(me.hmfile, name, typeName, unionOrderedData, unionGOrder)
+			un := unionInit(me.hmfile, name, typeName, unionOrderedData)
 			typesOrder = append(typesOrder, un)
 			typesMap[typeName] = un
 			continue

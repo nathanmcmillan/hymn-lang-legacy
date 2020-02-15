@@ -32,6 +32,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 	lazy := false
 	gtypes := make(map[string]*datatype)
 	gindex := en.genericsDict
+	fmt.Println("enum params ||", en.name, "|", un.name, "|", en.genericsDict, "|", un.types.order, "|", genericsmap(un.types.table))
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
@@ -133,6 +134,10 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
 			i, _ := gindex[k]
+			if i >= len(glist) {
+				panic(me.fail() + "Incomplete enum: " + en.join(un) + " declaration")
+			}
+			fmt.Println("Lazy enum ||", k, ":", v.print(), ":", i)
 			glist[i] = v.copy()
 		}
 		if len(glist) != len(en.generics) {
@@ -214,6 +219,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	}
 	uid := module.reference(typed)
 	gsize := len(en.generics)
+	fmt.Println("enum generics ::", en.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(en)
@@ -257,7 +263,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 		typed = module.reference(typed)
 	}
 	data := getdatatype(module, typed)
-	fmt.Println("alloc enum || module:", module.name, "typed:", typed, "enum:", en.name, "union:", un.name, "data:", data.error())
+	fmt.Println("alloc enum ::", module.name, "|", typed, "|", en.name, "|", un.name, "|", data.error())
 	return data
 }
 

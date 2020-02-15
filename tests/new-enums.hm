@@ -43,10 +43,9 @@ function calc_me(x int) either<int,float>
     if x < 10
         i = either<int,float>.one(first:6432)
         return i
-    f = either.two(
+    return either.two(
         second: 5329.5
     )
-    return f
 
 function omega_add() math.operation
     return math.operation.add
@@ -92,7 +91,13 @@ function main
     )
     blank = mammal.dolphin()
 
-    echo(fin.a)
-    echo(phin.a)
-    echo(dol.a)
-    echo("auto [" + blank.a + "]")
+    echo("fin := " + fin.a)
+    echo("phin := " + phin.a)
+    echo("dol := " + dol.a)
+    echo("blank <[" + blank.a + "]>")
+
+    mutable f = either<int, float>.two(
+        second: 5329.5
+    )
+    f = either.two(6315.1)
+    echo("second :=", f.second)

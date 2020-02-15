@@ -21,16 +21,14 @@ type enum struct {
 }
 
 type union struct {
-	name     string
-	types    *ordereddata
-	generics []string
+	name  string
+	types *ordereddata
 }
 
-func unionInit(module *hmfile, en string, name string, types *ordereddata, generics []string) *union {
+func unionInit(module *hmfile, en string, name string, types *ordereddata) *union {
 	u := &union{}
 	u.name = name
 	u.types = types
-	u.generics = generics
 	return u
 }
 
@@ -40,10 +38,6 @@ func (me *union) copy() *union {
 	u.types = newordereddata()
 	for _, t := range me.types.order {
 		u.types.push(t, me.types.table[t])
-	}
-	u.generics = make([]string, len(me.generics))
-	for i, g := range me.generics {
-		u.generics[i] = g
 	}
 	return u
 }

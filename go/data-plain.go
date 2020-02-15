@@ -716,10 +716,6 @@ func (me *datatype) print() string {
 			if len(me.generics) > 0 {
 				f += genericslist(me.generics)
 			}
-			// fmt.Println("print data class ::", f, "::", me.module.reference(me.class.name))
-			// if f != me.module.reference(me.class.name) {
-			// 	panic("no match")
-			// }
 			return f
 		}
 	case dataTypeEnum:
@@ -731,7 +727,6 @@ func (me *datatype) print() string {
 			if me.union != nil {
 				f += "." + me.union.name
 			}
-			fmt.Println("print data enum ::", f, "::", me.enum.name)
 			return f
 		}
 	default:

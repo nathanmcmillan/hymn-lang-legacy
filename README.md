@@ -3,12 +3,20 @@ Hymn is a programming language designed to make writing simple imperitive progra
 It compiles to efficient, readable C code.
 
 ```
-class foo<t>
+class vec<t>
     data t
 
+enum either<a,b>
+    first(value a)
+    second(value b, additional string)
+
 function main
-    f = foo(data:"hello world")
-    echo(f.data)
+    v = vec(data:"hello world")
+    echo("data :=", v.data)
+    e = either<int,float>.first(66)
+    match e
+        first(f) => echo("first :=", f.value)
+        second(s) => echo("second :=", s.value, s.additional)
 ```
 
 Learn more at https://hymn-lang.org

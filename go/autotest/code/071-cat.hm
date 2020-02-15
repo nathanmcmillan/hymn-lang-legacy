@@ -1,8 +1,8 @@
 main
-	chdir("../../../../")
-	content = cat("CNAME")
-	echo(content)
-	iterate i, c in content
-		echo(to_str(i) + ": " + to_str(c))
-	echo("done!")
-	echo("content length = " + to_str(len(content)))
+    chdir("../../../../")
+    content = cat("CNAME")
+    echo(content)
+    iterate i, c in content
+        echo(to_str(i) + ": " + to_str(c))
+    echo("done!")
+    echo("content length = " + to_str(len(content)))

@@ -1,15 +1,15 @@
 main
-	mutable pwd = system("pwd")
-	mutable size = len(pwd) 
-	if pwd[size - 1] == '\n'
-		pwd = substring(pwd, 0, size - 1)
-	mutable date = system("date +%s")
-	size = len(date)
-	if date[size - 1] == '\n'
-		date = substring(date, 0, size - 1)
-	path = pwd + "/" + date + ".txt"
-	content = "hello file\n"
-	echo("content:", content)
-	write(path, content)
-	echo("read:", cat(path))
-	echo("done!")
+    mutable pwd = system("pwd")
+    mutable size = len(pwd) 
+    if pwd[size - 1] == '\n'
+        pwd = substring(pwd, 0, size - 1)
+    mutable date = system("date +%s")
+    size = len(date)
+    if date[size - 1] == '\n'
+        date = substring(date, 0, size - 1)
+    path = pwd + "/" + date + ".txt"
+    content = "hello file\n"
+    echo("content:", content)
+    write(path, content)
+    echo("read:", cat(path))
+    echo("done!")

@@ -1,14 +1,14 @@
 square(x int, z int) int
-  a = x + 1
-  b = z + 1
-  c = 5 / 2
-  return a * b * c
+    a = x + 1
+    b = z + 1
+    c = 5 / 2
+    return a * b * c
 
 main
-  x = 1
-  z = 2
-  w = square(3, 5)
-  
-  echo(x)
-  echo(z)
-  echo(w)
+    x = 1
+    z = 2
+    w = square(3, 5)
+    
+    echo(x)
+    echo(z)
+    echo(w)

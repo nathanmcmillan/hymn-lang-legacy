@@ -1,11 +1,11 @@
 main
-	x = 0
-	z = 10
+    x = 0
+    z = 10
 
-	if x < z : echo("less!")
-	elif x == z : echo("equal!")
-	elif x == z + 1 : echo("plus!")
-	else : echo("more!")
+    if x < z : echo("less!")
+    elif x == z : echo("equal!")
+    elif x == z + 1 : echo("plus!")
+    else : echo("more!")
 
-	w = x < z ? "x is less!" : "x is more!"
-	echo(w)
+    w = x < z ? "x is less!" : "x is more!"
+    echo(w)

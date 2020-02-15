@@ -32,7 +32,6 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 	lazy := false
 	gtypes := make(map[string]*datatype)
 	gindex := en.genericsDict
-	fmt.Println("enum params ||", en.name, "|", un.name, "|", en.genericsDict, "|", un.types.order, "|", genericsmap(un.types.table))
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
@@ -137,7 +136,6 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 			if i >= len(glist) {
 				panic(me.fail() + "Incomplete enum: " + en.join(un) + " declaration")
 			}
-			fmt.Println("Lazy enum ||", k, ":", v.print(), ":", i)
 			glist[i] = v.copy()
 		}
 		if len(glist) != len(en.generics) {
@@ -153,60 +151,6 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 	typed := en.join(un)
 	me.pushEnumParams(n, un, params, typed)
 	return typed
-
-	// assign := me.hmfile.peekAssignStack()
-	// var assignEn *enum
-	// if assign != nil && !assign.isQuestion() {
-	// 	assignEn = assign.enum
-	// }
-
-	// gdict := en.genericsDict
-
-	// gimpl := make(map[string]string)
-
-	// for ix, unionKey := range un.types.order {
-	// 	unionType := un.types.table[unionKey]
-	// 	if ix != 0 {
-	// 		if me.token.is != "," {
-	// 			panic(me.fail() + "Expecting \"" + unionType.print() + "\" for enum \"" + typed + "\".")
-	// 		}
-	// 		me.eat(",")
-	// 	}
-	// 	param := me.calc(0, nil)
-	// 	if param.data().notEquals(unionType) {
-	// 		if _, gok := gdict[unionType.getRaw()]; gok {
-	// 			gimpl[unionType.getRaw()] = param.data().getRaw()
-	// 		} else {
-	// 			panic(me.fail() + "Enum: " + enumName + "." + unionName + " expects: " + unionType.print() + " but parameter was: " + param.data().print())
-	// 		}
-	// 	}
-	// 	n.push(param)
-	// }
-	// me.eat(")")
-	// if len(order) == 0 {
-	// 	if len(gimpl) != len(gdict) {
-	// 		if assignEn != nil {
-	// 			for k, v := range assignEn.gmapper {
-	// 				if nv, ok := gimpl[k]; ok {
-	// 					if nv != v {
-	// 						panic(me.fail() + "\"" + enumName + "\" with \"" + nv + "\" does not match \"" + v + "\"")
-	// 					}
-	// 				} else {
-	// 					gimpl[k] = v
-	// 				}
-	// 			}
-	// 		} else {
-	// 			panic(me.fail() + "Enum: " + enumName + " with implementation: " + fmt.Sprint(gimpl) + " does not match: " + fmt.Sprint(gdict))
-	// 		}
-	// 	}
-	// 	if len(gimpl) > 0 {
-	// 		order := me.mapUnionGenerics(en, gimpl)
-	// 		enumName += genericslist(order)
-	// 		if _, ok := module.enums[enumName]; !ok {
-	// 			me.defineEnumImplGeneric(enumDef, order)
-	// 		}
-	// 	}
-	// }
 }
 
 func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
@@ -219,7 +163,6 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	}
 	uid := module.reference(typed)
 	gsize := len(en.generics)
-	fmt.Println("enum generics ::", en.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
 			gtypes := me.declareGeneric(en)

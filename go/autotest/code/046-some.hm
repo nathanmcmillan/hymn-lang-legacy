@@ -1,58 +1,58 @@
 class vec
-	x int 
-	y int
-	z int
+    x int 
+    y int
+    z int
 
 class bar
-	ge maybe<vec>
-	ne maybe<bar>
+    ge maybe<vec>
+    ne maybe<bar>
 
 foo(w maybe<vec>) maybe<vec>
-	match w
-		some(s) => echo("foo some " + to_str(s.x))
-		none => echo("foo none")
-	return w
+    match w
+        some(s) => echo("foo some " + to_str(s.x))
+        none => echo("foo none")
+    return w
 
 zoo(v vec) maybe<vec>
-	v.x = 2
-	return v
+    v.x = 2
+    return v
 
 moo(v none<vec>) maybe<vec>
-	return v
+    return v
 
 main
-	a = none<vec>
-	b = vec()
-	c = foo(a)
-	d = foo(b)
-	e = zoo(b)
-	f = moo(a)
-	g = none<bar>
-	h = bar(a, g)
+    a = none<vec>
+    b = vec()
+    c = foo(a)
+    d = foo(b)
+    e = zoo(b)
+    f = moo(a)
+    g = none<bar>
+    h = bar(a, g)
 
-	match e
-		some => echo("oh no")
-		none => echo("none")
+    match e
+        some => echo("oh no")
+        none => echo("none")
 
-	match f
-		some(s) => echo("some " + to_str(s.x))
-		none => echo("oh no")
+    match f
+        some(s) => echo("some " + to_str(s.x))
+        none => echo("oh no")
 
-	match e
-		some(s) =>
-			echo("x " + to_str(s.x))
-			echo("y " + to_str(s.y))
-			echo("z " + to_str(s.z))
-		none => pass
+    match e
+        some(s) =>
+            echo("x " + to_str(s.x))
+            echo("y " + to_str(s.y))
+            echo("z " + to_str(s.z))
+        none => pass
 
-	match f
-		none => echo("oh no")
-		some => pass
-	
-	h.ge = vec(5, 6, 7)
-	match h.ge
-		some(s) => echo("some " + to_str(s.x))
-		none => echo("none")
+    match f
+        none => echo("oh no")
+        some => pass
+    
+    h.ge = vec(5, 6, 7)
+    match h.ge
+        some(s) => echo("some " + to_str(s.x))
+        none => echo("none")
 
-	if c is not none: echo("no!")
-	if d is not some: echo("no!")
+    if c is not none: echo("no!")
+    if d is not some: echo("no!")

@@ -1,18 +1,18 @@
 enum operation
-	add
-	subtract
-	multiply
-	divide
+    add
+    subtract
+    multiply
+    divide
 
 function get_op(flag bool) maybe<operation>
-	if flag
-		return operation.multiply
-	return none
+    if flag
+        return operation.multiply
+    return none
 
 function main()
-	x = get_op(true)
-	y = get_op(false)
-	match x
-		none => echo("oh no!")
-		some(s) => echo("x :=", s)
-	if y is some: echo("oh no!")
+    x = get_op(true)
+    y = get_op(false)
+    match x
+        none => echo("oh no!")
+        some(s) => echo("x :=", s)
+    if y is some: echo("oh no!")

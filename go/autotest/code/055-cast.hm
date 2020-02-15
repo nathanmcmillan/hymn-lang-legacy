@@ -1,74 +1,74 @@
 
 main
-	echo(int 2.3)
-	echo(int8 2.3)
-	echo(int16 2.3)
-	echo(int32 2.3)
-	echo(int64 2.3)
-	echo(uint 2.3)
-	echo(uint8 2.3)
-	echo(uint16 2.3)
-	echo(uint32 2.3)
-	echo(uint64 2.3)
-	echo(float 2)
-	echo(float32 2)
-	echo(float64 2)
+    echo(int 2.3)
+    echo(int8 2.3)
+    echo(int16 2.3)
+    echo(int32 2.3)
+    echo(int64 2.3)
+    echo(uint 2.3)
+    echo(uint8 2.3)
+    echo(uint16 2.3)
+    echo(uint32 2.3)
+    echo(uint64 2.3)
+    echo(float 2)
+    echo(float32 2)
+    echo(float64 2)
 
-	a = (int 2.3) * 11
-	b = int8 4.3 * int8 2.3
-	c = int16 2.3
-	d = int32 2.3
-	e = int64 2.3
-	f = uint 2.3
-	g = uint8 2.3
-	h = uint16 2.3
-	i = uint32 2.3
-	j = uint64 2.3
-	k = float 2
-	l = float32 2
-	m = float64 2
+    a = (int 2.3) * 11
+    b = int8 4.3 * int8 2.3
+    c = int16 2.3
+    d = int32 2.3
+    e = int64 2.3
+    f = uint 2.3
+    g = uint8 2.3
+    h = uint16 2.3
+    i = uint32 2.3
+    j = uint64 2.3
+    k = float 2
+    l = float32 2
+    m = float64 2
 
-	if a == 0 : echo("no!")
-	if b == 0 : echo("no!")
-	if c == 0 : echo("no!")
-	if d == 0 : echo("no!")
-	if e == 0 : echo("no!")
-	if f == 0 : echo("no!")
-	if g == 0 : echo("no!")
-	if h == 0 : echo("no!")
-	if i == 0 : echo("no!")
-	if j == 0 : echo("no!")
-	if k == 0 : echo("no!")
-	if l == 0 : echo("no!")
-	if m == 0 : echo("no!")
+    if a == 0 : echo("no!")
+    if b == 0 : echo("no!")
+    if c == 0 : echo("no!")
+    if d == 0 : echo("no!")
+    if e == 0 : echo("no!")
+    if f == 0 : echo("no!")
+    if g == 0 : echo("no!")
+    if h == 0 : echo("no!")
+    if i == 0 : echo("no!")
+    if j == 0 : echo("no!")
+    if k == 0 : echo("no!")
+    if l == 0 : echo("no!")
+    if m == 0 : echo("no!")
 
-	echo(to_str(int 2))
-	echo(to_str(int8 2))
-	echo(to_str(int16 2))
-	echo(to_str(int32 2))
-	echo(to_str(int64 2))
+    echo(to_str(int 2))
+    echo(to_str(int8 2))
+    echo(to_str(int16 2))
+    echo(to_str(int32 2))
+    echo(to_str(int64 2))
 
-	echo(to_str(uint 2))
-	echo(to_str(uint8 2))
-	echo(to_str(uint16 2))
-	echo(to_str(uint32 2))
-	echo(to_str(uint64 2))
+    echo(to_str(uint 2))
+    echo(to_str(uint8 2))
+    echo(to_str(uint16 2))
+    echo(to_str(uint32 2))
+    echo(to_str(uint64 2))
 
-	echo(to_str(float 2))
-	echo(to_str(float32 2))
-	echo(to_str(float64 2))
+    echo(to_str(float 2))
+    echo(to_str(float32 2))
+    echo(to_str(float64 2))
 
-	echo(to_int("2"))
-	echo(to_int8("2"))
-	echo(to_int16("2"))
-	echo(to_int32("2"))
-	echo(to_int64("2"))
-	echo(to_uint("2"))
-	echo(to_uint8("2"))
-	echo(to_uint16("2"))
-	echo(to_uint32("2"))
-	echo(to_uint64("2"))
+    echo(to_int("2"))
+    echo(to_int8("2"))
+    echo(to_int16("2"))
+    echo(to_int32("2"))
+    echo(to_int64("2"))
+    echo(to_uint("2"))
+    echo(to_uint8("2"))
+    echo(to_uint16("2"))
+    echo(to_uint32("2"))
+    echo(to_uint64("2"))
 
-	echo(to_float("2"))
-	echo(to_float32("2"))
-	echo(to_float64("2"))
+    echo(to_float("2"))
+    echo(to_float32("2"))
+    echo(to_float64("2"))

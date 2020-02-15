@@ -1,13 +1,13 @@
 enum operation
-	add(op operation)
-	subtract(op operation)
-	multiply()
+    add(op operation)
+    subtract(op operation)
+    multiply()
 
 function main
-	e = operation.add(operation.multiply)
-	if not e is add : echo("no!")
-	if e is add(a)
-		if not a.op is multiply
-			echo("no!")
-		if a.op is multiply(m)
-			echo("multiply!")
+    e = operation.add(operation.multiply)
+    if not e is add : echo("no!")
+    if e is add(a)
+        if not a.op is multiply
+            echo("no!")
+        if a.op is multiply(m)
+            echo("multiply!")

@@ -1,58 +1,58 @@
 class foo
-	x float
-	y float
+    x float
+    y float
 
 class goobie
   x []int
 
 test_a
-	mutable x = []foo
-	w = foo(1.0, 2.0)
-	t = foo(3.0, 4.0)
-	x = push(x, w)
-	x = push(x, t)
-	echo("length := " + to_str(len(x)))
-	echo(x[0].x)
-	echo(x[1].y)
-	echo("---")
+    mutable x = []foo
+    w = foo(1.0, 2.0)
+    t = foo(3.0, 4.0)
+    x = push(x, w)
+    x = push(x, t)
+    echo("length := " + to_str(len(x)))
+    echo(x[0].x)
+    echo(x[1].y)
+    echo("---")
 
 test_b
-	mutable x = []int
-	w = 33
-	t = 44
-	x = push(x, w)
-	x = push(x, t)
-	echo("length := " + to_str(len(x)))
-	echo(x[0])
-	echo(x[1])
-	echo("---")
+    mutable x = []int
+    w = 33
+    t = 44
+    x = push(x, w)
+    x = push(x, t)
+    echo("length := " + to_str(len(x)))
+    echo(x[0])
+    echo(x[1])
+    echo("---")
 
 test_c
-	mutable x = []foo
-	x = push(x, foo(1.0, 2.0))
-	x = push(x, foo(3.0, 4.0))
-	echo(len(x))
-	echo(x[0].x)
-	echo(x[1].y)
-	echo("---")
+    mutable x = []foo
+    x = push(x, foo(1.0, 2.0))
+    x = push(x, foo(3.0, 4.0))
+    echo(len(x))
+    echo(x[0].x)
+    echo(x[1].y)
+    echo("---")
 
 test_d
-	plain = [3]foo
-	w = foo(5.0, 6.0)
-	plain[0] = w
-	echo(plain[0].x)
-	echo("---")
+    plain = [3]foo
+    w = foo(5.0, 6.0)
+    plain[0] = w
+    echo(plain[0].x)
+    echo("---")
 
 test_e
-	f = goobie()
-	f.x = []int
-	f.x = push(f.x, 88)
-	echo(f.x[0])
-	echo("---")
+    f = goobie()
+    f.x = []int
+    f.x = push(f.x, 88)
+    echo(f.x[0])
+    echo("---")
 
 main
-	test_a()
-	test_b()
-	test_c()
-	test_d()
-	test_e()
+    test_a()
+    test_b()
+    test_c()
+    test_d()
+    test_e()

@@ -1,36 +1,36 @@
 class typ
-  ptr(int) int
+    ptr(int) int
 
 fun(ptr() int)
-  echo(ptr())
-  
+    echo(ptr())
+    
 get(x int) int
-  return x
+    return x
 
 get2(x int) int
-  return x * x
+    return x * x
 
 get3() int
-  return 4
+    return 4
 
 foo()
-  echo("foo")
+    echo("foo")
 
 main
-  a = get
-  echo(a(3))
+    a = get
+    echo(a(3))
 
-  mutable b = get
-  b = get2
-  echo(b(3))
+    mutable b = get
+    b = get2
+    echo(b(3))
 
-  c = get3
-  echo(c())
+    c = get3
+    echo(c())
 
-  f = foo
-  f()
+    f = foo
+    f()
 
-  t = typ(get)
-  echo(t.ptr(3))
+    t = typ(get)
+    echo(t.ptr(3))
 
-  fun(get3)
+    fun(get3)

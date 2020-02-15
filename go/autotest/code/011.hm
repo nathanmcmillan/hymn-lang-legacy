@@ -1,8 +1,8 @@
 class foo
-  val string
+    val string
 
 main
-  arr = [3]foo
-  arr[1] = foo()
-  arr[1].val = "foo!"
-  echo(arr[1].val)
+    arr = [3]foo
+    arr[1] = foo()
+    arr[1].val = "foo!"
+    echo(arr[1].val)

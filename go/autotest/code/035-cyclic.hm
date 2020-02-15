@@ -1,9 +1,9 @@
 class vec
-	x    float
-	nest maybe<vec>
+    x    float
+    nest maybe<vec>
 
 main
-	a = vec()
-	a.x = 3.1
-	a.nest = vec()
-	echo(a.x)
+    a = vec()
+    a.x = 3.1
+    a.nest = vec()
+    echo(a.x)

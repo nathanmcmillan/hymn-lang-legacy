@@ -1,17 +1,17 @@
 main
-	c = 'w'
-	i = 987
-	f = 3.45
+    c = 'w'
+    i = 987
+    f = 3.45
 
-	printf("char c: %c int i: %d, float f: %f\n", c, i, f)
-	println("char c: %c int i: %d, float f: %f", c, i, f)
-	echo("---")
+    printf("char c: %c int i: %d, float f: %f\n", c, i, f)
+    println("char c: %c int i: %d, float f: %f", c, i, f)
+    echo("---")
 
-	echo(sprintf("char c: %c int i: %d, float f: %f", c, i, f))
-	echo(sprintln("char c: %c int i: %d, float f: %f", c, i, f))
-	echo("---")
+    echo(sprintf("char c: %c int i: %d, float f: %f", c, i, f))
+    echo(sprintln("char c: %c int i: %d, float f: %f", c, i, f))
+    echo("---")
 
-	echo("char c:", c, "and int i:", i, "float f:", f)
-	x = format("char c:", c, "and int i:", i, "float f:", f)
-	echo(x)
-	echo("---")
+    echo("char c:", c, "and int i:", i, "float f:", f)
+    x = format("char c:", c, "and int i:", i, "float f:", f)
+    echo(x)
+    echo("---")

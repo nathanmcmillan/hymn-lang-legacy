@@ -1,10 +1,10 @@
 main
-  one = "foo"
-  two = "bar"
-  three = one + " " + two
-  echo(three)
-  four = "hello "
-  echo(four + "world")
-  mutable five = "coffee "
-  five += "chocolate"
-  echo(five)
+    one = "foo"
+    two = "bar"
+    three = one + " " + two
+    echo(three)
+    four = "hello "
+    echo(four + "world")
+    mutable five = "coffee "
+    five += "chocolate"
+    echo(five)

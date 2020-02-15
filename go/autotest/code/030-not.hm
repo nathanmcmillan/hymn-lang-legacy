@@ -1,15 +1,15 @@
 main
-  x = 3
-  y = 5
-  z = false
-  if x != y
-    echo("good")
-  if !z
-    echo("good")
-  if !(x == y)
-    echo("good")
-  if not(x == y)
-    echo("good")
-  if not false
-    echo("good")
-  echo("bye")
+    x = 3
+    y = 5
+    z = false
+    if x != y
+        echo("good")
+    if !z
+        echo("good")
+    if !(x == y)
+        echo("good")
+    if not(x == y)
+        echo("good")
+    if not false
+        echo("good")
+    echo("bye")

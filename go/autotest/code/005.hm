@@ -1,8 +1,8 @@
 class foo
-  a int
+    a int
 
 main
-  x = [3]foo
-  x[1] = foo()
-  x[1].a = 9
-  echo(x[1].a)
+    x = [3]foo
+    x[1] = foo()
+    x[1].a = 9
+    echo(x[1].a)

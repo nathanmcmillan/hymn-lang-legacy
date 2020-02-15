@@ -1,14 +1,14 @@
 class foo
-  a int
-  b string
+    a int
+    b string
 
 main
-  x = foo()
-  x.a = 2
-  x.b = "hi"
-  z = x.a
-  echo(z)
-  echo(x.a)
-  w = x.b
-  echo(w)
-  echo(x.b)
+    x = foo()
+    x.a = 2
+    x.b = "hi"
+    z = x.a
+    echo(z)
+    echo(x.a)
+    w = x.b
+    echo(w)
+    echo(x.b)

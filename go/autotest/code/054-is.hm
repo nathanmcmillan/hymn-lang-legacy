@@ -1,59 +1,59 @@
 enum foo
-	hello(int)
-	world(string)
+    hello(value int)
+    world(value string)
 
 fun(r int) maybe<foo>
-	if r == 2
-		return foo.hello(8)
-	return none
+    if r == 2
+        return foo.hello(8)
+    return none
 
 the_world() foo
-	return foo.world("wow")
+    return foo.world("wow")
 
 do_things(f foo)
-	match f
-		hello =>
-			echo("hello!")
-		world(w) =>
-			echo("world!")
-			echo(w.0)
+    match f
+        hello =>
+            echo("hello!")
+        world(w) =>
+            echo("world!")
+            echo(w.value)
 
 get_me() foo
-	return foo.hello(8)
+    return foo.hello(8)
 
 main
-	mutable e = foo.hello(2)
-	if e is hello : if 0 == 0 : echo("#1 hello!")
+    mutable e = foo.hello(2)
+    if e is hello : if 0 == 0 : echo("#1 hello!")
 
-	while e is hello
-		e = foo.world("e")
+    while e is hello
+        e = foo.world("e")
 
-	if e is the_world()
-		echo("e is the world")
+    if e is the_world()
+        echo("e is the world")
 
-	a = fun(2)
-	test = a is none
-	if test
-		echo("none")
-	if a is some
-		echo("some")
-	
-	match b := fun(2)
-		none => echo("no")
-		some(s) =>
-			echo("yes")
-			do_things(s)
-			match s
-				hello(h) =>
-					echo("#2 hello " + to_str(h.0))
-				world(w) =>
-					echo("#2 world " + w.0)
+    a = fun(2)
+    test = a is none
+    if test
+        echo("none")
+    if a is some
+        echo("some")
+    
+    match b := fun(2)
+        none => echo("no")
+        some(s) =>
+            echo("yes")
+            do_things(s)
+            match s
+                hello(h) =>
+                    echo("#2 hello " + to_str(h.value))
+                world(w) =>
+                    echo("#2 world " + w.value)
 
-	match c := get_me()
-		hello(h) =>
-			echo("#3 hello " + to_str(h.0))
-		world(w) =>
-			echo("#3 world " + w.0)
-	
-	if fun(0) is none
-		echo("fun(0) is none")
+    match c := get_me()
+        hello(h) =>
+            echo("#3 hello " + to_str(h.value))
+        world(w) =>
+            echo("#3 world " + w.value)
+    
+    if fun(0) is none
+        echo("fun(0) is none")

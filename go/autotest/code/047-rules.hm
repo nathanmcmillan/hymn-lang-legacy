@@ -1,43 +1,43 @@
 main
-  mutable x = 2
-  x += 2
-  x -= 1
-  x /= 2
-  x *= 1
-  x ^= 1
-  x |= 1
-  x &= 1
-  x <<= 1
-  x >>= 1
-  x %= 3
-  echo(x)
+    mutable x = 2
+    x += 2
+    x -= 1
+    x /= 2
+    x *= 1
+    x ^= 1
+    x |= 1
+    x &= 1
+    x <<= 1
+    x >>= 1
+    x %= 3
+    echo(x)
 
-  echo(12 % 5)
-  echo(2 == 3 and 2 * 3 == 4 / 5 or 4 == 4)
-  echo(256 >> 2)
-  echo(2 << 4)
-  echo(1 ^ 0)
-  echo(1 | 0)
-  echo(1 & 0)
-  echo(-5)
-  echo(+5)
-  echo(2 + 3)
-  echo(2 + -3)
-  echo(2 + 3 * 4)
-  echo(2 + 3 * -4)
-  echo(5 - 4)
-  echo((5))
-  echo((5) + 3)
-  echo(2 == 3)
-  echo(2 == 3 and 4 == 4)
-  echo(2 == 3 or 4 == 4)
+    echo(12 % 5)
+    echo(2 == 3 and 2 * 3 == 4 / 5 or 4 == 4)
+    echo(256 >> 2)
+    echo(2 << 4)
+    echo(1 ^ 0)
+    echo(1 | 0)
+    echo(1 & 0)
+    echo(-5)
+    echo(+5)
+    echo(2 + 3)
+    echo(2 + -3)
+    echo(2 + 3 * 4)
+    echo(2 + 3 * -4)
+    echo(5 - 4)
+    echo((5))
+    echo((5) + 3)
+    echo(2 == 3)
+    echo(2 == 3 and 4 == 4)
+    echo(2 == 3 or 4 == 4)
 
-  t0 = 3
-  t1 = 3
-  t2 = 3
-  if t0 == t1 and t1 == t2
-    echo("joy!")
+    t0 = 3
+    t1 = 3
+    t2 = 3
+    if t0 == t1 and t1 == t2
+        echo("joy!")
 
-  if 2 == 3 and 4 == 4 : echo("no!")
-  if 2 == 3 or 4 == 5 : echo("no!")
-  if 2 == 3 and 4 == 5 or 6 == 7 : echo("no!")
+    if 2 == 3 and 4 == 4 : echo("no!")
+    if 2 == 3 or 4 == 5 : echo("no!")
+    if 2 == 3 and 4 == 5 or 6 == 7 : echo("no!")

@@ -1,76 +1,76 @@
 class attribute<v>
-  on  bool
-  has v
+    on  bool
+    has v
 
 class tuple<u,v>
-  x u
-  y v
+    x u
+    y v
 
 class node<t,w>
-  a []attribute<t>
-  b tuple<attribute<w>, string>
-  c []tuple<int, tuple<int, w>>
-  d []tuple<tuple<int, w>, int>
-  e tuple<tuple<t, t>, tuple<w, w>>
-  f []t
+    a []attribute<t>
+    b tuple<attribute<w>, string>
+    c []tuple<int, tuple<int, w>>
+    d []tuple<tuple<int, w>, int>
+    e tuple<tuple<t, t>, tuple<w, w>>
+    f []t
 
 main
-  f = node<string, int>()
-  
-  f.a = [3:]attribute
-  f.a[1] = attribute()
-  f.a[1].has = "a"
-  echo(f.a[1].has)
-  
-  f.b = tuple()
-  f.b.x = attribute()
-  f.b.x.has = 5
-  f.b.y = "b"
-  echo(f.b.x.has)
-  echo(f.b.y)
+    f = node<string, int>()
+    
+    f.a = [3:]attribute
+    f.a[1] = attribute()
+    f.a[1].has = "a"
+    echo(f.a[1].has)
+    
+    f.b = tuple()
+    f.b.x = attribute()
+    f.b.x.has = 5
+    f.b.y = "b"
+    echo(f.b.x.has)
+    echo(f.b.y)
 
-  f.c = [3:]tuple
-  f.c[1] = tuple()
-  f.c[1].x = 7
-  f.c[1].y = tuple()
-  f.c[1].y.x = 9
-  f.c[1].y.y = 11
-  echo(f.c[1].x)
-  echo(f.c[1].y.x)
-  echo(f.c[1].y.y)
+    f.c = [3:]tuple
+    f.c[1] = tuple()
+    f.c[1].x = 7
+    f.c[1].y = tuple()
+    f.c[1].y.x = 9
+    f.c[1].y.y = 11
+    echo(f.c[1].x)
+    echo(f.c[1].y.x)
+    echo(f.c[1].y.y)
 
-  f.d = [3:]tuple
-  f.d[1] = tuple()
-  f.d[1].x = tuple()
-  f.d[1].x.x = 13
-  f.d[1].x.y = 15
-  f.d[1].y = 17
-  echo(f.d[1].x.x)
-  echo(f.d[1].x.y)
-  echo(f.d[1].y)
+    f.d = [3:]tuple
+    f.d[1] = tuple()
+    f.d[1].x = tuple()
+    f.d[1].x.x = 13
+    f.d[1].x.y = 15
+    f.d[1].y = 17
+    echo(f.d[1].x.x)
+    echo(f.d[1].x.y)
+    echo(f.d[1].y)
 
-  f.e = tuple()
-  f.e.x = tuple()
-  f.e.x.x = "c"
-  echo(f.e.x.x)
+    f.e = tuple()
+    f.e.x = tuple()
+    f.e.x.x = "c"
+    echo(f.e.x.x)
 
-  f.f = [3:]string
-  f.f[1] = "d"
-  echo(f.f[1])
+    f.f = [3:]string
+    f.f[1] = "d"
+    echo(f.f[1])
 
-  h = tuple<tuple<int, int>, tuple<string, string>>()
-  h.x = tuple()
-  h.y = tuple()
-  h.x.x = 1
-  h.x.y = 2
-  h.y.x = "e"
-  h.y.y = "f"
-  echo(h.x.x)
-  echo(h.x.y)
-  echo(h.y.x)
-  echo(h.y.y)
+    h = tuple<tuple<int, int>, tuple<string, string>>()
+    h.x = tuple()
+    h.y = tuple()
+    h.x.x = 1
+    h.x.y = 2
+    h.y.x = "e"
+    h.y.y = "f"
+    echo(h.x.x)
+    echo(h.x.y)
+    echo(h.y.x)
+    echo(h.y.y)
 
-  g = attribute<attribute<string>>()
-  g.has = attribute()
-  g.has.has = "g"
-  echo(g.has.has)
+    g = attribute<attribute<string>>()
+    g.has = attribute()
+    g.has.has = "g"
+    echo(g.has.has)

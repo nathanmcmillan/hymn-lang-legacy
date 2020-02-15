@@ -1,32 +1,32 @@
 main
-	a = [4]uint
-	a[0] = uint 875
-	a[1] = uint 538
-	a[2] = uint 255
-	a[3] = uint 156
+    a = [4]uint
+    a[0] = uint 875
+    a[1] = uint 538
+    a[2] = uint 255
+    a[3] = uint 156
 
-	iterate n in a
-		echo(n)
-	echo("---")
+    iterate n in a
+        echo(n)
+    echo("---")
 
-	iterate i, n in a
-		echo(to_str(i) + ": " + to_str(n))
-	echo("---")
+    iterate i, n in a
+        echo(to_str(i) + ": " + to_str(n))
+    echo("---")
 
-	b = [4:]int64
-	b[0] = int64 528
-	b[1] = int64 925
-	b[2] = int64 412
-	b[3] = int64 624
+    b = [4:]int64
+    b[0] = int64 528
+    b[1] = int64 925
+    b[2] = int64 412
+    b[3] = int64 624
 
-	iterate n in b
-		echo(n)
-	echo("---")
+    iterate n in b
+        echo(n)
+    echo("---")
 
-	iterate i, n in b
-		echo(to_str(i) + ": " + to_str(n))
-	echo("---")
+    iterate i, n in b
+        echo(to_str(i) + ": " + to_str(n))
+    echo("---")
 
-	iterate n in []int(2, 3, 5, 7, 11, 13)
-		echo(n)
-	echo("---")
+    iterate n in []int(2, 3, 5, 7, 11, 13)
+        echo(n)
+    echo("---")

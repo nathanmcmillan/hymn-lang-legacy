@@ -1,33 +1,43 @@
 
 enum either<x,y>
-	one(x)
-	two(y)
-
-exec_parse() either<string, int>
-	return either.two(15)
-
-exec_compile() either<string, int>
-	return either.one("ooh wee!")
+    one (
+        value x
+    )
+    two (
+        value y
+    )
 
 enum zoink<x,y,z>
-	foo(x,y)
-	bar(y,z)
+    foo (
+        aaa x
+        bbb y
+    )
+    bar (
+        rrr y
+        eee z
+    )
+
+exec_parse() either<string, int>
+    return either.two(15)
+
+exec_compile() either<string, int>
+    return either.one("ooh wee!")
 
 exec_boink() zoink<string, int, float>
-	return zoink.foo("boink!", 3)
+    return zoink.foo("boink!", 3)
 
 function main()
-	e = exec_compile()
-	match e
-		one(o) => echo(o.0)
-		two => echo("oh no!")
+    e = exec_compile()
+    match e
+        one(o) => echo(o.value)
+        two => echo("oh no!")
 
-	x = exec_parse()
-	match x
-		one => echo("oh no!")
-		two(z) => echo(z.0)
+    x = exec_parse()
+    match x
+        one => echo("oh no!")
+        two(z) => echo(z.value)
 
-	z = exec_boink()
-	match z
-		foo(f) => echo(f.0, f.1)
-		bar => echo("oh no!")
+    z = exec_boink()
+    match z
+        foo(f) => echo(f.aaa, f.bbb)
+        bar => echo("oh no!")

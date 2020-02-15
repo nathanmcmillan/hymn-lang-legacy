@@ -1,6 +1,6 @@
 main
-	foo = "hello i am an array of chars"
-	a = foo[0]
-	echo(a)
-	if a == 'h'
-		echo("a == h")
+    foo = "hello i am an array of chars"
+    a = foo[0]
+    echo(a)
+    if a == 'h'
+        echo("a == h")

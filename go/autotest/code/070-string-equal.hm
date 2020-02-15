@@ -1,35 +1,35 @@
 main
-	a = "foo"
-	b = "foo"
-	c = "foo"
-	d = "bar"
-	
-	if a == b
-		echo("good")
-	else
-		echo("bad")
+    a = "foo"
+    b = "foo"
+    c = "foo"
+    d = "bar"
+    
+    if a == b
+        echo("good")
+    else
+        echo("bad")
 
-	if a != b
-		echo("bad")
-	else
-		echo("good")
+    if a != b
+        echo("bad")
+    else
+        echo("good")
 
-	if c == d
-		echo("bad")
-	else
-		echo("good")
+    if c == d
+        echo("bad")
+    else
+        echo("good")
 
-	if c != d
-		echo("good")
-	else
-		echo("bad")
+    if c != d
+        echo("good")
+    else
+        echo("bad")
 
-	if not c == d
-		echo("good")
-	else
-		echo("bad")
+    if not c == d
+        echo("good")
+    else
+        echo("bad")
 
-	if not c != d
-		echo("bad")
-	else
-		echo("good")
+    if not c != d
+        echo("bad")
+    else
+        echo("good")

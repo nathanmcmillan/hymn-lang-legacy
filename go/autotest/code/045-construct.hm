@@ -1,41 +1,41 @@
 class attribute<v>
-	on  bool
-	has v
+    on  bool
+    has v
 
 class vec
-	x int 
-	y int
-	z int
+    x int 
+    y int
+    z int
 
 main
-	z = attribute(
-		on: true
-		has: attribute(
-			on: true
-			has: vec(2*5, 2*6, 2*7)))
+    z = attribute(
+        on: true
+        has: attribute(
+            on: true
+            has: vec(2*5, 2*6, 2*7)))
 
-	x = attribute(true, attribute(true, vec(2*5, 2*6, 2*7)))
+    x = attribute(true, attribute(true, vec(2*5, 2*6, 2*7)))
 
-	echo(to_str(z.on) + " | " + to_str(z.has.on))
-	echo(z.has.has.x)
-	echo(z.has.has.y)
-	echo(z.has.has.z)
+    echo(to_str(z.on) + " | " + to_str(z.has.on))
+    echo(z.has.has.x)
+    echo(z.has.has.y)
+    echo(z.has.has.z)
 
-	w = attribute<attribute<vec>>()
+    w = attribute<attribute<vec>>()
 
-	a = vec()
-	g = vec()
-	b = vec(1)
-	c = vec(1, 2, 3)
-	d = vec(y:5)
-	e = vec(x:4+10, y:5, z:6)
-	f = vec(
-		x: 7
-		y: 8
-		z: 9)
-	echo(to_str(a.x) + ", " + to_str(a.y) + ", " + to_str(a.z))
-	echo(to_str(b.x) + ", " + to_str(b.y) + ", " + to_str(b.z))
-	echo(to_str(c.x) + ", " + to_str(c.y) + ", " + to_str(c.z))
-	echo(to_str(d.x) + ", " + to_str(d.y) + ", " + to_str(d.z))
-	echo(to_str(e.x) + ", " + to_str(e.y) + ", " + to_str(e.z))
-	echo(to_str(f.x) + ", " + to_str(f.y) + ", " + to_str(f.z))
+    a = vec()
+    g = vec()
+    b = vec(1)
+    c = vec(1, 2, 3)
+    d = vec(y:5)
+    e = vec(x:4+10, y:5, z:6)
+    f = vec(
+        x: 7
+        y: 8
+        z: 9)
+    echo(to_str(a.x) + ", " + to_str(a.y) + ", " + to_str(a.z))
+    echo(to_str(b.x) + ", " + to_str(b.y) + ", " + to_str(b.z))
+    echo(to_str(c.x) + ", " + to_str(c.y) + ", " + to_str(c.z))
+    echo(to_str(d.x) + ", " + to_str(d.y) + ", " + to_str(d.z))
+    echo(to_str(e.x) + ", " + to_str(e.y) + ", " + to_str(e.z))
+    echo(to_str(f.x) + ", " + to_str(f.y) + ", " + to_str(f.z))

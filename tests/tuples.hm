@@ -1,27 +1,27 @@
 
 function do_stuff() int, int
-	return 3, 4
+    return 3, 4
 
 function main()
-	x, y = do_stuff()
+    x, y = do_stuff()
 
 -- current
 
 function do_stuff_2() tuple<int, int>
-	return tuple(3, 4)
+    return tuple(3, 4)
 
 function main_2()
-	tup = do_stuff_2()
-	x = tup.a
-	y = tup.b
+    tup = do_stuff_2()
+    x = tup.a
+    y = tup.b
 
 -- possible
 
 function do_stuff_3(return_x *int, return_y *int)
-	return_x = 3
-	return_y = 4
+    return_x = 3
+    return_y = 4
 
 function main_3()
-	x *int
-	y *int
-	do_stuff_3(x, y)
+    x *int
+    y *int
+    do_stuff_3(x, y)

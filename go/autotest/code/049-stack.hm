@@ -1,30 +1,30 @@
 class foo
-  data int
+    data int
 
 class boo
-  x foo
+    x foo
 
 class zoo
-  y int
+    y int
 
 class poo
-  z 'foo
-  w 'zoo
+    z 'foo
+    w 'zoo
 
 hello(f foo) int
-  return f.data + 1
+    return f.data + 1
 
 load() poo
-  p = poo()
-  p.z.data = 24
-  p.w.y = 25
-  return p
+    p = poo()
+    p.z.data = 24
+    p.w.y = 25
+    return p
 
 main
-  f = $foo(22)
-  echo(f.data)
-  echo(hello(f))
+    f = $foo(22)
+    echo(f.data)
+    echo(hello(f))
 
-  p = load()
-  echo(p.z.data)
-  echo(p.w.y)
+    p = load()
+    echo(p.z.data)
+    echo(p.w.y)

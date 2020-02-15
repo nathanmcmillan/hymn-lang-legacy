@@ -3,39 +3,39 @@ import "math"
 const pi = "tasty"
 
 power() string
-  return "pow"
+    return "pow"
 
 extra(fl float, mv math.vec) math.vec
-  mv.x += fl
-  return mv
+    mv.x += fl
+    return mv
 
 main
-  echo(pi)
-  echo(math.pi)
-  
-  s = power()
-  echo(s)
-  x = math.power(3)
-  echo(x)
+    echo(pi)
+    echo(math.pi)
+    
+    s = power()
+    echo(s)
+    x = math.power(3)
+    echo(x)
 
-  v = math.vec()
-  v.x = 3.0
-  v.y = 5.0
-  v.z = 7.0
-  d = v.dot()
-  echo(d)
+    v = math.vec()
+    v.x = 3.0
+    v.y = 5.0
+    v.z = 7.0
+    d = v.dot()
+    echo(d)
 
-  v.init(2.0, 6.0, 8.0)
-  n = extra(2.0, v)
-  echo(v.x)
-  echo(n.x)
-  echo(v.y)
-  echo(v.z)
+    v.init(2.0, 6.0, 8.0)
+    n = extra(2.0, v)
+    echo(v.x)
+    echo(n.x)
+    echo(v.y)
+    echo(v.z)
 
-  vl = [3]math.vec
-  vl[1] = math.vec()
-  vl[1].init(5.0, 7.0, 9.0)
-  echo(vl[1].x)
+    vl = [3]math.vec
+    vl[1] = math.vec()
+    vl[1].init(5.0, 7.0, 9.0)
+    echo(vl[1].x)
 
-  e = math.operation.add
-	if not e is add : echo("no!")
+    e = math.operation.add
+    if not e is add : echo("no!")

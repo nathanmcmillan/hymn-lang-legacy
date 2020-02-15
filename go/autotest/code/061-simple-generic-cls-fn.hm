@@ -1,23 +1,23 @@
 class foo<k,v>
-	size k
-	name v
+    size k
+    name v
 
 const thingy = "foo!"
 
 foo set_name(name v)
-	echo(thingy)
-	self.name = name
+    echo(thingy)
+    self.name = name
 
 foo get_size() k
-	return self.size
+    return self.size
 
 main
-	echo(thingy)
-	f = foo(
-		size:22.33
-		name:"zoob")
-	echo(f.size)
-	echo(f.get_size())
-	echo(f.name)
-	f.set_name("goob")
-	echo(f.name)
+    echo(thingy)
+    f = foo(
+        size:22.33
+        name:"zoob")
+    echo(f.size)
+    echo(f.get_size())
+    echo(f.name)
+    f.set_name("goob")
+    echo(f.name)

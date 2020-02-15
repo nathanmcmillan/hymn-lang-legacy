@@ -1,40 +1,40 @@
 
 main
-	mutable x = [3:5]int
-	echo(len(x))
-	echo(cap(x))
-	echo("---")
-	x[0] = 74
-	x = push(x, 89)
-	echo(len(x))
-	echo(cap(x))
-	echo(x[0])
-	echo(x[3])
-	echo("---")
-	x = push(x, 121)
-	echo(len(x))
-	echo(cap(x))
-	echo("---")
-	x = push(x, 144)
-	echo(len(x))
-	echo(cap(x))
-	echo("---")
+    mutable x = [3:5]int
+    echo(len(x))
+    echo(cap(x))
+    echo("---")
+    x[0] = 74
+    x = push(x, 89)
+    echo(len(x))
+    echo(cap(x))
+    echo(x[0])
+    echo(x[3])
+    echo("---")
+    x = push(x, 121)
+    echo(len(x))
+    echo(cap(x))
+    echo("---")
+    x = push(x, 144)
+    echo(len(x))
+    echo(cap(x))
+    echo("---")
 
-	y = [3]int
-	echo(len(y))
-	echo(cap(y))
-	echo("---")
+    y = [3]int
+    echo(len(y))
+    echo(cap(y))
+    echo("---")
 
-	z = []int
-	echo(len(z))
-	echo(cap(z))
-	echo("---")
+    z = []int
+    echo(len(z))
+    echo(cap(z))
+    echo("---")
 
-	h = y[:]
-	echo(len(h))
-	echo(cap(h))
-	echo("---")
+    h = y[:]
+    echo(len(h))
+    echo(cap(h))
+    echo("---")
 
-	echo(len("foo"))
-	echo(cap("bar"))
-	echo("---")
+    echo(len("foo"))
+    echo(cap("bar"))
+    echo("---")

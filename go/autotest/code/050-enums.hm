@@ -1,80 +1,103 @@
 import "math"
 
 class vec
-	x int
-	y int
+    x int
+    y int
 
 class exception
-	message string
-	stack   string
+    message string
+    stack   string
 
 enum snake
-	python
-	viper
-	cobra
+    python
+    viper
+    cobra
 
 enum mammal
-	mouse(int, string, vec)
-	cat(string)
-	dog(float)
+    mouse (
+        a int
+        b string
+        c vec
+    )
+    cat(cat string)
+    dog(type float)
+    dolphin(a string, b string)
 
 enum bug<x>
-	ant(x)
-	bee
+    ant(data x)
+    bee()
   
 enum result<r>
-	value(r)
-	error(exception)
+    value(result r)
+    error(err exception)
   
-enum either<u, v>
-	one(u)
-	two(v)
+enum either<u,v>
+    one(first u)
+    two(second v)
 
 const example = vec()
 const snap = snake.viper
-const woof = mammal.dog(7.2)
+const woof = mammal.dog(type:7.2)
 
-calc_me(x int) either<int,float>
-	if x < 10
-		i = either<int,float>.one(6432)
-		return i
-	f = either<int,float>.two(5329.5)
-	return f
+function calc_me(x int) either<int,float>
+    if x < 10
+        i = either<int,float>.one(first:6432)
+        return i
+    return either.two(
+        second: 5329.5
+    )
 
-omega_add() math.operation
-	return math.operation.add
+function omega_add() math.operation
+    return math.operation.add
 
-main
-	a = snake.cobra
-	b = snake.viper
-	if a == b
-		echo("bad")
-	else
-		echo("good")
+function main
+    a = snake.cobra
+    b = snake.viper
+    if a == b: echo("bad")
+    else: echo("good")
 
-	z = [10]snake
-	z[0] = snake.python
-	z[1] = snake.viper
-	z[2] = snake.cobra
+    z = [10]snake
+    z[0] = snake.python
+    z[1] = snake.viper
+    z[2] = snake.cobra
 
-	c = mammal.cat("meow")
-	d = mammal.cat("woof")
+    c = mammal.cat(cat:"meow")
+    d = mammal.cat(cat:"woof")
 
-	example2 = vec()
+    example2 = vec()
 
-	e = mammal.dog(1.4)
-	echo("doggo " + to_str(e.0))
+    doggo = mammal.dog(1.4)
+    echo("doggo " + to_str(doggo.type))
 
-	me = calc_me(5)
-	if not me is one : echo("no!")
+    me = calc_me(5)
+    if not me is one : echo("no!")
 
-	g = bug<int>.bee
-	h = bug.ant(true)
-	i = bug.ant(vec())
-	j = bug.ant("buggie")
+    g = bug<int>.bee()
+    h = bug.ant(true)
+    i = bug.ant(vec())
+    j = bug.ant("buggie")
 
-	omega = omega_add()
-	match omega
-		add => echo("omega: good")
-		_ => echo("omega: not good")
-	if omega is add : echo("omega: extra good")
+    omega = omega_add()
+    match omega
+        add => echo("omega: good")
+        _ => echo("omega: not good")
+    if omega is add : echo("omega: extra good")
+
+    fin = mammal.dolphin("x1", "y1")
+    phin = mammal.dolphin(a:"x2", b:"y2")
+    dol = mammal.dolphin(
+        a: "x3"
+        b: "y3"
+    )
+    blank = mammal.dolphin()
+
+    echo("fin := " + fin.a)
+    echo("phin := " + phin.a)
+    echo("dol := " + dol.a)
+    echo("blank <[" + blank.a + "]>")
+
+    mutable f = either<int, float>.two(
+        second: 5329.5
+    )
+    f = either.two(6315.1)
+    echo("second :=", int(f.second))

@@ -3,16 +3,18 @@ Hymn is a programming language designed to make writing simple imperitive progra
 It compiles to efficient, readable C code.
 
 ```
-class vec<t>
-    data t
+class vec<g>
+    x int
+    y float
+    z g
 
 enum either<a,b>
     first(value a)
     second(value b, additional string)
 
-function main
-    v = vec(data:"hello world")
-    echo("data :=", v.data)
+function main   
+    v = vec(x:12, y:23.34, g:"hello world")
+    echo("x :=", v.x, "y :=", v.y, "z :=", v.z)
     e = either<int,float>.first(66)
     match e
         first(f) => echo("first :=", f.value)
@@ -22,35 +24,35 @@ function main
 Learn more at https://hymn-lang.org
 
 ### Features
-* generics
-* goto + labels
-* enums + unions
-* structs
-* matching
-* walrus operator
-* stack variables
-* function pointers
-* slices and arrays
-* class functions with generics
-* "_" for default parameters during class allocation
-* $HYMN_MODULES environment variable
+* Generics
+* Goto and Labels
+* Enums with Unions
+* Classes
+* Match statements
+* Walrus operator
+* Defining stack or heap variables
+* Function pointers
+* Slices and arrays
+* Class functions with generics
+* Automatic or manual default parameters using '_'
+* Configurable environment variables using $HYMN_MODULES
 
 ### Timeline
-* bootstrapping compiler from golang to hymn
-* references to primitives
-* borrow checker
-* free heap space
-* interfaces / contraints (compile time check whether a class implements a set of functions)
-* threads / async await (split function in half for each await)
-* generate makefiles
-* macros / def
-* better error output
-* language server protocol
-* optimize printf for multiple strings to avoid concatenation 
+* Bootstrapping compiler from golang to hymn
+* References to primitives
+* Borrow checker
+* Free heap space
+* Interfaces / contraints (compile time check whether a class implements a set of functions)
+* Threads / async await (split function in half for each await)
+* Generate makefiles
+* Macros / def
+* Better error output
+* Language server protocol
+* Optimize printf for multiple strings to avoid concatenation 
 
 ### Bugs
-* variable scoping
+* Variable scoping
 
 ### Testing
-* need negative tests
-* need matching C code
+* Need negative tests
+* Need matching C code

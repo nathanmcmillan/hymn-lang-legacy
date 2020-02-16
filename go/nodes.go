@@ -26,9 +26,7 @@ func (me *node) copy() *node {
 	if me.idata != nil {
 		n.idata = me.idata.copy()
 	}
-	if me.fn != nil {
-		n.fn = me.fn.copy()
-	}
+	n.fn = me.fn
 	if me.data() != nil {
 		n._vdata = me.data().copy()
 	}

@@ -29,14 +29,14 @@ main
         none => pass
 
     if a.nest is some(t)
-        echo("foo " + to_str(t.x))
+        echo("foo " + str(t.x))
 
     if a.nest is none
         echo("no zoob")
     elif a.nest is some(z)
-        echo("foob " + to_str(z.x))
+        echo("foob " + str(z.x))
     elif a.nest is some(w)
-        echo("not possible " + to_str(w.x))
+        echo("not possible " + str(w.x))
 
     d = doggo()
     if d is bark
@@ -44,4 +44,4 @@ main
 
     g = kitty()
     if g is meow(e)
-        echo("meow! " + to_str(e.kitty))
+        echo("meow! " + str(e.kitty))

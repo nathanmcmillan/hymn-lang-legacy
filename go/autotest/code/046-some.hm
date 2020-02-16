@@ -9,7 +9,7 @@ class bar
 
 foo(w maybe<vec>) maybe<vec>
     match w
-        some(s) => echo("foo some " + to_str(s.x))
+        some(s) => echo("foo some " + str(s.x))
         none => echo("foo none")
     return w
 
@@ -35,14 +35,14 @@ main
         none => echo("none")
 
     match f
-        some(s) => echo("some " + to_str(s.x))
+        some(s) => echo("some " + str(s.x))
         none => echo("oh no")
 
     match e
         some(s) =>
-            echo("x " + to_str(s.x))
-            echo("y " + to_str(s.y))
-            echo("z " + to_str(s.z))
+            echo("x " + str(s.x))
+            echo("y " + str(s.y))
+            echo("z " + str(s.z))
         none => pass
 
     match f
@@ -51,7 +51,7 @@ main
     
     h.ge = vec(5, 6, 7)
     match h.ge
-        some(s) => echo("some " + to_str(s.x))
+        some(s) => echo("some " + str(s.x))
         none => echo("none")
 
     if c is not none: echo("no!")

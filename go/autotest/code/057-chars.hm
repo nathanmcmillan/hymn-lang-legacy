@@ -1,5 +1,5 @@
 main
     x = 'a'
     echo(x)
-    s = "hello worl" + to_str('d')
+    s = "hello worl" + str('d')
     echo(s)

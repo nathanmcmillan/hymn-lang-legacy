@@ -16,7 +16,7 @@ main
 
     x = attribute(true, attribute(true, vec(2*5, 2*6, 2*7)))
 
-    echo(to_str(z.on) + " | " + to_str(z.has.on))
+    echo(str(z.on) + " | " + str(z.has.on))
     echo(z.has.has.x)
     echo(z.has.has.y)
     echo(z.has.has.z)
@@ -33,9 +33,9 @@ main
         x: 7
         y: 8
         z: 9)
-    echo(to_str(a.x) + ", " + to_str(a.y) + ", " + to_str(a.z))
-    echo(to_str(b.x) + ", " + to_str(b.y) + ", " + to_str(b.z))
-    echo(to_str(c.x) + ", " + to_str(c.y) + ", " + to_str(c.z))
-    echo(to_str(d.x) + ", " + to_str(d.y) + ", " + to_str(d.z))
-    echo(to_str(e.x) + ", " + to_str(e.y) + ", " + to_str(e.z))
-    echo(to_str(f.x) + ", " + to_str(f.y) + ", " + to_str(f.z))
+    echo(str(a.x) + ", " + str(a.y) + ", " + str(a.z))
+    echo(str(b.x) + ", " + str(b.y) + ", " + str(b.z))
+    echo(str(c.x) + ", " + str(c.y) + ", " + str(c.z))
+    echo(str(d.x) + ", " + str(d.y) + ", " + str(d.z))
+    echo(str(e.x) + ", " + str(e.y) + ", " + str(e.z))
+    echo(str(f.x) + ", " + str(f.y) + ", " + str(f.z))

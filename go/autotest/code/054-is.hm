@@ -45,13 +45,13 @@ main
             do_things(s)
             match s
                 hello(h) =>
-                    echo("#2 hello " + to_str(h.value))
+                    echo("#2 hello " + str(h.value))
                 world(w) =>
                     echo("#2 world " + w.value)
 
     match c := get_me()
         hello(h) =>
-            echo("#3 hello " + to_str(h.value))
+            echo("#3 hello " + str(h.value))
         world(w) =>
             echo("#3 world " + w.value)
     

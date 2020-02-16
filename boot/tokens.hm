@@ -47,7 +47,7 @@ token_for(depth int, name string) token
     return token(depth, name, "")
 
 token to_string() string
-    mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
+    mutable s = "{depth:" + str(self.depth) + ", type:" + self.name
     if self.value != ""
         s += ", value:" + self.value
     s += "}"

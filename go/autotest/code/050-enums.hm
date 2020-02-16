@@ -67,7 +67,7 @@ function main
     example2 = vec()
 
     doggo = mammal.dog(1.4)
-    echo("doggo " + to_str(doggo.type))
+    echo("doggo " + str(doggo.type))
 
     me = calc_me(5)
     if not me is one : echo("no!")

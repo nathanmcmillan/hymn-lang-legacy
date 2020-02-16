@@ -23,12 +23,12 @@ type function struct {
 
 func funcInit(module *hmfile, name string, class *class) *function {
 	f := &function{}
-	f.module = module
 	f.name = name
 	if class != nil {
 		f.clsname = nameOfClassFunc(class.name, name)
 	}
 	if module != nil {
+		f.module = module
 		if class == nil {
 			f.cname = module.funcNameSpace(name)
 		} else {
@@ -40,23 +40,6 @@ func funcInit(module *hmfile, name string, class *class) *function {
 	f.expressions = make([]*node, 0)
 	f.aliasing = make(map[string]string)
 	f.forClass = class
-	return f
-}
-
-func (me *function) copy() *function {
-	f := &function{}
-	f.module = me.module
-	f.name = me.name
-	f.args = make([]*funcArg, len(me.args))
-	for i, a := range me.args {
-		f.args[i] = a.copy()
-	}
-	f.argDict = me.argDict
-	f.expressions = make([]*node, len(me.expressions))
-	for i, e := range me.expressions {
-		f.expressions[i] = e.copy()
-	}
-	f.returns = me.returns.copy()
 	return f
 }
 

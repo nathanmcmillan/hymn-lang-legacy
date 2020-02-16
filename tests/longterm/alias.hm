@@ -6,7 +6,7 @@ alias zoo  = boo
 alias int  = size
 
 fun(i size)
-    echo("size = " + to_str(i))
+    echo("size = " + str(i))
 
 main
     foo("alias of echo")

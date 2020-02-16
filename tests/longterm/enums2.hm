@@ -39,7 +39,7 @@ main
   if a = b
     echo("bad")
   else
-    echo("a.index = " + to_str(a.index))
+    echo("a.index = " + str(a.index))
     echo("good")
 
   z = [10]snake

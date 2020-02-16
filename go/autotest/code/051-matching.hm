@@ -25,7 +25,7 @@ doob(d dog) string
     return "woof!"
 
 zoob(b bug.ant) string
-    return "zoob " + to_str(b.value) + "!"
+    return "zoob " + str(b.value) + "!"
 
 moob(b liquid.soda) string
     return "moob " + b.z + "!"

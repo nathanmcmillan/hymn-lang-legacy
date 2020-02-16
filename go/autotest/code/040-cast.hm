@@ -1,8 +1,8 @@
 main
-    echo(to_str(5))
-    echo(to_int(to_str(99.4289743)))
-    echo(to_str(256) + " is a power of " + to_str(2))
-    echo(to_int("256"))
-    echo(int (to_float("256")))
+    echo(str(5))
+    echo(integer(str(99.4289743)))
+    echo(str(256) + " is a power of " + str(2))
+    echo(integer("256"))
+    echo(int (floating("256")))
     echo(int 4234.45354)
     echo(int (float 512))

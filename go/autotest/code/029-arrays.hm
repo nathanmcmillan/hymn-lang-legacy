@@ -1,17 +1,17 @@
 foo(z []int) []int
-    echo("size: " + to_str(len(z)))
+    echo("size: " + str(len(z)))
     for i = 0; i < len(z); i += 1
-        echo("z[" + to_str(i) + "]: " + to_str(z[i]))
+        echo("z[" + str(i) + "]: " + str(z[i]))
     z[2] = 777
-    echo("z[2]: " + to_str(z[2]))
+    echo("z[2]: " + str(z[2]))
     return z
 
 main
     a = [3]int
-    echo("size: " + to_str(len(a)))
+    echo("size: " + str(len(a)))
     for i = 0; i < len(a); i += 1
         a[i] = 10 + i
     for i = 0; i < len(a); i += 1
-        echo("a[" + to_str(i) + "]: " + to_str(a[i]))
+        echo("a[" + str(i) + "]: " + str(a[i]))
     foo(a[:])
-    echo("a[2]: " + to_str(a[2]))
+    echo("a[2]: " + str(a[2]))

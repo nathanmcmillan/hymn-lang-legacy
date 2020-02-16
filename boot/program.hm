@@ -19,7 +19,6 @@ class program
     sources      hashmap<string, string>
 
 function new_program() program
-
     return program (
         out: ""
         directory: ""

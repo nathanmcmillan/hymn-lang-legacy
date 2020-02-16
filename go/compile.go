@@ -251,9 +251,8 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 }
 
 func (me *cfile) compileFnPtr(n *node, hint *datatype) *codeblock {
-	code := ""
 	fn := n.fn
-	code += "&" + fn.getcname()
+	code := "&" + fn.getcname()
 	return codeBlockOne(n, code)
 }
 

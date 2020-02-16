@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -181,7 +180,6 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		d = strings.Index(remainder, ".")
 		if d != -1 {
 			base = typed[0:gt]
-			fmt.Println("data enum generic ::", base)
 			if en, ok := module.enums[base]; ok {
 				un := en.types[remainder[d+1:]]
 				return newdataenum(origin, en, un, glist)
@@ -192,7 +190,6 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		d = strings.Index(base, ".")
 		if d != -1 {
 			base = typed[0:d]
-			fmt.Println("data enum ::", base)
 			if en, ok := module.enums[base]; ok {
 				un := en.types[typed[d+1:]]
 				return newdataenum(origin, en, un, glist)
@@ -467,6 +464,8 @@ func (me *datatype) standardEquals(b *datatype) bool {
 
 func (me *datatype) equals(b *datatype) bool {
 	switch me.is {
+	case dataTypeVoid:
+		return false
 	case dataTypeClass:
 		{
 			for b.is == dataTypeMaybe {
@@ -919,9 +918,6 @@ func (me *datatype) typeSig() string {
 		{
 			if c, ok := getCName(me.canonical); ok {
 				return c
-			}
-			if me.canonical == "hmfile.hmfile" {
-				fmt.Println("type sig cname canonical ::", me.origin.name, "::", me.module.name, "::", me.canonical)
 			}
 			return me.canonical
 		}

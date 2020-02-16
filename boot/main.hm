@@ -10,9 +10,6 @@ const debug = true
 const debug_tokens = true
 const debug_ast = true
 
-const space_char = '\t'
-const space_fmc = "\t"
-
 class flags
     cc               string
     path             string
@@ -38,13 +35,13 @@ class tuple<x,y>
     b x
 
 enum either<x,y>
-    one(x)
-    two(y)
+    one(value x)
+    two(value y)
 
 function fmc(depth int) string
     mutable space = ""
     for i = 0; i < depth; i += 1
-        space += space_fmc
+        space += "    "
     return space
 
 function exec_compile(f flags) either<string, error>

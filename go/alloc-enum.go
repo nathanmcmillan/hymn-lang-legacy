@@ -64,12 +64,12 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 			}
 
 			me.eat(":")
+			var param *node
 
 			if me.token.is == "_" {
 				me.eat("_")
-				params[pix] = nil
 			} else {
-				param := me.calc(0, nil)
+				param = me.calc(0, nil)
 
 				var update map[string]*datatype
 				if len(gindex) > 0 {
@@ -93,11 +93,12 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 					err += vname + "\" with type \"" + unvar.print() + "\""
 					panic(me.fail() + err)
 				}
-				for i, v := range vars {
-					if vname == v {
-						params[i] = param
-						break
-					}
+			}
+
+			for i, v := range vars {
+				if vname == v {
+					params[i] = param
+					break
 				}
 			}
 
@@ -213,9 +214,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	if me.hmfile != module {
 		typed = module.reference(typed)
 	}
-	data := getdatatype(module, typed)
-	fmt.Println("alloc enum ::", module.name, "|", typed, "|", en.name, "|", un.name, "|", data.error())
-	return data
+	return getdatatype(module, typed)
 }
 
 func (me *parser) allocEnum(module *hmfile, hint *allocHint) *node {

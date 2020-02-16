@@ -68,6 +68,7 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	expressions := fn.expressions
 	var block strings.Builder
 	me.pushScope()
+	me.scope.fn = fn
 	me.depth = 1
 	for _, arg := range args {
 		me.scope.variables[arg.name] = arg.variable
@@ -105,6 +106,7 @@ func (me *cfile) compileMain(fn *function) {
 	var block strings.Builder
 	returns := false
 	me.pushScope()
+	me.scope.fn = fn
 	me.depth = 1
 	list := me.hmfile.program.hmorder
 	for x := len(list) - 1; x >= 0; x-- {

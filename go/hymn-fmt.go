@@ -102,7 +102,7 @@ func execFormat(path string) {
 func hymnNewLine(depth int) string {
 	space := ""
 	for i := 0; i < depth; i++ {
-		space += "\t"
+		space += "    "
 	}
 	return space
 }

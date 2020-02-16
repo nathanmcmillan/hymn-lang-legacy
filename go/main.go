@@ -39,15 +39,10 @@ type flags struct {
 	variables       string
 }
 
-const (
-	spaceChar = '\t'
-	spaceFmc  = string(spaceChar)
-)
-
 func fmc(depth int) string {
 	space := ""
 	for i := 0; i < depth; i++ {
-		space += spaceFmc
+		space += "    "
 	}
 	return space
 }

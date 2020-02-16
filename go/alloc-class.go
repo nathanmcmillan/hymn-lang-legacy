@@ -71,12 +71,12 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 			}
 
 			me.eat(":")
+			var param *node
 
 			if me.token.is == "_" {
 				me.eat("_")
-				params[pix] = nil
 			} else {
-				param := me.calc(0, nil)
+				param = me.calc(0, nil)
 
 				var update map[string]*datatype
 				if len(gindex) > 0 {
@@ -100,11 +100,12 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
 					panic(me.fail() + err)
 				}
-				for i, v := range vars {
-					if vname == v {
-						params[i] = param
-						break
-					}
+			}
+
+			for i, v := range vars {
+				if vname == v {
+					params[i] = param
+					break
 				}
 			}
 

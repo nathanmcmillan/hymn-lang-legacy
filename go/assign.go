@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -59,11 +58,6 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			left.copyDataOfNode(right)
 			varini := right.data().getnamedvariable(left.idata.name, mutable)
 			me.hmfile.scope.variables[left.idata.name] = varini
-
-			if mutable && left.idata.name == "e" {
-				fmt.Println("DEBUG ::", left.data().error())
-			}
-
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
 		if !right.data().isQuestion() && left.data().notEquals(right.data()) {

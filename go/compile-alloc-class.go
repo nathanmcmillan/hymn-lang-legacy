@@ -70,14 +70,15 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 	} else {
 		temp := me.temp()
 		cb.current = codeNode(n, temp)
-		n.attributes["assign"] = temp
+		nodeCopy := n.copy()
+		nodeCopy.attributes["assign"] = temp
 		d := nodeInit("variable")
 		d.idata = newidvariable(me.hmfile, temp)
-		d.copyDataOfNode(n)
+		d.copyDataOfNode(nodeCopy)
 		decl := me.compileDeclare(d)
-		value := me.eval(n).code()
+		value := me.eval(nodeCopy).code()
 		code := decl + " = " + value + me.maybeColon(value) + "\n"
-		cn := codeNode(n, code)
+		cn := codeNode(nodeCopy, code)
 		cn.value = temp
 		cb.prepend(codeNodeUpgrade(cn))
 	}

@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	debug       = true
-	debugTokens = false
-	debugTree   = true
+	debug        = true
+	debugTokens  = false
+	debugTree    = true
+	debugCommand = false
 )
 
 type flags struct {
@@ -35,6 +36,7 @@ type flags struct {
 	info            bool
 	optimize        bool
 	makefile        bool
+	script          bool
 	doNotCompile    bool
 	variables       string
 }
@@ -76,6 +78,7 @@ func main() {
 	flag.BoolVar(&flags.info, "i", false, "includes additional information in the binary (sends -g flag to the compiler)")
 	flag.BoolVar(&flags.optimize, "o", false, "optimizes the binary (sends -O2 flag to the compiler)")
 	flag.BoolVar(&flags.makefile, "g", false, "generate a makefile")
+	flag.BoolVar(&flags.script, "b", false, "generate a shell script for compiling")
 	flag.BoolVar(&flags.doNotCompile, "x", false, "do not compile")
 	flag.Parse()
 
@@ -152,9 +155,11 @@ func (me *program) compile(cc string) {
 
 func gcc(flags *flags, sources map[string]string, fileOut string) {
 	command := flags.cc
+
 	if debug {
 		fmt.Println("=== " + command + " ===")
 	}
+
 	paramGcc := make([]string, 0)
 	if flags.analysis {
 		paramGcc = append(paramGcc, "-v")
@@ -192,8 +197,27 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	} else {
 		paramGcc = append(paramGcc, fileOut)
 	}
-	if debug {
+
+	if debugCommand {
 		fmt.Println(command, strings.Join(paramGcc, " "))
+	}
+
+	if flags.script {
+		name := fileName(flags.path)
+		var script strings.Builder
+		script.WriteString("#!/bin/sh\n\n")
+		script.WriteString(command)
+		for _, line := range paramGcc {
+			script.WriteString(" \\\n")
+			script.WriteString(line)
+		}
+		sh := filepath.Join(flags.writeTo, name+".sh")
+		write(sh, script.String())
+		cmd := exec.Command("chmod", "+x", sh)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 
 	if flags.makefile {
@@ -202,7 +226,7 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 		make.WriteString("program:\n\t")
 		make.WriteString(command + " ")
 		make.WriteString(strings.Join(paramGcc, " "))
-		write(flags.writeTo+"/makefile", make.String())
+		write(filepath.Join(flags.writeTo, "makefile"), make.String())
 	}
 
 	cmd := exec.Command(command, paramGcc...)

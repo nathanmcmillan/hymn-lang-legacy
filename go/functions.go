@@ -93,13 +93,16 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	}
 }
 
-func remapFunctionImpl(funcName string, alias map[string]string, original *function) *function {
+func remapFunctionImpl(name string, alias map[string]string, original *function) *function {
 	module := original.module
+	if fn, ok := module.functions[name]; ok {
+		return fn
+	}
 	parsing := module.parser
 	module.program.pushRemapStack(module.reference(original.name))
 	pos := parsing.save()
 	parsing.jump(original.start)
-	fn := parsing.defineFunction(funcName, alias, original, nil)
+	fn := parsing.defineFunction(name, alias, original, nil)
 	parsing.jump(pos)
 	fn.start = original.start
 	parsing.pushFunction(fn.getname(), module, fn)
@@ -109,12 +112,15 @@ func remapFunctionImpl(funcName string, alias map[string]string, original *funct
 
 func remapClassFunctionImpl(class *class, original *function) {
 	module := class.module
+	name := original.name
+	if _, ok := module.functions[name]; ok {
+		return
+	}
 	parsing := module.parser
-	funcName := original.name
-	module.program.pushRemapStack(module.reference(funcName))
+	module.program.pushRemapStack(module.reference(name))
 	pos := parsing.save()
 	parsing.jump(original.start)
-	fn := parsing.defineFunction(funcName, nil, nil, class)
+	fn := parsing.defineFunction(name, nil, nil, class)
 	parsing.jump(pos)
 	fn.start = original.start
 	class.functions[fn.name] = fn
@@ -133,8 +139,7 @@ func (me *parser) defineClassFunction() {
 	me.eat("id")
 	if _, ok := module.functions[globalFuncName]; ok {
 		panic(me.fail() + "class \"" + className + "\" with function \"" + funcName + "\" is already defined")
-	}
-	if _, ok := class.variables[funcName]; ok {
+	} else if _, ok := class.variables[funcName]; ok {
 		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
 	}
 	fn := me.defineFunction(funcName, nil, nil, class)

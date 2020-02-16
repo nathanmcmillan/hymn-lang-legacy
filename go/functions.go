@@ -110,13 +110,13 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	}
 }
 
-func (me *parser) remapFunctionImpl(funcName string, alias map[string]string, original *function) *function {
+func remapFunctionImpl(funcName string, alias map[string]string, original *function) *function {
 	module := original.module
 	parsing := module.parser
 	module.program.pushRemapStack(module.reference(original.name))
 	pos := parsing.save()
 	parsing.jump(original.start)
-	fn := me.defineFunction(funcName, alias, original, nil)
+	fn := parsing.defineFunction(funcName, alias, original, nil)
 	parsing.jump(pos)
 	fn.start = original.start
 	parsing.pushFunction(fn.getname(), module, fn)

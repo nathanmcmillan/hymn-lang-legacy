@@ -61,44 +61,52 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 			}
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
+			dict = true
+
 			vname := me.token.value
 			me.eat("id")
-			me.eat(":")
-			param := me.calc(0, nil)
 			clsvar, ok := cl.variables[vname]
 			if !ok {
 				panic(me.fail() + "Member variable: " + vname + " does not exist for class: " + cl.name)
 			}
 
-			var update map[string]*datatype
-			if len(gindex) > 0 {
-				update = me.hintGeneric(param.data(), clsvar.data(), gindex)
-			}
+			me.eat(":")
 
-			if update != nil && len(update) > 0 {
-				lazy = true
-				good, newtypes := mergeMaps(update, gtypes)
-				if !good {
-					a := genericsmap(gtypes)
-					b := genericsmap(update)
-					f := fmt.Sprint("Lazy generic for class \""+cl.name+"\" is ", a, " but found ", b)
-					panic(me.fail() + f)
-				}
-				gtypes = newtypes
+			if me.token.is == "_" {
+				me.eat("_")
+				params[pix] = nil
+			} else {
+				param := me.calc(0, nil)
 
-			} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
-				err := "parameter \"" + vname + "\" with type \"" + param.data().print()
-				err += "\" does not match class variable \"" + cl.name + "."
-				err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
-				panic(me.fail() + err)
-			}
-			for i, v := range vars {
-				if vname == v {
-					params[i] = param
-					break
+				var update map[string]*datatype
+				if len(gindex) > 0 {
+					update = me.hintGeneric(param.data(), clsvar.data(), gindex)
+				}
+
+				if update != nil && len(update) > 0 {
+					lazy = true
+					good, newtypes := mergeMaps(update, gtypes)
+					if !good {
+						a := genericsmap(gtypes)
+						b := genericsmap(update)
+						f := fmt.Sprint("Lazy generic for class \""+cl.name+"\" is ", a, " but found ", b)
+						panic(me.fail() + f)
+					}
+					gtypes = newtypes
+
+				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
+					err := "parameter \"" + vname + "\" with type \"" + param.data().print()
+					err += "\" does not match class variable \"" + cl.name + "."
+					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
+					panic(me.fail() + err)
+				}
+				for i, v := range vars {
+					if vname == v {
+						params[i] = param
+						break
+					}
 				}
 			}
-			dict = true
 
 		} else if dict {
 			panic(me.fail() + "Regular paramater found after mapped parameter")

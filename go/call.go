@@ -143,7 +143,7 @@ func (me *parser) call(module *hmfile) *node {
 		for ix, gname := range fnbase.genericsOrder {
 			alias[gname] = order[ix].print()
 		}
-		fn = me.remapFunctionImpl(name, alias, fnbase)
+		fn = remapFunctionImpl(name, alias, fnbase)
 	}
 	n := nodeInit("call")
 	n.fn = fn

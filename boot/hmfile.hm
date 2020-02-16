@@ -1,5 +1,5 @@
 
-class hmfile
-	out  string
-	path string
-	libs string
+class hm_file
+    out  string
+    path string
+    libs string

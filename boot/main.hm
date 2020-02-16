@@ -14,59 +14,59 @@ const space_char = '\t'
 const space_fmc = "\t"
 
 class flags
-	cc               string
-	path             string
-	hmlib            string
-	write_to         string
-	help             bool
-	format           bool
-	library          bool
-	analysis         bool
-	memory_check     bool
-	sanitize_address bool
-	info             bool
-	optimize         bool
-	makefile         bool
-	do_not_compile   bool
+    cc               string
+    path             string
+    hmlib            string
+    write_to         string
+    help             bool
+    format           bool
+    library          bool
+    analysis         bool
+    memory_check     bool
+    sanitize_address bool
+    info             bool
+    optimize         bool
+    makefile         bool
+    do_not_compile   bool
 
 class error
-	code    string
-	message string
+    code    string
+    message string
 
 class tuple<x,y>
-	a x
-	b x
+    a x
+    b x
 
 enum either<x,y>
-	one(x)
-	two(y)
+    one(x)
+    two(y)
 
 function fmc(depth int) string
-	mutable space = ""
-	for i = 0; i < depth; i += 1
-		space += space_fmc
-	return space
+    mutable space = ""
+    for i = 0; i < depth; i += 1
+        space += space_fmc
+    return space
 
 function exec_compile(f flags) either<string, error>
-	echo(f.write_to)
-	return either.one("")
+    echo(f.write_to)
+    return either.one("")
 
 function help()
-	echo("Hymn command line interface.")
-	echo("")
-	echo("Usage:")
-	echo("")
-	echo("    hymn <command> [arguments]")
-	echo("")
-	echo("The commands are:")
-	echo("")
-	echo("    fmt      format a file")
-	echo("    build    compile a program")
-	echo("")
+    echo("Hymn command line interface.")
+    echo("")
+    echo("Usage:")
+    echo("")
+    echo("    hymn <command> [arguments]")
+    echo("")
+    echo("The commands are:")
+    echo("")
+    echo("    fmt      format a file")
+    echo("    build    compile a program")
+    echo("")
 
 function main()
-	t = tokens.new_tokenizer()
-	tok = t.get(0)
-	echo(tok.to_string())
-	p = program.new_program()
-	help()
+    t = tokens.new_tokenizer()
+    tok = t.get(0)
+    echo(tok.to_string())
+    p = program.new_program()
+    help()

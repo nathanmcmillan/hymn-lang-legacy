@@ -1,72 +1,72 @@
 const uint64_max = uint64 2000000
 
 string_hashcode(key string) int
-	mutable pos = 0
-	mutable value = uint64 0
-	length = len(key)
-	while value < uint64_max and pos < length
-		value = (value << uint64 8) + uint64 key[pos]
-		pos += 1
-	return int value
+    mutable pos = 0
+    mutable value = uint64 0
+    length = len(key)
+    while value < uint64_max and pos < length
+        value = (value << uint64 8) + uint64 key[pos]
+        pos += 1
+    return int value
 
 class hashset_item<i>
-	code  int
-	key   i
-	next  maybe<hashset_item<i>>
+    code  int
+    key   i
+    next  maybe<hashset_item<i>>
 
 class hashset<i>
-	size     int
-	capacity int
-	get_code (i) int
-	table    []maybe<hashset_item<i>>
+    size     int
+    capacity int
+    get_code (i) int
+    table    []maybe<hashset_item<i>>
 
 hashset get_bin(code int) int
-	return code % self.capacity
+    return code % self.capacity
 
 hashset add(key i)
-	code = self.get_code(key)
-	bin = self.get_bin(code)
-	mutable element = self.table[bin]
-	mutable previous = none<hashset_item<i>>
-	while element is some(s)
-		if code == s.code
-			s.key = key
-			return
-		previous = element
-		element = s.next
-	item = hashset_item(code, key, none)
-	match previous
-		some(s) => s.next = item
-		none => self.table[bin] = item
-	self.size += 1
+    code = self.get_code(key)
+    bin = self.get_bin(code)
+    mutable element = self.table[bin]
+    mutable previous = none<hashset_item<i>>
+    while element is some(s)
+        if code == s.code
+            s.key = key
+            return
+        previous = element
+        element = s.next
+    item = hashset_item(code, key, none)
+    match previous
+        some(s) => s.next = item
+        none => self.table[bin] = item
+    self.size += 1
 
 hashset has(key i) bool
-	code = self.get_code(key)
-	bin = self.get_bin(code)
-	mutable element = self.table[bin]
-	while element is some(s)
-		if code == s.code
-			return true
-		element = s.next
-	return false
+    code = self.get_code(key)
+    bin = self.get_bin(code)
+    mutable element = self.table[bin]
+    while element is some(s)
+        if code == s.code
+            return true
+        element = s.next
+    return false
 
 hashset delete(key i) bool
-	code = self.get_code(key)
-	bin = self.get_bin(code)
-	mutable element = self.table[bin]
-	mutable previous = none<hashset_item<i>>
-	while element is some(s)
-		if code == s.code
-			match previous
-				some(p) => p.next = s.next
-				none => self.table[bin] = s.next
-			self.size -= 1
-			return true
-		previous = element
-		element = s.next
-	return false
-	
+    code = self.get_code(key)
+    bin = self.get_bin(code)
+    mutable element = self.table[bin]
+    mutable previous = none<hashset_item<i>>
+    while element is some(s)
+        if code == s.code
+            match previous
+                some(p) => p.next = s.next
+                none => self.table[bin] = s.next
+            self.size -= 1
+            return true
+        previous = element
+        element = s.next
+    return false
+    
 hashset clear()
-	iterate i, _ in self.table
-		self.table[i] = none
-	self.size = 0
+    iterate i, _ in self.table
+        self.table[i] = none
+    self.size = 0

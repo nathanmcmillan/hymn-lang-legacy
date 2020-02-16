@@ -15,56 +15,56 @@ import "hashset" (hashset, hashset_item)
 --      --> %0.hashmap<string,%1.library>
 
 new_hashset() hashset<string>
-	return hashset(
-		capacity: 12
-		get_code: hashset.string_hashcode
-		table: [12:]maybe<hashset_item<string>>)
+    return hashset(
+        capacity: 12
+        get_code: hashset.string_hashcode
+        table: [12:]maybe<hashset_item<string>>)
 
 const words = new_hashset()
 const primitives = new_hashset()
 
 init()
-	words.add("import")
-	words.add("macro")
+    words.add("import")
+    words.add("macro")
 
-	primitives.add("int")
-	primitives.add("float")
+    primitives.add("int")
+    primitives.add("float")
 
 digit(c char) bool
-	match c
-		'0' | '1' | '2' | '3' |
-		'4' | '5' | '6' | '7' |
-		'8' | '9' => return true
-		_ => pass
-	return false
+    match c
+        '0' | '1' | '2' | '3' |
+        '4' | '5' | '6' | '7' |
+        '8' | '9' => return true
+        _ => pass
+    return false
 
 class token
-	depth int
-	name  string
-	value string
+    depth int
+    name  string
+    value string
 
 token_for(depth int, name string) token
-	return token(depth, name, "")
+    return token(depth, name, "")
 
 token to_string() string
-	mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
-	if self.value != ""
-		s += ", value:" + self.value
-	s += "}"
-	return s
+    mutable s = "{depth:" + to_str(self.depth) + ", type:" + self.name
+    if self.value != ""
+        s += ", value:" + self.value
+    s += "}"
+    return s
 
 class tokenizer
-	tokens []token
-	depth  int
-	eof    token
+    tokens []token
+    depth  int
+    eof    token
 
 new_tokenizer() tokenizer
-	return tokenizer()
+    return tokenizer()
 
 tokenizer simple_token(name string) token
-	return token_for(self.depth, name)
+    return token_for(self.depth, name)
 
 tokenizer get(pos int) token
-	if pos < len(self.tokens)
-		return self.tokens[pos]
-	return self.eof
+    if pos < len(self.tokens)
+        return self.tokens[pos]
+    return self.eof

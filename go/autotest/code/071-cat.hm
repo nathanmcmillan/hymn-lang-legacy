@@ -1,8 +1,8 @@
 main
-    chdir("../../../../")
-    content = cat("CNAME")
-    echo(content)
+    content = cat("071-cat.c")
     iterate i, c in content
         echo(to_str(i) + ": " + to_str(c))
+        if i == 19
+            break
     echo("done!")
     echo("content length = " + to_str(len(content)))

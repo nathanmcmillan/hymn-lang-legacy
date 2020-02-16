@@ -5,13 +5,12 @@ import (
 )
 
 func (me *cfile) compileIs(n *node) *codeblock {
-	code := ""
-	code += me.walrusMatch(n)
+	code := me.walrusMatch(n)
 	using := n.has[0]
+	caseOf := n.has[1]
 	match := me.eval(using)
 
 	if match.data().isSomeOrNone() {
-		caseOf := n.has[1]
 		if caseOf.is == "some" {
 			if len(caseOf.has) > 0 {
 				temphas := caseOf.has[0]
@@ -35,7 +34,8 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		return codeBlockOne(n, code)
 	}
 
-	caseOf := n.has[1]
+	cb := &codeblock{}
+
 	tempname := ""
 
 	if using.is == "variable" {
@@ -43,6 +43,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		tempname = name
 	}
 
+	assignment := ""
 	if len(caseOf.has) > 0 {
 		temphas := caseOf.has[0]
 		idata := temphas.idata.name
@@ -50,16 +51,23 @@ func (me *cfile) compileIs(n *node) *codeblock {
 			tempname = "match_" + me.temp()
 			tempv := temphas.data().getnamedvariable(tempname, false)
 			me.scope.variables[tempname] = tempv
-			code = fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth) + code
+			prepend := fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth)
+			assignment = "(" + tempname + " = " + match.code() + ")"
+			cb.prepend(codeBlockOne(n, prepend))
 		}
 		me.scope.renaming[idata] = tempname
 	}
 
 	baseEnum, _, _ := using.data().isEnum()
-	if baseEnum.simple {
+
+	if assignment == "" {
 		code += match.code()
 	} else {
-		code += using.idata.name + "->type"
+		code += assignment
+	}
+
+	if !baseEnum.simple {
+		code += "->type"
 	}
 
 	code += " == "
@@ -84,7 +92,8 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		}
 	}
 
-	return codeBlockOne(n, code)
+	cb.current = codeNode(n, code)
+	return cb
 }
 
 func (me *cfile) compileMatch(n *node) *codeblock {

@@ -1,9 +1,20 @@
-import "hashmap" (hashmap)
+import "hashmap" (
+    hashmap
+    new_str_hashmap
+)
 import "function" (hm_function)
 import "class" (hm_class)
 
-class hmlib
-	functions     hashmap<string, hm_function>
-	function_list []hm_function
-	types         hashmap<string, string>
-	classes       hashmap<string, hm_class>
+class hm_lib
+    functions     hashmap<string, hm_function>
+    function_list []hm_function
+    types         hashmap<string, string>
+    classes       hashmap<string, hm_class>
+
+new_hm_lib()
+    return hm_lib (
+        functions: new_str_hashmap<hm_function>()
+        function_list: _
+        types: new_str_hashmap<string>()
+        classes: new_str_hashmap<hm_class>()
+    )

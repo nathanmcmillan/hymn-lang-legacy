@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type parser struct {
@@ -20,7 +22,31 @@ type parsepoint struct {
 }
 
 func (me *parser) fail() string {
-	return fmt.Sprintf("\nModule: %s\nLine: %d\nToken: %s\nError: ", me.hmfile.name, me.line, me.tokens.get(me.pos).string())
+	var str strings.Builder
+	str.WriteString("\nModule: ")
+	str.WriteString(me.hmfile.name)
+	str.WriteString("\nLine: ")
+	str.WriteString(strconv.Itoa(me.line))
+	str.WriteString("\nToken: ")
+	str.WriteString(me.tokens.get(me.pos).string())
+
+	fn := me.hmfile.scope.fn
+	if fn != nil {
+		str.WriteString("\nCurrent Function: ")
+		str.WriteString(fn.module.reference(fn.name))
+	}
+
+	if me.hmfile.program.peekRemapStack() != "" {
+		str.WriteString("\nFunction Implementation Stack: [")
+		for _, r := range me.hmfile.program.remapStack {
+			str.WriteString("\n    ")
+			str.WriteString(r)
+		}
+		str.WriteString("\n]")
+	}
+
+	str.WriteString("\nError: ")
+	return str.String()
 }
 
 func (me *parser) skipLines() {

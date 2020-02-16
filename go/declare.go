@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -153,12 +152,10 @@ func (me *parser) declareType() *datatype {
 	}
 
 	if cl, ok := module.classes[value]; ok {
-		fmt.Println("declare class ::", module.name, "::", value, "::", cl.name)
 		var gtypes []*datatype
 		if me.token.is == "<" {
 			gtypes = me.declareGeneric(cl)
 			value += genericslist(gtypes)
-			fmt.Println("declare class generic ::", module.name, "::", value, "::", cl.name)
 			if _, ok := cl.module.classes[value]; !ok {
 				me.defineClassImplGeneric(cl, gtypes)
 			}
@@ -166,7 +163,6 @@ func (me *parser) declareType() *datatype {
 				cl = clgen
 			}
 		}
-		fmt.Println("declare class final ::", cl.name, "::", genericslist(gtypes))
 		return newdataclass(me.hmfile, cl, gtypes)
 	}
 

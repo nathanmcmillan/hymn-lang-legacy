@@ -47,6 +47,11 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 		if pix > 0 || dict {
 			if me.token.is == "line" {
 				ndepth := me.peek().depth
+				if ndepth == depth && me.peek().is == ")" {
+					me.eat("line")
+					me.eat(")")
+					break
+				}
 				if ndepth != depth+1 {
 					panic(me.fail() + "unexpected line indentation")
 				}
@@ -189,7 +194,6 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			}
 		}
 	}
-	fmt.Println("alloc class ::", module.name, "::", typed)
 	if n != nil {
 		typed = me.classParams(n, cl, depth)
 	}

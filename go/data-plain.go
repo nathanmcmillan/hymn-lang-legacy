@@ -777,7 +777,10 @@ func newdataclass(origin *hmfile, class *class, generics []*datatype) *datatype 
 	d.origin = origin
 	d.module = class.module
 	d.class = class
-	d.generics = generics
+
+	if generics != nil && len(generics) > 0 {
+		d.generics = generics
+	}
 
 	actual := d.print()
 	expected := class.module.reference(class.name)
@@ -794,7 +797,10 @@ func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype)
 	d.module = enum.module
 	d.enum = enum
 	d.union = union
-	d.generics = generics
+
+	if generics != nil && len(generics) > 0 {
+		d.generics = generics
+	}
 
 	actual := d.print()
 	expected := enum.module.reference(enum.name)
@@ -813,7 +819,9 @@ func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics [
 	d.origin = origin
 	d.module = module
 	d.canonical = canonical
-	d.generics = generics
+	if generics != nil && len(generics) > 0 {
+		d.generics = generics
+	}
 	return d
 }
 

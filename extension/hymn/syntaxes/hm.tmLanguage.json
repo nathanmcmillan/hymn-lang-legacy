@@ -4,33 +4,33 @@
 	"scopeName": "source.hymn",
 	"patterns": [
 		{
-			"begin": "\\(\\*",
-			"end": "\\*\\)",
-			"name": "comment.block.hymn"
-		},
-		{
 			"match": "--.*$",
 			"name": "comment.line.double-slash.hymn"
 		},
 		{
-			"match": "'.*?'",
-			"name": "string.quoted.hymn",
-			"patterns": [
-				{
-					"match": "\\\\.",
-					"name": "constant.character.escape.hymn"
+			"match": "'(.*?)'",
+			"captures": {
+				"0": {
+					"name": "string.quoted.hymn"
+				},
+				"1": {
+					"name": "constant.other.rune.hymn"
 				}
-			]
+			}
 		},
 		{
 			"match": "\".*?\"",
 			"name": "string.quoted.double.hymn",
-			"patterns": [
-				{
-					"match": "\\\\.",
-					"name": "constant.character.escape.hymn"
+			"captures": {
+				"0": {
+					"patterns": [
+						{
+							"match": "\\\\.",
+							"name": "constant.character.escape.hymn"
+						}
+					]
 				}
-			]
+			}
 		},
 		{
 			"match": "\\b(self)\\b",

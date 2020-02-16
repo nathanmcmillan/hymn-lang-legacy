@@ -74,17 +74,18 @@ var (
 )
 
 type program struct {
-	out       string
-	directory string
-	libs      string
-	hmlibmap  map[string]string
-	hmlib     *hmlib
-	hmfiles   map[string]*hmfile
-	modules   map[string]*hmfile
-	hmorder   []*hmfile
-	sources   map[string]string
-	shellvar  map[string]string
-	moduleUID int
+	out        string
+	directory  string
+	libs       string
+	hmlibmap   map[string]string
+	hmlib      *hmlib
+	hmfiles    map[string]*hmfile
+	modules    map[string]*hmfile
+	hmorder    []*hmfile
+	sources    map[string]string
+	shellvar   map[string]string
+	moduleUID  int
+	remapStack []string
 }
 
 func programInit() *program {
@@ -95,6 +96,7 @@ func programInit() *program {
 	prog.hmorder = make([]*hmfile, 0)
 	prog.sources = make(map[string]string)
 	prog.shellvar = make(map[string]string)
+	prog.remapStack = make([]string, 0)
 	return prog
 }
 
@@ -107,4 +109,19 @@ func (me *program) loadlibs(hmlibs string) {
 			me.hmlibmap[base] = hmlibs + "/" + name
 		}
 	}
+}
+
+func (me *program) pushRemapStack(name string) {
+	me.remapStack = append(me.remapStack, name)
+}
+
+func (me *program) popRemapStack() {
+	me.remapStack = me.remapStack[0 : len(me.remapStack)-1]
+}
+
+func (me *program) peekRemapStack() string {
+	if len(me.remapStack) == 0 {
+		return ""
+	}
+	return me.remapStack[len(me.remapStack)-1]
 }

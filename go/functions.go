@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type function struct {
 	name          string
 	clsname       string
@@ -113,20 +111,24 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 }
 
 func (me *parser) remapFunctionImpl(funcName string, alias map[string]string, original *function) *function {
-	pos := me.save()
-	me.jump(original.start)
+	module := original.module
+	parsing := module.parser
+	module.program.pushRemapStack(module.reference(original.name))
+	pos := parsing.save()
+	parsing.jump(original.start)
 	fn := me.defineFunction(funcName, alias, original, nil)
-	me.jump(pos)
+	parsing.jump(pos)
 	fn.start = original.start
-	me.pushFunction(funcName, me.hmfile, fn)
+	parsing.pushFunction(fn.getname(), module, fn)
+	module.program.popRemapStack()
 	return fn
 }
 
 func remapClassFunctionImpl(class *class, original *function) {
-	fmt.Println("remapping class function ::", original.name, "--->", class.name)
 	module := class.module
 	parsing := module.parser
 	funcName := original.name
+	module.program.pushRemapStack(module.reference(funcName))
 	pos := parsing.save()
 	parsing.jump(original.start)
 	fn := parsing.defineFunction(funcName, nil, nil, class)
@@ -135,6 +137,7 @@ func remapClassFunctionImpl(class *class, original *function) {
 	class.functions[fn.name] = fn
 	class.functionOrder = append(class.functionOrder, fn)
 	parsing.pushFunction(fn.getname(), module, fn)
+	module.program.popRemapStack()
 }
 
 func (me *parser) defineClassFunction() {

@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func (me *parser) genericHeader() ([]*datatype, map[string]int) {
 	order := make([]*datatype, 0)
 	dict := make(map[string]int)
@@ -79,17 +77,13 @@ func (me *parser) genericsReplacer(module *hmfile, original *datatype, gmapper m
 			if cl, ok := data.module.classes[implementation]; ok {
 				data.class = cl
 			} else {
-				fmt.Println("generics replacer defining class ::", data.class.name, "->", implementation)
 				data.class = me.defineClassImplGeneric(data.class, data.generics)
-				fmt.Println("completed generics replacer defining class ::", data.class.name)
 			}
 		} else if data.enum != nil {
 			if en, ok := data.module.enums[implementation]; ok {
 				data.enum = en
 			} else {
-				fmt.Println("generics replacer defining enum ::", data.enum.name, "->", implementation)
 				data.enum = me.defineEnumImplGeneric(data.enum, data.generics)
-				fmt.Println("completed generics replacer defining enum ::", data.enum.name)
 			}
 		}
 	}

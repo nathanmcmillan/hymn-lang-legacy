@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class {
 
 	base = base.baseClass()
@@ -11,12 +7,6 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 
 	implementation := base.name + genericslist(order)
 	uid := base.uid() + genericslist(order)
-
-	for k, v := range base.variables {
-		fmt.Println(uid+" base class variables ::", k, "::", v.data().print())
-	}
-
-	fmt.Println("inserting new class ::", module.name, "::", implementation, "(", uid, ")", "::", base.name, "::", genericslist(order))
 
 	module.namespace[uid] = "class"
 	module.types[uid] = "class"
@@ -32,17 +22,12 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 	module.classes[uid] = classDef
 	module.classes[implementation] = classDef
 
-	for k := range module.classes {
-		fmt.Println("updated module class list ::", k)
-	}
-
 	base.implementations = append(base.implementations, classDef)
 
 	gmapper := make(map[string]string)
 	for ix, gname := range base.generics {
 		from := order[ix]
 		value := from.getRaw()
-		fmt.Println(implementation, "generic map ::", gname, "<-", value)
 		gmapper[gname] = value
 		if gname == value || from.isRecursiveUnknown() {
 			classDef.doNotDefine = true
@@ -65,10 +50,6 @@ func (me *parser) finishClassGenericDefinition(classDef *class) {
 	}
 
 	classDef.initMembers(classDef.base.variableOrder, memberMap)
-
-	for k, v := range memberMap {
-		fmt.Println(classDef.name, "member map ::", k, "::", v.data().print())
-	}
 
 	for _, mem := range memberMap {
 		data := me.genericsReplacer(classDef.module, mem.data(), classDef.gmapper)

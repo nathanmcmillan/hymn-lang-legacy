@@ -136,12 +136,24 @@ func (me *cfile) compileMain(fn *function) {
 		}
 	}
 
-	fn._cname = "main"
-	fn.returns = getdatatype(nil, TokenInt)
+	head := "int main("
+	if len(args) > 0 {
+		me.libReq.add(HmLibSlice)
+		me.libReq.add(HmLibString)
+		head += "int argc, char** argv"
+	}
+	head += ")"
 
-	head := me.functionHead(fn)
 	code.WriteString(head)
 	code.WriteString(" {\n")
+
+	if len(args) > 0 {
+		code.WriteString(fmc(1))
+		code.WriteString("char **")
+		code.WriteString(args[0].name)
+		code.WriteString(" = hmlib_array_to_slice(argv, sizeof(char *), argc);\n")
+	}
+
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 

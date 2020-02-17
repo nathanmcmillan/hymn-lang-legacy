@@ -47,8 +47,8 @@ def help
 
 def main(args []string)
     help()
-    iterate a in args
-        echo("args!", a)
+    iterate i, a in args
+        printf("args %d: %s\n", i, a)
     flag = flags (
         path: "./main.c"
         write_to: "write_to..."

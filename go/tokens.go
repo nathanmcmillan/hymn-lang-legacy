@@ -365,12 +365,6 @@ func (me *tokenizer) get(pos int) *token {
 		} else if peek == '>' {
 			stream.next()
 			token = me.simpleToken("->")
-		} else if peek == '-' {
-			stream.next()
-			value := me.forLineComment()
-			token := me.valueToken("comment", value)
-			me.push(token)
-			return token
 		} else {
 			token = me.simpleToken("-")
 		}
@@ -442,6 +436,13 @@ func (me *tokenizer) get(pos int) *token {
 		token := me.tokenFor(0, "line")
 		me.push(token)
 		me.updateDepth = true
+		return token
+	}
+	if c == '#' {
+		stream.next()
+		value := me.forLineComment()
+		token := me.valueToken("comment", value)
+		me.push(token)
 		return token
 	}
 	panic("unknown token " + stream.fail())

@@ -6,9 +6,11 @@ class vec
 foobar(d dict<string, vec>)
   v = vec(1, 2, 3)
   d.insert("one", v)
-  bind(v, d) -- v deallocated when d is 
+  # v deallocated when d is 
+  bind(v, d)
 
 main
-  d = dict<string, vec> -- d deallocated at end of scope 
+  # d deallocated at end of scope
+  d = dict<string, vec>
   foobar(d)
   echo("done")

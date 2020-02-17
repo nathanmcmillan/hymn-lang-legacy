@@ -267,6 +267,22 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		fn.returns = getdatatype(module, "void")
 	}
 	me.eat("line")
+
+	if self == nil && name == "main" {
+		if len(fn.args) != 0 {
+			if len(fn.args) == 1 {
+				if !fn.args[0].data().isSlice() || !fn.args[0].data().member.isString() {
+					panic(me.fail() + "Function main argument must be []string")
+				}
+			} else {
+				panic(me.fail() + "Function main cannot have more than one argument.")
+			}
+		}
+		if fn.returns != nil && !fn.returns.isInt() && !fn.returns.isVoid() {
+			panic(me.fail() + "Function main must return an integer but was: " + fn.returns.error())
+		}
+	}
+
 	for _, arg := range fn.args {
 		module.scope.variables[arg.name] = arg.variable
 	}

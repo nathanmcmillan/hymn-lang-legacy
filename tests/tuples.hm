@@ -5,7 +5,7 @@ def do_stuff() int, int
 def main()
     x, y = do_stuff()
 
--- current
+# current
 
 def do_stuff_2() tuple<int, int>
     return tuple(3, 4)
@@ -15,7 +15,7 @@ def main_2()
     x = tup.a
     y = tup.b
 
--- possible
+# possible
 
 def do_stuff_3(return_x *int, return_y *int)
     return_x = 3

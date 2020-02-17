@@ -1,7 +1,7 @@
---
---           The Hymn Compiler
--- Copyright 2019 Nathan Michael McMillan
---
+#
+#           The Hymn Compiler
+# Copyright 2019 Nathan Michael McMillan
+#
 
 import "program"
 import "flags" (flags)
@@ -45,9 +45,10 @@ def help
     echo("    build    compile a program")
     echo("")
 
--- def main(args []string)
-def main()
+def main(args []string)
     help()
+    iterate a in args
+        echo("args!", a)
     flag = flags (
         path: "./main.c"
         write_to: "write_to..."

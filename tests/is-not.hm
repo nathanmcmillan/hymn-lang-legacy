@@ -6,5 +6,5 @@ enum operation
 
 def main()
     e = math.operation.add
-    -- if not e is add
+    # if not e is add
     if e is not add : echo("no!")

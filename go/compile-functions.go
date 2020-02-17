@@ -99,15 +99,15 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 }
 
 func (me *cfile) compileMain(fn *function) {
-	if len(fn.args) > 0 {
-		panic("main can not have arguments")
-	}
+	args := fn.args
 	expressions := fn.expressions
 	var block strings.Builder
-	returns := false
 	me.pushScope()
 	me.scope.fn = fn
 	me.depth = 1
+	for _, arg := range args {
+		me.scope.variables[arg.name] = arg.variable
+	}
 	list := me.hmfile.program.hmorder
 	for x := len(list) - 1; x >= 0; x-- {
 		file := list[x]
@@ -120,16 +120,9 @@ func (me *cfile) compileMain(fn *function) {
 	}
 	for _, expr := range expressions {
 		e := me.eval(expr)
-		if e.is() == "return" {
-			if e.getType() != TokenInt {
-				panic("main must return int")
-			} else {
-				returns = true
-			}
-		}
 		block.WriteString(me.happyOut(e))
 	}
-	if !returns {
+	if expressions[len(expressions)-1].is != "return" {
 		block.WriteString(fmc(me.depth) + "return 0;\n")
 	}
 	me.popScope()
@@ -142,10 +135,16 @@ func (me *cfile) compileMain(fn *function) {
 			code.WriteString("\n")
 		}
 	}
-	code.WriteString("int main() {\n")
+
+	fn._cname = "main"
+	fn.returns = getdatatype(nil, TokenInt)
+
+	head := me.functionHead(fn)
+	code.WriteString(head)
+	code.WriteString(" {\n")
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 
-	me.headFuncSection.WriteString("\nint main();")
+	me.headFuncSection.WriteString("\n" + head + ";")
 	me.codeFn = append(me.codeFn, code)
 }

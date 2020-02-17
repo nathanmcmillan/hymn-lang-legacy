@@ -2,7 +2,7 @@ main
   for i = 0, i < 5, i += 1
     x = 2
     echo(i)
-  -- if we know i or x will not be used later, can declare in C scope 
+  # if we know i or x will not be used later, can declare in C scope 
   echo(x)
   z = 3
   if x = 2
@@ -14,4 +14,4 @@ main
   else
     b = "bar"
   echo(b)
-  -- error w may not have been initialized 
+  # error w may not have been initialized 

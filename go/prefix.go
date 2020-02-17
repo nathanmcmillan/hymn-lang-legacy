@@ -84,7 +84,7 @@ func prefixIdent(me *parser, op string) *node {
 	name := me.token.value
 	module := me.hmfile
 
-	if _, ok := me.hmfile.imports[name]; ok && me.peek().is == "." {
+	if _, ok := module.imports[name]; ok && me.peek().is == "." {
 		return me.extern()
 	}
 

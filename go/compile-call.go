@@ -23,7 +23,7 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		code += ")"
 		return codeBlockOne(node, code)
 	}
-	name := fn.name
+	name := fn.getname()
 	if !me.master {
 		if _, ok := me.functions[name]; !ok {
 			if _, ok2 := me.hmfile.functions[name]; ok2 {

@@ -33,7 +33,7 @@ func (me *parser) fail() string {
 	fn := me.hmfile.scope.fn
 	if fn != nil {
 		str.WriteString("\nCurrent Function: ")
-		str.WriteString(fn.module.reference(fn.name))
+		str.WriteString(fn.module.reference(fn.getname()))
 	}
 
 	if me.hmfile.program.peekRemapStack() != "" {

@@ -73,7 +73,7 @@
 			}
 		},
 		{
-			"match": "\\b(char|int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float|float32|float64)\\b",
+			"match": "\\b(char|byte|int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float|float32|float64)\\b",
 			"captures": {
 				"1": {
 					"name": "storage.type.numeric.hymn"
@@ -105,7 +105,7 @@
 			}
 		},
 		{
-			"match": "^(class|enum|function) +(\\w+)",
+			"match": "^(class|enum|def) +(\\w+)",
 			"captures": {
 				"1": {
 					"name": "keyword.struct.hymn"

@@ -26,7 +26,7 @@ exec_compile() either<string, int>
 exec_boink() zoink<string, int, float>
     return zoink.foo("boink!", 3)
 
-function main()
+def main()
     e = exec_compile()
     match e
         one(o) => echo(o.value)

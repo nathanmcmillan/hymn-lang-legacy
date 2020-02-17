@@ -1,0 +1,15 @@
+class flags
+    cc               string
+    path             string
+    hmlib            string
+    write_to         string
+    help             bool
+    format           bool
+    library          bool
+    analysis         bool
+    memory_check     bool
+    sanitize_address bool
+    info             bool
+    optimize         bool
+    makefile         bool
+    do_not_compile   bool

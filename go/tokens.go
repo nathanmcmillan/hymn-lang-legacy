@@ -65,7 +65,6 @@ var keywords = map[string]bool{
 	"async":      true,
 	"yield":      true,
 	"await":      true,
-	"def":        true,
 	"ifdef":      true,
 	"ifndef":     true,
 	"elsedef":    true,
@@ -76,7 +75,7 @@ var keywords = map[string]bool{
 	"is":         true,
 	"iterate":    true,
 	"in":         true,
-	"function":   true,
+	"def":        true,
 	"class":      true,
 	TokenInt:     true,
 	TokenInt8:    true,
@@ -91,6 +90,7 @@ var keywords = map[string]bool{
 	TokenFloat:   true,
 	TokenFloat32: true,
 	TokenFloat64: true,
+	TokenChar:    true,
 }
 
 type token struct {

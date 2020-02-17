@@ -2,8 +2,8 @@ package main
 
 import "fmt"
 
-func (me *parser) def() *node {
-	me.eat("def")
+func (me *parser) macro() *node {
+	me.eat("macro")
 	name := me.token.value
 	me.eat("id")
 	var value *node

@@ -46,7 +46,7 @@ func (me *parser) declareFn() *datatype {
 }
 
 func (me *parser) declareFnPtr(fn *function) *datatype {
-	return getdatatype(me.hmfile, fn.name)
+	return getdatatype(me.hmfile, fn._name)
 }
 
 func (me *parser) declareType() *datatype {

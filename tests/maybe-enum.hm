@@ -4,12 +4,12 @@ enum operation
     multiply
     divide
 
-function get_op(flag bool) maybe<operation>
+def get_op(flag bool) maybe<operation>
     if flag
         return operation.multiply
     return none
 
-function main()
+def main()
     x = get_op(true)
     y = get_op(false)
     match x

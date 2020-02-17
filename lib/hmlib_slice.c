@@ -64,54 +64,6 @@ hmlib_slice_head *hmlib_slice_resize(const hmlib_slice head, const size_t member
     return new_head;
 }
 
-hmlib_slice hmlib_slice_push(const hmlib_slice a, void *const b) {
-    hmlib_slice_head *head = hmlib_slice_get_head(a);
-    size_t length = head->length + 1;
-    hmlib_slice_head *new_head;
-    if (length > head->capacity) {
-        new_head = hmlib_slice_resize(head, sizeof(void *), length);
-        new_head->capacity = length;
-    } else {
-        new_head = head;
-    }
-    new_head->length = length;
-    hmlib_slice data = (hmlib_slice_head *)new_head + 1;
-    ((hmlib_slice_head **)data)[length - 1] = b;
-    return data;
-}
-
-hmlib_slice hmlib_slice_push_int(const hmlib_slice a, const int b) {
-    hmlib_slice_head *head = hmlib_slice_get_head(a);
-    size_t length = head->length + 1;
-    hmlib_slice_head *new_head;
-    if (length > head->capacity) {
-        new_head = hmlib_slice_resize(head, sizeof(b), length);
-        new_head->capacity = length;
-    } else {
-        new_head = head;
-    }
-    new_head->length = length;
-    hmlib_slice data = (hmlib_slice_head *)new_head + 1;
-    ((int *)data)[length - 1] = b;
-    return data;
-}
-
-hmlib_slice hmlib_slice_push_float(const hmlib_slice a, const float b) {
-    hmlib_slice_head *head = hmlib_slice_get_head(a);
-    size_t length = head->length + 1;
-    hmlib_slice_head *new_head;
-    if (length > head->capacity) {
-        new_head = hmlib_slice_resize(head, sizeof(b), length);
-        new_head->capacity = length;
-    } else {
-        new_head = head;
-    }
-    new_head->length = length;
-    hmlib_slice data = (hmlib_slice_head *)new_head + 1;
-    ((float *)data)[length - 1] = b;
-    return data;
-}
-
 hmlib_slice hmlib_slice_expand(const hmlib_slice a, const hmlib_slice b) {
     hmlib_slice_head *head_a = hmlib_slice_get_head(a);
     hmlib_slice_head *head_b = hmlib_slice_get_head(b);
@@ -121,5 +73,44 @@ hmlib_slice hmlib_slice_expand(const hmlib_slice a, const hmlib_slice b) {
     hmlib_slice_head *new_head = hmlib_slice_resize(head_a, sizeof(void *), length);
     hmlib_slice_head *data = (hmlib_slice_head *)new_head + 1;
     memcpy(data + length_a * sizeof(void *), b, length_b * sizeof(void *));
+    return data;
+}
+
+hmlib_slice hmlib_slice_push(const hmlib_slice a, void *const b) {
+    hmlib_slice_head *head = hmlib_slice_get_head(a);
+    size_t length = head->length + 1;
+    if (length > head->capacity) {
+        head = hmlib_slice_resize(head, sizeof(void *), length);
+        head->capacity = length;
+    }
+    head->length = length;
+    hmlib_slice data = (hmlib_slice_head *)head + 1;
+    ((hmlib_slice_head **)data)[length - 1] = b;
+    return data;
+}
+
+hmlib_slice hmlib_slice_push_int(const hmlib_slice a, const int b) {
+    hmlib_slice_head *head = hmlib_slice_get_head(a);
+    size_t length = head->length + 1;
+    if (length > head->capacity) {
+        head = hmlib_slice_resize(head, sizeof(b), length);
+        head->capacity = length;
+    }
+    head->length = length;
+    hmlib_slice data = (hmlib_slice_head *)head + 1;
+    ((int *)data)[length - 1] = b;
+    return data;
+}
+
+hmlib_slice hmlib_slice_push_float(const hmlib_slice a, const float b) {
+    hmlib_slice_head *head = hmlib_slice_get_head(a);
+    size_t length = head->length + 1;
+    if (length > head->capacity) {
+        head = hmlib_slice_resize(head, sizeof(b), length);
+        head->capacity = length;
+    }
+    head->length = length;
+    hmlib_slice data = (hmlib_slice_head *)head + 1;
+    ((float *)data)[length - 1] = b;
     return data;
 }

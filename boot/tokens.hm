@@ -1,36 +1,41 @@
-import "hashset" (hashset, hashset_item)
+import "hashset" (new_str_set)
 
--- parsing & compiling imports from abritrary directories and files
--- parsing is completely finished before any compiling is done
--- this means we can represent any given directory/module as a generic UID e.g a number 0, 1, 2, 3, etc
--- only at the compilation phase must we convert this UID to actual unique directory/modules
--- the compilation phase can determine path & naming conflicts and generate an ideally replicable unique name-space
+const token_int_literal     = "int-v"
+const token_float_literal   = "float-v"
+const token_string_literal  = "string-v"
+const token_char_literal    = "char-v"
+const token_byte_literal    = "byte-v"
+const token_boolean_literal = "bool-v"
+const token_int             = "int"
+const token_int8            = "int8"
+const token_int16           = "int16"
+const token_int32           = "int32"
+const token_int64           = "int64"
+const token_uint            = "uint"
+const token_uint8           = "uint8"
+const token_uint16          = "uint16"
+const token_uint32          = "uint32"
+const token_uint64          = "uint64"
+const token_float           = "float"
+const token_float32         = "float32"
+const token_float64         = "float64"
+const token_string          = "string"
+const token_raw_string      = "string-raw"
+const token_char            = "char"
+const token_byte            = "byte"
+const token_boolean         = "bool"
 
--- example: 
---      --> import "hashmap" (hashmap)
---      --> import "library" (library)
---      --> x = hashmap<string,library>
---      --> hashmap => /user/code/project/hashmap.hm => 0
---      --> library => /user/code/modules/library.hm => 1
---      --> %0.hashmap<string,%1.library>
+const words = new_str_set()
+const primitives = new_str_set()
 
-new_hashset() hashset<string>
-    return hashset(
-        capacity: 12
-        get_code: hashset.string_hashcode
-        table: [12:]maybe<hashset_item<string>>)
-
-const words = new_hashset()
-const primitives = new_hashset()
-
-init()
+def init
     words.add("import")
     words.add("macro")
 
     primitives.add("int")
     primitives.add("float")
 
-digit(c char) bool
+def digit(c char) bool
     match c
         '0' | '1' | '2' | '3' |
         '4' | '5' | '6' | '7' |
@@ -43,28 +48,9 @@ class token
     name  string
     value string
 
-token_for(depth int, name string) token
-    return token(depth, name, "")
-
 token to_string() string
     mutable s = "{depth:" + str(self.depth) + ", type:" + self.name
     if self.value != ""
         s += ", value:" + self.value
     s += "}"
     return s
-
-class tokenizer
-    tokens []token
-    depth  int
-    eof    token
-
-new_tokenizer() tokenizer
-    return tokenizer()
-
-tokenizer simple_token(name string) token
-    return token_for(self.depth, name)
-
-tokenizer get(pos int) token
-    if pos < len(self.tokens)
-        return self.tokens[pos]
-    return self.eof

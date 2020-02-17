@@ -25,7 +25,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			if head.is == "variable" {
 				sv := me.hmfile.getvar(head.idata.name)
 				if sv == nil {
-					panic(me.fail() + "variable \"" + head.value + "\" out of scope")
+					panic(me.fail() + "Variable '" + head.idata.name + "' out of scope")
 				}
 				head.copyData(sv.data())
 				head.is = "root-variable"
@@ -44,7 +44,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				} else if classFunc, ok := rootClass.functions[dotName]; ok {
 					member = me.callClassFunction(data.getmodule(), head, rootClass, classFunc)
 				} else {
-					panic(me.fail() + "Class: " + rootClass.name + " does not have variable or function: " + dotName)
+					panic(me.fail() + "Class: " + rootClass.name + " does not have a variable or function named: " + dotName)
 				}
 				head = member
 

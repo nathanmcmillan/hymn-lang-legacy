@@ -20,7 +20,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			cb.prepend(param1.pre)
 			return cb
 		}
-		panic("argument for push was not an array \"" + p.print() + "\"")
+		panic("Argument for push was not an array: " + p.error())
 	case libLength:
 		param := me.eval(parameters[0])
 		switch param.getType() {

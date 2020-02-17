@@ -288,7 +288,9 @@ func (me *datatype) isPointer() bool {
 }
 
 func (me *datatype) isPointerInC() bool {
-	if me.isPrimitive() {
+	if me.is == dataTypeString {
+		return true
+	} else if me.isPrimitive() {
 		return false
 	}
 	return me.pointer

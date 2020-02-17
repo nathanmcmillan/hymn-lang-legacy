@@ -1,6 +1,6 @@
 import "hashmap" (
     hashmap
-    new_str_hashmap
+    new_str_map
 )
 import "function" (hm_function)
 import "class" (hm_class)
@@ -13,8 +13,8 @@ class hm_lib
 
 new_hm_lib() hm_lib
     return hm_lib (
-        functions: new_str_hashmap<hm_function>()
+        functions: new_str_map<hm_function>()
         function_list: _
-        types: new_str_hashmap<string>()
-        classes: new_str_hashmap<hm_class>()
+        types: new_str_map<string>()
+        classes: new_str_map<hm_class>()
     )

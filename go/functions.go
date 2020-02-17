@@ -1,9 +1,9 @@
 package main
 
 type function struct {
-	name          string
-	clsname       string
-	cname         string
+	_name         string
+	_clsname      string
+	_cname        string
 	start         *parsepoint
 	module        *hmfile
 	forClass      *class
@@ -23,16 +23,16 @@ type function struct {
 
 func funcInit(module *hmfile, name string, class *class) *function {
 	f := &function{}
-	f.name = name
+	f._name = name
 	if class != nil {
-		f.clsname = nameOfClassFunc(class.name, name)
+		f._clsname = nameOfClassFunc(class.name, name)
 	}
 	if module != nil {
 		f.module = module
 		if class == nil {
-			f.cname = module.funcNameSpace(name)
+			f._cname = module.funcNameSpace(name)
 		} else {
-			f.cname = module.funcNameSpace(f.clsname)
+			f._cname = module.funcNameSpace(f._clsname)
 		}
 	}
 	f.args = make([]*funcArg, 0)
@@ -45,17 +45,17 @@ func funcInit(module *hmfile, name string, class *class) *function {
 
 func (me *function) getname() string {
 	if me.forClass == nil {
-		return me.name
+		return me._name
 	}
-	return me.clsname
+	return me._clsname
 }
 
 func (me *function) getcname() string {
-	return me.cname
+	return me._cname
 }
 
 func (me *function) getclsname() string {
-	return me.clsname
+	return me._clsname
 }
 
 func (me *function) canonical(current *hmfile) string {
@@ -99,7 +99,7 @@ func remapFunctionImpl(name string, alias map[string]string, original *function)
 		return fn
 	}
 	parsing := module.parser
-	module.program.pushRemapStack(module.reference(original.name))
+	module.program.pushRemapStack(module.reference(original.getname()))
 	pos := parsing.save()
 	parsing.jump(original.start)
 	fn := parsing.defineFunction(name, alias, original, nil)
@@ -112,18 +112,19 @@ func remapFunctionImpl(name string, alias map[string]string, original *function)
 
 func remapClassFunctionImpl(class *class, original *function) {
 	module := class.module
-	name := original.name
-	if _, ok := module.functions[name]; ok {
+	plain := original._name
+	registered := nameOfClassFunc(class.name, plain)
+	if _, ok := module.functions[registered]; ok {
 		return
 	}
 	parsing := module.parser
-	module.program.pushRemapStack(module.reference(name))
+	module.program.pushRemapStack(module.reference(registered))
 	pos := parsing.save()
 	parsing.jump(original.start)
-	fn := parsing.defineFunction(name, nil, nil, class)
+	fn := parsing.defineFunction(plain, nil, nil, class)
 	parsing.jump(pos)
 	fn.start = original.start
-	class.functions[fn.name] = fn
+	class.functions[fn._name] = fn
 	class.functionOrder = append(class.functionOrder, fn)
 	parsing.pushFunction(fn.getname(), module, fn)
 	module.program.popRemapStack()

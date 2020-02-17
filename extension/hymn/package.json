@@ -10,16 +10,26 @@
         "Programming Languages"
     ],
     "contributes": {
-        "languages": [{
-            "id": "hymn",
-            "aliases": ["hymn", "hm"],
-            "extensions": ["hm"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "hymn",
-            "scopeName": "source.hymn",
-            "path": "./syntaxes/hm.tmLanguage.json"
-        }]
+        "languages": [
+            {
+                "id": "Hymn",
+                "aliases": [
+                    "Hymn",
+                    "hymn",
+                    "hm"
+                ],
+                "extensions": [
+                    "hm"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "Hymn",
+                "scopeName": "source.hymn",
+                "path": "./syntaxes/hm.tmLanguage.json"
+            }
+        ]
     }
 }

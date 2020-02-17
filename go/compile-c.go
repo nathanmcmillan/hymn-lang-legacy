@@ -46,7 +46,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string
 	}
 
 	if debug {
-		fmt.Println("=== compile: end ===")
+		fmt.Println("=== end: " + name + " ===")
 	}
 
 	if len(cfile.codeFn) > 0 {

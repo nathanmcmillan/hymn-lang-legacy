@@ -3,28 +3,12 @@
 -- Copyright 2019 Nathan Michael McMillan
 --
 
-import "tokens"
 import "program"
+import "flags" (flags)
 
 const debug = true
 const debug_tokens = true
 const debug_ast = true
-
-class flags
-    cc               string
-    path             string
-    hmlib            string
-    write_to         string
-    help             bool
-    format           bool
-    library          bool
-    analysis         bool
-    memory_check     bool
-    sanitize_address bool
-    info             bool
-    optimize         bool
-    makefile         bool
-    do_not_compile   bool
 
 class error
     code    string
@@ -38,17 +22,17 @@ enum either<x,y>
     one(value x)
     two(value y)
 
-function fmc(depth int) string
+def fmc(depth int) string
     mutable space = ""
     for i = 0; i < depth; i += 1
         space += "    "
     return space
 
-function exec_compile(f flags) either<string, error>
+def exec_compile(f flags) either<string, error>
     echo(f.write_to)
     return either.one("")
 
-function help()
+def help
     echo("Hymn command line interface.")
     echo("")
     echo("Usage:")
@@ -61,10 +45,12 @@ function help()
     echo("    build    compile a program")
     echo("")
 
-function main()
-    t = tokens.new_tokenizer()
-    tok = t.get(0)
-    echo(tok.to_string())
-    p = program.new_program()
-    echo(p.out)
+-- def main(args []string)
+def main()
     help()
+    flag = flags (
+        path: "./main.c"
+        write_to: "write_to..."
+    )
+    p = program.new_program()
+    p.parse(flag)

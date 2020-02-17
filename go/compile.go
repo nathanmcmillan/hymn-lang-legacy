@@ -116,7 +116,7 @@ func (me *hmfile) generateC() string {
 			continue
 		}
 		fun := me.functions[f]
-		if fun.forClass != nil {
+		if fun.forClass != nil && fun.forClass.name != filename {
 			continue
 		}
 		if f == "main" {
@@ -131,7 +131,7 @@ func (me *hmfile) generateC() string {
 	}
 
 	if debug {
-		fmt.Println("=== compile: end ===")
+		fmt.Println("=== end: " + filename + " ===")
 	}
 
 	fileCode := filepath.Join(folder, filename+".c")

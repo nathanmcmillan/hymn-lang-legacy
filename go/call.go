@@ -86,8 +86,8 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 					arg = fn.args[pix]
 				}
 				if param.data().notEquals(arg.data()) && !arg.data().isQuestion() {
-					err := "parameter \"" + param.data().print()
-					err += "\" does not match argument[" + strconv.Itoa(pix) + "] \"" + arg.data().print() + "\" for function \"" + name + "\""
+					err := "Parameter: " + param.data().print()
+					err += " does not match expected: " + arg.data().print() + " for function: " + name
 					panic(me.fail() + err)
 				}
 				params[pix] = param

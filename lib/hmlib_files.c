@@ -3,7 +3,7 @@
 size_t hmlib_file_size(const char *path) {
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
-        printf("could not open file");
+        printf("Could not open file: %s", path);
         exit(1);
     }
     size_t num = 0;
@@ -19,7 +19,7 @@ hmlib_string hmlib_cat(const char *path) {
     size_t size = hmlib_file_size(path);
     FILE *fp = fopen(path, "r");
     if (fp == NULL) {
-        printf("could not open file");
+        printf("Could not open file: %s", path);
         exit(1);
     }
     char *content = malloc((size + 1) * sizeof(char));
@@ -35,8 +35,8 @@ hmlib_string hmlib_cat(const char *path) {
 void hmlib_write(const char *path, const char *content) {
     FILE *fp = fopen(path, "a");
     if (fp == NULL) {
-        printf("could not open file");
-        exit(0);
+        printf("Could not open file: %s", path);
+        exit(1);
     }
     fputs(content, fp);
     fclose(fp);

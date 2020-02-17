@@ -39,7 +39,7 @@ const example = vec()
 const snap = snake.viper
 const woof = mammal.dog(type:7.2)
 
-function calc_me(x int) either<int,float>
+def calc_me(x int) either<int,float>
     if x < 10
         i = either<int,float>.one(first:6432)
         return i
@@ -47,10 +47,10 @@ function calc_me(x int) either<int,float>
         second: 5329.5
     )
 
-function omega_add() math.operation
+def omega_add() math.operation
     return math.operation.add
 
-function main
+def main
     a = snake.cobra
     b = snake.viper
     if a == b: echo("bad")

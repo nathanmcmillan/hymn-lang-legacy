@@ -1,0 +1,16 @@
+import "stream"
+import "tokenizer"
+
+class parser
+    out  string
+    path string
+
+def parse(out string, path string)
+    echo(out)
+    echo(path)
+    data = cat(path)
+    file_stream = stream.new_stream(data)
+    tokens = tokenizer.new_tokenizer(file_stream)
+    token = tokens.get(0)
+    echo(data)
+    echo(token.to_string())

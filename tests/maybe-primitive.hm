@@ -1,10 +1,10 @@
 
-function get_num(flag bool) maybe<int>
+def get_num(flag bool) maybe<int>
     if flag
         return 12
     return none
 
-function main()
+def main()
     x = get_num(true)
     y = get_num(false)
     match x

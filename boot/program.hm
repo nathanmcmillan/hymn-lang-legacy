@@ -1,12 +1,8 @@
-import "hashmap" (
-    hashmap
-    new_str_hashmap
-)
-import "hmlib" (
-    hm_lib
-    new_hm_lib
-)
+import "hashmap" (hashmap, new_str_map)
+import "hmlib" (hm_lib, new_hm_lib)
 import "hmfile" (hm_file)
+import "flags" (flags)
+import "parser"
 
 class program
     out          string
@@ -17,15 +13,18 @@ class program
     hm_file_map  hashmap<string, hm_file>
     hm_file_list []hm_file
     sources      hashmap<string, string>
+    module_uid   int
 
-function new_program() program
+def new_program() program
     return program (
-        out: ""
-        directory: ""
-        libs: ""
-        hm_lib_map: new_str_hashmap<string>()
+        hm_lib_map: new_str_map<string>()
         hm_library: new_hm_lib()
-        hm_file_map: new_str_hashmap<hm_file>()
-        hm_file_list: _
-        sources: new_str_hashmap<string>()
+        hm_file_map: new_str_map<hm_file>()
+        sources: new_str_map<string>()
     )
+
+program parse(flag flags)
+    uid = str(self.module_uid)
+    self.module_uid += 1
+    echo(uid)
+    parser.parse(flag.write_to, flag.path)

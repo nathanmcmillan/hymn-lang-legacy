@@ -78,14 +78,14 @@ hashmap clear()
         self.table[i] = none
     self.size = 0
 
-new_hashmap<k,v>(hash (k) int) hashmap<k,v>
+new_map<k,v>(hash (k) int) hashmap<k,v>
     return hashmap (
         capacity: 12
         get_code: hash
         table: [0:12]maybe<hashmap_item<k,v>>
     )
 
-new_str_hashmap<v>() hashmap<string,v>
+new_str_map<v>() hashmap<string,v>
     return hashmap (
         capacity: 12
         get_code: string_hashcode

@@ -70,3 +70,10 @@ hashset clear()
     iterate i, _ in self.table
         self.table[i] = none
     self.size = 0
+
+new_str_set() hashset<string>
+    return hashset (
+        capacity: 12
+        get_code: string_hashcode
+        table: [0:12]maybe<hashset_item<string>>
+    )

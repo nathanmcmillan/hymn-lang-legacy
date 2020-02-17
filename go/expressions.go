@@ -16,14 +16,14 @@ func (me *parser) fileExpression() {
 		me.immutable()
 	} else if op == "mutable" {
 		me.mutable()
-	} else if op == "function" || op == "id" {
+	} else if op == "def" || op == "id" {
 		me.defineNewFunction()
 	} else if op == "class" {
 		me.defineClass()
 	} else if op == "enum" {
 		me.defineEnum()
-	} else if op == "def" {
-		me.def()
+	} else if op == "macro" {
+		me.macro()
 	} else if op == "ifdef" {
 		me.ifdef()
 	} else if op == "elsedef" {
@@ -43,24 +43,9 @@ func (me *parser) expression() *node {
 	token := me.token
 	op := token.is
 	if op == "mutable" {
-		me.eat(op)
-		n := me.forceassign(me.eatvar(me.hmfile), true, true)
-		me.verify("line")
-		return n
-	}
-	if op == "id" {
-		name := token.value
-		if _, ok := me.hmfile.getFunction(name); ok {
-			return me.parseFn(me.hmfile)
-		}
-		n := me.eatvar(me.hmfile)
-		if me.assignable(n) {
-			n = me.assign(n, true, false)
-		} else if n.is != "call" {
-			panic(me.fail() + "expected assign or call expression for \"" + name + "\"")
-		}
-		me.verify("line")
-		return n
+		return me.parseMutable()
+	} else if op == "id" {
+		return me.parseIdent()
 	} else if op == "match" {
 		return me.parseMatch()
 	} else if op == "if" {
@@ -83,8 +68,8 @@ func (me *parser) expression() *node {
 		return me.label()
 	} else if op == "pass" {
 		return me.pass()
-	} else if op == "def" {
-		return me.def()
+	} else if op == "macro" {
+		return me.macro()
 	} else if op == "ifdef" {
 		return me.ifdef()
 	} else if op == "elsedef" {
@@ -97,6 +82,41 @@ func (me *parser) expression() *node {
 		return nil
 	}
 	panic(me.fail() + "unknown expression \"" + op + "\"")
+}
+
+func (me *parser) parseMutable() *node {
+	me.eat("mutable")
+	n := me.forceassign(me.eatvar(me.hmfile), true, true)
+	me.verify("line")
+	return n
+}
+
+func (me *parser) parseIdent() *node {
+
+	name := me.token.value
+	module := me.hmfile
+
+	if _, ok := module.imports[name]; ok && me.peek().is == "." {
+		return me.extern()
+	}
+
+	if _, ok := module.getType(name); ok {
+		if _, ok := module.getFunction(name); ok {
+			return me.parseFn(module)
+		}
+		panic(me.fail() + "Type '" + name + "' must be assigned.")
+	}
+
+	n := me.eatvar(me.hmfile)
+
+	if me.assignable(n) {
+		n = me.assign(n, true, false)
+	} else if n.is != "call" {
+		panic(me.fail() + "Expected assignment or call expression for '" + name + "'")
+	}
+
+	me.verify("line")
+	return n
 }
 
 func (me *parser) maybeIgnore(depth int) {
@@ -182,8 +202,8 @@ func (me *parser) parseReturn() *node {
 }
 
 func (me *parser) defineNewFunction() {
-	if me.token.is == "function" {
-		me.eat("function")
+	if me.token.is == "def" {
+		me.eat("def")
 	}
 	name := me.token.value
 	if _, ok := me.hmfile.classes[name]; ok {
@@ -359,12 +379,13 @@ func (me *parser) importing() {
 			module.types[en.uid()] = "enum"
 
 		} else if fn, ok := importing.functions[s]; ok {
-			if _, ok := module.types[fn.name]; ok {
-				panic(me.fail() + "Cannot import function \"" + cl.name + "\". It is already defined.")
+			name := fn.getname()
+			if _, ok := module.types[name]; ok {
+				panic(me.fail() + "Cannot import function \"" + name + "\". It is already defined.")
 			}
-			module.functions[fn.name] = fn
-			module.namespace[fn.name] = "function"
-			module.types[fn.name] = "function"
+			module.functions[name] = fn
+			module.namespace[name] = "function"
+			module.types[name] = "function"
 
 		} else if st, ok := importing.staticScope[s]; ok {
 			if _, ok := module.types[st.v.name]; ok {

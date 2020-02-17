@@ -1,8 +1,62 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "hymn",
+	"name": "Hymn",
 	"scopeName": "source.hymn",
 	"patterns": [
+		{
+			"begin": "^inline$",
+			"end": "^end$",
+			"captures": {
+				"0": {
+					"name": "keyword.struct.hymn"
+				}
+			},
+			"contentName": "embedded.c.hymn",
+			"patterns": [
+				{
+					"match": "//.*$",
+					"name": "comment.line.double-slash.c.hymn"
+				},
+				{
+					"match": "(#include) (.*)$",
+					"captures": {
+						"1": {
+							"name": "keyword.control.directive.include.c.hymn"
+						},
+						"2": {
+							"name": "string.quoted.other.lt-gt.include.c.hymn"
+						}
+					}
+				},
+				{
+					"match": "(#(?:ifndef|define|endif))(?:$|( .*$))",
+					"captures": {
+						"1": {
+							"name": "keyword.control.directive.include.c.hymn"
+						},
+						"2": {
+							"name": "entity.name.function.preprocessor.c.hymn"
+						}
+					}
+				},
+				{
+					"match": "\\b(char|int|float)\\b",
+					"captures": {
+						"1": {
+							"name": "storage.type.numeric.c.hymn"
+						}
+					}
+				},
+				{
+					"match": "\\b(struct)\\b",
+					"captures": {
+						"1": {
+							"name": "storage.type.struct.c.hymn"
+						}
+					}
+				}
+			]
+		},
 		{
 			"match": "#.*$",
 			"name": "comment.line.double-slash.hymn"

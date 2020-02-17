@@ -5,6 +5,7 @@ enum operation
     divide
 
 def main()
-    e = math.operation.add
-    # if not e is add
+    e = operation.add
     if e is not add : echo("no!")
+    if e is not multiply : echo("good!")
+    echo("done!")

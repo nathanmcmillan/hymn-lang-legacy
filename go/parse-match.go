@@ -1,8 +1,18 @@
 package main
 
+import "fmt"
+
 func (me *parser) parseIs(left *node, op string, n *node) *node {
 	n.copyData(newdataprimitive("bool"))
 	me.eat(op)
+
+	negate := false
+	if me.token.is == "not" {
+		me.eat("not")
+		negate = true
+	}
+	fmt.Println("negate!", negate)
+
 	var right *node
 	data := left.data()
 	if data.isSomeOrNone() {

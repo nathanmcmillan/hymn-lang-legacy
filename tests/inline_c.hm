@@ -1,0 +1,25 @@
+
+inline
+
+#ifndef HMLIB_SLICE_H
+#define HMLIB_SLICE_H
+
+#include <inttypes.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct head {
+
+};
+
+#endif
+
+end
+
+def main
+    echo(beans)
+    echo(4 + num)

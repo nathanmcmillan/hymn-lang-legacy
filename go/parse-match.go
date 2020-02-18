@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func (me *parser) parseIs(left *node, op string, n *node) *node {
 	n.copyData(newdataprimitive("bool"))
 	me.eat(op)
@@ -11,27 +9,21 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 		me.eat("not")
 		negate = true
 	}
-	fmt.Println("negate!", negate)
 
 	var right *node
 	data := left.data()
 	if data.isSomeOrNone() {
-		invert := false
-		if me.token.is == "not" {
-			invert = true
-			me.eat("not")
-		}
 		is := ""
 		if me.token.is == "some" {
 			me.eat("some")
-			if invert {
+			if negate {
 				is = "none"
 			} else {
 				is = "some"
 			}
 		} else if me.token.is == "none" {
 			me.eat("none")
-			if invert {
+			if negate {
 				is = "some"
 			} else {
 				is = "none"
@@ -42,8 +34,8 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 		if is == "some" {
 			right = nodeInit("some")
 			if me.token.is == "(" {
-				if invert {
-					panic(me.fail() + "inversion not allowed with value here.")
+				if negate {
+					panic(me.fail() + "Negation not allowed when declaring a variable here.")
 				}
 				me.eat("(")
 				temp := me.token.value
@@ -67,8 +59,8 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 		} else if is == "none" {
 			right = nodeInit("none")
 			if me.token.is == "(" {
-				if invert {
-					panic(me.fail() + "inversion not allowed with value here.")
+				if negate {
+					panic(me.fail() + "Negation not allowed when declaring a variable here.")
 				}
 				panic(me.fail() + "none type can't have a value here.")
 			}
@@ -83,9 +75,16 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 			if un, ok := baseEnum.types[name]; ok {
 				me.eat("id")
 				newenum := newdataenum(me.hmfile, baseEnum, un, copydatalist(data.generics))
-				right = nodeInit("match-enum")
+				if negate {
+					right = nodeInit("negate-match-enum")
+				} else {
+					right = nodeInit("match-enum")
+				}
 				right.setData(newenum)
 				if me.token.is == "(" {
+					if negate {
+						panic(me.fail() + "Negation not allowed when declaring a variable here.")
+					}
 					me.eat("(")
 					temp := me.token.value
 					me.eat("id")

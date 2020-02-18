@@ -1,0 +1,24 @@
+enum operation
+    add
+    subtract
+    multiply
+    divide
+
+def main()
+    e = operation.add
+
+    if e is not add : echo("no!")
+    if e is not multiply : echo("good!")
+
+    if not e is add : echo("no!")
+    if not e is multiply : echo("good!")
+
+    m = none<string>
+
+    if m is not none : echo("no!")
+    if m is not some : echo("good!")
+
+    if not m is none : echo("no!")
+    if not m is some : echo("good!")
+
+    echo("done!")

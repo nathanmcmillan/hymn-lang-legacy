@@ -70,9 +70,13 @@ func (me *cfile) compileIs(n *node) *codeblock {
 		code += "->type"
 	}
 
-	code += " == "
+	if caseOf.is == "negate-match-enum" {
+		code += " != "
+	} else {
+		code += " == "
+	}
 
-	if caseOf.is == "match-enum" {
+	if caseOf.is == "match-enum" || caseOf.is == "negate-match-enum" {
 		matchBaseEnum, matchBaseUn, _ := caseOf.data().isEnum()
 		matchBaseEnum = matchBaseEnum.baseEnum()
 		enNameSpace := matchBaseEnum.cname

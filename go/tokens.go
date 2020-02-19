@@ -208,6 +208,17 @@ func (me *tokenizer) forWord() string {
 	return value.String()
 }
 
+func (me *tokenizer) consumeDepth() {
+	spaces := me.depth * 4
+	stream := me.stream
+	for i := 0; i < spaces && !stream.eof(); i++ {
+		c := stream.next()
+		if c != ' ' {
+			panic("Bad spacing " + stream.fail())
+		}
+	}
+}
+
 func (me *tokenizer) forString() string {
 	stream := me.stream
 	stream.next()
@@ -216,6 +227,21 @@ func (me *tokenizer) forString() string {
 		c := stream.next()
 		if c == '"' {
 			break
+		}
+		if c == '\\' {
+			peek := stream.peek()
+			if peek == '\n' || peek == ' ' {
+				if peek == ' ' {
+					me.forSpace()
+					peek = stream.peek()
+					if peek != '\n' {
+						panic("Bad string " + stream.fail())
+					}
+				}
+				stream.next()
+				me.consumeDepth()
+				continue
+			}
 		}
 		value.WriteByte(c)
 	}

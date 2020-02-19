@@ -73,7 +73,22 @@
 			}
 		},
 		{
-			"match": "\".*?\"",
+			"begin": "\"",
+			"end": "\"",
+			"name": "string.quoted.double.hymn",
+			"captures": {
+				"0": {
+					"patterns": [
+						{
+							"match": "\\\\.",
+							"name": "constant.character.escape.hymn"
+						}
+					]
+				}
+			}
+		},
+		{
+			"match": "REMOVE_ME\".*?\"",
 			"name": "string.quoted.double.hymn",
 			"captures": {
 				"0": {

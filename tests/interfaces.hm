@@ -22,8 +22,16 @@ bar set(value int)
     self.two = value
 
 class special
-    first  get_and_set # void pointer internally?
+    first  get_and_set
     second get_and_set
+
+# there are two reasons for needing interfaces
+
+# 1. for generics we want a contract stating we know we can insert a given interface function at compile time
+#    this allows us to make statements such as generic:X has a get()
+
+# 2. given different structs we want a way to store/make calls to a single set containing them
+#    this requires significant runtime penalties and much more code behind the scenes
 
 main
     f = foo(2)

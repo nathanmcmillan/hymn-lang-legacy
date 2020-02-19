@@ -36,6 +36,7 @@ Learn more at https://hymn-lang.org
 * Class functions with generics
 * Automatic or manual default parameters using '_'
 * Configurable environment variables using $HYMN_MODULES
+* Multiline string declaration using '\'
 
 ### Timeline
 * Bootstrapping compiler from golang to hymn

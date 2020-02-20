@@ -1,0 +1,51 @@
+
+class get_and_set
+    pointer *
+    get (*) int
+    set (*, int)
+
+class foo
+    interface get_and_set
+    one int
+
+class bar
+    interface get_and_set
+    two int
+
+foo get() int
+    return self.one
+
+foo set(value int)
+    self.one = value
+
+bar get() int
+    return self.two
+
+bar set(value int)
+    self.two = value
+
+class special
+    first  get_and_set
+    second get_and_set
+
+main
+    i = interface (
+        get: foo.get
+        set: foo.set
+    )
+    f = foo(i, 2)
+    echo(f.one)
+
+    b = bar(3)
+    echo(b.two)
+
+    s = special (
+        first: f.interface
+        second: b.interface
+    )
+
+    s.first.set(4)
+    s.second.set(5)
+
+    echo(s.first.get())
+    echo(s.second.get())

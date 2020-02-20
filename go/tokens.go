@@ -77,6 +77,7 @@ var keywords = map[string]bool{
 	"in":         true,
 	"def":        true,
 	"class":      true,
+	"interface":  true,
 	TokenInt:     true,
 	TokenInt8:    true,
 	TokenInt16:   true,

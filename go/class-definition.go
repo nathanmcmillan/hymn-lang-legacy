@@ -9,6 +9,27 @@ func (me *parser) defineClass() {
 	}
 	me.eat("id")
 	genericsOrder, genericsDict := me.genericHeader()
+
+	var interfaces map[string]*classInterface
+	if me.token.is == ":" {
+		me.eat(":")
+		interfaces = make(map[string]*classInterface)
+		for {
+			interfaceName := me.token.value
+			me.eat("id")
+			in, ok := me.hmfile.interfaces[interfaceName]
+			if !ok {
+				panic(me.fail() + "Unknown interface: " + interfaceName)
+			}
+			interfaces[in.name] = in
+			if me.token.is == "," {
+				me.eat(",")
+				continue
+			}
+			break
+		}
+	}
+
 	me.eat("line")
 
 	uid := me.hmfile.reference(name)
@@ -19,7 +40,7 @@ func (me *parser) defineClass() {
 	me.hmfile.namespace[name] = "class"
 	me.hmfile.types[name] = "class"
 
-	classDef := classInit(me.hmfile, name, datatypels(genericsOrder), genericsDict)
+	classDef := classInit(me.hmfile, name, datatypels(genericsOrder), genericsDict, interfaces)
 
 	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{class: classDef})
 

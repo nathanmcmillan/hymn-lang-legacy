@@ -20,6 +20,8 @@ func (me *parser) fileExpression() {
 		me.defineNewFunction()
 	} else if op == "class" {
 		me.defineClass()
+	} else if op == "interface" {
+		me.defineInterface()
 	} else if op == "enum" {
 		me.defineEnum()
 	} else if op == "macro" {

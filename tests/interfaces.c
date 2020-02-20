@@ -15,11 +15,6 @@ struct get_and_set {
     void (*set)(void *self, int value);
 };
 
-union get_and_set_union {
-    foo *foo;
-    bar *bar;
-};
-
 struct foo {
     get_and_set interface;
     int one;
@@ -35,13 +30,11 @@ struct special {
     get_and_set *second;
 };
 
-int foo_get(void *_self) {
-    foo *self = (foo *)_self;
+int foo_get(foo *self) {
     return self->one;
 }
 
-void foo_set(void *_self, int value) {
-    foo *self = (foo *)_self;
+void foo_set(foo *self, int value) {
     self->one = value;
 }
 
@@ -58,8 +51,8 @@ void bar_set(void *_self, int value) {
 int main() {
 
     foo *f = calloc(1, sizeof(foo));
-    f->interface.get = &foo_get;
-    f->interface.set = &foo_set;
+    f->interface.get = (int (*)(void *self))(&foo_get);
+    f->interface.set = (void (*)(void *self, int value))(&foo_set);
 
     bar *b = calloc(1, sizeof(bar));
     b->interface.get = &bar_get;

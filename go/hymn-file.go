@@ -24,6 +24,7 @@ type hmfile struct {
 	importOrder     []string
 	crossref        map[*hmfile]string
 	classes         map[string]*class
+	interfaces      map[string]*classInterface
 	enums           map[string]*enum
 	defs            map[string]*node
 	defineOrder     []*defineType
@@ -61,6 +62,7 @@ func (program *program) hymnFileInit(uid string, name, out, path, libs string) *
 	hm.importOrder = make([]string, 0)
 	hm.crossref = make(map[*hmfile]string)
 	hm.classes = make(map[string]*class)
+	hm.interfaces = make(map[string]*classInterface)
 	hm.enums = make(map[string]*enum)
 	hm.defs = make(map[string]*node)
 	hm.statics = make([]*node, 0)

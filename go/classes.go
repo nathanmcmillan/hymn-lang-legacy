@@ -20,9 +20,10 @@ type class struct {
 	base            *class
 	implementations []*class
 	doNotDefine     bool
+	interfaces      map[string]*classInterface
 }
 
-func classInit(module *hmfile, name string, generics []string, genericsDict map[string]int) *class {
+func classInit(module *hmfile, name string, generics []string, genericsDict map[string]int, interfaces map[string]*classInterface) *class {
 	c := &class{}
 	c.module = module
 	c.name = name
@@ -39,6 +40,7 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 		c.implementations = make([]*class, 0)
 		c.doNotDefine = true
 	}
+	c.interfaces = interfaces
 	return c
 }
 

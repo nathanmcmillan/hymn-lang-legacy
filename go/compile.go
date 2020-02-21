@@ -16,19 +16,10 @@ func (me *hmfile) generateC() string {
 		fmt.Println("=== compile: " + filename + " ===")
 	}
 
-	cfile := me.cFileInit()
-	cfile.master = true
-
 	guard := me.headerFileGuard("", filename)
 
-	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
-	cfile.headStdIncludeSection.WriteString("#define " + guard + "\n")
-
-	cfile.headStdIncludeSection.WriteString("\n#include <stdio.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <stdlib.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <stdint.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <inttypes.h>")
-	cfile.headStdIncludeSection.WriteString("\n#include <stdbool.h>")
+	cfile := me.cFileInit(guard)
+	cfile.master = true
 
 	if len(me.importOrder) > 0 {
 		for _, iname := range me.importOrder {

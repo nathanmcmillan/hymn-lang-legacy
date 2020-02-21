@@ -10,5 +10,10 @@ const (
 
 // C Standard Library
 const (
-	CStdUnistd = "unistd"
+	CStdUnistd   = "unistd"
+	CStdIo       = "stdio"
+	CStdLib      = "stdlib"
+	CStdInt      = "stdint"
+	CStdIntTypes = "inttypes"
+	CStdBool     = "stdbool"
 )

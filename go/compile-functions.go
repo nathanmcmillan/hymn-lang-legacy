@@ -39,14 +39,14 @@ func (me *cfile) functionHead(fn *function) string {
 	args := fn.args
 	returns := fn.returns
 	var code strings.Builder
-	code.WriteString(fmtassignspace(returns.typeSig()) + fn.getcname() + "(")
+	code.WriteString(fmtassignspace(returns.typeSig(me)) + fn.getcname() + "(")
 	me.dependencyGraph(returns)
 	for ix, arg := range args {
 		me.dependencyGraph(arg.data())
 		if ix > 0 {
 			code.WriteString(", ")
 		}
-		code.WriteString(arg.data().typeSigOf(arg.name, false))
+		code.WriteString(arg.data().typeSigOf(me, arg.name, false))
 	}
 	code.WriteString(")")
 	return code.String()

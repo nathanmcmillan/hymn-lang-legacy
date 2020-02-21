@@ -31,12 +31,12 @@ func (me *cfile) compileDeclare(n *node) string {
 			newVar.cname = idata.getcname()
 			// code += fmtassignspace(data.noMallocTypeSig())
 			// code += fmtassignspace(data.typeSig())
-			code += data.typeSigOf(newVar.cname, true)
+			code += data.typeSigOf(me, newVar.cname, true)
 		} else if useStack {
-			code += fmtassignspace(data.typeSig())
+			code += fmtassignspace(data.typeSig(me))
 			code += name
 		} else {
-			code += data.typeSigOf(name, mutable)
+			code += data.typeSigOf(me, name, mutable)
 		}
 	} else {
 		code += v.cname
@@ -50,5 +50,5 @@ func (me *cfile) declareExtern(vnode *variableNode) string {
 	newv := v.data().getnamedvariable(name, v.mutable)
 	newv.cname = vnode.n.has[0].idata.getcname()
 	me.scope.variables[name] = newv
-	return newv.data().typeSigOf(newv.cname, true)
+	return newv.data().typeSigOf(me, newv.cname, true)
 }

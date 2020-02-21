@@ -30,7 +30,7 @@ func (me *cfile) compileAllocArray(n *node) *codeblock {
 		}
 	}
 
-	memberType := n.data().getmember().typeSig()
+	memberType := n.data().getmember().typeSig(me)
 	code := "malloc("
 	if parenthesis {
 		code += "("
@@ -86,9 +86,9 @@ func (me *cfile) compileAllocSlice(n *node) *codeblock {
 
 	me.libReq.add(HmLibSlice)
 	if capacity != "" {
-		code = "hmlib_slice_init(sizeof(" + n.data().getmember().typeSig() + "), " + size + ", " + capacity + ")"
+		code = "hmlib_slice_init(sizeof(" + n.data().getmember().typeSig(me) + "), " + size + ", " + capacity + ")"
 	} else {
-		code = "hmlib_slice_simple_init(sizeof(" + n.data().getmember().typeSig() + "), " + size + ")"
+		code = "hmlib_slice_simple_init(sizeof(" + n.data().getmember().typeSig(me) + "), " + size + ")"
 	}
 
 	if items != nil {
@@ -107,6 +107,6 @@ func (me *cfile) compileArrayToSlice(n *node) *codeblock {
 	array := n.has[0]
 	data := array.data()
 	me.libReq.add(HmLibSlice)
-	code := "hmlib_array_to_slice(" + array.idata.name + ", sizeof(" + data.getmember().typeSig() + "), " + data.arraySize() + ")"
+	code := "hmlib_array_to_slice(" + array.idata.name + ", sizeof(" + data.getmember().typeSig(me) + "), " + data.arraySize() + ")"
 	return codeBlockOne(n, code)
 }

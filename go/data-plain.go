@@ -848,11 +848,11 @@ func newdatafunction(funcSig *fnSig, parameters []*datatype, variadic *datatype,
 	return d
 }
 
-func (me *datatype) typeSigOf(name string, mutable bool) string {
+func (me *datatype) typeSigOf(cfile *cfile, name string, mutable bool) string {
 	code := ""
 	switch me.is {
 	case dataTypeFunction:
-		code += fmtassignspace(me.returns.typeSig())
+		code += fmtassignspace(me.returns.typeSig(cfile))
 		code += "(*"
 		if !mutable {
 			code += "const "
@@ -863,17 +863,17 @@ func (me *datatype) typeSigOf(name string, mutable bool) string {
 			if ix > 0 {
 				code += ", "
 			}
-			code += arg.typeSig()
+			code += arg.typeSig(cfile)
 		}
 		if me.variadic != nil {
 			if len(me.parameters) > 0 {
 				code += ", "
 			}
-			code += "..." + me.variadic.typeSig()
+			code += "..." + me.variadic.typeSig(cfile)
 		}
 		code += ")"
 	default:
-		sig := fmtassignspace(me.typeSig())
+		sig := fmtassignspace(me.typeSig(cfile))
 		if mutable || me.noConst() {
 			code += sig
 		} else if me.postfixConst() {
@@ -886,7 +886,7 @@ func (me *datatype) typeSigOf(name string, mutable bool) string {
 	return code
 }
 
-func (me *datatype) typeSig() string {
+func (me *datatype) typeSig(cfile *cfile) string {
 	switch me.is {
 	case dataTypeClass:
 		{
@@ -904,13 +904,13 @@ func (me *datatype) typeSig() string {
 		fallthrough
 	case dataTypeMaybe:
 		{
-			return me.member.typeSig()
+			return me.member.typeSig(cfile)
 		}
 	case dataTypeSlice:
 		fallthrough
 	case dataTypeArray:
 		{
-			return fmtptr(me.member.typeSig())
+			return fmtptr(me.member.typeSig(cfile))
 		}
 	case dataTypeUnknown:
 		fallthrough
@@ -919,6 +919,9 @@ func (me *datatype) typeSig() string {
 	case dataTypePrimitive:
 		{
 			if c, ok := getCName(me.canonical); ok {
+				if lib, ok := typeToStd[me.canonical]; ok {
+					cfile.stdReq.add(lib)
+				}
 				return c
 			}
 			return me.canonical
@@ -933,7 +936,7 @@ func (me *datatype) typeSig() string {
 	return ""
 }
 
-func (me *datatype) noMallocTypeSig() string {
+func (me *datatype) noMallocTypeSig(cfile *cfile) string {
 	switch me.is {
 	case dataTypeClass:
 		{
@@ -947,13 +950,13 @@ func (me *datatype) noMallocTypeSig() string {
 		fallthrough
 	case dataTypeMaybe:
 		{
-			return me.member.noMallocTypeSig()
+			return me.member.noMallocTypeSig(cfile)
 		}
 	case dataTypeSlice:
 		fallthrough
 	case dataTypeArray:
 		{
-			return fmtptr(me.member.noMallocTypeSig())
+			return fmtptr(me.member.noMallocTypeSig(cfile))
 		}
 	case dataTypeUnknown:
 		fallthrough
@@ -962,6 +965,9 @@ func (me *datatype) noMallocTypeSig() string {
 	case dataTypePrimitive:
 		{
 			if c, ok := getCName(me.canonical); ok {
+				if lib, ok := typeToStd[me.canonical]; ok {
+					cfile.stdReq.add(lib)
+				}
 				return c
 			}
 			return me.canonical

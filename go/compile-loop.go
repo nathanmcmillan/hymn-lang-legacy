@@ -97,7 +97,7 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 			arrayname = "iterate_" + me.temp()
 			array.attributes["assign"] = arrayname
 			me.scope.variables[arrayname] = array.data().getnamedvariable(arrayname, false)
-			code += array.data().typeSig() + arrayname + " = "
+			code += array.data().typeSig(me) + arrayname + " = "
 			code += me.eval(array).code()
 			code += ";\n" + fmc(me.depth)
 		}
@@ -124,7 +124,7 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 	code += "for (" + index + " = 0; " + index + " < " + getlen + "; " + index + "++) {\n"
 	if item != "" {
 		code += fmc(me.depth + 1)
-		code += fmtassignspace(array.data().getmember().typeSig()) + item + " = " + arrayname + "[" + index + "];\n"
+		code += fmtassignspace(array.data().getmember().typeSig(me)) + item + " = " + arrayname + "[" + index + "];\n"
 	}
 	code += block.code()
 	code += me.maybeNewLine(code) + fmc(me.depth) + "}"

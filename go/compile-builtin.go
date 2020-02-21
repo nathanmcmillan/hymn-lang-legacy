@@ -15,7 +15,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 				cb.prepend(param1.pre)
 				return cb
 			}
-			cb := codeBlockOne(n, "hmlib_slice_push_"+uses.typeSig()+"("+param0.pop()+", "+param1.pop()+")")
+			cb := codeBlockOne(n, "hmlib_slice_push_"+uses.typeSig(me)+"("+param0.pop()+", "+param1.pop()+")")
 			cb.prepend(param0.pre)
 			cb.prepend(param1.pre)
 			return cb

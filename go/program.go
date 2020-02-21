@@ -37,6 +37,17 @@ var (
 		TokenUInt64:    "uint64_t",
 		TokenLibSize:   "size_t",
 	}
+	typeToStd = map[string]string{
+		TokenBoolean: CStdBool,
+		TokenInt8:    CStdIntTypes,
+		TokenInt16:   CStdIntTypes,
+		TokenInt32:   CStdIntTypes,
+		TokenInt64:   CStdIntTypes,
+		TokenUInt8:   CStdIntTypes,
+		TokenUInt16:  CStdIntTypes,
+		TokenUInt32:  CStdIntTypes,
+		TokenUInt64:  CStdIntTypes,
+	}
 	literals = map[string]string{
 		TokenIntLiteral:     TokenInt,
 		TokenFloatLiteral:   TokenFloat,

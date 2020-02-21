@@ -14,11 +14,9 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string
 
 	module := me.hmfile
 
-	cfile := module.cFileInit()
 	guard := module.headerFileGuard(rootname, name)
 
-	cfile.headStdIncludeSection.WriteString("#ifndef " + guard + "\n")
-	cfile.headStdIncludeSection.WriteString("#define " + guard)
+	cfile := module.cFileInit(guard)
 
 	cfile.pathLocal = name
 	cfile.pathGlobal, _ = filepath.Rel(module.program.out, filepath.Join(folder, cfile.pathLocal))

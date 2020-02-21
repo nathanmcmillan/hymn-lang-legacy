@@ -19,7 +19,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 				tempv := temphas.data().getnamedvariable(tempname, false)
 				me.scope.renaming[idata] = tempname
 				me.scope.variables[tempname] = tempv
-				prepend := fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth)
+				prepend := fmtassignspace(match.data().typeSig(me)) + tempname + ";\n" + fmc(me.depth)
 				code := "(" + tempname + " = " + match.code() + ") != NULL"
 				cb := &codeblock{}
 				cb.prepend(codeBlockOne(n, prepend))
@@ -51,7 +51,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 			tempname = "match_" + me.temp()
 			tempv := temphas.data().getnamedvariable(tempname, false)
 			me.scope.variables[tempname] = tempv
-			prepend := fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth)
+			prepend := fmtassignspace(match.data().typeSig(me)) + tempname + ";\n" + fmc(me.depth)
 			assignment = "(" + tempname + " = " + match.code() + ")"
 			cb.prepend(codeBlockOne(n, prepend))
 		}
@@ -147,7 +147,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 						tempname = "match_" + me.temp()
 						tempv := temphas.data().getnamedvariable(tempname, false)
 						me.scope.variables[tempname] = tempv
-						code = fmtassignspace(match.data().typeSig()) + tempname + ";\n" + fmc(me.depth) + code
+						code = fmtassignspace(match.data().typeSig(me)) + tempname + ";\n" + fmc(me.depth) + code
 					}
 					me.scope.renaming[idata] = tempname
 					renaming = idata
@@ -237,7 +237,7 @@ func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeb
 	boolcode := ""
 
 	if casename != "" {
-		code += fmtassignspace(match.data().typeSig()) + tempname + " = " + matchcode + ";\n" + fmc(me.depth)
+		code += fmtassignspace(match.data().typeSig(me)) + tempname + " = " + matchcode + ";\n" + fmc(me.depth)
 		boolcode = tempname
 	} else {
 		boolcode = matchcode

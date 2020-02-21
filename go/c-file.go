@@ -5,6 +5,7 @@ import (
 )
 
 type cfile struct {
+	guard                    string
 	pathLocal                string
 	pathGlobal               string
 	hmfile                   *hmfile
@@ -31,8 +32,9 @@ type cfile struct {
 	master                   bool
 }
 
-func (me *hmfile) cFileInit() *cfile {
+func (me *hmfile) cFileInit(guard string) *cfile {
 	c := &cfile{}
+	c.guard = guard
 	c.hmfile = me
 	c.rootScope = scopeInit(nil)
 	c.scope = c.rootScope
@@ -74,9 +76,28 @@ func (me *cfile) getvar(name string) *variable {
 	}
 }
 
+func (me *cfile) includeLibs() {
+	for _, name := range me.stdReq.order {
+		me.headStdIncludeSection.WriteString("\n#include <" + name + ".h>")
+	}
+	for _, name := range me.libReq.order {
+		location := me.hmfile.program.hmlibmap[name]
+		me.hmfile.program.sources[name] = location
+		me.headLibIncludeSection.WriteString("\n#include \"" + name + ".h\"")
+	}
+	if !me.master {
+		me.dependencyReq.delete(me.pathLocal)
+		for _, name := range me.dependencyReq.order {
+			me.headReqIncludeSection.WriteString("\n#include \"" + name + ".h\"")
+		}
+	}
+}
+
 func (me *cfile) head() string {
 	me.includeLibs()
 	var head strings.Builder
+	head.WriteString("#ifndef " + me.guard + "\n")
+	head.WriteString("#define " + me.guard + "\n")
 	if me.headStdIncludeSection.Len() != 0 {
 		head.WriteString(me.headStdIncludeSection.String())
 		head.WriteString("\n")
@@ -106,21 +127,4 @@ func (me *cfile) head() string {
 	head.WriteString(me.headFuncSection.String())
 	head.WriteString(me.headSuffix.String())
 	return head.String()
-}
-
-func (me *cfile) includeLibs() {
-	for _, name := range me.stdReq.order {
-		me.headStdIncludeSection.WriteString("\n#include <" + name + ".h>")
-	}
-	for _, name := range me.libReq.order {
-		location := me.hmfile.program.hmlibmap[name]
-		me.hmfile.program.sources[name] = location
-		me.headLibIncludeSection.WriteString("\n#include \"" + name + ".h\"")
-	}
-	if !me.master {
-		me.dependencyReq.delete(me.pathLocal)
-		for _, name := range me.dependencyReq.order {
-			me.headReqIncludeSection.WriteString("\n#include \"" + name + ".h\"")
-		}
-	}
 }

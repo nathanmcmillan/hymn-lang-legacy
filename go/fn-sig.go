@@ -39,3 +39,24 @@ func (me *fnSig) print() string {
 func (me *fnSig) newdatatype() *datatype {
 	return getdatatype(nil, me.print())
 }
+
+func (me *fnSig) equals(b *fnSig) bool {
+	if len(me.args) != len(b.args) {
+		return false
+	}
+	if me.argVariadic != nil || b.argVariadic != nil {
+		if me.argVariadic == nil || b.argVariadic == nil || me.argVariadic.data().notEquals(b.argVariadic.data()) {
+			return false
+		}
+	}
+	if me.returns.notEquals(b.returns) {
+		return false
+	}
+	for i, pa := range me.args {
+		pb := b.args[i]
+		if pa.data().notEquals(pb.data()) {
+			return false
+		}
+	}
+	return true
+}

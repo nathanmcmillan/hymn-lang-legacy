@@ -39,6 +39,8 @@ func (me *parser) defineInterface() {
 				panic(me.fail() + "Interface must define a function signature, but found: " + mtype.error())
 			}
 			me.eat("line")
+			self := fnArgInit(newdataany().getvariable())
+			sig.args = append([]*funcArg{self}, sig.args...)
 			functions[mname] = sig
 			continue
 		}

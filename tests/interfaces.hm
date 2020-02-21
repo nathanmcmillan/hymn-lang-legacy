@@ -34,7 +34,7 @@ bar write(value uint8)
 
 main
     f = foo(2)
-    f.set(3)
+    # f.set(3)
     echo(f.get())
 
     b = bar(4, uint8 5)

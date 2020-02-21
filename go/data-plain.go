@@ -92,7 +92,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	if typed == "?" {
-		return newdataunknown(nil, nil, typed, nil)
+		return newdataany()
 	}
 
 	if typed == TokenString {
@@ -813,6 +813,10 @@ func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype)
 	}
 
 	return d
+}
+
+func newdataany() *datatype {
+	return newdataunknown(nil, nil, "?", nil)
 }
 
 func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics []*datatype) *datatype {

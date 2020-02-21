@@ -109,6 +109,8 @@ func (me *hmfile) parse(out, path string) {
 		}
 	}
 
+	parsing.verifyFile()
+
 	if tokenFile != nil {
 		tokenFile.WriteString("\n\t]\n}\n")
 	}

@@ -2,17 +2,23 @@ package main
 
 func (me *parser) verifyFile() {
 	module := me.hmfile
-	// TODO: do something about duplicates
-	for _, cl := range module.classes {
+	for _, def := range module.defineOrder {
+		cl := def.class
+		if cl == nil {
+			continue
+		}
 		for iname, in := range cl.interfaces {
 			for fname, infn := range in.functions {
 				if clfn, ok := cl.functions[fname]; ok {
 					sig := clfn.asSig()
-					if sig.equals(infn) {
-						panic(me.fail() + "Class '" + cl.name + "' function signature '" + fname + "' " + sig.print() + " does not match interface '" + iname + "' " + infn.print())
-					} else {
-						panic(me.fail() + "Class '" + cl.name + "' Missing " + fname + " for interface '" + iname + "'")
+					if !sig.equals(infn) {
+						e := me.fail()
+						e += "Class '" + cl.name + "' with function '" + fname + sig.print() + "'"
+						e += " does not match interface '" + iname + "' with '" + fname + infn.print() + "'"
+						panic(e)
 					}
+				} else {
+					panic(me.fail() + "Class '" + cl.name + "' is missing function '" + fname + infn.print() + "' for interface '" + iname + "'")
 				}
 			}
 		}

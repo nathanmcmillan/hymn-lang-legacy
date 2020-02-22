@@ -17,7 +17,7 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 		}
 		arg := sig.args[ix]
 		param := me.calc(0, arg.data())
-		if param.data().notEquals(arg.data()) && !arg.data().isQuestion() {
+		if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 			err := "parameter \"" + param.data().print()
 			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().print() + "\" of function signature \"" + sig.print() + "\""
 			panic(me.fail() + err)
@@ -47,7 +47,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			param := me.calc(0, nil)
 			aix := fn.argDict[argname]
 			arg := fn.args[aix]
-			if param.data().notEquals(arg.data()) && !arg.data().isQuestion() {
+			if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 				err := "parameter \"" + param.data().print()
 				err += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().print() + "\" for function \"" + name + "\""
 				panic(me.fail() + err)
@@ -85,7 +85,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 				if arg == nil {
 					arg = fn.args[pix]
 				}
-				if param.data().notEquals(arg.data()) && !arg.data().isQuestion() {
+				if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 					err := "Parameter: " + param.data().print()
 					err += " does not match expected: " + arg.data().print() + " for function: " + name
 					panic(me.fail() + err)

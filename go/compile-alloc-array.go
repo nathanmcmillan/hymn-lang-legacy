@@ -31,6 +31,7 @@ func (me *cfile) compileAllocArray(n *node) *codeblock {
 	}
 
 	memberType := n.data().getmember().typeSig(me)
+	me.stdReq.add(CStdLib)
 	code := "malloc("
 	if parenthesis {
 		code += "("

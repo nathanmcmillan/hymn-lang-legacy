@@ -1,0 +1,80 @@
+
+interface get_and_set
+    get() int
+    set(int)
+
+interface read_and_write
+    read() uint8
+    write(uint8)
+
+class foo: get_and_set
+    one int
+
+class bar: get_and_set, read_and_write
+    two   int
+    three uint8
+
+class bar
+    with get_and_set
+    with read_and_write
+    two   int
+    three uint8
+
+foo get() int
+    return self.one
+
+foo set(value int)
+    self.one = value
+
+bar get() int
+    return self.two
+
+bar set(value int)
+    self.two = value
+
+bar read() uint8
+    return self.three + uint8 1
+
+bar write(value uint8)
+    self.three += value
+
+class baz<x:get_and_set, y:get_and_set+read_and_write>
+    four x
+    five y
+
+class baz<x,y>
+    where x: get_and_set
+    where y: get_and_set, read_and_write
+    four x
+    five y
+
+def my_func<x,y>(one x, two y)
+    where x: get_and_set
+    where y: get_and_set, read_and_write
+    one.set(8)
+    two.set(9)
+    two.write(uint8 10)
+    echo("1.", one.get())
+    echo("2.", two.get())
+    echo("3.", two.read())
+
+def my_func<x:get_and_set, y:get_and_set+read_and_write>(one x, two y)
+    one.set(8)
+    two.set(9)
+    two.write(uint8 10)
+    echo("1.", one.get())
+    echo("2.", two.get())
+    echo("3.", two.read())
+
+main
+    f = foo(2)
+    f.set(3)
+    echo(f.get())
+
+    b = bar(4, uint8 5)
+    b.set(6)
+    echo(b.get())
+    b.write(uint8 7)
+    echo(b.read())
+
+    my_func(f, b)

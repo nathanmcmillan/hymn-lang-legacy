@@ -1,22 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 const (
-	dataTypePrimitive = 0
-	dataTypeMaybe     = 1
-	dataTypeArray     = 2
-	dataTypeFunction  = 3
-	dataTypeClass     = 4
-	dataTypeEnum      = 5
-	dataTypeUnknown   = 6
-	dataTypeNone      = 7
-	dataTypeSlice     = 8
-	dataTypeString    = 9
-	dataTypeVoid      = 10
+	dataTypePrimitive  = 0
+	dataTypeMaybe      = 1
+	dataTypeArray      = 2
+	dataTypeFunction   = 3
+	dataTypeClass      = 4
+	dataTypeEnum       = 5
+	dataTypeUnknown    = 6
+	dataTypeNone       = 7
+	dataTypeSlice      = 8
+	dataTypeString     = 9
+	dataTypeVoid       = 10
+	dataTypeAny        = 11
+	dataTypeAnyPointer = 12
 )
 
 type datatype struct {
@@ -93,6 +96,10 @@ func getdatatype(me *hmfile, typed string) *datatype {
 
 	if typed == "?" {
 		return newdataany()
+	}
+
+	if typed == "*" {
+		return newdataanypointer()
 	}
 
 	if typed == TokenString {
@@ -342,8 +349,12 @@ func (me *datatype) isRecursiveUnknown() bool {
 	return false
 }
 
-func (me *datatype) isQuestion() bool {
-	return me.is == dataTypeUnknown && me.canonical == "?"
+func (me *datatype) isAnyType() bool {
+	return me.is == dataTypeAny
+}
+
+func (me *datatype) isAnyPointerType() bool {
+	return me.is == dataTypeAnyPointer
 }
 
 func (me *datatype) isVoid() bool {
@@ -465,9 +476,24 @@ func (me *datatype) standardEquals(b *datatype) bool {
 }
 
 func (me *datatype) equals(b *datatype) bool {
+	if me.isAnyType() || b.isAnyType() {
+		return true
+	} else if b.is == dataTypeAnyPointer {
+		if me.is == dataTypeAnyPointer {
+			return true
+		}
+		fmt.Println("me.isPointer :=", me.isPointer())
+		return me.isPointer()
+	}
 	switch me.is {
+	case dataTypeAnyPointer:
+		if b.is == dataTypeAnyPointer {
+			return true
+		}
+		fmt.Println("b.isPointer :=", b.isPointer())
+		return b.isPointer()
 	case dataTypeVoid:
-		return false
+		return b.is == dataTypeVoid
 	case dataTypeClass:
 		{
 			for b.is == dataTypeMaybe {
@@ -597,8 +623,12 @@ func (me *datatype) nameIs() string {
 		return "none"
 	case dataTypeVoid:
 		return "void"
+	case dataTypeAny:
+		return "?"
+	case dataTypeAnyPointer:
+		return "*"
 	}
-	panic("missing data type " + strconv.Itoa(me.is))
+	panic("Missing data type " + strconv.Itoa(me.is))
 }
 
 func (me *datatype) cname() string {
@@ -665,6 +695,10 @@ func (me *datatype) print() string {
 	case dataTypeUnknown:
 		fallthrough
 	case dataTypeString:
+		fallthrough
+	case dataTypeAny:
+		fallthrough
+	case dataTypeAnyPointer:
 		fallthrough
 	case dataTypePrimitive:
 		{
@@ -816,7 +850,15 @@ func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype)
 }
 
 func newdataany() *datatype {
-	return newdataunknown(nil, nil, "?", nil)
+	d := newdatatype(dataTypeAny)
+	d.canonical = "?"
+	return d
+}
+
+func newdataanypointer() *datatype {
+	d := newdatatype(dataTypeAny)
+	d.canonical = "*"
+	return d
 }
 
 func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics []*datatype) *datatype {

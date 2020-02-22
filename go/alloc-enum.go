@@ -87,7 +87,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 					}
 					gtypes = newtypes
 
-				} else if param.data().notEquals(unvar) && !unvar.isQuestion() {
+				} else if param.data().notEquals(unvar) && !unvar.isAnyType() {
 					err := "Parameter: " + vname + " with type \"" + param.data().print()
 					err += "\" does not match class variable \"" + en.join(un) + "."
 					err += vname + "\" with type \"" + unvar.print() + "\""
@@ -126,7 +126,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 					}
 					gtypes = newtypes
 
-				} else if param.data().notEquals(unvar) && !unvar.isQuestion() {
+				} else if param.data().notEquals(unvar) && !unvar.isAnyType() {
 					err := "Parameter " + strconv.Itoa(pix) + " with type: " + param.data().print()
 					err += " does not match enum variable: " + en.join(un) + "."
 					err += strconv.Itoa(pix) + "\" with type: " + unvar.print()
@@ -185,7 +185,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 			en = module.enums[typed]
 		} else {
 			assign := me.hmfile.peekAssignStack()
-			if assign != nil && !assign.isQuestion() {
+			if assign != nil && !assign.isAnyType() {
 				var d *datatype
 				if assign.isSome() || assign.isArrayOrSlice() {
 					d = assign.getmember()

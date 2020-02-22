@@ -35,7 +35,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if !sv.mutable {
 				panic(me.fail() + "Variable: " + sv.name + " is not mutable.")
 			}
-			if !right.data().isQuestion() && left.data().notEquals(right.data()) {
+			if !right.data().isAnyType() && left.data().notEquals(right.data()) {
 				enleft, _, ok1 := left.data().isEnum()
 				enright, _, ok2 := right.data().isEnum()
 				if ok1 && ok2 && enleft == enright {
@@ -60,7 +60,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			me.hmfile.scope.variables[left.idata.name] = varini
 		}
 	} else if left.is == "member-variable" || left.is == "array-member" {
-		if !right.data().isQuestion() && left.data().notEquals(right.data()) {
+		if !right.data().isAnyType() && left.data().notEquals(right.data()) {
 			if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {

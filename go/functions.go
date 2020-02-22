@@ -264,7 +264,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		}
 		fn.returns = me.declareType()
 	} else {
-		fn.returns = getdatatype(module, "void")
+		fn.returns = newdatavoid()
 	}
 	me.eat("line")
 

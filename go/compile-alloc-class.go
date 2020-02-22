@@ -35,6 +35,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 		cl, _ := data.isClass()
 		code := ""
 		if !useStack {
+			me.stdReq.add(CStdLib)
 			code += "malloc(sizeof(" + typed + "))"
 		}
 		params := n.has

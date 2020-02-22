@@ -39,7 +39,7 @@ func (me *parser) declareFn() *datatype {
 	if me.token.is != "line" && me.token.is != "," {
 		fn.returns = me.declareType()
 	} else {
-		fn.returns = getdatatype(me.hmfile, "void")
+		fn.returns = newdatavoid()
 	}
 
 	return fn.newdatatype()
@@ -97,7 +97,11 @@ func (me *parser) declareType() *datatype {
 	}
 
 	if value == "?" {
-		return newdataunknown(nil, nil, value, nil)
+		return newdataany()
+	}
+
+	if value == "*" {
+		return newdataany()
 	}
 
 	if value == TokenString {

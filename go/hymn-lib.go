@@ -98,7 +98,7 @@ func (me *hmlib) newLibSimplePrint(name string, ret string) {
 
 func (me *hmlib) initPush() {
 	fn := funcInit(nil, libPush, nil)
-	fn.returns = getdatatype(nil, "?")
+	fn.returns = newdataany()
 	fn.args = append(fn.args, me.fnArgInit("?", "a", false))
 	fn.args = append(fn.args, me.fnArgInit("?", "v", false))
 	me.functions[libPush] = fn
@@ -135,7 +135,7 @@ func (me *hmlib) initIO() {
 
 	fnName = "close"
 	fn = funcInit(nil, fnName, classDef)
-	fn.returns = getdatatype(nil, "void")
+	fn.returns = newdatavoid()
 	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
 	me.functions[fn.getname()] = fn
 	me.types[fn.getname()] = ""

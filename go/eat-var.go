@@ -7,7 +7,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 	if from == me.hmfile {
 		sv := from.getvar(localvarname)
 		if sv == nil {
-			head.copyData(getdatatype(me.hmfile, "?"))
+			head.copyData(newdataany())
 		} else {
 			head.copyData(sv.data())
 		}

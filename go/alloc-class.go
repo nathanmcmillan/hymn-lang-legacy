@@ -94,7 +94,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 					}
 					gtypes = newtypes
 
-				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
+				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isAnyType() {
 					err := "parameter \"" + vname + "\" with type \"" + param.data().print()
 					err += "\" does not match class variable \"" + cl.name + "."
 					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
@@ -133,7 +133,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 					}
 					gtypes = newtypes
 
-				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isQuestion() {
+				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isAnyType() {
 					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().print()
 					err += "\" does not match class variable \"" + cl.name + "."
 					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
@@ -190,7 +190,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 			cl = module.classes[typed]
 		} else {
 			assign := me.hmfile.peekAssignStack()
-			if assign != nil && !assign.isQuestion() {
+			if assign != nil && !assign.isAnyType() {
 				var d *datatype
 				if assign.isSome() || assign.isArrayOrSlice() {
 					d = assign.getmember()

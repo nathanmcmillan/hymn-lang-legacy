@@ -4,19 +4,21 @@ func (me *parser) defineInterface() {
 	me.eat("interface")
 	token := me.token
 	name := token.value
-	if _, ok := me.hmfile.namespace[name]; ok {
+	module := me.hmfile
+	if _, ok := module.namespace[name]; ok {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
+	generics, _ := me.genericHeader()
 	me.eat("line")
 
-	uid := me.hmfile.reference(name)
+	uid := module.reference(name)
 
-	me.hmfile.namespace[uid] = "interface"
-	me.hmfile.types[uid] = "interface"
+	module.namespace[uid] = "interface"
+	module.types[uid] = "interface"
 
-	me.hmfile.namespace[name] = "interface"
-	me.hmfile.types[name] = "interface"
+	module.namespace[name] = "interface"
+	module.types[name] = "interface"
 
 	functions := make(map[string]*fnSig)
 
@@ -47,8 +49,8 @@ func (me *parser) defineInterface() {
 		panic(me.fail() + "Bad token '" + token.is + "' in interface '" + name + "' definition")
 	}
 
-	interfaceDef := interfaceInit(me.hmfile, name, functions)
+	interfaceDef := interfaceInit(module, name, generics, functions)
 
-	me.hmfile.interfaces[uid] = interfaceDef
-	me.hmfile.interfaces[name] = interfaceDef
+	module.interfaces[uid] = interfaceDef
+	module.interfaces[name] = interfaceDef
 }

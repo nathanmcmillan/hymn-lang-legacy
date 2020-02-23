@@ -31,14 +31,24 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 
 func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *function) []*node {
 	me.eat("(")
+	if me.token.is == "line" {
+		me.eat("line")
+	}
 	min := pix
 	dict := false
+	size := len(fn.args)
 	for {
 		if me.token.is == ")" {
-			me.eat(")")
 			break
 		} else if pix > min || dict {
-			me.eat(",")
+			if me.token.is == "line" {
+				me.eat("line")
+				if me.token.is == ")" {
+					break
+				}
+			} else {
+				me.eat(",")
+			}
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
 			argname := me.token.value
@@ -59,7 +69,6 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			panic(me.fail() + "regular paramater found after mapped parameter")
 		} else {
 			var arg *funcArg
-			size := len(fn.args)
 			if pix >= size {
 				if fn.argVariadic != nil {
 					arg = fn.argVariadic
@@ -95,6 +104,7 @@ func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *
 			pix++
 		}
 	}
+	me.eat(")")
 	for ix, param := range params {
 		if param == nil {
 			var arg *funcArg

@@ -1,0 +1,38 @@
+
+def my_very_big_func(
+    one int
+    two int8
+    three int16
+    four int32
+    five int64
+    six uint
+    seven uint8
+    eight uint16
+    nine uint32
+    ten uint64)
+
+    echo(one)
+    echo(two)
+    echo(three)
+    echo(four)
+    echo(five)
+    echo(six)
+    echo(seven)
+    echo(eight)
+    echo(nine)
+    echo(ten)
+
+def main
+    my_very_big_func(
+        int 0
+        int8 1
+        int16 2
+        int32 3
+        int64 4
+        uint 5
+        uint8 6
+        uint16 7
+        uint32 8
+        uint64 9
+    )
+    echo("done!")

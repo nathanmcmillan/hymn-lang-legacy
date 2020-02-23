@@ -1,29 +1,56 @@
 package main
 
+import "fmt"
+
 func (me *parser) defineClass() {
 	me.eat("class")
 	token := me.token
 	name := token.value
-	if _, ok := me.hmfile.namespace[name]; ok {
+	module := me.hmfile
+	if _, ok := module.namespace[name]; ok {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
 	genericsOrder, genericsDict := me.genericHeader()
 
 	var interfaces map[string]*classInterface
-	if me.token.is == ":" {
-		me.eat(":")
+	if me.token.is == "line" && me.peek().is == "implements" {
+		me.eat("line")
+	}
+	if me.token.is == "implements" {
+		me.eat("implements")
 		interfaces = make(map[string]*classInterface)
 		for {
 			interfaceName := me.token.value
 			me.eat("id")
-			in, ok := me.hmfile.interfaces[interfaceName]
+			in, ok := module.interfaces[interfaceName]
 			if !ok {
 				panic(me.fail() + "Unknown interface: " + interfaceName)
 			}
+			if in.requiresGenerics() {
+				generics := me.declareGeneric(len(in.generics))
+				if len(generics) != len(in.generics) {
+					e := me.fail()
+					e += "Class '" + name + "' implementing interface '" + in.name + "' does not have correct generics."
+					panic(e)
+				}
+				intname := in.name + genericslist(generics)
+				fmt.Println("INTERFACE ::", intname)
+				if gotInterface, ok := module.interfaces[intname]; ok {
+					in = gotInterface
+				} else {
+					in = me.defineInterfaceImplementation(in, generics)
+				}
+				for _, fn := range in.functions {
+					fmt.Println("INTERFACE FINAL ::", fn.print())
+				}
+			}
 			interfaces[in.name] = in
-			if me.token.is == "," {
-				me.eat(",")
+			if me.token.is == "line" && me.peek().is == "and" {
+				me.eat("line")
+			}
+			if me.token.is == "and" {
+				me.eat("and")
 				continue
 			}
 			break
@@ -32,20 +59,20 @@ func (me *parser) defineClass() {
 
 	me.eat("line")
 
-	uid := me.hmfile.reference(name)
+	uid := module.reference(name)
 
-	me.hmfile.namespace[uid] = "class"
-	me.hmfile.types[uid] = "class"
+	module.namespace[uid] = "class"
+	module.types[uid] = "class"
 
-	me.hmfile.namespace[name] = "class"
-	me.hmfile.types[name] = "class"
+	module.namespace[name] = "class"
+	module.types[name] = "class"
 
-	classDef := classInit(me.hmfile, name, datatypels(genericsOrder), genericsDict, interfaces)
+	classDef := classInit(module, name, datatypels(genericsOrder), genericsDict, interfaces)
 
-	me.hmfile.defineOrder = append(me.hmfile.defineOrder, &defineType{class: classDef})
+	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})
 
-	me.hmfile.classes[uid] = classDef
-	me.hmfile.classes[name] = classDef
+	module.classes[uid] = classDef
+	module.classes[name] = classDef
 
 	memberOrder := make([]string, 0)
 	memberMap := make(map[string]*variable)

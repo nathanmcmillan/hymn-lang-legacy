@@ -1,0 +1,46 @@
+
+interface get_and_set<x>
+    get() x
+    set(x)
+
+interface read_and_write<y,z>
+    read() y
+    write(z)
+
+class foo implements get_and_set<int>
+    one int
+
+class bar<k,v>
+    implements get_and_set<k> and read_and_write<k,v>
+    two   k
+    three v
+
+foo get() int
+    return self.one
+
+foo set(value int)
+    self.one = value
+
+bar get() k
+    return self.two
+
+bar set(value k)
+    self.two = value
+
+bar read() k
+    return self.get()
+
+bar write(value v)
+    self.three = value
+
+def main
+    f = foo(2)
+    f.set(3)
+    echo(f.get())
+
+    b = bar(4, uint8 5)
+    b.set(6)
+    echo(b.get())
+    b.write(uint8 7)
+    echo(b.read())
+    echo(b.three)

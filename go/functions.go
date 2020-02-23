@@ -209,11 +209,14 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 	parenthesis := false
 	if me.token.is == "(" {
 		me.eat("(")
+		if me.token.is == "line" {
+			me.eat("line")
+		}
 		parenthesis = true
 		if me.token.is != ")" {
 			for {
 				if me.token.is != "id" {
-					panic(me.fail() + "unexpected token in function definition")
+					panic(me.fail() + "Unexpected token in function definition")
 				}
 				argname := me.token.value
 				me.eat("id")
@@ -247,6 +250,8 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 				fn.args = append(fn.args, fnArg)
 				if me.token.is == ")" {
 					break
+				} else if me.token.is == "line" {
+					me.eat("line")
 				} else {
 					me.eat(",")
 				}

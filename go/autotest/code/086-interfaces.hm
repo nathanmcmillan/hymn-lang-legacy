@@ -7,10 +7,11 @@ interface read_and_write
     read() uint8
     write(uint8)
 
-class foo: get_and_set
+class foo implements get_and_set
     one int
 
-class bar: get_and_set, read_and_write
+class bar
+    implements get_and_set and read_and_write
     two   int
     three uint8
 

@@ -174,7 +174,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	gsize := len(en.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
-			gtypes := me.declareGeneric(en)
+			gtypes := me.declareGeneric(len(en.generics))
 			if len(gtypes) != len(en.generics) {
 				panic(me.fail() + "Enum \"" + en.name + " with implementation " + fmt.Sprint(gtypes) + " does not match " + fmt.Sprint(en.generics))
 			}

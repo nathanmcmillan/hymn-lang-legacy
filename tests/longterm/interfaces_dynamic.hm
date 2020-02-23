@@ -11,10 +11,10 @@ interface get_and_set
     get() int
     set(value int)
 
-class foo: dynamic get_and_set
+class foo implements dynamic get_and_set
     one int
 
-class bar: dynamic get_and_set
+class bar implements dynamic get_and_set
     two int
 
 foo get() int

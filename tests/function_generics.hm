@@ -1,0 +1,52 @@
+int_hashcode(key int) int
+    return key
+
+interface linked_list<k, v is linked_list>
+    get_next() maybe<hashtable_item<k,v>>
+
+class hashtable_item <
+        k is get_and_set
+        v is get_and_set and read_and_write
+    >
+    implements linked_list<k>
+    code  int
+    key   k
+    value v
+    next  maybe<hashtable_item<k,v>>
+
+class hashtable<k,v>
+    size     int
+    capacity int
+    get_code (k) int
+    table    []maybe<hashtable_item<k,v>>
+
+class hashtable <
+        k is get_and_set
+        v is get_and_set and read_and_write
+    >
+    size     int
+    capacity int
+    get_code (k) int
+    table    []maybe<hashtable_item<k,v>>
+
+def new_hashtable(hash (k) int) hashtable<k,v> where [
+        k is get_and_set
+        v is get_and_set and read_and_write
+    ]
+    table = hashtable (
+        capacity: 12
+        get_code: hash
+        table: [0:12]maybe<hashtable_item<k,v>>
+    )
+    return table
+
+def thing(a k, b v) linked_list<k,v> [k,v]
+    return linked_list(a, b)
+
+main
+    m = new_hashtable<int,float>(int_hashcode)
+    echo(m.size)
+    echo(m.capacity)
+    echo(len(m.table))
+    echo(cap(m.table))
+    echo("---")

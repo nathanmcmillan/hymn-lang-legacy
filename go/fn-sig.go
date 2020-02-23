@@ -60,3 +60,23 @@ func (me *fnSig) equals(b *fnSig) bool {
 	}
 	return true
 }
+
+func (me *fnSig) genericsReplacer(parser *parser, mapping map[string]string) *fnSig {
+
+	sig := &fnSig{}
+	sig.module = me.module
+
+	if me.argVariadic != nil {
+		sig.argVariadic = parser.genericsReplacer(parser.hmfile, me.argVariadic.data(), mapping).tofnarg()
+	}
+
+	sig.returns = parser.genericsReplacer(parser.hmfile, me.returns, mapping)
+
+	sig.args = make([]*funcArg, len(me.args))
+
+	for i, a := range me.args {
+		sig.args[i] = parser.genericsReplacer(parser.hmfile, a.data(), mapping).tofnarg()
+	}
+
+	return sig
+}

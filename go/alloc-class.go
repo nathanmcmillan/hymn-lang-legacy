@@ -179,7 +179,7 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	gsize := len(cl.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
-			gtypes := me.declareGeneric(cl)
+			gtypes := me.declareGeneric(len(cl.generics))
 			if len(gtypes) != gsize {
 				panic(me.fail() + "Class:" + cl.name + " with implementation " + fmt.Sprint(gtypes) + " does not match " + fmt.Sprint(cl.generics))
 			}

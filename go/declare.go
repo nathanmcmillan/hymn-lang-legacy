@@ -4,11 +4,10 @@ import (
 	"strings"
 )
 
-func (me *parser) declareGeneric(base hasGenerics) []*datatype {
+func (me *parser) declareGeneric(size int) []*datatype {
 	me.eat("<")
-	gsize := len(base.getGenerics())
 	order := make([]*datatype, 0)
-	for i := 0; i < gsize; i++ {
+	for i := 0; i < size; i++ {
 		if i != 0 {
 			me.eat(",")
 		}
@@ -133,7 +132,7 @@ func (me *parser) declareType() *datatype {
 	if en, ok := module.enums[value]; ok {
 		var gtypes []*datatype
 		if me.token.is == "<" {
-			gtypes = me.declareGeneric(en)
+			gtypes = me.declareGeneric(len(en.generics))
 			value += genericslist(gtypes)
 			if _, ok := en.module.enums[value]; !ok {
 				me.defineEnumImplGeneric(en, gtypes)
@@ -158,7 +157,7 @@ func (me *parser) declareType() *datatype {
 	if cl, ok := module.classes[value]; ok {
 		var gtypes []*datatype
 		if me.token.is == "<" {
-			gtypes = me.declareGeneric(cl)
+			gtypes = me.declareGeneric(len(cl.generics))
 			value += genericslist(gtypes)
 			if _, ok := cl.module.classes[value]; !ok {
 				me.defineClassImplGeneric(cl, gtypes)

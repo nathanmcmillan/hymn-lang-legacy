@@ -166,7 +166,7 @@
 			}
 		},
 		{
-			"match": "\\b(if|elif|else|for|while|return|break|continue|and|or|not|match|is|pass|goto|label|iterate|in|async|await|yield)\\b",
+			"match": "\\b(if|elif|else|for|while|return|break|continue|and|or|not|match|is|pass|goto|label|iterate|in|async|await|yield|implements|with|where)\\b",
 			"captures": {
 				"1": {
 					"name": "keyword.control.hymn"

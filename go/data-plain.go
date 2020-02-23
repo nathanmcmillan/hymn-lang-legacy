@@ -136,7 +136,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		funcSig := fnSigInit(me)
 		for i, p := range parameters {
 			list[i] = getdatatype(me, p)
-			funcSig.args = append(funcSig.args, fnArgInit(getdatatype(me, p).getvariable()))
+			funcSig.args = append(funcSig.args, getdatatype(me, p).tofnarg())
 		}
 		funcSig.returns = getdatatype(me, returns)
 		return newdatafunction(funcSig, list, nil, getdatatype(me, returns))
@@ -1153,4 +1153,8 @@ func copydatalist(generics []*datatype) []*datatype {
 		order[i] = g.copy()
 	}
 	return order
+}
+
+func (me *datatype) tofnarg() *funcArg {
+	return fnArgInit(me.getvariable())
 }

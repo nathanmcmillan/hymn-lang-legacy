@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) genericHeader() ([]*datatype, map[string]int) {
 	order := make([]*datatype, 0)
 	dict := make(map[string]int)
@@ -10,14 +12,26 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int) {
 			me.wordOrPrimitive()
 			dict[gname] = len(order)
 			order = append(order, getdatatype(me.hmfile, gname))
+			if me.token.is == ":" {
+				me.eat(":")
+				for {
+					requires := me.token.value
+					me.eat("id")
+					fmt.Println("REQUIRES ::", requires)
+					if me.token.is != "+" {
+						break
+					}
+					me.eat("+")
+				}
+			}
 			if me.token.is == "," {
 				me.eat(",")
 				continue
-			}
-			if me.token.is == ">" {
+			} else if me.token.is == ">" {
 				break
+			} else {
+				panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
 			}
-			panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
 		}
 		me.eat(">")
 	}

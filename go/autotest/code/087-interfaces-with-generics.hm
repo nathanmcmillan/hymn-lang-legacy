@@ -35,10 +35,13 @@ bar write(value v)
 
 def main
     f = foo(2)
+    echo(f.one)
     f.set(3)
     echo(f.get())
 
     b = bar(4, uint8 5)
+    echo(b.two)
+    echo(b.three)
     b.set(6)
     echo(b.get())
     b.write(uint8 7)

@@ -1,12 +1,12 @@
 package main
 
-func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class {
+func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class {
 
-	base = base.baseClass()
-	module := base.module
+	super = super.baseClass()
+	module := super.module
 
-	implementation := base.name + genericslist(order)
-	uid := base.uid() + genericslist(order)
+	implementation := super.name + genericslist(order)
+	uid := super.uid() + genericslist(order)
 
 	module.namespace[uid] = "class"
 	module.types[uid] = "class"
@@ -15,17 +15,17 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 	module.types[implementation] = "class"
 
 	classDef := classInit(module, implementation, nil, nil, nil)
-	classDef.base = base
+	classDef.base = super
 
 	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})
 
 	module.classes[uid] = classDef
 	module.classes[implementation] = classDef
 
-	base.implementations = append(base.implementations, classDef)
+	super.implementations = append(super.implementations, classDef)
 
 	gmapper := make(map[string]string)
-	for ix, gname := range base.generics {
+	for ix, gname := range super.generics {
 		from := order[ix]
 		value := from.getRaw()
 		gmapper[gname] = value
@@ -35,7 +35,31 @@ func (me *parser) defineClassImplGeneric(base *class, order []*datatype) *class 
 	}
 	classDef.gmapper = gmapper
 
-	if base.variables != nil && len(base.variables) > 0 {
+	classDef.interfaces = make(map[string]*classInterface)
+	for key, in := range super.interfaces {
+		if !in.requiresGenerics() {
+			classDef.interfaces[key] = in
+			continue
+		}
+		super := in.getSuper()
+		generics := make([]*datatype, len(in.generics))
+		for i := 0; i < len(generics); i++ {
+			if gn, ok := gmapper[in.generics[i].getRaw()]; ok {
+				generics[i] = getdatatype(classDef.module, gn)
+			} else {
+				generics[i] = in.generics[i]
+			}
+		}
+		intname := super.name + genericslist(generics)
+		if gotInterface, ok := module.interfaces[intname]; ok {
+			in = gotInterface
+		} else {
+			in = me.defineInterfaceImplementation(in, generics)
+		}
+		classDef.interfaces[key] = in
+	}
+
+	if super.variables != nil && len(super.variables) > 0 {
 		me.finishClassGenericDefinition(classDef)
 	}
 

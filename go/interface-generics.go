@@ -27,7 +27,7 @@ func (me *parser) defineInterfaceImplementation(in *classInterface, generics []*
 		functions[fname] = superfn.genericsReplacer(me, mapping)
 	}
 
-	interfaceDef := interfaceInit(module, implementation, nil, functions)
+	interfaceDef := interfaceInit(module, implementation, generics, functions)
 	interfaceDef.super = super
 
 	module.interfaces[uid] = interfaceDef

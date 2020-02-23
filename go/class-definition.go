@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func (me *parser) defineClass() {
 	me.eat("class")
 	token := me.token
@@ -35,14 +33,10 @@ func (me *parser) defineClass() {
 					panic(e)
 				}
 				intname := in.name + genericslist(generics)
-				fmt.Println("INTERFACE ::", intname)
 				if gotInterface, ok := module.interfaces[intname]; ok {
 					in = gotInterface
 				} else {
 					in = me.defineInterfaceImplementation(in, generics)
-				}
-				for _, fn := range in.functions {
-					fmt.Println("INTERFACE FINAL ::", fn.print())
 				}
 			}
 			interfaces[in.name] = in

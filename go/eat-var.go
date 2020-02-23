@@ -79,6 +79,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			} else if data.isSomeOrNone() {
 				panic(me.fail() + "Unexpected maybe type \"" + head.data().print() + "\". Do you need a match statement?")
 			} else {
+				// TODO :: need something to handlle checking if unknown type has an interface that allows this method call
 				panic(me.fail() + "Unknown type: " + head.data().error())
 			}
 		} else if me.token.is == "[" {

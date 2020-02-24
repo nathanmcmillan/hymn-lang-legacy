@@ -33,12 +33,24 @@ bar read() uint8
 bar write(value uint8)
     self.three += value
 
+class baz
+    four %x: get_and_set
+    five %y: get_and_set + read_and_write
+ 
 class baz<x:get_and_set, y:get_and_set+read_and_write>
     four x
     five y
 
+def my_func(one %x: get_and_set, two %y: get_and_set + read_and_write)
+    one.selt(8)
+    two.set(9)
+    two.write(uint8 10)
+    echo(one.get())
+    echo(two.get())
+    echo(two.read())
+
 def my_func<x:get_and_set, y:get_and_set+read_and_write>(one x, two y)
-    one.set(8)
+    one.selt(8)
     two.set(9)
     two.write(uint8 10)
     echo(one.get())

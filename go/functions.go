@@ -13,8 +13,8 @@ type function struct {
 	aliasing      map[string]string
 	expressions   []*node
 	returns       *datatype
-	generics      map[string]int
-	genericsOrder []string
+	generics      []string
+	interfaces    map[string][]*classInterface
 	genericsAlias map[string]string
 	base          *function
 	impls         []*function
@@ -200,10 +200,10 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 		if base != nil {
 			panic(me.fail() + "implementation of static function cannot have additional generics")
 		}
-		order, dict := me.genericHeader()
+		order, _, interfaces := me.genericHeader()
 		me.verify("(")
-		fn.generics = dict
-		fn.genericsOrder = datatypels(order)
+		fn.generics = datatypels(order)
+		fn.interfaces = interfaces
 	}
 	fn.start = me.save()
 	parenthesis := false
@@ -291,6 +291,7 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 	for _, arg := range fn.args {
 		module.scope.variables[arg.name] = arg.variable
 	}
+
 	for {
 		for me.token.is == "line" {
 			me.eat("line")
@@ -320,4 +321,24 @@ fnEnd:
 	}
 	module.popScope()
 	return fn
+}
+
+func (me *function) hasInterface(data *datatype) bool {
+	_, ok := me.interfaces[data.print()]
+	return ok
+}
+
+func (me *function) searchInterface(data *datatype, name string) (*classInterface, *fnSig, bool) {
+	return searchInterface(me.interfaces[data.print()], name)
+}
+
+func searchInterface(interfaces []*classInterface, name string) (*classInterface, *fnSig, bool) {
+	for _, def := range interfaces {
+		for fname, fn := range def.functions {
+			if name == fname {
+				return def, fn, true
+			}
+		}
+	}
+	return nil, nil, false
 }

@@ -1,10 +1,11 @@
 package main
 
 func (me *parser) eatvar(from *hmfile) *node {
+	module := me.hmfile
 	head := nodeInit("variable")
 	localvarname := me.token.value
 	head.idata = newidvariable(from, localvarname)
-	if from == me.hmfile {
+	if from == module {
 		sv := from.getvar(localvarname)
 		if sv == nil {
 			head.copyData(newdataany())
@@ -23,7 +24,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 	for {
 		if me.token.is == "." {
 			if head.is == "variable" {
-				sv := me.hmfile.getvar(head.idata.name)
+				sv := module.getvar(head.idata.name)
 				if sv == nil {
 					panic(me.fail() + "Variable '" + head.idata.name + "' out of scope")
 				}
@@ -48,6 +49,20 @@ func (me *parser) eatvar(from *hmfile) *node {
 				}
 				head = member
 
+			} else if data.isUnknown() && module.scope.fn.hasInterface(data) {
+				me.eat(".")
+				dotName := me.token.value
+				me.eat("id")
+				_, sig, ok := module.scope.fn.searchInterface(data, dotName)
+				if !ok {
+					panic(me.fail() + "Generic '" + data.print() + " does not have an interface function called '" + dotName + "'")
+				}
+				member := nodeInit("call")
+				member.copyData(sig.returns)
+				member.push(head)
+				me.pushSigParams(member, sig)
+				head = member
+
 			} else if rootEnum, rootUnion, ok := data.isEnum(); ok {
 				if rootUnion == nil {
 					peek := me.peek().value
@@ -55,7 +70,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 						me.eat(".")
 						me.eat("id")
 						member := nodeInit("member-variable")
-						member.copyData(getdatatype(me.hmfile, TokenInt))
+						member.copyData(getdatatype(module, TokenInt))
 						member.idata = newidvariable(from, "class")
 						member.push(head)
 						head = member
@@ -79,12 +94,11 @@ func (me *parser) eatvar(from *hmfile) *node {
 			} else if data.isSomeOrNone() {
 				panic(me.fail() + "Unexpected maybe type \"" + head.data().print() + "\". Do you need a match statement?")
 			} else {
-				// TODO :: need something to handlle checking if unknown type has an interface that allows this method call
 				panic(me.fail() + "Unknown type: " + head.data().error())
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {
-				sv := me.hmfile.getvar(head.idata.name)
+				sv := module.getvar(head.idata.name)
 				if sv == nil {
 					panic(me.fail() + "variable out of scope")
 				}
@@ -117,7 +131,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 		} else if me.token.is == "(" {
 			var sig *fnSig
 			if head.is == "variable" {
-				sv := me.hmfile.getvar(head.idata.name)
+				sv := module.getvar(head.idata.name)
 				if sv == nil {
 					panic(me.fail() + "variable \"" + head.idata.name + "\" not found in scope.")
 				}

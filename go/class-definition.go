@@ -9,7 +9,7 @@ func (me *parser) defineClass() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	genericsOrder, genericsDict := me.genericHeader()
+	genericsOrder, genericsDict, _ := me.genericHeader()
 
 	var interfaces map[string]*classInterface
 	if me.token.is == "line" && me.peek().is == "implements" {

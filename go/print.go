@@ -239,8 +239,42 @@ func (me *function) string(current *hmfile, lv int) string {
 	s += "\": {\n"
 	lv++
 	comma := false
+	if me.interfaces != nil {
+		if comma {
+			s += ",\n"
+		} else {
+			comma = true
+		}
+		s += fmc(lv) + "\"interfaces\": {\n"
+		lv++
+		end := len(me.interfaces) - 1
+		i := 0
+		for k, v := range me.interfaces {
+			s += fmc(lv) + "\"" + k + "\": [\n"
+			lv++
+			xend := len(v) - 1
+			for xi, x := range v {
+				s += fmc(lv) + "\"" + x.name + "\""
+				if xi < xend {
+					s += ",\n"
+				}
+			}
+			lv--
+			s += "\n" + fmc(lv) + "]"
+			if i < end {
+				s += ",\n"
+			}
+			i++
+		}
+		lv--
+		s += "\n" + fmc(lv) + "}"
+	}
 	if len(me.args) > 0 {
-		comma = true
+		if comma {
+			s += ",\n"
+		} else {
+			comma = true
+		}
 		s += fmc(lv) + "\"args\": [\n"
 		lv++
 		end := len(me.args) - 1

@@ -1,29 +1,41 @@
 package main
 
-import "fmt"
-
-func (me *parser) genericHeader() ([]*datatype, map[string]int) {
+func (me *parser) genericHeader() ([]*datatype, map[string]int, map[string][]*classInterface) {
+	module := me.hmfile
 	order := make([]*datatype, 0)
 	dict := make(map[string]int)
+	mapinterfaces := make(map[string][]*classInterface)
 	if me.token.is == "<" {
 		me.eat("<")
 		for {
 			gname := me.token.value
 			me.wordOrPrimitive()
 			dict[gname] = len(order)
-			order = append(order, getdatatype(me.hmfile, gname))
+			data := getdatatype(module, gname)
 			if me.token.is == ":" {
 				me.eat(":")
+				interfaces := make([]*classInterface, 0)
 				for {
 					requires := me.token.value
 					me.eat("id")
-					fmt.Println("REQUIRES ::", requires)
+					interfaceDef, ok := module.interfaces[requires]
+					if !ok {
+						panic(me.fail() + "Missing interface '" + requires + "'")
+					}
+					for fname := range interfaceDef.functions {
+						if def, _, ok := searchInterface(interfaces, fname); ok {
+							panic(me.fail() + "Conflicting '" + fname + "' from '" + interfaceDef.name + "' and '" + def.name + "'")
+						}
+					}
+					interfaces = append(interfaces, interfaceDef)
 					if me.token.is != "+" {
 						break
 					}
 					me.eat("+")
 				}
+				mapinterfaces[gname] = interfaces
 			}
+			order = append(order, data)
 			if me.token.is == "," {
 				me.eat(",")
 				continue
@@ -35,7 +47,7 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int) {
 		}
 		me.eat(">")
 	}
-	return order, dict
+	return order, dict, mapinterfaces
 }
 
 func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []*datatype {

@@ -140,7 +140,7 @@ func (me *parser) call(module *hmfile) *node {
 	me.eat("id")
 	var order []*datatype
 	if me.token.is == "<" {
-		order, _ = me.genericHeader()
+		order, _, _ = me.genericHeader()
 		name += genericslist(order)
 	}
 	fn, ok := module.getFunction(name)
@@ -150,7 +150,7 @@ func (me *parser) call(module *hmfile) *node {
 			panic(me.fail() + "missing function \"" + name + "\"")
 		}
 		alias := make(map[string]string)
-		for ix, gname := range fnbase.genericsOrder {
+		for ix, gname := range fnbase.generics {
 			alias[gname] = order[ix].print()
 		}
 		fn = remapFunctionImpl(name, alias, fnbase)

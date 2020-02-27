@@ -14,6 +14,7 @@ type function struct {
 	expressions   []*node
 	returns       *datatype
 	generics      []string
+	mapping       map[string]*datatype
 	interfaces    map[string][]*classInterface
 	genericsAlias map[string]string
 	base          *function
@@ -93,7 +94,7 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	}
 }
 
-func remapFunctionImpl(name string, alias map[string]string, original *function) *function {
+func remapFunctionImpl(name string, mapping map[string]*datatype, original *function) *function {
 	module := original.module
 	if fn, ok := module.functions[name]; ok {
 		return fn
@@ -102,7 +103,28 @@ func remapFunctionImpl(name string, alias map[string]string, original *function)
 	module.program.pushRemapStack(module.reference(original.getname()))
 	pos := parsing.save()
 	parsing.jump(original.start)
-	fn := parsing.defineFunction(name, alias, original, nil)
+
+	fn := parsing.defineFunction(name, mapping, original, nil)
+
+	if len(original.interfaces) > 0 {
+		for _, g := range original.generics {
+			i, ok := original.interfaces[g]
+			if !ok {
+				continue
+			}
+			m := fn.mapping[g]
+			if cl, ok := m.isClass(); ok {
+				for _, t := range i {
+					if _, ok := cl.interfaces[t.name]; !ok {
+						panic(parsing.fail() + "Class '" + cl.name + "' for function '" + name + "' requires interface '" + t.name + "'")
+					}
+				}
+			} else {
+				panic(parsing.fail() + "Function '" + name + "' requires interface implementation but type was " + m.error())
+			}
+		}
+	}
+
 	parsing.jump(pos)
 	fn.start = original.start
 	parsing.pushFunction(fn.getname(), module, fn)
@@ -167,7 +189,7 @@ func (me *parser) defineStaticFunction() {
 	me.pushFunction(name, module, fn)
 }
 
-func (me *parser) defineFunction(name string, alias map[string]string, base *function, self *class) *function {
+func (me *parser) defineFunction(name string, mapping map[string]*datatype, base *function, self *class) *function {
 	module := me.hmfile
 	if base != nil {
 		module = base.module
@@ -185,6 +207,11 @@ func (me *parser) defineFunction(name string, alias map[string]string, base *fun
 	if base != nil {
 		fn.base = base
 		base.impls = append(base.impls, fn)
+		alias := make(map[string]string)
+		for k, v := range mapping {
+			alias[k] = v.print()
+		}
+		fn.mapping = mapping
 		fn.aliasing = alias
 	} else if self != nil {
 		ref := module.fnArgInit(self.uid(), "self", false)

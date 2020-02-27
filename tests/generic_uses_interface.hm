@@ -38,6 +38,9 @@ class baz<x: get_and_set, y: get_and_set + read_and_write>
     four x
     five y
 
+baz composite()
+    echo(self.four.get())
+
 # def my_func(one x, two y) with x: get_and_set and y: get_and_set + read_and_write
 
 def my_func<x:get_and_set, y:get_and_set+read_and_write>(one x, two y)
@@ -62,10 +65,10 @@ def main
     b.write(uint8 7)
     echo(b.read())
 
-    # TODO lazy function
-    # my_func(f, b)
+    # TODO: need to verify class interfaces
 
-    my_func<foo,bar>(f, b)
+    my_func(f, b)
+    # my_func<foo,bar>(f, b)
 
     z = baz(f, b)
     echo(z.four.get())

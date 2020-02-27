@@ -29,7 +29,7 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 	}
 }
 
-func (me *parser) pushParams(name string, n *node, pix int, params []*node, fn *function) []*node {
+func (me *parser) functionParams(name string, n *node, pix int, params []*node, fn *function, lazy bool) []*node {
 	me.eat("(")
 	if me.token.is == "line" {
 		me.eat("line")
@@ -130,36 +130,45 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	n.copyData(fn.returns)
 	params := make([]*node, len(fn.args))
 	params[0] = root
-	me.pushParams(fn.getclsname(), n, 1, params, fn)
+	me.functionParams(fn.getclsname(), n, 1, params, fn, false)
 	return n
 }
 
 func (me *parser) call(module *hmfile) *node {
-	base := me.token.value
-	name := base
+	name := me.token.value
 	me.eat("id")
 	var order []*datatype
-	if me.token.is == "<" {
-		order, _, _ = me.genericHeader()
-		name += genericslist(order)
-	}
-	fn, ok := module.getFunction(name)
+	var fn *function
+	bfn, ok := module.getFunction(name)
 	if !ok {
-		fnbase, ok := module.getFunction(base)
-		if !ok {
-			panic(me.fail() + "missing function \"" + name + "\"")
+		panic(me.fail() + "Missing function '" + name + "'")
+	}
+	lazy := false
+	if bfn.generics != nil {
+		if me.token.is == "<" {
+			order, _, _ = me.genericHeader()
+			name += genericslist(order)
+			gfn, ok := module.getFunction(name)
+			if ok {
+				fn = gfn
+			} else {
+				mapping := make(map[string]*datatype)
+				for i, g := range bfn.generics {
+					mapping[g] = order[i]
+				}
+				fn = remapFunctionImpl(name, mapping, bfn)
+			}
+		} else {
+			lazy = true
 		}
-		alias := make(map[string]string)
-		for ix, gname := range fnbase.generics {
-			alias[gname] = order[ix].print()
-		}
-		fn = remapFunctionImpl(name, alias, fnbase)
+	} else {
+		fn = bfn
 	}
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
 	params := make([]*node, len(fn.args))
-	me.pushParams(name, n, 0, params, fn)
+	me.functionParams(name, n, 0, params, fn, lazy)
 	return n
 }
 

@@ -32,16 +32,22 @@ bar read() uint8
 bar write(value uint8)
     self.three += value
 
-# class baz with x: get_and_set and y: get_and_set + read_and_write
+# class baz with x:get_and_set and y:get_and_set+read_and_write
 
-class baz<x: get_and_set, y: get_and_set + read_and_write>
+class baz<x:get_and_set, y:get_and_set+read_and_write>
     four x
     five y
 
-baz composite()
-    echo(self.four.get())
+# baz work()
+#     echo(self.four.get())
 
-# def my_func(one x, two y) with x: get_and_set and y: get_and_set + read_and_write
+# enum doggo with x:get_and_set and y:read_and_write
+
+enum doggo<x:get_and_set, y:read_and_write>
+    woof(sound x)
+    bark(sound y)
+
+# def my_func(one x, two y) with x:get_and_set and y:get_and_set+read_and_write
 
 def my_func<x:get_and_set, y:get_and_set+read_and_write>(one x, two y)
     one.set(8)
@@ -56,6 +62,7 @@ def main
     echo(f.one)
     f.set(3)
     echo(f.get())
+    echo("---")
 
     b = bar(4, uint8 5)
     echo(b.two)
@@ -64,13 +71,26 @@ def main
     echo(b.get())
     b.write(uint8 7)
     echo(b.read())
+    echo("---")
 
     # TODO: need to verify class interfaces
+    # TODO: external interfaces
+    # TODO: interfaces for enums
+    # TODO: lazy function calls
 
-    my_func(f, b)
-    # my_func<foo,bar>(f, b)
+    # my_func(f, b)
+    my_func<foo,bar>(f, b)
+    echo("---")
 
     z = baz(f, b)
     echo(z.four.get())
     echo(z.five.get())
     echo(z.five.read())
+    # echo(z.work())
+    echo("---")
+
+    d_1 = doggo<foo,bar>.woof(f)
+    echo(d_1.sound.get())
+    d_2 = doggo<foo,bar>.bark(b)
+    echo(d_2.sound.read())
+    echo("---")

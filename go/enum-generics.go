@@ -24,16 +24,35 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 
 	base.implementations = append(base.implementations, enumDef)
 
-	gmapper := make(map[string]string)
+	mapping := make(map[string]*datatype)
 	for ix, gname := range base.generics {
 		from := order[ix]
 		value := from.getRaw()
-		gmapper[gname] = value
+		mapping[gname] = from
 		if gname == value || from.isRecursiveUnknown() {
 			enumDef.doNotDefine = true
 		}
 	}
-	enumDef.gmapper = gmapper
+	enumDef.mapping = mapping
+
+	if len(base.interfaces) > 0 {
+		for _, g := range base.generics {
+			i, ok := base.interfaces[g]
+			if !ok {
+				continue
+			}
+			m := mapping[g]
+			if cl, ok := m.isClass(); ok {
+				for _, t := range i {
+					if _, ok := cl.interfaces[t.name]; !ok {
+						panic(me.fail() + "Class '" + cl.name + "' for enum '" + implementation + "' requires interface '" + t.name + "'")
+					}
+				}
+			} else {
+				panic(me.fail() + "Enum '" + implementation + "' requires interface implementation but type was " + m.error())
+			}
+		}
+	}
 
 	if base.types != nil && len(base.types) > 0 {
 		me.finishEnumGenericDefinition(enumDef)
@@ -52,12 +71,17 @@ func (me *parser) finishEnumGenericDefinition(enumDef *enum) {
 		unionDict[cp.name] = cp
 	}
 
+	mapping := make(map[string]string)
+	for k, m := range enumDef.mapping {
+		mapping[k] = m.getRaw()
+	}
+
 	for _, un := range unionList {
 		for _, dataKey := range un.types.order {
 			data := un.types.table[dataKey]
-			un.types.table[dataKey] = me.genericsReplacer(enumDef.module, data, enumDef.gmapper)
+			un.types.table[dataKey] = me.genericsReplacer(enumDef.module, data, mapping)
 		}
 	}
 
-	enumDef.finishInit(false, unionList, unionDict, nil, nil)
+	enumDef.finishInit(false, unionList, unionDict, nil, nil, nil)
 }

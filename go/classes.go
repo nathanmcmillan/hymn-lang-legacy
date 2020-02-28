@@ -14,7 +14,7 @@ type class struct {
 	variableOrder   []string
 	generics        []string
 	genericsDict    map[string]int
-	gmapper         map[string]string
+	mapping         map[string]*datatype
 	functions       map[string]*function
 	functionOrder   []*function
 	base            *class

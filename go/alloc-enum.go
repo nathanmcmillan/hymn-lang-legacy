@@ -19,6 +19,9 @@ func (me *parser) pushEnumParams(n *node, un *union, params []*node, typed strin
 
 func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 	if me.token.is != "(" {
+		if me.token.is == "<" {
+			panic(me.fail() + "Enum: " + en.join(un) + " was expects something like '" + en.name + "<>." + un.name + "()'")
+		}
 		panic(me.fail() + "Enum: " + en.join(un) + " must be instantiated with parenthesis\nExample: " + en.join(un) + "()")
 	}
 	me.eat("(")

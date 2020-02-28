@@ -217,7 +217,12 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		ref := module.fnArgInit(self.uid(), "self", false)
 		fn.argDict["self"] = 0
 		fn.args = append(fn.args, ref)
-		fn.aliasing = self.gmapper
+		alias := make(map[string]string)
+		for k, v := range self.mapping {
+			alias[k] = v.print()
+		}
+		fn.mapping = mapping
+		fn.aliasing = alias
 		fname = self.name + "." + name
 	}
 	if me.token.is == "<" {

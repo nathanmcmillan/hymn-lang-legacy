@@ -24,16 +24,16 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 
 	super.implementations = append(super.implementations, classDef)
 
-	gmapper := make(map[string]string)
+	mapping := make(map[string]*datatype)
 	for ix, gname := range super.generics {
 		from := order[ix]
 		value := from.getRaw()
-		gmapper[gname] = value
+		mapping[gname] = from
 		if gname == value || from.isRecursiveUnknown() {
 			classDef.doNotDefine = true
 		}
 	}
-	classDef.gmapper = gmapper
+	classDef.mapping = mapping
 
 	classDef.interfaces = make(map[string]*classInterface)
 	for key, in := range super.interfaces {
@@ -44,8 +44,8 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 		super := in.getSuper()
 		generics := make([]*datatype, len(in.generics))
 		for i := 0; i < len(generics); i++ {
-			if gn, ok := gmapper[in.generics[i].getRaw()]; ok {
-				generics[i] = getdatatype(classDef.module, gn)
+			if gn, ok := mapping[in.generics[i].getRaw()]; ok {
+				generics[i] = gn
 			} else {
 				generics[i] = in.generics[i]
 			}
@@ -75,8 +75,13 @@ func (me *parser) finishClassGenericDefinition(classDef *class) {
 
 	classDef.initMembers(classDef.base.variableOrder, memberMap)
 
+	mapping := make(map[string]string)
+	for k, m := range classDef.mapping {
+		mapping[k] = m.getRaw()
+	}
+
 	for _, mem := range memberMap {
-		data := me.genericsReplacer(classDef.module, mem.data(), classDef.gmapper)
+		data := me.genericsReplacer(classDef.module, mem.data(), mapping)
 		mem._vdata = data
 	}
 

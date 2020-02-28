@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -29,7 +30,26 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 	}
 }
 
-func (me *parser) functionParams(name string, n *node, pix int, params []*node, fn *function, lazy bool) []*node {
+func (me *parser) pushFunctionParams(n *node, params []*node, fn *function) {
+	for ix, param := range params {
+		if param == nil {
+			var arg *funcArg
+			if ix < len(fn.args) {
+				arg = fn.args[ix]
+			} else {
+				arg = fn.argVariadic
+			}
+			if arg.defaultNode == nil {
+				panic(me.fail() + "argument " + strconv.Itoa(ix) + " is missing")
+			}
+			n.push(arg.defaultNode)
+		} else {
+			n.push(param)
+		}
+	}
+}
+
+func (me *parser) functionParams(name string, pix int, params []*node, fn *function, lazy bool) (*function, []*node) {
 	me.eat("(")
 	if me.token.is == "line" {
 		me.eat("line")
@@ -105,32 +125,34 @@ func (me *parser) functionParams(name string, n *node, pix int, params []*node, 
 		}
 	}
 	me.eat(")")
-	for ix, param := range params {
-		if param == nil {
-			var arg *funcArg
-			if ix < len(fn.args) {
-				arg = fn.args[ix]
-			} else {
-				arg = fn.argVariadic
-			}
-			if arg.defaultNode == nil {
-				panic(me.fail() + "argument[" + strconv.Itoa(pix) + "] is missing")
-			}
-			n.push(arg.defaultNode)
-		} else {
-			n.push(param)
+	if lazy {
+		glist := make([]*datatype, len(gtypes))
+		for k, v := range gtypes {
+			i, _ := gindex[k]
+			glist[i] = v.copy()
 		}
+		if len(glist) != len(cl.generics) {
+			f := fmt.Sprint("Missing generic for function '"+fn.name+"'\nImplementation list was ", genericslist(glist))
+			panic(me.fail() + f)
+		}
+		lazy := typed + genericslist(glist)
+		if _, ok := module.classes[lazy]; !ok {
+			me.defineClassImplGeneric(cl, glist)
+		}
+		cl = module.classes[lazy]
+		typed = lazy
 	}
-	return params
+	return fn, params
 }
 
 func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {
+	params := make([]*node, len(fn.args))
+	params[0] = root
+	_, params = me.functionParams(fn.getclsname(), 1, params, fn, false)
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
-	params := make([]*node, len(fn.args))
-	params[0] = root
-	me.functionParams(fn.getclsname(), n, 1, params, fn, false)
+	me.pushFunctionParams(n, params, fn)
 	return n
 }
 
@@ -138,11 +160,11 @@ func (me *parser) call(module *hmfile) *node {
 	name := me.token.value
 	me.eat("id")
 	var order []*datatype
-	var fn *function
 	bfn, ok := module.getFunction(name)
 	if !ok {
 		panic(me.fail() + "Missing function '" + name + "'")
 	}
+	fn := bfn
 	lazy := false
 	if bfn.generics != nil {
 		if me.token.is == "<" {
@@ -161,14 +183,13 @@ func (me *parser) call(module *hmfile) *node {
 		} else {
 			lazy = true
 		}
-	} else {
-		fn = bfn
 	}
+	params := make([]*node, len(fn.args))
+	fn, params = me.functionParams(name, 0, params, fn, lazy)
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
-	params := make([]*node, len(fn.args))
-	me.functionParams(name, n, 0, params, fn, lazy)
+	me.pushFunctionParams(n, params, fn)
 	return n
 }
 

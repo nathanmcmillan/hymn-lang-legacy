@@ -73,13 +73,10 @@ def main
     echo(b.read())
     echo("---")
 
-    # TODO: need to verify class interfaces
     # TODO: external interfaces
-    # TODO: interfaces for enums
-    # TODO: lazy function calls
 
-    # my_func(f, b)
-    my_func<foo,bar>(f, b)
+    my_func(f, b)
+    # my_func<foo,bar>(f, b)
     echo("---")
 
     z = baz(f, b)

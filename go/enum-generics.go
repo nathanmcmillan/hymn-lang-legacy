@@ -83,5 +83,5 @@ func (me *parser) finishEnumGenericDefinition(enumDef *enum) {
 		}
 	}
 
-	enumDef.finishInit(false, unionList, unionDict, nil, nil, nil)
+	enumDef.finishInit(false, unionList, unionDict, nil, nil)
 }

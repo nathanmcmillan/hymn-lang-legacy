@@ -116,15 +116,15 @@ func (me *parser) genericsReplacer(module *hmfile, original *datatype, gmapper m
 	return getdatatype(module, data.print())
 }
 
-func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[string]*datatype) bool {
+func hintRecursiveReplace(a, b *datatype, generics []string, update map[string]*datatype) bool {
 	if b.is == dataTypeUnknown {
-		if _, ok := gindex[b.canonical]; ok {
+		if inList(generics, b.canonical) >= 0 {
 			update[b.canonical] = a
 			return true
 		}
 	}
 	if b.is == dataTypeMaybe {
-		return hintRecursiveReplace(a, b.member, gindex, update)
+		return hintRecursiveReplace(a, b.member, generics, update)
 	}
 	switch a.is {
 	case dataTypeClass:
@@ -146,7 +146,7 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 				}
 				for i, ga := range a.generics {
 					gb := b.generics[i]
-					ok := hintRecursiveReplace(ga, gb, gindex, update)
+					ok := hintRecursiveReplace(ga, gb, generics, update)
 					if !ok {
 						return false
 					}
@@ -159,14 +159,14 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 		}
 	case dataTypeMaybe:
 		{
-			return hintRecursiveReplace(a.member, b, gindex, update)
+			return hintRecursiveReplace(a.member, b, generics, update)
 		}
 	case dataTypeSlice:
 		{
 			if b.is != dataTypeSlice {
 				return false
 			}
-			ok := hintRecursiveReplace(a.member, b.member, gindex, update)
+			ok := hintRecursiveReplace(a.member, b.member, generics, update)
 			if !ok {
 				return false
 			}
@@ -176,7 +176,7 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 			if b.is != dataTypeArray {
 				return false
 			}
-			ok := hintRecursiveReplace(a.member, b.member, gindex, update)
+			ok := hintRecursiveReplace(a.member, b.member, generics, update)
 			if !ok {
 				return false
 			}
@@ -189,13 +189,13 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 			if len(a.parameters) != len(b.parameters) {
 				return false
 			}
-			ok := hintRecursiveReplace(a.returns, b.returns, gindex, update)
+			ok := hintRecursiveReplace(a.returns, b.returns, generics, update)
 			if !ok {
 				return false
 			}
 			for i, pa := range a.parameters {
 				pb := b.parameters[i]
-				ok := hintRecursiveReplace(pa, pb, gindex, update)
+				ok := hintRecursiveReplace(pa, pb, generics, update)
 				if !ok {
 					return false
 				}
@@ -207,9 +207,9 @@ func hintRecursiveReplace(a, b *datatype, gindex map[string]int, update map[stri
 	return true
 }
 
-func (me *parser) hintGeneric(data *datatype, gdata *datatype, gindex map[string]int) map[string]*datatype {
+func (me *parser) hintGeneric(data *datatype, gdata *datatype, generics []string) map[string]*datatype {
 	update := make(map[string]*datatype)
-	ok := hintRecursiveReplace(data, gdata, gindex, update)
+	ok := hintRecursiveReplace(data, gdata, generics, update)
 	if !ok {
 		return nil
 	}
@@ -231,4 +231,13 @@ func mergeMaps(one, two map[string]*datatype) (bool, map[string]*datatype) {
 		}
 	}
 	return true, merge
+}
+
+func inList(ls []string, name string) int {
+	for i, s := range ls {
+		if s == name {
+			return i
+		}
+	}
+	return -1
 }

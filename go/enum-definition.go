@@ -8,7 +8,7 @@ func (me *parser) defineEnum() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	genericsOrder, genericsDict, interfaces := me.genericHeader()
+	genericsOrder, _, interfaces := me.genericHeader()
 	me.eat("line")
 
 	uid := me.hmfile.reference(name)
@@ -84,7 +84,7 @@ func (me *parser) defineEnum() {
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
 
-	enumDef.finishInit(isSimple, typesOrder, typesMap, datatypels(genericsOrder), genericsDict, interfaces)
+	enumDef.finishInit(isSimple, typesOrder, typesMap, datatypels(genericsOrder), interfaces)
 
 	for _, implementation := range enumDef.implementations {
 		me.finishEnumGenericDefinition(implementation)

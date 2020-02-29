@@ -9,7 +9,8 @@ func (me *parser) defineClass() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	genericsOrder, genericsDict, _ := me.genericHeader()
+	typedGenerics, _, _ := me.genericHeader()
+	generics := datatypels(typedGenerics)
 
 	var interfaces map[string]*classInterface
 	if me.token.is == "line" && me.peek().is == "implements" {
@@ -61,7 +62,7 @@ func (me *parser) defineClass() {
 	module.namespace[name] = "class"
 	module.types[name] = "class"
 
-	classDef := classInit(module, name, datatypels(genericsOrder), genericsDict, interfaces)
+	classDef := classInit(module, name, generics, interfaces)
 
 	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})
 
@@ -82,10 +83,10 @@ func (me *parser) defineClass() {
 			mname := me.token.value
 			me.eat("id")
 			if _, ok := memberMap[mname]; ok {
-				panic(me.fail() + "member name \"" + mname + "\" already used")
+				panic(me.fail() + "Member name '" + mname + "' already used")
 			}
-			if _, ok := genericsDict[mname]; ok {
-				panic(me.fail() + "cannot use \"" + mname + "\" as member name")
+			if i := inList(generics, mname); i >= 0 {
+				panic(me.fail() + "Cannot use '" + mname + "' as member name")
 			}
 
 			isptr := true

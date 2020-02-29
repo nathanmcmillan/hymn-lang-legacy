@@ -14,7 +14,7 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 	module.namespace[implementation] = "class"
 	module.types[implementation] = "class"
 
-	classDef := classInit(module, implementation, nil, nil, nil)
+	classDef := classInit(module, implementation, nil, nil)
 	classDef.base = super
 
 	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})

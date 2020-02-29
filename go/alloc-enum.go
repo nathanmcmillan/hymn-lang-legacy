@@ -34,7 +34,6 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 	dict := false
 	lazy := false
 	gtypes := make(map[string]*datatype)
-	gindex := en.genericsDict
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
@@ -75,8 +74,8 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 				param = me.calc(0, nil)
 
 				var update map[string]*datatype
-				if len(gindex) > 0 {
-					update = me.hintGeneric(param.data(), unvar, gindex)
+				if len(en.generics) > 0 {
+					update = me.hintGeneric(param.data(), unvar, en.generics)
 				}
 
 				if update != nil && len(update) > 0 {
@@ -116,8 +115,8 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 				param := me.calc(0, nil)
 
 				var update map[string]*datatype
-				if len(gindex) > 0 {
-					update = me.hintGeneric(param.data(), unvar, gindex)
+				if len(en.generics) > 0 {
+					update = me.hintGeneric(param.data(), unvar, en.generics)
 				}
 
 				if update != nil && len(update) > 0 {
@@ -144,7 +143,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 	if lazy {
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
-			i, _ := gindex[k]
+			i := inList(en.generics, k)
 			if i >= len(glist) {
 				panic(me.fail() + "Incomplete enum: " + en.join(un) + " declaration")
 			}

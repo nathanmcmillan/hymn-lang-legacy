@@ -39,10 +39,11 @@ func (me *parser) pushFunctionParams(n *node, params []*node, fn *function) {
 			} else {
 				arg = fn.argVariadic
 			}
-			if arg.defaultNode == nil {
-				panic(me.fail() + "argument " + strconv.Itoa(ix) + " is missing")
+			d := arg.defaultNode
+			if d == nil {
+				d = me.defaultValue(arg.data(), fn.getname())
 			}
-			n.push(arg.defaultNode)
+			n.push(d)
 		} else {
 			n.push(param)
 		}
@@ -57,6 +58,8 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 	min := pix
 	dict := false
 	size := len(fn.args)
+	// gtypes := make(map[string]*datatype)
+	// gindex := fn.generics
 	for {
 		if me.token.is == ")" {
 			break
@@ -74,15 +77,38 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 			argname := me.token.value
 			me.eat("id")
 			me.eat(":")
-			param := me.calc(0, nil)
 			aix := fn.argDict[argname]
-			arg := fn.args[aix]
-			if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
-				err := "parameter \"" + param.data().print()
-				err += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().print() + "\" for function \"" + name + "\""
-				panic(me.fail() + err)
+			if me.token.is == "_" {
+				me.eat("_")
+				params[aix] = nil
+			} else {
+				arg := fn.args[aix]
+				param := me.calc(0, nil)
+
+				// var update map[string]*datatype
+				// if len(fn.generics) > 0 {
+				// 	update = me.hintGeneric(param.data(), clsvar.data(), gindex)
+				// }
+
+				// if update != nil && len(update) > 0 {
+				// 	lazy = true
+				// 	good, newtypes := mergeMaps(update, gtypes)
+				// 	if !good {
+				// 		a := genericsmap(gtypes)
+				// 		b := genericsmap(update)
+				// 		f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", a, " but found ", b)
+				// 		panic(me.fail() + f)
+				// 	}
+				// 	gtypes = newtypes
+
+				// } else
+				if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
+					err := "parameter \"" + param.data().print()
+					err += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().print() + "\" for function \"" + name + "\""
+					panic(me.fail() + err)
+				}
+				params[aix] = param
 			}
-			params[aix] = param
 			dict = true
 
 		} else if dict {
@@ -99,16 +125,7 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 			}
 			if me.token.is == "_" {
 				me.eat("_")
-				var param *node
-				if arg == nil {
-					arg = fn.args[pix]
-				}
-				if arg.defaultNode != nil {
-					param = arg.defaultNode
-				} else {
-					param = me.defaultValue(arg.data(), "")
-				}
-				params[pix] = param
+				params[pix] = nil
 			} else {
 				param := me.calc(0, nil)
 				if arg == nil {

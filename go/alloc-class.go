@@ -38,7 +38,6 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 	dict := false
 	lazy := false
 	gtypes := make(map[string]*datatype)
-	gindex := cl.genericsDict
 	for {
 		if me.token.is == ")" {
 			me.eat(")")
@@ -79,11 +78,12 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 				param = me.calc(0, nil)
 
 				var update map[string]*datatype
-				if len(gindex) > 0 {
-					update = me.hintGeneric(param.data(), clsvar.data(), gindex)
+				if len(cl.generics) > 0 {
+					update = me.hintGeneric(param.data(), clsvar.data(), cl.generics)
 				}
 
 				if update != nil && len(update) > 0 {
+					fmt.Println("Lazy :: "+genericsmap(update)+" ---> "+genericsmap(gtypes)+" ||", cl.generics)
 					lazy = true
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {
@@ -120,8 +120,8 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 				param := me.calc(0, nil)
 
 				var update map[string]*datatype
-				if len(gindex) > 0 {
-					update = me.hintGeneric(param.data(), clsvar.data(), gindex)
+				if len(cl.generics) > 0 {
+					update = me.hintGeneric(param.data(), clsvar.data(), cl.generics)
 				}
 
 				if update != nil && len(update) > 0 {
@@ -149,7 +149,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 	if lazy {
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
-			i, _ := gindex[k]
+			i := inList(cl.generics, k)
 			glist[i] = v.copy()
 		}
 		if len(glist) != len(cl.generics) {

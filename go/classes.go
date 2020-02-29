@@ -13,7 +13,6 @@ type class struct {
 	variables       map[string]*variable
 	variableOrder   []string
 	generics        []string
-	genericsDict    map[string]int
 	mapping         map[string]*datatype
 	functions       map[string]*function
 	functionOrder   []*function
@@ -23,7 +22,7 @@ type class struct {
 	interfaces      map[string]*classInterface
 }
 
-func classInit(module *hmfile, name string, generics []string, genericsDict map[string]int, interfaces map[string]*classInterface) *class {
+func classInit(module *hmfile, name string, generics []string, interfaces map[string]*classInterface) *class {
 	c := &class{}
 	c.module = module
 	c.name = name
@@ -33,7 +32,6 @@ func classInit(module *hmfile, name string, generics []string, genericsDict map[
 		c.pathGlobal = filepath.Join(module.relativeOut, c.pathLocal)
 	}
 	c.generics = generics
-	c.genericsDict = genericsDict
 	c.functions = make(map[string]*function)
 	c.functionOrder = make([]*function, 0)
 	if len(generics) > 0 {

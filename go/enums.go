@@ -13,7 +13,6 @@ type enum struct {
 	types           map[string]*union
 	typesOrder      []*union
 	generics        []string
-	genericsDict    map[string]int
 	mapping         map[string]*datatype
 	interfaces      map[string][]*classInterface
 	base            *enum
@@ -56,12 +55,11 @@ func enumInit(module *hmfile, name string) *enum {
 	return e
 }
 
-func (me *enum) finishInit(simple bool, order []*union, dict map[string]*union, generics []string, genericsDict map[string]int, interfaces map[string][]*classInterface) {
+func (me *enum) finishInit(simple bool, order []*union, dict map[string]*union, generics []string, interfaces map[string][]*classInterface) {
 	me.simple = simple
 	me.types = dict
 	me.typesOrder = order
 	me.generics = generics
-	me.genericsDict = genericsDict
 	me.interfaces = interfaces
 	if len(generics) > 0 {
 		me.implementations = make([]*enum, 0)

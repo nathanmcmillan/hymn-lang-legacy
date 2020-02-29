@@ -8,11 +8,13 @@ class vec
     z int
 
 main
-    z = attribute(
+    z = attribute (
         on: true
-        has: attribute(
+        has: attribute (
             on: true
-            has: vec(2*5, 2*6, 2*7)))
+            has: vec(2*5, 2*6, 2*7)
+        )
+    )
 
     x = attribute(true, attribute(true, vec(2*5, 2*6, 2*7)))
 
@@ -29,10 +31,11 @@ main
     c = vec(1, 2, 3)
     d = vec(y:5)
     e = vec(x:4+10, y:5, z:6)
-    f = vec(
+    f = vec (
         x: 7
         y: 8
-        z: 9)
+        z: 9
+    )
     echo(str(a.x) + ", " + str(a.y) + ", " + str(a.z))
     echo(str(b.x) + ", " + str(b.y) + ", " + str(b.z))
     echo(str(c.x) + ", " + str(c.y) + ", " + str(c.z))

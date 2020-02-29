@@ -48,7 +48,7 @@ Learn more at https://hymn-lang.org
 * Generate makefiles
 * Macros / def
 * Better error output
-* Language server protocol
+* Language server protocol: The compiler should have flags for how to format/output found problems and at what point to stop
 * Optimize printf for multiple strings to avoid concatenation 
 
 ### Bugs

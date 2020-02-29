@@ -82,7 +82,6 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 				}
 
 				if update != nil && len(update) > 0 {
-					fmt.Println("Lazy :: "+genericsmap(update)+" ---> "+genericsmap(gtypes)+" ||", cl.generics)
 					lazy = true
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {

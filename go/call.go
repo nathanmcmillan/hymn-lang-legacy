@@ -58,8 +58,7 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 	min := pix
 	dict := false
 	size := len(fn.args)
-	// gtypes := make(map[string]*datatype)
-	// gindex := fn.generics
+	gtypes := make(map[string]*datatype)
 	for {
 		if me.token.is == ")" {
 			break
@@ -85,24 +84,23 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 				arg := fn.args[aix]
 				param := me.calc(0, nil)
 
-				// var update map[string]*datatype
-				// if len(fn.generics) > 0 {
-				// 	update = me.hintGeneric(param.data(), clsvar.data(), gindex)
-				// }
+				var update map[string]*datatype
+				if len(fn.generics) > 0 {
+					update = me.hintGeneric(param.data(), arg.data(), fn.generics)
+				}
 
-				// if update != nil && len(update) > 0 {
-				// 	lazy = true
-				// 	good, newtypes := mergeMaps(update, gtypes)
-				// 	if !good {
-				// 		a := genericsmap(gtypes)
-				// 		b := genericsmap(update)
-				// 		f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", a, " but found ", b)
-				// 		panic(me.fail() + f)
-				// 	}
-				// 	gtypes = newtypes
+				if update != nil && len(update) > 0 {
+					lazy = true
+					good, newtypes := mergeMaps(update, gtypes)
+					if !good {
+						a := genericsmap(gtypes)
+						b := genericsmap(update)
+						f := fmt.Sprint("Lazy generic for function '"+fn.getname()+"' is ", a, " but found ", b)
+						panic(me.fail() + f)
+					}
+					gtypes = newtypes
 
-				// } else
-				if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
+				} else if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 					err := "parameter \"" + param.data().print()
 					err += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().print() + "\" for function \"" + name + "\""
 					panic(me.fail() + err)
@@ -131,7 +129,24 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 				if arg == nil {
 					arg = fn.args[pix]
 				}
-				if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
+
+				var update map[string]*datatype
+				if len(fn.generics) > 0 {
+					update = me.hintGeneric(param.data(), arg.data(), fn.generics)
+				}
+
+				if update != nil && len(update) > 0 {
+					lazy = true
+					good, newtypes := mergeMaps(update, gtypes)
+					if !good {
+						a := genericsmap(gtypes)
+						b := genericsmap(update)
+						f := fmt.Sprint("Lazy generic for function '"+fn.getname()+"' is ", a, " but found ", b)
+						panic(me.fail() + f)
+					}
+					gtypes = newtypes
+
+				} else if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 					err := "Parameter: " + param.data().print()
 					err += " does not match expected: " + arg.data().print() + " for function: " + name
 					panic(me.fail() + err)
@@ -144,12 +159,9 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 	me.eat(")")
 	if lazy {
 		module := me.hmfile
-		gtypes := make(map[string]*datatype)
-		gindex := make(map[string]int)
-
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
-			i, _ := gindex[k]
+			i := inList(fn.generics, k)
 			glist[i] = v.copy()
 		}
 		if len(glist) != len(fn.generics) {
@@ -160,7 +172,7 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 		if implementation, ok := module.functions[lazy]; ok {
 			fn = implementation
 		} else {
-			fn = remapFunctionImpl(name, gtypes, fn)
+			fn = remapFunctionImpl(lazy, gtypes, fn)
 		}
 	}
 	return fn, params

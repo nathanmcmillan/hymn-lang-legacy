@@ -76,7 +76,9 @@ def main
     # TODO: external interfaces
 
     my_func(f, b)
-    # my_func<foo,bar>(f, b)
+    my_func(one:f, two:b)
+    my_func<foo,bar>(f, b)
+    my_func<foo,bar>(one:f, two:b)
     echo("---")
 
     z = baz(f, b)

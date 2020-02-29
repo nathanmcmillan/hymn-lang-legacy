@@ -125,32 +125,34 @@ func (me *hmfile) generateC() string {
 		fmt.Println("=== end: " + filename + " ===")
 	}
 
-	fileCode := filepath.Join(folder, filename+".c")
-
-	write(fileCode, code.String())
+	fileOut := ""
 
 	if len(cfile.codeFn) > 0 {
+		fileOut = filepath.Join(folder, filename+".c")
+
+		write(fileOut, code.String())
+
 		for _, cfn := range cfile.codeFn {
-			fileappend(fileCode, cfn.String())
+			fileappend(fileOut, cfn.String())
 		}
 		cfile.headSuffix.WriteString("\n")
-	}
 
-	if len(me.comments) > 0 {
-		code.Reset()
-		code.WriteString("\n")
-		for _, comment := range me.comments {
-			code.WriteString("//")
-			code.WriteString(comment)
+		if len(me.comments) > 0 {
+			code.Reset()
 			code.WriteString("\n")
+			for _, comment := range me.comments {
+				code.WriteString("//")
+				code.WriteString(comment)
+				code.WriteString("\n")
+			}
+			fileappend(fileOut, code.String())
 		}
-		fileappend(fileCode, code.String())
 	}
 
 	cfile.headSuffix.WriteString("\n#endif\n")
 	write(filepath.Join(folder, filename+".h"), cfile.head())
 
-	return fileCode
+	return fileOut
 }
 
 func (me *cfile) eval(n *node) *codeblock {

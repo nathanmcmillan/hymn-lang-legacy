@@ -8,7 +8,7 @@ func (me *parser) defineEnum() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	genericsOrder, _, interfaces := me.genericHeader()
+	genericsOrder, interfaces := me.genericHeader()
 	me.eat("line")
 
 	uid := me.hmfile.reference(name)

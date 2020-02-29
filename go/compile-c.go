@@ -48,16 +48,16 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string
 	}
 
 	if len(cfile.codeFn) > 0 {
-		cFile := filepath.Join(folder, name+".c")
+		fileOut := filepath.Join(folder, name+".c")
 
-		module.program.sources[name] = cFile
+		module.program.sources[name] = fileOut
 
 		var code strings.Builder
 		code.WriteString("#include \"" + name + ".h\"\n")
-		write(cFile, code.String())
+		write(fileOut, code.String())
 
 		for _, cfn := range cfile.codeFn {
-			fileappend(cFile, cfn.String())
+			fileappend(fileOut, cfn.String())
 		}
 
 		cfile.headSuffix.WriteString("\n")

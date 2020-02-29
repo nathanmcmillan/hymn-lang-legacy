@@ -9,7 +9,7 @@ func (me *parser) defineClass() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	typedGenerics, _, _ := me.genericHeader()
+	typedGenerics, _ := me.genericHeader()
 	generics := datatypels(typedGenerics)
 
 	var interfaces map[string]*classInterface
@@ -22,10 +22,21 @@ func (me *parser) defineClass() {
 		for {
 			interfaceName := me.token.value
 			me.eat("id")
-			in, ok := module.interfaces[interfaceName]
+
+			interfaceModule := module
+
+			if m, ok := module.imports[interfaceName]; ok && me.token.is == "." {
+				interfaceModule = m
+				me.eat(".")
+				interfaceName = me.token.value
+				me.eat("id")
+			}
+
+			in, ok := interfaceModule.interfaces[interfaceName]
 			if !ok {
 				panic(me.fail() + "Unknown interface: " + interfaceName)
 			}
+
 			if in.requiresGenerics() {
 				generics := me.declareGeneric(len(in.generics))
 				if len(generics) != len(in.generics) {
@@ -34,7 +45,7 @@ func (me *parser) defineClass() {
 					panic(e)
 				}
 				intname := in.name + genericslist(generics)
-				if gotInterface, ok := module.interfaces[intname]; ok {
+				if gotInterface, ok := interfaceModule.interfaces[intname]; ok {
 					in = gotInterface
 				} else {
 					in = me.defineInterfaceImplementation(in, generics)

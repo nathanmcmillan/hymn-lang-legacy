@@ -1,0 +1,3 @@
+interface read_and_write
+    read() uint8
+    write(uint8)

@@ -8,7 +8,6 @@ type function struct {
 	module        *hmfile
 	forClass      *class
 	args          []*funcArg
-	argDict       map[string]int
 	argVariadic   *funcArg
 	aliasing      map[string]string
 	expressions   []*node
@@ -37,7 +36,6 @@ func funcInit(module *hmfile, name string, class *class) *function {
 		}
 	}
 	f.args = make([]*funcArg, 0)
-	f.argDict = make(map[string]int)
 	f.expressions = make([]*node, 0)
 	f.aliasing = make(map[string]string)
 	f.forClass = class
@@ -213,7 +211,6 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		fn.aliasing = alias
 	} else if self != nil {
 		ref := module.fnArgInit(self.uid(), "self", false)
-		fn.argDict["self"] = 0
 		fn.args = append(fn.args, ref)
 		alias := make(map[string]string)
 		for k, v := range self.mapping {
@@ -230,7 +227,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if base != nil {
 			panic(me.fail() + "implementation of static function cannot have additional generics")
 		}
-		order, _, interfaces := me.genericHeader()
+		order, interfaces := me.genericHeader()
 		me.verify("(")
 		fn.generics = datatypels(order)
 		fn.interfaces = interfaces
@@ -264,7 +261,6 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 					}
 				}
 				typed := me.declareType()
-				fn.argDict[argname] = len(fn.args)
 				fnArg := &funcArg{}
 				fnArg.variable = typed.getnamedvariable(argname, false)
 				if defaultValue != "" {
@@ -371,4 +367,18 @@ func searchInterface(interfaces []*classInterface, name string) (*classInterface
 		}
 	}
 	return nil, nil, false
+}
+
+func (me *function) getParameter(name string) *funcArg {
+	_, p := getParameter(me.args, name)
+	return p
+}
+
+func getParameter(parameters []*funcArg, name string) (int, *funcArg) {
+	for i, p := range parameters {
+		if name == p.name {
+			return i, p
+		}
+	}
+	return -1, nil
 }

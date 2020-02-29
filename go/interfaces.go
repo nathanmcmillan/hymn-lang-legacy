@@ -21,6 +21,10 @@ func interfaceInit(module *hmfile, name string, generics []*datatype, functions 
 	return i
 }
 
+func (me *classInterface) uid() string {
+	return me.module.reference(me.name)
+}
+
 func (me *classInterface) requiresGenerics() bool {
 	return me.generics != nil
 }

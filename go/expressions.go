@@ -368,9 +368,21 @@ func (me *parser) importing() {
 			module.namespace[cl.uid()] = "class"
 			module.types[cl.uid()] = "class"
 
+		} else if in, ok := importing.interfaces[s]; ok {
+			if _, ok := module.types[in.name]; ok {
+				panic(me.fail() + "Cannot import interface \"" + in.name + "\". It is already defined.")
+			}
+			module.interfaces[in.name] = in
+			module.namespace[in.name] = "interface"
+			module.types[in.name] = "interface"
+
+			module.interfaces[in.uid()] = in
+			module.namespace[in.uid()] = "interface"
+			module.types[in.uid()] = "interface"
+
 		} else if en, ok := importing.enums[s]; ok {
 			if _, ok := module.types[en.name]; ok {
-				panic(me.fail() + "Cannot import enum \"" + cl.name + "\". It is already defined.")
+				panic(me.fail() + "Cannot import enum \"" + en.name + "\". It is already defined.")
 			}
 			module.enums[en.name] = en
 			module.namespace[en.name] = "enum"

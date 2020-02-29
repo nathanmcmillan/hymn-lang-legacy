@@ -1,16 +1,13 @@
+import "read_and_write_interface"
 
 interface get_and_set
     get() int
     set(int)
 
-interface read_and_write
-    read() uint8
-    write(uint8)
-
 class foo implements get_and_set
     one int
 
-class bar implements get_and_set and read_and_write
+class bar implements get_and_set and read_and_write_interface.read_and_write
     two   int
     three uint8
 
@@ -34,7 +31,7 @@ bar write(value uint8)
 
 # class baz with x:get_and_set and y:get_and_set+read_and_write
 
-class baz<x:get_and_set, y:get_and_set+read_and_write>
+class baz<x:get_and_set, y:get_and_set+read_and_write_interface.read_and_write>
     four x
     five y
 
@@ -43,13 +40,13 @@ class baz<x:get_and_set, y:get_and_set+read_and_write>
 
 # enum doggo with x:get_and_set and y:read_and_write
 
-enum doggo<x:get_and_set, y:read_and_write>
+enum doggo<x:get_and_set, y:read_and_write_interface.read_and_write>
     woof(sound x)
     bark(sound y)
 
 # def my_func(one x, two y) with x:get_and_set and y:get_and_set+read_and_write
 
-def my_func<x:get_and_set, y:get_and_set+read_and_write>(one x, two y)
+def my_func<x:get_and_set, y:get_and_set+read_and_write_interface.read_and_write>(one x, two y)
     one.set(8)
     two.set(9)
     two.write(uint8 10)
@@ -72,8 +69,6 @@ def main
     b.write(uint8 7)
     echo(b.read())
     echo("---")
-
-    # TODO: external interfaces
 
     my_func(f, b)
     my_func(one:f, two:b)

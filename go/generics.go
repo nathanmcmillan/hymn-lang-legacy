@@ -1,16 +1,14 @@
 package main
 
-func (me *parser) genericHeader() ([]*datatype, map[string]int, map[string][]*classInterface) {
+func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
 	module := me.hmfile
-	order := make([]*datatype, 0)
-	dict := make(map[string]int)
-	mapinterfaces := make(map[string][]*classInterface)
+	list := make([]*datatype, 0)
+	requirements := make(map[string][]*classInterface)
 	if me.token.is == "<" {
 		me.eat("<")
 		for {
 			gname := me.token.value
 			me.wordOrPrimitive()
-			dict[gname] = len(order)
 			data := getdatatype(module, gname)
 			if me.token.is == ":" {
 				me.eat(":")
@@ -18,7 +16,17 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int, map[string][]*cl
 				for {
 					requires := me.token.value
 					me.eat("id")
-					interfaceDef, ok := module.interfaces[requires]
+
+					moduleReq := module
+
+					if m, ok := module.imports[requires]; ok && me.token.is == "." {
+						moduleReq = m
+						me.eat(".")
+						requires = me.token.value
+						me.eat("id")
+					}
+
+					interfaceDef, ok := moduleReq.interfaces[requires]
 					if !ok {
 						panic(me.fail() + "Missing interface '" + requires + "'")
 					}
@@ -33,9 +41,9 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int, map[string][]*cl
 					}
 					me.eat("+")
 				}
-				mapinterfaces[gname] = interfaces
+				requirements[gname] = interfaces
 			}
-			order = append(order, data)
+			list = append(list, data)
 			if me.token.is == "," {
 				me.eat(",")
 				continue
@@ -47,7 +55,7 @@ func (me *parser) genericHeader() ([]*datatype, map[string]int, map[string][]*cl
 		}
 		me.eat(">")
 	}
-	return order, dict, mapinterfaces
+	return list, requirements
 }
 
 func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []*datatype {

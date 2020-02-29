@@ -9,7 +9,7 @@ func (me *parser) defineInterface() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	generics, _, _ := me.genericHeader()
+	generics, _ := me.genericHeader()
 	me.eat("line")
 
 	uid := module.reference(name)

@@ -149,7 +149,10 @@ func (me *program) compile(cc string) {
 	for x := len(list) - 1; x >= 0; x-- {
 		module := list[x]
 		os.MkdirAll(module.out, os.ModePerm)
-		me.sources[module.path] = module.generateC()
+		file := module.generateC()
+		if file != "" {
+			me.sources[module.path] = file
+		}
 	}
 }
 

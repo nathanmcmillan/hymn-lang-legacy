@@ -97,8 +97,8 @@ func (me *hmfile) getvar(name string) *variable {
 		if v, ok := scope.variables[name]; ok {
 			fn := me.scope.fn
 			if fn != nil {
-				if id, ok := fn.argDict[name]; ok {
-					fn.args[id].used = true
+				if id := fn.getParameter(name); id != nil {
+					id.used = true
 				}
 			}
 			return v

@@ -76,12 +76,11 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 			argname := me.token.value
 			me.eat("id")
 			me.eat(":")
-			aix := fn.argDict[argname]
+			aix, arg := getParameter(fn.args, argname)
 			if me.token.is == "_" {
 				me.eat("_")
 				params[aix] = nil
 			} else {
-				arg := fn.args[aix]
 				param := me.calc(0, nil)
 
 				var update map[string]*datatype
@@ -201,7 +200,7 @@ func (me *parser) call(module *hmfile) *node {
 	lazy := false
 	if bfn.generics != nil {
 		if me.token.is == "<" {
-			order, _, _ = me.genericHeader()
+			order, _ = me.genericHeader()
 			name += genericslist(order)
 			gfn, ok := module.getFunction(name)
 			if ok {

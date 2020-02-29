@@ -161,9 +161,9 @@ func (me *parser) defineClassFunction() {
 	globalFuncName := nameOfClassFunc(class.name, funcName)
 	me.eat("id")
 	if _, ok := module.functions[globalFuncName]; ok {
-		panic(me.fail() + "class \"" + className + "\" with function \"" + funcName + "\" is already defined")
-	} else if _, ok := class.variables[funcName]; ok {
-		panic(me.fail() + "class \"" + className + "\" with variable \"" + funcName + "\" is already defined")
+		panic(me.fail() + "Class '" + className + "' with function '" + funcName + "' is already defined")
+	} else if class.getVariable(funcName) != nil {
+		panic(me.fail() + "Class '" + className + "' with variable '" + funcName + "' is already defined")
 	}
 	fn := me.defineFunction(funcName, nil, nil, class)
 	class.functions[funcName] = fn

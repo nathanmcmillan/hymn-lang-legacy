@@ -40,7 +40,7 @@ func (me *cfile) compileAllocClass(n *node) *codeblock {
 		}
 		params := n.has
 		for i, p := range params {
-			clv := cl.variables[cl.variableOrder[i]]
+			clv := cl.variables[i]
 			if !clv.data().isPointer() {
 				p.attributes["stack"] = "true"
 			}

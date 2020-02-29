@@ -174,9 +174,8 @@ func (me *codeblock) string(lv int) string {
 func (me *class) string(lv int) string {
 	s := fmc(lv) + "\"" + me.name + "\": [\n"
 	lv++
-	end := len(me.variableOrder) - 1
-	for i, cls := range me.variableOrder {
-		classVar := me.variables[cls]
+	end := len(me.variables) - 1
+	for i, classVar := range me.variables {
 		s += fmc(lv) + "{\n"
 		lv++
 		s += fmc(lv) + "\"name\": \"" + classVar.name + "\",\n" + fmc(lv)

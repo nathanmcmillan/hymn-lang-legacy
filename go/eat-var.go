@@ -37,7 +37,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				dotName := me.token.value
 				me.eat("id")
 				var member *node
-				if classVar, ok := rootClass.variables[dotName]; ok {
+				if classVar := rootClass.getVariable(dotName); classVar != nil {
 					member = nodeInit("member-variable")
 					member.copyData(classVar.data())
 					member.idata = newidvariable(from, dotName)

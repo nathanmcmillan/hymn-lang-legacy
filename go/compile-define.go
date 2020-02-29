@@ -76,8 +76,7 @@ func (me *cfile) defineClass(c *class) {
 	hmName := me.typedefClass(c)
 	var code strings.Builder
 	code.WriteString("\nstruct " + hmName + " {\n")
-	for _, name := range c.variableOrder {
-		field := c.variables[name]
+	for _, field := range c.variables {
 		me.dependencyGraph(field.data())
 		code.WriteString(fmc(1) + field.data().typeSigOf(me, field.name, true) + ";\n")
 	}

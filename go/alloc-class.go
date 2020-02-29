@@ -10,7 +10,7 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 	if !ok {
 		panic(me.fail())
 	}
-	vars := cl.variableOrder
+	vars := cl.variables
 	params := make([]*node, len(vars))
 	me.pushClassParams(n, cl, params, cl.name)
 }
@@ -18,7 +18,7 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 func (me *parser) pushClassParams(n *node, classDef *class, params []*node, typed string) {
 	for i, param := range params {
 		if param == nil {
-			clsvar := classDef.variables[classDef.variableOrder[i]]
+			clsvar := classDef.variables[i]
 			d := me.defaultValue(clsvar.data(), typed)
 			n.push(d)
 		} else {
@@ -32,8 +32,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 	if me.token.is == "line" {
 		me.eat("line")
 	}
-	vars := cl.variableOrder
-	params := make([]*node, len(vars))
+	params := make([]*node, len(cl.variables))
 	pix := 0
 	dict := false
 	lazy := false
@@ -64,8 +63,8 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 
 			vname := me.token.value
 			me.eat("id")
-			clsvar, ok := cl.variables[vname]
-			if !ok {
+			clsvar := cl.getVariable(vname)
+			if clsvar == nil {
 				panic(me.fail() + "Member variable: " + vname + " does not exist for class: " + cl.name)
 			}
 
@@ -102,8 +101,8 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 				}
 			}
 
-			for i, v := range vars {
-				if vname == v {
+			for i, v := range cl.variables {
+				if vname == v.name {
 					params[i] = param
 					break
 				}
@@ -112,7 +111,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 		} else if dict {
 			panic(me.fail() + "Regular paramater found after mapped parameter")
 		} else {
-			clsvar := cl.variables[vars[pix]]
+			clsvar := cl.variables[pix]
 			if me.token.is == "_" {
 				me.eat("_")
 				params[pix] = nil

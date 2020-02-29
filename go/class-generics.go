@@ -68,19 +68,19 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 
 func (me *parser) finishClassGenericDefinition(classDef *class) {
 
-	memberMap := make(map[string]*variable)
-	for k, v := range classDef.base.variables {
-		memberMap[k] = v.copy()
+	members := make([]*variable, len(classDef.base.variables))
+	for i, v := range classDef.base.variables {
+		members[i] = v.copy()
 	}
 
-	classDef.initMembers(classDef.base.variableOrder, memberMap)
+	classDef.initMembers(members)
 
 	mapping := make(map[string]string)
 	for k, m := range classDef.mapping {
 		mapping[k] = m.getRaw()
 	}
 
-	for _, mem := range memberMap {
+	for _, mem := range members {
 		data := me.genericsReplacer(classDef.module, mem.data(), mapping)
 		mem._vdata = data
 	}

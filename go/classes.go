@@ -10,8 +10,7 @@ type class struct {
 	cname           string
 	pathLocal       string
 	pathGlobal      string
-	variables       map[string]*variable
-	variableOrder   []string
+	variables       []*variable
 	generics        []string
 	mapping         map[string]*datatype
 	functions       map[string]*function
@@ -42,8 +41,7 @@ func classInit(module *hmfile, name string, generics []string, interfaces map[st
 	return c
 }
 
-func (me *class) initMembers(variableOrder []string, variables map[string]*variable) {
-	me.variableOrder = variableOrder
+func (me *class) initMembers(variables []*variable) {
 	me.variables = variables
 }
 
@@ -60,4 +58,17 @@ func (me *class) getGenerics() []string {
 
 func (me *class) uid() string {
 	return me.module.reference(me.name)
+}
+
+func (me *class) getVariable(name string) *variable {
+	return getVariable(me.variables, name)
+}
+
+func getVariable(variables []*variable, name string) *variable {
+	for _, v := range variables {
+		if name == v.name {
+			return v
+		}
+	}
+	return nil
 }

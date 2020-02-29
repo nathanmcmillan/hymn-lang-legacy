@@ -69,8 +69,7 @@ func (me *parser) defineClass() {
 	module.classes[uid] = classDef
 	module.classes[name] = classDef
 
-	memberOrder := make([]string, 0)
-	memberMap := make(map[string]*variable)
+	members := make([]*variable, 0)
 
 	for {
 		if me.token.is == "line" {
@@ -82,7 +81,7 @@ func (me *parser) defineClass() {
 		if me.token.is == "id" {
 			mname := me.token.value
 			me.eat("id")
-			if _, ok := memberMap[mname]; ok {
+			if getVariable(members, mname) != nil {
 				panic(me.fail() + "Member name '" + mname + "' already used")
 			}
 			if i := inList(generics, mname); i >= 0 {
@@ -103,14 +102,13 @@ func (me *parser) defineClass() {
 				}
 			}
 			me.eat("line")
-			memberOrder = append(memberOrder, mname)
-			memberMap[mname] = mtype.getnamedvariable(mname, true)
+			members = append(members, mtype.getnamedvariable(mname, true))
 			continue
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in class")
 	}
 
-	classDef.initMembers(memberOrder, memberMap)
+	classDef.initMembers(members)
 
 	for _, implementation := range classDef.implementations {
 		me.finishClassGenericDefinition(implementation)

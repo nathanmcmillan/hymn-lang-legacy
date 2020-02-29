@@ -195,8 +195,8 @@ func (me *class) string(lv int) string {
 func (me *enum) string(lv int) string {
 	s := fmc(lv) + "\"" + me.name + "\": [\n"
 	lv++
-	end := len(me.typesOrder) - 1
-	for i, unionType := range me.typesOrder {
+	end := len(me.types) - 1
+	for i, unionType := range me.types {
 		size := unionType.types.size()
 		if size > 0 {
 			s += fmc(lv) + "{\n"

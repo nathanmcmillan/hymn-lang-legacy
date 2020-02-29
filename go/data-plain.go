@@ -188,7 +188,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		if d != -1 {
 			base = typed[0:gt]
 			if en, ok := module.enums[base]; ok {
-				un := en.types[remainder[d+1:]]
+				un := en.getType(remainder[d+1:])
 				return newdataenum(origin, en, un, glist)
 			}
 			return newdataunknown(origin, module, typed, glist)
@@ -198,7 +198,7 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		if d != -1 {
 			base = typed[0:d]
 			if en, ok := module.enums[base]; ok {
-				un := en.types[typed[d+1:]]
+				un := en.getType(typed[d+1:])
 				return newdataenum(origin, en, un, glist)
 			}
 			return newdataunknown(origin, module, typed, glist)

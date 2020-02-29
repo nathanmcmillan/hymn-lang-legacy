@@ -10,8 +10,7 @@ type enum struct {
 	pathLocal       string
 	pathGlobal      string
 	simple          bool
-	types           map[string]*union
-	typesOrder      []*union
+	types           []*union
 	generics        []string
 	mapping         map[string]*datatype
 	interfaces      map[string][]*classInterface
@@ -55,10 +54,9 @@ func enumInit(module *hmfile, name string) *enum {
 	return e
 }
 
-func (me *enum) finishInit(simple bool, order []*union, dict map[string]*union, generics []string, interfaces map[string][]*classInterface) {
+func (me *enum) finishInit(simple bool, types []*union, generics []string, interfaces map[string][]*classInterface) {
 	me.simple = simple
-	me.types = dict
-	me.typesOrder = order
+	me.types = types
 	me.generics = generics
 	me.interfaces = interfaces
 	if len(generics) > 0 {
@@ -95,4 +93,17 @@ func (me *enum) uid() string {
 
 func (me *enum) join(un *union) string {
 	return me.name + "." + un.name
+}
+
+func (me *enum) getType(name string) *union {
+	return getUnionType(me.types, name)
+}
+
+func getUnionType(unions []*union, name string) *union {
+	for _, v := range unions {
+		if name == v.name {
+			return v
+		}
+	}
+	return nil
 }

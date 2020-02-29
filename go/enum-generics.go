@@ -64,11 +64,9 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 func (me *parser) finishEnumGenericDefinition(enumDef *enum) {
 
 	unionList := make([]*union, len(enumDef.base.types))
-	unionDict := make(map[string]*union)
-	for i, v := range enumDef.base.typesOrder {
+	for i, v := range enumDef.base.types {
 		cp := v.copy()
 		unionList[i] = cp
-		unionDict[cp.name] = cp
 	}
 
 	mapping := make(map[string]string)
@@ -83,5 +81,5 @@ func (me *parser) finishEnumGenericDefinition(enumDef *enum) {
 		}
 	}
 
-	enumDef.finishInit(false, unionList, unionDict, nil, nil)
+	enumDef.finishInit(false, unionList, nil, nil)
 }

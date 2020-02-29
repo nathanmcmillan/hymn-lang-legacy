@@ -204,8 +204,8 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	me.eat(".")
 	unvalue := me.token.value
 	me.eat("id")
-	un, ok := en.types[unvalue]
-	if !ok {
+	un := en.getType(unvalue)
+	if un == nil {
 		panic(me.fail() + "Enum: " + en.name + " does not have type: " + unvalue)
 	}
 	if n != nil && !en.simple {

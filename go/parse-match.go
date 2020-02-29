@@ -72,7 +72,7 @@ func (me *parser) parseIs(left *node, op string, n *node) *node {
 		}
 		if me.token.is == "id" {
 			name := me.token.value
-			if un, ok := baseEnum.types[name]; ok {
+			if un := baseEnum.getType(name); un != nil {
 				me.eat("id")
 				newenum := newdataenum(me.hmfile, baseEnum, un, copydatalist(data.generics))
 				if negate {

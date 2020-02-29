@@ -12,7 +12,7 @@ func (me *cfile) defineEnum(enum *enum) {
 
 	if !impl {
 		code := "\nenum " + hmBaseEnumName + " {\n"
-		for ix, enumUnion := range enum.typesOrder {
+		for ix, enumUnion := range enum.types {
 			if ix == 0 {
 				code += fmc(1) + enumTypeName(hmBaseEnumName, enumUnion.name)
 			} else {
@@ -36,7 +36,7 @@ func (me *cfile) defineEnum(enum *enum) {
 	code += "\nstruct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
-	for _, enumUnion := range enum.typesOrder {
+	for _, enumUnion := range enum.types {
 		num := enumUnion.types.size()
 		if num == 1 {
 			typed := enumUnion.types.get(0)

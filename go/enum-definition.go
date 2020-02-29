@@ -26,8 +26,7 @@ func (me *parser) defineEnum() {
 	me.hmfile.enums[uid] = enumDef
 	me.hmfile.enums[name] = enumDef
 
-	typesOrder := make([]*union, 0)
-	typesMap := make(map[string]*union)
+	types := make([]*union, 0)
 	isSimple := true
 
 	for {
@@ -42,7 +41,7 @@ func (me *parser) defineEnum() {
 		if token.is == "id" {
 			typeName := token.value
 			me.eat("id")
-			if _, ok := typesMap[typeName]; ok {
+			if getUnionType(types, typeName) != nil {
 				panic(me.fail() + "type name \"" + typeName + "\" already used")
 			}
 			unionOrderedData := newordereddata()
@@ -77,14 +76,13 @@ func (me *parser) defineEnum() {
 			}
 			me.eat("line")
 			un := unionInit(me.hmfile, name, typeName, unionOrderedData)
-			typesOrder = append(typesOrder, un)
-			typesMap[typeName] = un
+			types = append(types, un)
 			continue
 		}
 		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
 	}
 
-	enumDef.finishInit(isSimple, typesOrder, typesMap, datatypels(genericsOrder), interfaces)
+	enumDef.finishInit(isSimple, types, datatypels(genericsOrder), interfaces)
 
 	for _, implementation := range enumDef.implementations {
 		me.finishEnumGenericDefinition(implementation)

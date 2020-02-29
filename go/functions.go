@@ -146,8 +146,7 @@ func remapClassFunctionImpl(class *class, original *function) {
 	fn := parsing.defineFunction(plain, nil, nil, class)
 	parsing.jump(pos)
 	fn.start = original.start
-	class.functions[fn._name] = fn
-	class.functionOrder = append(class.functionOrder, fn)
+	class.functions = append(class.functions, fn)
 	parsing.pushFunction(fn.getname(), module, fn)
 	module.program.popRemapStack()
 }
@@ -166,8 +165,7 @@ func (me *parser) defineClassFunction() {
 		panic(me.fail() + "Class '" + className + "' with variable '" + funcName + "' is already defined")
 	}
 	fn := me.defineFunction(funcName, nil, nil, class)
-	class.functions[funcName] = fn
-	class.functionOrder = append(class.functionOrder, fn)
+	class.functions = append(class.functions, fn)
 	me.pushFunction(globalFuncName, module, fn)
 	for _, implementation := range class.implementations {
 		remapClassFunctionImpl(implementation, fn)

@@ -42,7 +42,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.copyData(classVar.data())
 					member.idata = newidvariable(from, dotName)
 					member.push(head)
-				} else if classFunc, ok := rootClass.functions[dotName]; ok {
+				} else if classFunc := rootClass.getFunction(dotName); classFunc != nil {
 					member = me.callClassFunction(data.getmodule(), head, rootClass, classFunc)
 				} else {
 					panic(me.fail() + "Class: " + rootClass.name + " does not have a variable or function named: " + dotName)

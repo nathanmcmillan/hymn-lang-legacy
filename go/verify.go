@@ -9,7 +9,7 @@ func (me *parser) verifyFile() {
 		}
 		for iname, in := range cl.interfaces {
 			for fname, infn := range in.functions {
-				if clfn, ok := cl.functions[fname]; ok {
+				if clfn := cl.getFunction(fname); clfn != nil {
 					sig := clfn.asSig()
 					if !sig.equals(infn) {
 						e := me.fail()

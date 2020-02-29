@@ -13,8 +13,7 @@ type class struct {
 	variables       []*variable
 	generics        []string
 	mapping         map[string]*datatype
-	functions       map[string]*function
-	functionOrder   []*function
+	functions       []*function
 	base            *class
 	implementations []*class
 	doNotDefine     bool
@@ -31,8 +30,7 @@ func classInit(module *hmfile, name string, generics []string, interfaces map[st
 		c.pathGlobal = filepath.Join(module.relativeOut, c.pathLocal)
 	}
 	c.generics = generics
-	c.functions = make(map[string]*function)
-	c.functionOrder = make([]*function, 0)
+	c.functions = make([]*function, 0)
 	if len(generics) > 0 {
 		c.implementations = make([]*class, 0)
 		c.doNotDefine = true
@@ -68,6 +66,19 @@ func getVariable(variables []*variable, name string) *variable {
 	for _, v := range variables {
 		if name == v.name {
 			return v
+		}
+	}
+	return nil
+}
+
+func (me *class) getFunction(name string) *function {
+	return getFunction(me.functions, name)
+}
+
+func getFunction(functions []*function, name string) *function {
+	for _, f := range functions {
+		if name == f._name {
+			return f
 		}
 	}
 	return nil

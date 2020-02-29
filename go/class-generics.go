@@ -85,7 +85,7 @@ func (me *parser) finishClassGenericDefinition(classDef *class) {
 		mem._vdata = data
 	}
 
-	for _, fn := range classDef.base.functionOrder {
+	for _, fn := range classDef.base.functions {
 		remapClassFunctionImpl(classDef, fn)
 	}
 }

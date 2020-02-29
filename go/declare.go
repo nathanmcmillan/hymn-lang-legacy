@@ -144,7 +144,7 @@ func (me *parser) declareType() *datatype {
 		var un *union
 		if me.token.is == "." {
 			me.eat(".")
-			if en.getType(me.token.value) == nil {
+			if un = en.getType(me.token.value); un == nil {
 				panic(me.fail() + "Union type \"" + me.token.value + "\" not found for enum \"" + en.name + "\".")
 			}
 			me.eat("id")

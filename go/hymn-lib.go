@@ -107,7 +107,7 @@ func (me *hmlib) initPush() {
 
 func (me *hmlib) initIO() {
 	me.types[TokenLibFile] = ""
-	classDef := classInit(nil, TokenLibFile, make([]string, 0), nil)
+	classDef := classInit(nil, TokenLibFile, make([]string, 0), make(map[string][]*classInterface), nil)
 	me.classes[TokenLibFile] = classDef
 
 	fn := funcInit(nil, libOpen, nil)

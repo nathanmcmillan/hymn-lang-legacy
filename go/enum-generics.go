@@ -44,7 +44,7 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 			m := mapping[g]
 			if cl, ok := m.isClass(); ok {
 				for _, t := range i {
-					if _, ok := cl.interfaces[t.name]; !ok {
+					if _, ok := cl.selfInterfaces[t.uid()]; !ok {
 						panic(me.fail() + "Class '" + cl.name + "' for enum '" + implementation + "' requires interface '" + t.name + "'")
 					}
 				}

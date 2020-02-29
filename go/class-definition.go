@@ -9,7 +9,7 @@ func (me *parser) defineClass() {
 		panic(me.fail() + "name \"" + name + "\" already defined")
 	}
 	me.eat("id")
-	typedGenerics, _ := me.genericHeader()
+	typedGenerics, typedGenericsInterfaces := me.genericHeader()
 	generics := datatypels(typedGenerics)
 
 	var interfaces map[string]*classInterface
@@ -51,7 +51,7 @@ func (me *parser) defineClass() {
 					in = me.defineInterfaceImplementation(in, generics)
 				}
 			}
-			interfaces[in.name] = in
+			interfaces[in.uid()] = in
 			if me.token.is == "line" && me.peek().is == "and" {
 				me.eat("line")
 			}
@@ -73,7 +73,7 @@ func (me *parser) defineClass() {
 	module.namespace[name] = "class"
 	module.types[name] = "class"
 
-	classDef := classInit(module, name, generics, interfaces)
+	classDef := classInit(module, name, generics, typedGenericsInterfaces, interfaces)
 
 	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})
 

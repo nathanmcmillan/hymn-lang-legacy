@@ -113,7 +113,7 @@ func remapFunctionImpl(name string, mapping map[string]*datatype, original *func
 			m := fn.mapping[g]
 			if cl, ok := m.isClass(); ok {
 				for _, t := range i {
-					if _, ok := cl.interfaces[t.name]; !ok {
+					if _, ok := cl.selfInterfaces[t.uid()]; !ok {
 						panic(parsing.fail() + "Class '" + cl.name + "' for function '" + name + "' requires interface '" + t.name + "'")
 					}
 				}
@@ -218,6 +218,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		}
 		fn.mapping = mapping
 		fn.aliasing = alias
+		fn.interfaces = self.genericsInterfaces
 		fname = self.name + "." + name
 	}
 	if me.token.is == "<" {

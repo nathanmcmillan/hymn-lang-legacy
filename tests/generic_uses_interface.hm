@@ -35,8 +35,8 @@ class baz<x:get_and_set, y:get_and_set+read_and_write_interface.read_and_write>
     four x
     five y
 
-# baz work()
-#     echo(self.four.get())
+baz work()
+    echo(self.four.get())
 
 # enum doggo with x:get_and_set and y:read_and_write
 
@@ -80,7 +80,7 @@ def main
     echo(z.four.get())
     echo(z.five.get())
     echo(z.five.read())
-    # echo(z.work())
+    z.work()
     echo("---")
 
     d_1 = doggo<foo,bar>.woof(f)

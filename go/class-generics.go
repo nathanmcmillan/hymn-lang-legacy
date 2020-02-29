@@ -14,7 +14,7 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 	module.namespace[implementation] = "class"
 	module.types[implementation] = "class"
 
-	classDef := classInit(module, implementation, nil, nil)
+	classDef := classInit(module, implementation, nil, nil, nil)
 	classDef.base = super
 
 	module.defineOrder = append(module.defineOrder, &defineType{class: classDef})
@@ -35,10 +35,29 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 	}
 	classDef.mapping = mapping
 
-	classDef.interfaces = make(map[string]*classInterface)
-	for key, in := range super.interfaces {
+	if len(super.genericsInterfaces) > 0 {
+		for _, g := range super.generics {
+			i, ok := super.genericsInterfaces[g]
+			if !ok {
+				continue
+			}
+			m := mapping[g]
+			if cl, ok := m.isClass(); ok {
+				for _, t := range i {
+					if _, ok := cl.selfInterfaces[t.uid()]; !ok {
+						panic(me.fail() + "Class '" + cl.name + "' for '" + implementation + "' requires interface '" + t.name + "'")
+					}
+				}
+			} else {
+				panic(me.fail() + "Class '" + implementation + "' requires interface implementation but type was " + m.error())
+			}
+		}
+	}
+
+	classDef.selfInterfaces = make(map[string]*classInterface)
+	for key, in := range super.selfInterfaces {
 		if !in.requiresGenerics() {
-			classDef.interfaces[key] = in
+			classDef.selfInterfaces[key] = in
 			continue
 		}
 		super := in.getSuper()
@@ -56,7 +75,7 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 		} else {
 			in = me.defineInterfaceImplementation(in, generics)
 		}
-		classDef.interfaces[key] = in
+		classDef.selfInterfaces[key] = in
 	}
 
 	if super.variables != nil && len(super.variables) > 0 {

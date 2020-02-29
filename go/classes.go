@@ -5,22 +5,23 @@ import (
 )
 
 type class struct {
-	module          *hmfile
-	name            string
-	cname           string
-	pathLocal       string
-	pathGlobal      string
-	variables       []*variable
-	generics        []string
-	mapping         map[string]*datatype
-	functions       []*function
-	base            *class
-	implementations []*class
-	doNotDefine     bool
-	interfaces      map[string]*classInterface
+	module             *hmfile
+	name               string
+	cname              string
+	pathLocal          string
+	pathGlobal         string
+	variables          []*variable
+	generics           []string
+	mapping            map[string]*datatype
+	genericsInterfaces map[string][]*classInterface
+	functions          []*function
+	base               *class
+	implementations    []*class
+	doNotDefine        bool
+	selfInterfaces     map[string]*classInterface
 }
 
-func classInit(module *hmfile, name string, generics []string, interfaces map[string]*classInterface) *class {
+func classInit(module *hmfile, name string, generics []string, genericsInterfaces map[string][]*classInterface, interfaces map[string]*classInterface) *class {
 	c := &class{}
 	c.module = module
 	c.name = name
@@ -29,13 +30,14 @@ func classInit(module *hmfile, name string, generics []string, interfaces map[st
 		c.cname = module.classNameSpace(name)
 		c.pathGlobal = filepath.Join(module.relativeOut, c.pathLocal)
 	}
-	c.generics = generics
 	c.functions = make([]*function, 0)
+	c.generics = generics
+	c.genericsInterfaces = genericsInterfaces
 	if len(generics) > 0 {
 		c.implementations = make([]*class, 0)
 		c.doNotDefine = true
 	}
-	c.interfaces = interfaces
+	c.selfInterfaces = interfaces
 	return c
 }
 

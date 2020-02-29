@@ -7,7 +7,7 @@ func (me *parser) verifyFile() {
 		if cl == nil {
 			continue
 		}
-		for iname, in := range cl.interfaces {
+		for iname, in := range cl.selfInterfaces {
 			for fname, infn := range in.functions {
 				if clfn := cl.getFunction(fname); clfn != nil {
 					sig := clfn.asSig()

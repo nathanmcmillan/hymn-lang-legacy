@@ -2,8 +2,8 @@ package main
 
 func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
 	module := me.hmfile
-	list := make([]*datatype, 0)
-	requirements := make(map[string][]*classInterface)
+	var list []*datatype
+	var requirements map[string][]*classInterface
 	if me.token.is == "<" {
 		me.eat("<")
 		for {
@@ -41,7 +41,13 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
 					}
 					me.eat("+")
 				}
+				if requirements == nil {
+					requirements = make(map[string][]*classInterface)
+				}
 				requirements[gname] = interfaces
+			}
+			if list == nil {
+				list = make([]*datatype, 0)
 			}
 			list = append(list, data)
 			if me.token.is == "," {

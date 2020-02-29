@@ -126,21 +126,25 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 	}
 	me.eat(")")
 	if lazy {
+		module := me.hmfile
+		gtypes := make(map[string]*datatype)
+		gindex := make(map[string]int)
+
 		glist := make([]*datatype, len(gtypes))
 		for k, v := range gtypes {
 			i, _ := gindex[k]
 			glist[i] = v.copy()
 		}
-		if len(glist) != len(cl.generics) {
-			f := fmt.Sprint("Missing generic for function '"+fn.name+"'\nImplementation list was ", genericslist(glist))
+		if len(glist) != len(fn.generics) {
+			f := fmt.Sprint("Missing generic for function '"+fn.getname()+"'\nImplementation list was ", genericslist(glist))
 			panic(me.fail() + f)
 		}
-		lazy := typed + genericslist(glist)
-		if _, ok := module.classes[lazy]; !ok {
-			me.defineClassImplGeneric(cl, glist)
+		lazy := name + genericslist(glist)
+		if implementation, ok := module.functions[lazy]; ok {
+			fn = implementation
+		} else {
+			fn = remapFunctionImpl(name, gtypes, fn)
 		}
-		cl = module.classes[lazy]
-		typed = lazy
 	}
 	return fn, params
 }

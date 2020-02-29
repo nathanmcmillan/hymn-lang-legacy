@@ -89,7 +89,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 					if !good {
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
-						f := fmt.Sprint("Lazy generic for class \""+cl.name+"\" is ", a, " but found ", b)
+						f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", a, " but found ", b)
 						panic(me.fail() + f)
 					}
 					gtypes = newtypes
@@ -128,7 +128,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 					lazy = true
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {
-						f := fmt.Sprint("lazy generic for class \""+cl.name+"\" is ", gtypes, " but found ", update)
+						f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", gtypes, " but found ", update)
 						panic(me.fail() + f)
 					}
 					gtypes = newtypes

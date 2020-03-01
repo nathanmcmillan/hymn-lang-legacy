@@ -75,6 +75,9 @@ func (me *parser) declareType() *datatype {
 		me.eat("<")
 		option := me.declareType()
 		me.eat(">")
+		if !option.isPointer() {
+			panic(me.fail() + "Maybe type requires a pointer. Found: " + option.print())
+		}
 		return newdatamaybe(option)
 
 	} else if me.token.is == "none" {
@@ -83,6 +86,9 @@ func (me *parser) declareType() *datatype {
 			me.eat("<")
 			option := me.declareType()
 			me.eat(">")
+			if !option.isPointer() {
+				panic(me.fail() + "None type requires a pointer. Found: " + option.print())
+			}
 			return newdatamaybe(option)
 		}
 		return newdatanone()

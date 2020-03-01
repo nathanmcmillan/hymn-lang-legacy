@@ -111,13 +111,21 @@ func getdatatype(me *hmfile, typed string) *datatype {
 	}
 
 	if strings.HasPrefix(typed, "maybe<") {
-		return newdatamaybe(getdatatype(me, typed[6:len(typed)-1]))
+		member := getdatatype(me, typed[6:len(typed)-1])
+		if !member.isPointer() {
+			panic(me.parser.fail() + "Maybe type requires a pointer. Found: " + member.print())
+		}
+		return newdatamaybe(member)
 
 	} else if typed == "none" {
 		return newdatanone()
 
 	} else if strings.HasPrefix(typed, "none<") {
-		return newdatamaybe(getdatatype(me, typed[5:len(typed)-1]))
+		member := getdatatype(me, typed[5:len(typed)-1])
+		if !member.isPointer() {
+			panic(me.parser.fail() + "None type requires a pointer. Found: " + member.print())
+		}
+		return newdatamaybe(member)
 	}
 
 	if checkIsArray(typed) {

@@ -115,13 +115,14 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 
 	var isEnum *enum
 
+	if baseEnum, _, ok := using.data().isEnum(); ok {
+		isEnum = baseEnum
+	}
+
 	if using.is == "variable" {
 		name := me.getvar(using.idata.name).cname
-		if baseEnum, _, ok := using.data().isEnum(); ok {
-			isEnum = baseEnum
-			if !baseEnum.simple {
-				test = name + "->type"
-			}
+		if isEnum != nil && !isEnum.simple {
+			test = name + "->type"
 		}
 		tempname = name
 	}
@@ -164,7 +165,7 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 					}
 				}
 			} else {
-				code += fmc(me.depth) + "case " + caseOf.is + ":\n"
+				code += fmc(me.depth) + "case " + caseOf.is + ": {\n"
 			}
 		}
 		thenBlock := me.eval(thenDo).code()

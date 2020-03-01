@@ -126,6 +126,10 @@ func (me *parser) parseMatch() *node {
 	matching := me.calc(0, nil)
 	matchType := matching.data()
 
+	if _, ok := matchType.isClass(); ok {
+		panic(me.fail() + "Can't match on class.\nFound: " + matchType.error())
+	}
+
 	_, un, ok := matchType.isEnum()
 	if ok && un != nil {
 		panic(me.fail() + "enum \"" + matchType.print() + "\" does not need a match expression.")
@@ -160,7 +164,7 @@ func (me *parser) parseMatch() *node {
 			if temp != "" {
 				en, _, ok := matchType.isEnum()
 				if !ok {
-					panic(me.fail() + "only enums supported for matching")
+					panic(me.fail() + "Enum required for matching but found: " + name)
 				}
 				tempd := me.hmfile.varInit(en.name+"."+name, temp, false)
 				me.hmfile.scope.variables[temp] = tempd

@@ -1,0 +1,3 @@
+enum either<x,y>
+    left(value x)
+    right(value y)

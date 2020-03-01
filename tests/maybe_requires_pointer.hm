@@ -1,0 +1,9 @@
+
+def call() maybe<int>
+    return 0
+
+def main()
+    x = call()
+    match x
+        some => echo("oh no!")
+        _ => pass

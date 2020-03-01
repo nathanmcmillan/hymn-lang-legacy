@@ -194,7 +194,11 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			case TokenLibSize:
 				code += "%zu"
 			default:
-				panic("argument for echo was " + param.string(me.hmfile, 0))
+				if param.data().enum != nil {
+					panic("echo() does not support printing enums: " + param.data().print())
+				} else {
+					panic("Argument for echo was " + param.string(me.hmfile, 0))
+				}
 			}
 			if pop {
 				code2 += paramx.pop()

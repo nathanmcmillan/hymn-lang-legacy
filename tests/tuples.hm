@@ -1,27 +1,8 @@
 
-def do_stuff() int, int
-    return 3, 4
+def call() int, string
+    return 3, "foo"
 
 def main()
-    x, y = do_stuff()
-
-# current
-
-def do_stuff_2() tuple<int, int>
-    return tuple(3, 4)
-
-def main_2()
-    tup = do_stuff_2()
-    x = tup.a
-    y = tup.b
-
-# possible
-
-def do_stuff_3(return_x *int, return_y *int)
-    return_x = 3
-    return_y = 4
-
-def main_3()
-    x *int
-    y *int
-    do_stuff_3(x, y)
+    x, y = call()
+    echo(x)
+    echo(y)

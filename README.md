@@ -37,19 +37,27 @@ Learn more at https://hymn-lang.org
 * Automatic or manual default parameters using '_'
 * Configurable environment variables using $HYMN_MODULES
 * Multiline string declaration using '\'
+* Interfaces
 
 ### Timeline
-* Bootstrapping compiler from golang to hymn
 * References to primitives
+* Multiple return values
+* Bootstrapping compiler from golang to hymn
 * Borrow checker
 * Free heap space
-* Interfaces / contraints (compile time check whether a class implements a set of functions)
 * Threads / async await (split function in half for each await)
 * Generate makefiles
 * Macros / def
 * Better error output
 * Language server protocol: The compiler should have flags for how to format/output found problems and at what point to stop
-* Optimize printf for multiple strings to avoid concatenation 
+* Optimize printf for multiple strings to avoid concatenation
+
+### Libraries
+The standard libraries will need to include the following
+* ref/ptr class for holding pointers to primitives
+* tuple class for returning multiple values
+* hashmap, hashset, list classes for standard data structures
+* either enum for union returns
 
 ### Bugs
 * Variable scoping

@@ -1,13 +1,29 @@
 
-def get_num(flag bool) maybe<int>
+class ref<x>
+    val x
+
+def call(flag bool) maybe<ref<int>>
     if flag
-        return 12
+        return ref(12)
     return none
 
 def main()
-    x = get_num(true)
-    y = get_num(false)
+    x = call(true)
+    y = call(false)
     match x
         none => echo("oh no!")
-        some(s) => echo("x :=", s)
+        some(num) => echo("x :=", num.val)
     if y is some: echo("oh no!")
+
+# def call(flag bool) maybe<int>
+#     if flag
+#         return 12
+#     return none
+
+# def main()
+#     x = call(true)
+#     y = call(false)
+#     match x
+#         none => echo("oh no!")
+#         some(num) => echo("x :=", num)
+#     if y is some: echo("oh no!")

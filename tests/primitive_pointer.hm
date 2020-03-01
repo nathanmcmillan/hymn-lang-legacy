@@ -1,0 +1,16 @@
+
+class ptr<x>
+    value x
+
+def call(return_x ptr<int>, return_y ptr<int>)
+    return_x.value = 3
+    return_y.value = 4
+
+def main()
+    x = ptr(0)
+    y = ptr(0)
+    echo(x.value)
+    echo(y.value)
+    call(x, y)
+    echo(x.value)
+    echo(y.value)

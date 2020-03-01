@@ -1,0 +1,3 @@
+class tuple<x,y>
+    first  x
+    second y

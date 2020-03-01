@@ -4,15 +4,21 @@ enum operation
     multiply
     divide
 
-def get_op(flag bool) maybe<operation>
+class ptr<x>
+    val x
+
+def call(flag bool) maybe<ptr<operation>>
     if flag
-        return operation.multiply
+        return ptr(operation.multiply)
     return none
 
 def main()
-    x = get_op(true)
-    y = get_op(false)
+    x = call(true)
+    y = call(false)
     match x
         none => echo("oh no!")
-        some(s) => echo("x :=", s)
+        some(s) =>
+            match s.val
+                multiply => echo("x := multiply")
+                _ => echo("oh no!")
     if y is some: echo("oh no!")

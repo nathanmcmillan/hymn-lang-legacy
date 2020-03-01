@@ -1132,6 +1132,9 @@ func genericsliststr(list []string) string {
 }
 
 func datatypels(data []*datatype) []string {
+	if data == nil {
+		return nil
+	}
 	ls := make([]string, len(data))
 	for i, d := range data {
 		ls[i] = d.print()

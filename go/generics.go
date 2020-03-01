@@ -1,5 +1,78 @@
 package main
 
+func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterface) {
+	if me.token.is != "with" {
+		if me.token.is == "line" && me.peek().is == "with" {
+			me.eat("line")
+		} else {
+			return nil, nil
+		}
+	}
+	me.eat("with")
+	module := me.hmfile
+	var list []*datatype
+	var requirements map[string][]*classInterface
+	for {
+		gname := me.token.value
+		me.wordOrPrimitive()
+		data := getdatatype(module, gname)
+		if me.token.is == ":" {
+			me.eat(":")
+			interfaces := make([]*classInterface, 0)
+			for {
+				requires := me.token.value
+				me.eat("id")
+
+				moduleReq := module
+
+				if m, ok := module.imports[requires]; ok && me.token.is == "." {
+					moduleReq = m
+					me.eat(".")
+					requires = me.token.value
+					me.eat("id")
+				}
+
+				interfaceDef, ok := moduleReq.interfaces[requires]
+				if !ok {
+					panic(me.fail() + "Missing interface '" + requires + "'")
+				}
+				for fname := range interfaceDef.functions {
+					if def, _, ok := searchInterface(interfaces, fname); ok {
+						panic(me.fail() + "Conflicting '" + fname + "' from '" + interfaceDef.name + "' and '" + def.name + "'")
+					}
+				}
+				interfaces = append(interfaces, interfaceDef)
+				if me.token.is != "," {
+					break
+				}
+				me.eat("+")
+			}
+			if requirements == nil {
+				requirements = make(map[string][]*classInterface)
+			}
+			requirements[gname] = interfaces
+		}
+		if list == nil {
+			list = make([]*datatype, 0)
+		}
+		list = append(list, data)
+		if me.token.is == "and" {
+			me.eat("and")
+			continue
+		} else if me.token.is == "line" {
+			if me.peek().is == "and" {
+				me.eat("line")
+				me.eat("and")
+				continue
+			}
+			break
+		} else {
+			panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
+		}
+	}
+	return list, requirements
+}
+
 func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
 	module := me.hmfile
 	var list []*datatype

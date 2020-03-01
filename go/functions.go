@@ -290,6 +290,13 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 			panic(me.fail() + "class function \"" + fname + "\" must include parenthesis")
 		}
 	}
+	// TODO ::
+	// if fn.generics == nil && fn.interfaces == nil {
+	// 	order, interfaces := me.withGenericsHeader()
+	// 	fn.generics = datatypels(order)
+	// 	fn.interfaces = interfaces
+	// 	fmt.Println(name, fn.generics, fn.interfaces)
+	// }
 	if me.token.is != "line" {
 		if !parenthesis {
 			panic(me.fail() + "function \"" + name + "\" returns a value and must include parenthesis")

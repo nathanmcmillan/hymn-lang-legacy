@@ -1,4 +1,4 @@
-import "read_and_write_interface"
+import "read_and_write_interface" (read_and_write)
 
 interface get_and_set
     get() int
@@ -29,8 +29,6 @@ bar read() uint8
 bar write(value uint8)
     self.three += value
 
-# class baz with x:get_and_set and y:get_and_set+read_and_write
-
 class baz<x:get_and_set, y:get_and_set+read_and_write_interface.read_and_write>
     four x
     five y
@@ -38,15 +36,11 @@ class baz<x:get_and_set, y:get_and_set+read_and_write_interface.read_and_write>
 baz work()
     echo(self.four.get())
 
-# enum doggo with x:get_and_set and y:read_and_write
-
-enum doggo<x:get_and_set, y:read_and_write_interface.read_and_write>
+enum doggo<x:get_and_set, y:read_and_write>
     woof(sound x)
     bark(sound y)
 
-# def my_func(one x, two y) with x:get_and_set and y:get_and_set+read_and_write
-
-def my_func<x:get_and_set, y:get_and_set+read_and_write_interface.read_and_write>(one x, two y)
+def my_func<x:get_and_set, y:get_and_set+read_and_write>(one x, two y)
     one.set(8)
     two.set(9)
     two.write(uint8 10)

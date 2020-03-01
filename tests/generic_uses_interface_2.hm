@@ -1,0 +1,84 @@
+import "read_and_write_interface" (read_and_write)
+
+interface get_and_set
+    get() int
+    set(int)
+
+class foo implements get_and_set
+    one int
+
+class bar implements get_and_set and read_and_write
+    two   int
+    three uint8
+
+foo get() int
+    return self.one
+
+foo set(value int)
+    self.one = value
+
+bar get() int
+    return self.two
+
+bar set(value int)
+    self.two = value
+
+bar read() uint8
+    return self.three + uint8 1
+
+bar write(value uint8)
+    self.three += value
+
+class baz with x:get_and_set and y:get_and_set, read_and_write
+    four x
+    five y
+
+baz work()
+    echo(self.four.get())
+
+enum doggo with x:get_and_set and y:read_and_write
+    woof(sound x)
+    bark(sound y)
+
+def my_func(one x, two y) with x:get_and_set and y:get_and_set, read_and_write
+    one.set(8)
+    two.set(9)
+    two.write(uint8 10)
+    echo(one.get())
+    echo(two.get())
+    echo(two.read())
+
+def main
+    f = foo(2)
+    echo(f.one)
+    f.set(3)
+    echo(f.get())
+    echo("---")
+
+    b = bar(4, uint8 5)
+    echo(b.two)
+    echo(b.three)
+    b.set(6)
+    echo(b.get())
+    b.write(uint8 7)
+    echo(b.read())
+    echo("---")
+
+    my_func(f, b)
+    my_func(one:f, two:b)
+    my_func<foo,bar>(f, b)
+    my_func<foo,bar>(one:f, two:b)
+    echo("---")
+
+    z = baz(f, b)
+    echo(z.four.get())
+    echo(z.five.get())
+    echo(z.five.read())
+    z.work()
+    echo("---")
+
+    d_1 = doggo<foo,bar>.woof(f)
+    echo(d_1.sound.get())
+    d_2 = doggo<foo,bar>.bark(b)
+    echo(d_2.sound.read())
+    echo("---")

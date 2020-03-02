@@ -49,9 +49,12 @@ func TestCompile(t *testing.T) {
 		fmt.Println("====================================================================== test", info.Name())
 		flags.path = tests + "/" + info.Name()
 		flags.writeTo = folder + "/out/" + nameNum
-		stdout, err := execCompile(flags)
-		if err != nil {
-			t.Errorf("compile error for " + info.Name() + ". " + err.Error())
+		stdout, errp, errf := execCompile(flags)
+		if errp != nil {
+			t.Errorf("Parsing error for " + info.Name() + "\n" + errp.print())
+		}
+		if errf != nil {
+			t.Errorf("Compile error for " + info.Name() + ". " + errf.Error())
 		}
 		expected := string(read(folder + "/assert/" + nameNum + ".out"))
 		if stdout != expected {

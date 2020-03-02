@@ -362,12 +362,17 @@ func (me *parser) importing() *parseError {
 		}
 		importing = found
 	} else {
-		out, er := filepath.Abs(filepath.Join(module.program.out, value))
-		if er != nil {
+		out, fer := filepath.Abs(filepath.Join(module.program.out, value))
+		if fer != nil {
 			return err(me, "Failed to parse import \""+value+"\". "+er.Error())
 		}
 
-		importing = module.program.parse(out, path, module.program.libs)
+		var er *parseError
+		importing, er = module.program.parse(out, path, module.program.libs)
+		if er != nil {
+			return er
+		}
+
 		if debug {
 			fmt.Println("=== parse: " + module.name + " ===")
 		}

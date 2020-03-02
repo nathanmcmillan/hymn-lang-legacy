@@ -59,7 +59,7 @@ func (me *parser) skipLines() {
 	}
 }
 
-func (me *hmfile) parse(out, path string) {
+func (me *hmfile) parse(out, path string) *parseError {
 	name := fileName(path)
 	data := read(path)
 
@@ -103,13 +103,19 @@ func (me *hmfile) parse(out, path string) {
 
 	parsing.skipLines()
 	for parsing.token.is != "eof" {
-		parsing.fileExpression()
+		er := parsing.fileExpression()
+		if er != nil {
+			return er
+		}
 		if parsing.token.is == "line" {
 			parsing.eat("line")
 		}
 	}
 
-	parsing.verifyFile()
+	er := parsing.verifyFile()
+	if er != nil {
+		return er
+	}
 
 	if tokenFile != nil {
 		tokenFile.WriteString("\n\t]\n}\n")
@@ -121,6 +127,8 @@ func (me *hmfile) parse(out, path string) {
 		treeFile.WriteString(me.string())
 		treeFile.WriteString("\n")
 	}
+
+	return nil
 }
 
 func (me *parser) next() {

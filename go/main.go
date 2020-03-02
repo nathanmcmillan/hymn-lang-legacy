@@ -89,14 +89,22 @@ func main() {
 	if flags.format {
 		execFormat(flags.path)
 	} else {
-		execCompile(flags)
+		_, parseError, fsError := execCompile(flags)
+		if parseError != nil {
+			fmt.Println(parseError.print())
+			os.Exit(1)
+		}
+		if fsError != nil {
+			fmt.Println(fsError.Error())
+			os.Exit(1)
+		}
 	}
 }
 
-func execCompile(flags *flags) (string, error) {
-	out, err := filepath.Abs(flags.writeTo)
-	if err != nil {
-		panic(err.Error())
+func execCompile(flags *flags) (string, *parseError, error) {
+	out, fer := filepath.Abs(flags.writeTo)
+	if fer != nil {
+		panic(fer.Error())
 	}
 
 	program := programInit()
@@ -113,7 +121,11 @@ func execCompile(flags *flags) (string, error) {
 	hmlib.libs()
 	program.hmlib = hmlib
 
-	program.parse(flags.writeTo, flags.path, flags.hmlib)
+	_, er := program.parse(flags.writeTo, flags.path, flags.hmlib)
+	if er != nil {
+		return "", er, nil
+	}
+
 	program.compile(flags.cc)
 
 	name := fileName(flags.path)
@@ -122,13 +134,14 @@ func execCompile(flags *flags) (string, error) {
 		os.Remove(fileOut)
 	}
 	if flags.doNotCompile {
-		return "", nil
+		return "", nil, nil
 	}
 	gcc(flags, program.sources, fileOut)
-	return execBin(flags, name)
+	s, e := execBin(flags, name)
+	return s, nil, e
 }
 
-func (me *program) parse(out, path, libs string) *hmfile {
+func (me *program) parse(out, path, libs string) (*hmfile, *parseError) {
 	uid := strconv.Itoa(me.moduleUID)
 	me.moduleUID++
 
@@ -140,8 +153,12 @@ func (me *program) parse(out, path, libs string) *hmfile {
 	me.hmfiles[path] = module
 	me.hmorder = append(me.hmorder, module)
 
-	module.parse(out, path)
-	return module
+	er := module.parse(out, path)
+	if er != nil {
+		return nil, er
+	}
+
+	return module, nil
 }
 
 func (me *program) compile(cc string) {

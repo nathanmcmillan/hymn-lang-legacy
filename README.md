@@ -58,6 +58,7 @@ The standard libraries will need to include the following
 * tuple class for returning multiple values
 * hashmap, hashset, list classes for standard data structures
 * either enum for union returns
+* string builder class
 
 ### Bugs
 * Variable scoping

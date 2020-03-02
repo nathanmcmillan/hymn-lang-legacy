@@ -1,6 +1,6 @@
 package main
 
-func (me *cfile) compileCall(node *node) *codeblock {
+func (me *cfile) compileCall(node *node) (*codeblock, *compileError) {
 	fn := node.fn
 	if fn == nil {
 		head := node.has[0]
@@ -21,7 +21,7 @@ func (me *cfile) compileCall(node *node) *codeblock {
 			code += me.hintEval(parameter, arg.data()).code()
 		}
 		code += ")"
-		return codeBlockOne(node, code)
+		return codeBlockOne(node, code), nil
 	}
 	name := fn.getname()
 	if !me.master {
@@ -33,7 +33,10 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		}
 	}
 	parameters := node.has
-	cb := me.compileBuiltin(node, name, parameters)
+	cb, er := me.compileBuiltin(node, name, parameters)
+	if er != nil {
+		return nil, er
+	}
 	if cb == nil {
 		cb = &codeblock{}
 		code := fn.getcname() + "("
@@ -55,5 +58,5 @@ func (me *cfile) compileCall(node *node) *codeblock {
 		code += ")"
 		cb.current = codeNode(node, code)
 	}
-	return cb
+	return cb, nil
 }

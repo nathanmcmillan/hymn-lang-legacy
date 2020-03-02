@@ -75,7 +75,7 @@ func (me *function) asSig() *fnSig {
 	return sig
 }
 
-func (me *function) data() *datatype {
+func (me *function) data() (*datatype, *parseError) {
 	return me.asSig().newdatatype()
 }
 
@@ -92,17 +92,20 @@ func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
 	}
 }
 
-func remapFunctionImpl(name string, mapping map[string]*datatype, original *function) *function {
+func remapFunctionImpl(name string, mapping map[string]*datatype, original *function) (*function, *parseError) {
 	module := original.module
 	if fn, ok := module.functions[name]; ok {
-		return fn
+		return fn, nil
 	}
 	parsing := module.parser
 	module.program.pushRemapStack(module.reference(original.getname()))
 	pos := parsing.save()
 	parsing.jump(original.start)
 
-	fn := parsing.defineFunction(name, mapping, original, nil)
+	fn, er := parsing.defineFunction(name, mapping, original, nil)
+	if er != nil {
+		return nil, er
+	}
 
 	if len(original.interfaces) > 0 {
 		for _, g := range original.generics {
@@ -127,29 +130,33 @@ func remapFunctionImpl(name string, mapping map[string]*datatype, original *func
 	fn.start = original.start
 	parsing.pushFunction(fn.getname(), module, fn)
 	module.program.popRemapStack()
-	return fn
+	return fn, nil
 }
 
-func remapClassFunctionImpl(class *class, original *function) {
+func remapClassFunctionImpl(class *class, original *function) *parseError {
 	module := class.module
 	plain := original._name
 	registered := nameOfClassFunc(class.name, plain)
 	if _, ok := module.functions[registered]; ok {
-		return
+		return nil
 	}
 	parsing := module.parser
 	module.program.pushRemapStack(module.reference(registered))
 	pos := parsing.save()
 	parsing.jump(original.start)
-	fn := parsing.defineFunction(plain, nil, nil, class)
+	fn, er := parsing.defineFunction(plain, nil, nil, class)
+	if er != nil {
+		return er
+	}
 	parsing.jump(pos)
 	fn.start = original.start
 	class.functions = append(class.functions, fn)
 	parsing.pushFunction(fn.getname(), module, fn)
 	module.program.popRemapStack()
+	return er
 }
 
-func (me *parser) defineClassFunction() {
+func (me *parser) defineClassFunction() *parseError {
 	module := me.hmfile
 	className := me.token.value
 	class := module.classes[className]
@@ -158,34 +165,42 @@ func (me *parser) defineClassFunction() {
 	globalFuncName := nameOfClassFunc(class.name, funcName)
 	me.eat("id")
 	if _, ok := module.functions[globalFuncName]; ok {
-		panic(me.fail() + "Class '" + className + "' with function '" + funcName + "' is already defined")
+		return err(me, "Class '"+className+"' with function '"+funcName+"' is already defined")
 	} else if class.getVariable(funcName) != nil {
-		panic(me.fail() + "Class '" + className + "' with variable '" + funcName + "' is already defined")
+		return err(me, "Class '"+className+"' with variable '"+funcName+"' is already defined")
 	}
-	fn := me.defineFunction(funcName, nil, nil, class)
+	fn, er := me.defineFunction(funcName, nil, nil, class)
+	if er != nil {
+		return er
+	}
 	class.functions = append(class.functions, fn)
 	me.pushFunction(globalFuncName, module, fn)
 	for _, implementation := range class.implementations {
 		remapClassFunctionImpl(implementation, fn)
 	}
+	return nil
 }
 
-func (me *parser) defineStaticFunction() {
+func (me *parser) defineStaticFunction() *parseError {
 	module := me.hmfile
 	token := me.token
 	name := token.value
 	if _, ok := module.functions[name]; ok {
-		panic(me.fail() + "Function \"" + name + "\" is already defined.")
+		return err(me, "Function \""+name+"\" is already defined.")
 	}
 	if name == "static" {
-		panic(me.fail() + "Function \"" + name + "\" is reserved.")
+		return err(me, "Function \""+name+"\" is reserved.")
 	}
 	me.eat("id")
-	fn := me.defineFunction(name, nil, nil, nil)
+	fn, er := me.defineFunction(name, nil, nil, nil)
+	if er != nil {
+		return er
+	}
 	me.pushFunction(name, module, fn)
+	return nil
 }
 
-func (me *parser) defineFunction(name string, mapping map[string]*datatype, base *function, self *class) *function {
+func (me *parser) defineFunction(name string, mapping map[string]*datatype, base *function, self *class) (*function, *parseError) {
 	module := me.hmfile
 	if base != nil {
 		module = base.module
@@ -210,7 +225,10 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		fn.mapping = mapping
 		fn.aliasing = alias
 	} else if self != nil {
-		ref := module.fnArgInit(self.uid(), "self", false)
+		ref, er := module.fnArgInit(self.uid(), "self", false)
+		if er != nil {
+			return nil, er
+		}
 		fn.args = append(fn.args, ref)
 		alias := make(map[string]string)
 		for k, v := range self.mapping {
@@ -223,12 +241,15 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	}
 	if me.token.is == "<" {
 		if self != nil {
-			panic(me.fail() + "class functions cannot have additional generics")
+			return nil, err(me, "class functions cannot have additional generics")
 		}
 		if base != nil {
-			panic(me.fail() + "implementation of static function cannot have additional generics")
+			return nil, err(me, "implementation of static function cannot have additional generics")
 		}
-		order, interfaces := me.genericHeader()
+		order, interfaces, er := me.genericHeader()
+		if er != nil {
+			return nil, er
+		}
 		me.verify("(")
 		fn.generics = datatypels(order)
 		fn.interfaces = interfaces
@@ -244,7 +265,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if me.token.is != ")" {
 			for {
 				if me.token.is != "id" {
-					panic(me.fail() + "Unexpected token in function definition")
+					return nil, err(me, "Unexpected token in function definition")
 				}
 				argname := me.token.value
 				me.eat("id")
@@ -258,16 +279,22 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 						defaultType = literal
 						me.eat(op)
 					} else {
-						panic(me.fail() + "only primitive literals allowed for parameter defaults. was \"" + me.token.is + "\"")
+						return nil, err(me, "only primitive literals allowed for parameter defaults. was \""+me.token.is+"\"")
 					}
 				}
-				typed := me.declareType()
+				typed, er := me.declareType()
+				if er != nil {
+					return nil, er
+				}
 				fnArg := &funcArg{}
 				fnArg.variable = typed.getnamedvariable(argname, false)
 				if defaultValue != "" {
-					defaultTypeVarData := getdatatype(module, defaultType)
+					defaultTypeVarData, er := getdatatype(module, defaultType)
+					if er != nil {
+						return nil, er
+					}
 					if typed.notEquals(defaultTypeVarData) {
-						panic(me.fail() + "function parameter default type \"" + defaultType + "\" and signature \"" + typed.print() + "\" do not match")
+						return nil, err(me, "function parameter default type \""+defaultType+"\" and signature \""+typed.print()+"\" do not match")
 					}
 					defaultNode := nodeInit(defaultTypeVarData.getRaw())
 					defaultNode.copyData(defaultTypeVarData)
@@ -287,7 +314,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		me.eat(")")
 	} else {
 		if self != nil {
-			panic(me.fail() + "class function \"" + fname + "\" must include parenthesis")
+			return nil, err(me, "class function \""+fname+"\" must include parenthesis")
 		}
 	}
 	// TODO ::
@@ -299,9 +326,13 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	// }
 	if me.token.is != "line" {
 		if !parenthesis {
-			panic(me.fail() + "function \"" + name + "\" returns a value and must include parenthesis")
+			return nil, err(me, "function \""+name+"\" returns a value and must include parenthesis")
 		}
-		fn.returns = me.declareType()
+		var er *parseError
+		fn.returns, er = me.declareType()
+		if er != nil {
+			return nil, er
+		}
 	} else {
 		fn.returns = newdatavoid()
 	}
@@ -311,14 +342,14 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if len(fn.args) != 0 {
 			if len(fn.args) == 1 {
 				if !fn.args[0].data().isSlice() || !fn.args[0].data().member.isString() {
-					panic(me.fail() + "Function main argument must be []string")
+					return nil, err(me, "Function main argument must be []string")
 				}
 			} else {
-				panic(me.fail() + "Function main cannot have more than one argument.")
+				return nil, err(me, "Function main cannot have more than one argument.")
 			}
 		}
 		if fn.returns != nil && !fn.returns.isInt() && !fn.returns.isVoid() {
-			panic(me.fail() + "Function main must return an integer but was: " + fn.returns.error())
+			return nil, err(me, "Function main must return an integer but was: "+fn.returns.error())
 		}
 	}
 
@@ -339,7 +370,10 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if me.token.depth == 0 {
 			goto fnEnd
 		}
-		expr := me.expression()
+		expr, er := me.expression()
+		if er != nil {
+			return nil, er
+		}
 		fn.expressions = append(fn.expressions, expr)
 	}
 fnEnd:
@@ -354,7 +388,7 @@ fnEnd:
 		}
 	}
 	module.popScope()
-	return fn
+	return fn, nil
 }
 
 func (me *function) hasInterface(data *datatype) bool {

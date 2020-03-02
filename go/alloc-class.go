@@ -15,19 +15,23 @@ func (me *parser) pushAllDefaultClassParams(n *node) {
 	me.pushClassParams(n, cl, params, cl.name)
 }
 
-func (me *parser) pushClassParams(n *node, classDef *class, params []*node, typed string) {
+func (me *parser) pushClassParams(n *node, classDef *class, params []*node, typed string) *parseError {
 	for i, param := range params {
 		if param == nil {
 			clsvar := classDef.variables[i]
-			d := me.defaultValue(clsvar.data(), typed)
+			d, er := me.defaultValue(clsvar.data(), typed)
+			if er != nil {
+				return er
+			}
 			n.push(d)
 		} else {
 			n.push(param)
 		}
 	}
+	return nil
 }
 
-func (me *parser) classParams(n *node, cl *class, depth int) string {
+func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseError) {
 	me.eat("(")
 	if me.token.is == "line" {
 		me.eat("line")
@@ -51,7 +55,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 					break
 				}
 				if ndepth != depth+1 {
-					panic(me.fail() + "unexpected line indentation")
+					return "", err(me, "unexpected line indentation")
 				}
 				me.eat("line")
 			} else {
@@ -65,7 +69,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 			me.eat("id")
 			clsvar := cl.getVariable(vname)
 			if clsvar == nil {
-				panic(me.fail() + "Member variable: " + vname + " does not exist for class: " + cl.name)
+				return "", err(me, "Member variable: "+vname+" does not exist for class: "+cl.name)
 			}
 
 			me.eat(":")
@@ -74,7 +78,11 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 			if me.token.is == "_" {
 				me.eat("_")
 			} else {
-				param = me.calc(0, nil)
+				var er *parseError
+				param, er = me.calc(0, nil)
+				if er != nil {
+					return "", er
+				}
 
 				var update map[string]*datatype
 				if len(cl.generics) > 0 {
@@ -88,15 +96,15 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", a, " but found ", b)
-						panic(me.fail() + f)
+						return "", err(me, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isAnyType() {
-					err := "parameter \"" + vname + "\" with type \"" + param.data().print()
-					err += "\" does not match class variable \"" + cl.name + "."
-					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
-					panic(me.fail() + err)
+					er := "parameter \"" + vname + "\" with type \"" + param.data().print()
+					er += "\" does not match class variable \"" + cl.name + "."
+					er += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
+					return "", err(me, er)
 				}
 			}
 
@@ -108,14 +116,17 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 			}
 
 		} else if dict {
-			panic(me.fail() + "Regular paramater found after mapped parameter")
+			return "", err(me, "Regular paramater found after mapped parameter")
 		} else {
 			clsvar := cl.variables[pix]
 			if me.token.is == "_" {
 				me.eat("_")
 				params[pix] = nil
 			} else {
-				param := me.calc(0, nil)
+				param, er := me.calc(0, nil)
+				if er != nil {
+					return "", er
+				}
 
 				var update map[string]*datatype
 				if len(cl.generics) > 0 {
@@ -127,15 +138,15 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {
 						f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", gtypes, " but found ", update)
-						panic(me.fail() + f)
+						return "", err(me, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isAnyType() {
-					err := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().print()
-					err += "\" does not match class variable \"" + cl.name + "."
-					err += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
-					panic(me.fail() + err)
+					er := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().print()
+					er += "\" does not match class variable \"" + cl.name + "."
+					er += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
+					return "", err(me, er)
 				}
 				params[pix] = param
 			}
@@ -152,7 +163,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 		}
 		if len(glist) != len(cl.generics) {
 			f := fmt.Sprint("Missing generic for class \""+cl.name+"\"\nimplementation list was ", genericslist(glist))
-			panic(me.fail() + f)
+			return "", err(me, f)
 		}
 		lazy := typed + genericslist(glist)
 		if _, ok := module.classes[lazy]; !ok {
@@ -162,24 +173,27 @@ func (me *parser) classParams(n *node, cl *class, depth int) string {
 		typed = lazy
 	}
 	me.pushClassParams(n, cl, params, typed)
-	return typed
+	return typed, nil
 }
 
-func (me *parser) buildClass(n *node, module *hmfile) *datatype {
+func (me *parser) buildClass(n *node, module *hmfile) (*datatype, *parseError) {
 	typed := me.token.value
 	depth := me.token.depth
 	me.eat("id")
 	cl, ok := module.classes[typed]
 	if !ok {
-		panic(me.fail() + "Class: " + typed + " does not exist")
+		return nil, err(me, "Class: "+typed+" does not exist")
 	}
 	uid := module.reference(typed)
 	gsize := len(cl.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
-			gtypes := me.declareGeneric(len(cl.generics))
+			gtypes, er := me.declareGeneric(len(cl.generics))
+			if er != nil {
+				return nil, er
+			}
 			if len(gtypes) != gsize {
-				panic(me.fail() + "Class:" + cl.name + " with implementation " + fmt.Sprint(gtypes) + " does not match " + fmt.Sprint(cl.generics))
+				return nil, err(me, "Class:"+cl.name+" with implementation "+fmt.Sprint(gtypes)+" does not match "+fmt.Sprint(cl.generics))
 			}
 			typed = uid + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {
@@ -202,7 +216,11 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 		}
 	}
 	if n != nil {
-		typed = me.classParams(n, cl, depth)
+		var er *parseError
+		typed, er = me.classParams(n, cl, depth)
+		if er != nil {
+			return nil, er
+		}
 	}
 	if me.hmfile != module {
 		typed = module.reference(typed)
@@ -210,9 +228,12 @@ func (me *parser) buildClass(n *node, module *hmfile) *datatype {
 	return getdatatype(me.hmfile, typed)
 }
 
-func (me *parser) allocClass(module *hmfile, hint *allocHint) *node {
+func (me *parser) allocClass(module *hmfile, hint *allocHint) (*node, *parseError) {
 	n := nodeInit("new")
-	data := me.buildClass(n, module)
+	data, er := me.buildClass(n, module)
+	if er != nil {
+		return nil, er
+	}
 	data = data.merge(hint)
 	n.copyData(data)
 	if hint != nil && hint.stack {
@@ -220,5 +241,5 @@ func (me *parser) allocClass(module *hmfile, hint *allocHint) *node {
 		n.data().setIsPointer(false)
 		n.data().setIsOnStack(true)
 	}
-	return n
+	return n, nil
 }

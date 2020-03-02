@@ -48,138 +48,336 @@ type hmlib struct {
 	functions map[string]*function
 }
 
-func (me *hmlib) newLibSimple(name string, ret string, params ...string) {
+func (me *hmlib) newLibSimple(name string, ret string, params ...string) *parseError {
+	var er *parseError
 	fn := funcInit(nil, name, nil)
-	fn.returns = getdatatype(nil, ret)
-	fn.args = append(fn.args, me.fnArgInit("?", "s", false))
+	fn.returns, er = getdatatype(nil, ret)
+	if er != nil {
+		return er
+	}
+	a, er := me.fnArgInit("?", "s", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, a)
 	if params != nil {
-		fn.args = append(fn.args, me.fnArgInit("?", "s", false))
+		a, er := me.fnArgInit("?", "s", false)
+		if er != nil {
+			return er
+		}
+		fn.args = append(fn.args, a)
 	}
 	me.functions[name] = fn
 	me.types[name] = ""
+	return nil
 }
 
-func (me *hmlib) newLibRegular(name string, ret string, params ...string) {
+func (me *hmlib) newLibRegular(name string, ret string, params ...string) *parseError {
+	var er *parseError
 	fn := funcInit(nil, name, nil)
-	fn.returns = getdatatype(nil, ret)
+	fn.returns, er = getdatatype(nil, ret)
+	if er != nil {
+		return er
+	}
 	if params != nil {
 		for ix, p := range params {
-			fn.args = append(fn.args, me.fnArgInit(p, "p"+strconv.Itoa(ix), false))
+			a, er := me.fnArgInit(p, "p"+strconv.Itoa(ix), false)
+			if er != nil {
+				return er
+			}
+			fn.args = append(fn.args, a)
 		}
 	}
 	me.functions[name] = fn
 	me.types[name] = ""
+	return nil
 }
 
-func (me *hmlib) newLibSimpleIn(name string, in string, ret string) {
+func (me *hmlib) newLibSimpleIn(name string, in string, ret string) *parseError {
+	var er *parseError
 	fn := funcInit(nil, name, nil)
-	fn.returns = getdatatype(nil, ret)
-	fn.args = append(fn.args, me.fnArgInit(in, "s", false))
+	fn.returns, er = getdatatype(nil, ret)
+	if er != nil {
+		return er
+	}
+	a, er := me.fnArgInit(in, "s", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, a)
 	me.functions[name] = fn
 	me.types[name] = ""
+	return nil
 }
 
-func (me *hmlib) newLibSimpleVardiac(name string, ret string) {
+func (me *hmlib) newLibSimpleVardiac(name string, ret string) *parseError {
+	var er *parseError
 	fn := funcInit(nil, name, nil)
-	fn.returns = getdatatype(nil, ret)
-	fn.argVariadic = me.fnArgInit("?", "a", false)
+	fn.returns, er = getdatatype(nil, ret)
+	if er != nil {
+		return er
+	}
+	a, er := me.fnArgInit("?", "a", false)
+	fn.argVariadic = a
 	me.functions[name] = fn
 	me.types[name] = ""
+	return nil
 }
 
-func (me *hmlib) newLibSimplePrint(name string, ret string) {
+func (me *hmlib) newLibSimplePrint(name string, ret string) *parseError {
+	var er *parseError
 	fn := funcInit(nil, name, nil)
-	fn.returns = getdatatype(nil, ret)
-	fn.args = append(fn.args, me.fnArgInit(TokenString, "a", false))
-	fn.argVariadic = me.fnArgInit("?", "b", false)
+	fn.returns, er = getdatatype(nil, ret)
+	if er != nil {
+		return er
+	}
+	a, er := me.fnArgInit(TokenString, "a", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, a)
+	b, er := me.fnArgInit("?", "b", false)
+	if er != nil {
+		return er
+	}
+	fn.argVariadic = b
 	me.functions[name] = fn
 	me.types[name] = ""
+	return nil
 }
 
-func (me *hmlib) initPush() {
+func (me *hmlib) initPush() *parseError {
+	var er *parseError
 	fn := funcInit(nil, libPush, nil)
 	fn.returns = newdataany()
-	fn.args = append(fn.args, me.fnArgInit("?", "a", false))
-	fn.args = append(fn.args, me.fnArgInit("?", "v", false))
+	a, er := me.fnArgInit("?", "a", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, a)
+	v, er := me.fnArgInit("?", "v", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, v)
 	me.functions[libPush] = fn
 	me.types[libPush] = ""
+	return nil
 }
 
-func (me *hmlib) initIO() {
+func (me *hmlib) initIO() *parseError {
+	var er *parseError
+
 	me.types[TokenLibFile] = ""
 	classDef := classInit(nil, TokenLibFile, make([]string, 0), make(map[string][]*classInterface), nil)
 	me.classes[TokenLibFile] = classDef
 
 	fn := funcInit(nil, libOpen, nil)
-	fn.returns = getdatatype(nil, TokenLibFile)
-	fn.args = append(fn.args, me.fnArgInit(TokenString, "path", false))
-	fn.args = append(fn.args, me.fnArgInit(TokenString, "mode", false))
+	fn.returns, er = getdatatype(nil, TokenLibFile)
+	if er != nil {
+		return er
+	}
+	a, er := me.fnArgInit(TokenString, "path", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, a)
+	m, er := me.fnArgInit(TokenString, "mode", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, m)
 	me.functions[libOpen] = fn
 	me.types[libOpen] = ""
 
 	fnName := "read"
 	fn = funcInit(nil, fnName, classDef)
-	fn.returns = getdatatype(nil, TokenInt)
-	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
+	fn.returns, er = getdatatype(nil, TokenInt)
+	if er != nil {
+		return er
+	}
+	s, er := me.fnArgInit(classDef.name, "self", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, s)
 	me.functions[fn.getname()] = fn
 	me.types[fn.getname()] = ""
 
 	fnName = "read_line"
 	fn = funcInit(nil, fnName, classDef)
-	fn.returns = getdatatype(nil, TokenString)
-	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
+	fn.returns, er = getdatatype(nil, TokenString)
+	if er != nil {
+		return er
+	}
+	s, er = me.fnArgInit(classDef.name, "self", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, s)
 	me.functions[fn.getname()] = fn
 	me.types[fn.getname()] = ""
 
 	fnName = "close"
 	fn = funcInit(nil, fnName, classDef)
 	fn.returns = newdatavoid()
-	fn.args = append(fn.args, me.fnArgInit(classDef.name, "self", false))
+	a, er = me.fnArgInit(classDef.name, "self", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, a)
 	me.functions[fn.getname()] = fn
 	me.types[fn.getname()] = ""
+
+	return nil
 }
 
-func (me *hmlib) libs() {
+func (me *hmlib) libs() *parseError {
 	me.types = make(map[string]string)
 	me.classes = make(map[string]*class)
 	me.functions = make(map[string]*function)
 
-	me.newLibSimpleIn(libExit, TokenInt, "void")
-	me.newLibSimpleIn(libChdir, TokenString, "void")
+	var er *parseError
 
-	me.newLibSimpleVardiac(libEcho, "void")
-	me.newLibSimpleVardiac(libFormat, TokenString)
+	er = me.newLibSimpleIn(libExit, TokenInt, "void")
+	if er != nil {
+		return er
+	}
 
-	me.newLibSimplePrint(libPrintf, "void")
-	me.newLibSimplePrint(libPrintln, "void")
-	me.newLibSimplePrint(libSprintf, TokenString)
-	me.newLibSimplePrint(libSprintln, TokenString)
+	er = me.newLibSimpleIn(libChdir, TokenString, "void")
+	if er != nil {
+		return er
+	}
 
-	me.newLibSimple(libCat, TokenString)
-	me.newLibSimple(libSystem, TokenString)
-	me.newLibSimple(libToStr, TokenString)
+	er = me.newLibSimpleVardiac(libEcho, "void")
+	if er != nil {
+		return er
+	}
 
-	me.newLibSimple(libToInt, TokenInt)
-	me.newLibSimple(libToInt8, TokenInt8)
-	me.newLibSimple(libToInt16, TokenInt16)
-	me.newLibSimple(libToInt32, TokenInt32)
-	me.newLibSimple(libToInt64, TokenInt64)
+	er = me.newLibSimpleVardiac(libFormat, TokenString)
+	if er != nil {
+		return er
+	}
 
-	me.newLibSimple(libToUInt, TokenUInt)
-	me.newLibSimple(libToUInt8, TokenUInt8)
-	me.newLibSimple(libToUInt16, TokenUInt16)
-	me.newLibSimple(libToUInt32, TokenUInt32)
-	me.newLibSimple(libToUInt64, TokenUInt64)
+	er = me.newLibSimplePrint(libPrintf, "void")
+	if er != nil {
+		return er
+	}
 
-	me.newLibSimple(libToFloat, TokenFloat)
-	me.newLibSimple(libToFloat32, TokenFloat32)
-	me.newLibSimple(libToFloat64, TokenFloat64)
+	er = me.newLibSimplePrint(libPrintln, "void")
+	if er != nil {
+		return er
+	}
 
-	me.newLibSimple(libLength, TokenInt)
-	me.newLibSimple(libCapacity, TokenInt)
+	er = me.newLibSimplePrint(libSprintf, TokenString)
+	if er != nil {
+		return er
+	}
 
-	me.newLibRegular(libWrite, "void", TokenString, TokenString)
-	me.newLibRegular(libSubstring, TokenString, TokenString, TokenInt, TokenInt)
+	er = me.newLibSimplePrint(libSprintln, TokenString)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libCat, TokenString)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libSystem, TokenString)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToStr, TokenString)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToInt, TokenInt)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToInt8, TokenInt8)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToInt16, TokenInt16)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToInt32, TokenInt32)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToInt64, TokenInt64)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToUInt, TokenUInt)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToUInt8, TokenUInt8)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToUInt16, TokenUInt16)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToUInt32, TokenUInt32)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToUInt64, TokenUInt64)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToFloat, TokenFloat)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToFloat32, TokenFloat32)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libToFloat64, TokenFloat64)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libLength, TokenInt)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibSimple(libCapacity, TokenInt)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibRegular(libWrite, "void", TokenString, TokenString)
+	if er != nil {
+		return er
+	}
+
+	er = me.newLibRegular(libSubstring, TokenString, TokenString, TokenInt, TokenInt)
+	if er != nil {
+		return er
+	}
 
 	me.initIO()
 	me.initPush()
@@ -187,4 +385,6 @@ func (me *hmlib) libs() {
 	for primitive := range primitives {
 		me.types[primitive] = ""
 	}
+
+	return nil
 }

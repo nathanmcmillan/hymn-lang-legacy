@@ -3,13 +3,13 @@ package main
 type prefixRule struct {
 	precedence int
 	name       string
-	fn         func(*parser, string) *node
+	fn         func(*parser, string) (*node, *parseError)
 }
 
 type infixRule struct {
 	precedence int
 	name       string
-	fn         func(*parser, *node, string) *node
+	fn         func(*parser, *node, string) (*node, *parseError)
 }
 
 var (

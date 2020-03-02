@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func (me *parser) assign(left *node, malloc, mutable bool) *node {
+func (me *parser) assign(left *node, malloc, mutable bool) (*node, *parseError) {
 	op := me.token.is
 	mustBeInt := false
 	mustBeNumber := false
@@ -14,26 +14,29 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 		mustBeNumber = true
 	} else if op != "+=" && op != "=" && op != ":=" {
 		if op == "+" {
-			panic(me.fail() + "Use \"+= 1\" rather than \"++\".")
+			return nil, err(me, "Use \"+= 1\" rather than \"++\".")
 		}
-		panic(me.fail() + "Unknown assign operation \"" + op + "\".")
+		return nil, err(me, "Unknown assign operation \""+op+"\".")
 	}
 	me.eat(op)
-	right := me.calc(0, left.data())
+	right, er := me.calc(0, left.data())
+	if er != nil {
+		return nil, er
+	}
 	if mustBeInt {
 		if !right.data().isInt() {
-			panic(me.fail() + "assign operation \"" + op + "\" requires int type")
+			return nil, err(me, "assign operation \""+op+"\" requires int type")
 		}
 	} else if mustBeNumber {
 		if !right.data().isNumber() {
-			panic(me.fail() + "assign operation \"" + op + "\" requires number type")
+			return nil, err(me, "assign operation \""+op+"\" requires number type")
 		}
 	}
 	if left.is == "variable" {
 		sv := me.hmfile.getvar(left.idata.name)
 		if sv != nil {
 			if !sv.mutable {
-				panic(me.fail() + "Variable: " + sv.name + " is not mutable.")
+				return nil, err(me, "Variable: "+sv.name+" is not mutable.")
 			}
 			if !right.data().isAnyType() && left.data().notEquals(right.data()) {
 				enleft, _, ok1 := left.data().isEnum()
@@ -43,11 +46,11 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 				} else if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
-					panic(me.fail() + "Variable: " + sv.name + " of type: " + left.data().print() + " does not match expression: " + right.data().print())
+					return nil, err(me, "Variable: "+sv.name+" of type: "+left.data().print()+" does not match expression: "+right.data().print())
 				}
 			}
 		} else if mustBeInt || mustBeNumber || op == "+=" {
-			panic(me.fail() + "cannot operate \"" + op + "\" because variable \"" + left.idata.name + "\" does not exist.")
+			return nil, err(me, "cannot operate \""+op+"\" because variable \""+left.idata.name+"\" does not exist.")
 		} else {
 			if mutable {
 				left.attributes["mutable"] = "true"
@@ -64,11 +67,11 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 			if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 				right.copyDataOfNode(left)
 			} else {
-				panic(me.fail() + "Member variable: " + left.data().error() + " does not match expression: " + right.data().error())
+				return nil, err(me, "Member variable: "+left.data().error()+" does not match expression: "+right.data().error())
 			}
 		}
 	} else {
-		panic(me.fail() + "bad assignment \"" + left.is + "\"")
+		return nil, err(me, "bad assignment \""+left.is+"\"")
 	}
 	if left.idata != nil && left.is == "variable" {
 		right.attributes["assign"] = left.idata.name
@@ -82,12 +85,12 @@ func (me *parser) assign(left *node, malloc, mutable bool) *node {
 	}
 	n.push(left)
 	n.push(right)
-	return n
+	return n, nil
 }
 
-func (me *parser) forceassign(v *node, malloc, mutable bool) *node {
+func (me *parser) forceassign(v *node, malloc, mutable bool) (*node, *parseError) {
 	if !me.assignable(v) {
-		panic(me.fail() + "Expected variable for assignment but was \"" + v.data().print() + "\".")
+		return nil, err(me, "Expected variable for assignment but was \""+v.data().print()+"\".")
 	}
 	return me.assign(v, malloc, mutable)
 }

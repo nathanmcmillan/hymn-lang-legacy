@@ -1,6 +1,6 @@
 package main
 
-func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeblock {
+func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) (*codeblock, *compileError) {
 	switch name {
 	case libPush:
 		me.libReq.add(HmLibSlice)
@@ -13,46 +13,46 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 				cb := codeBlockOne(n, "hmlib_slice_push("+param0.pop()+", "+param1.pop()+")")
 				cb.prepend(param0.pre)
 				cb.prepend(param1.pre)
-				return cb
+				return cb, nil
 			}
 			cb := codeBlockOne(n, "hmlib_slice_push_"+uses.typeSig(me)+"("+param0.pop()+", "+param1.pop()+")")
 			cb.prepend(param0.pre)
 			cb.prepend(param1.pre)
-			return cb
+			return cb, nil
 		}
 		panic("Argument for push was not an array: " + p.error())
 	case libLength:
 		param := me.eval(parameters[0])
 		switch param.getType() {
 		case TokenRawString:
-			return codeBlockMerge(n, "((int) strlen("+param.pop()+"))", param.pre)
+			return codeBlockMerge(n, "((int) strlen("+param.pop()+"))", param.pre), nil
 		case TokenString:
 			me.libReq.add(HmLibString)
-			return codeBlockMerge(n, "hmlib_string_len("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_len("+param.pop()+")", param.pre), nil
 		}
 		p := param.data()
 		if p.isArray() {
-			return codeBlockMerge(n, p.arraySize(), param.pre)
+			return codeBlockMerge(n, p.arraySize(), param.pre), nil
 		} else if p.isSlice() {
 			me.libReq.add(HmLibSlice)
-			return codeBlockMerge(n, "hmlib_slice_len("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_slice_len("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for len() was " + param.string(0))
 	case libCapacity:
 		param := me.eval(parameters[0])
 		switch param.getType() {
 		case TokenRawString:
-			return codeBlockMerge(n, "((int) strlen("+param.pop()+"))", param.pre)
+			return codeBlockMerge(n, "((int) strlen("+param.pop()+"))", param.pre), nil
 		case TokenString:
 			me.libReq.add(HmLibString)
-			return codeBlockMerge(n, "hmlib_string_cap("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_cap("+param.pop()+")", param.pre), nil
 		}
 		p := param.data()
 		if p.isArray() {
-			return codeBlockMerge(n, p.arraySize(), param.pre)
+			return codeBlockMerge(n, p.arraySize(), param.pre), nil
 		} else if p.isSlice() {
 			me.libReq.add(HmLibSlice)
-			return codeBlockMerge(n, "hmlib_slice_cap("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_slice_cap("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for cap() was " + param.string(0))
 	case libSubstring:
@@ -64,7 +64,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		cb.prepend(str.pre)
 		cb.prepend(start.pre)
 		cb.prepend(end.pre)
-		return cb
+		return cb, nil
 	case libWrite:
 		me.libReq.add(HmLibFiles)
 		path := me.eval(parameters[0])
@@ -72,7 +72,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		cb := codeBlockOne(n, "hmlib_write("+path.pop()+", "+content.pop()+")")
 		cb.prepend(path.pre)
 		cb.prepend(content.pre)
-		return cb
+		return cb, nil
 	case libOpen:
 		me.libReq.add(HmLibFiles)
 		param0 := me.eval(parameters[0])
@@ -80,19 +80,19 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		cb := codeBlockOne(n, "fopen("+param0.pop()+", "+param1.pop()+")")
 		cb.prepend(param0.pre)
 		cb.prepend(param1.pre)
-		return cb
+		return cb, nil
 	case libCat:
 		me.libReq.add(HmLibFiles)
 		param := me.eval(parameters[0])
 		cb := codeBlockOne(n, "hmlib_cat("+param.pop()+")")
 		cb.prepend(param.pre)
-		return cb
+		return cb, nil
 	case libSystem:
 		me.libReq.add(HmLibSystem)
 		param := me.eval(parameters[0])
 		cb := codeBlockOne(n, "hmlib_popen("+param.pop()+")")
 		cb.prepend(param.pre)
-		return cb
+		return cb, nil
 	case libPrintln:
 		fallthrough
 	case libPrintf:
@@ -111,7 +111,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		}
 		code += ")"
 		cb.current = codeNode(n, code)
-		return cb
+		return cb, nil
 	case libSprintln:
 		fallthrough
 	case libSprintf:
@@ -131,7 +131,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		}
 		code += ")"
 		cb.current = codeNode(n, code)
-		return cb
+		return cb, nil
 	case libFormat:
 		fallthrough
 	case libEcho:
@@ -210,7 +210,7 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		code += "\""
 		code2 += ")"
 		cb.current = codeNode(n, code+code2)
-		return cb
+		return cb, nil
 	case libToStr:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
@@ -220,142 +220,142 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		case TokenString:
 			panic("redundant string cast")
 		case TokenChar:
-			return codeBlockMerge(n, "hmlib_char_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_char_to_string("+param.pop()+")", param.pre), nil
 		case TokenInt:
-			return codeBlockMerge(n, "hmlib_int_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_int_to_string("+param.pop()+")", param.pre), nil
 		case TokenInt8:
-			return codeBlockMerge(n, "hmlib_int8_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_int8_to_string("+param.pop()+")", param.pre), nil
 		case TokenInt16:
-			return codeBlockMerge(n, "hmlib_int16_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_int16_to_string("+param.pop()+")", param.pre), nil
 		case TokenInt32:
-			return codeBlockMerge(n, "hmlib_int32_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_int32_to_string("+param.pop()+")", param.pre), nil
 		case TokenInt64:
-			return codeBlockMerge(n, "hmlib_int64_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_int64_to_string("+param.pop()+")", param.pre), nil
 		case TokenUInt:
-			return codeBlockMerge(n, "hmlib_uint_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_uint_to_string("+param.pop()+")", param.pre), nil
 		case TokenUInt8:
-			return codeBlockMerge(n, "hmlib_uint8_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_uint8_to_string("+param.pop()+")", param.pre), nil
 		case TokenUInt16:
-			return codeBlockMerge(n, "hmlib_uint16_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_uint16_to_string("+param.pop()+")", param.pre), nil
 		case TokenUInt32:
-			return codeBlockMerge(n, "hmlib_uint32_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_uint32_to_string("+param.pop()+")", param.pre), nil
 		case TokenUInt64:
-			return codeBlockMerge(n, "hmlib_uint64_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_uint64_to_string("+param.pop()+")", param.pre), nil
 		case TokenFloat:
-			return codeBlockMerge(n, "hmlib_float_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_float_to_string("+param.pop()+")", param.pre), nil
 		case TokenFloat32:
-			return codeBlockMerge(n, "hmlib_float32_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_float32_to_string("+param.pop()+")", param.pre), nil
 		case TokenFloat64:
-			return codeBlockMerge(n, "hmlib_float64_to_string("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_float64_to_string("+param.pop()+")", param.pre), nil
 		case "bool":
-			return codeBlockMerge(n, "("+param.pop()+" ? hmlib_string_init(\"true\") : hmlib_string_init(\"false\"))", param.pre)
+			return codeBlockMerge(n, "("+param.pop()+" ? hmlib_string_init(\"true\") : hmlib_string_init(\"false\"))", param.pre), nil
 		}
 		panic("argument for string cast was " + param.string(0))
 	case libToInt:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_int("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_int("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to int was " + param.string(0))
 	case libToInt8:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_int8("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_int8("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to int8 was " + param.string(0))
 	case libToInt16:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_int16("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_int16("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to int16 was " + param.string(0))
 	case libToInt32:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_int32("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_int32("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to int32 was " + param.string(0))
 	case libToInt64:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_int64("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_int64("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to int64 was " + param.string(0))
 	case libToUInt:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_uint("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_uint("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to uint was " + param.string(0))
 	case libToUInt8:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_uint8("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_uint8("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to uint8 was " + param.string(0))
 	case libToUInt16:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_uint16("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_uint16("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to uint16 was " + param.string(0))
 	case libToUInt32:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_uint32("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_uint32("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to uint32 was " + param.string(0))
 	case libToUInt64:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_uint64("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_uint64("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to uint64 was " + param.string(0))
 	case libToFloat:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_float("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_float("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to float was " + param.string(0))
 	case libToFloat32:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_float32("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_float32("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to float32 was " + param.string(0))
 	case libToFloat64:
 		me.libReq.add(HmLibString)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "hmlib_string_to_float64("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "hmlib_string_to_float64("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for conversion to float64 was " + param.string(0))
 	case libExit:
 		param := me.eval(parameters[0])
 		if param.getType() == TokenInt {
-			return codeBlockMerge(n, "exit("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "exit("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for exit was " + param.string(0))
 	case libChdir:
 		me.stdReq.add(CStdUnistd)
 		param := me.eval(parameters[0])
 		if param.getType() == TokenString {
-			return codeBlockMerge(n, "chdir("+param.pop()+")", param.pre)
+			return codeBlockMerge(n, "chdir("+param.pop()+")", param.pre), nil
 		}
 		panic("argument for chdir was " + param.string(0))
 	default:
-		return nil
+		return nil, nil
 	}
 }

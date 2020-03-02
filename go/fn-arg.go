@@ -15,10 +15,14 @@ func (me *funcArg) copy() *funcArg {
 	return a
 }
 
-func (me *hmfile) fnArgInit(typed, name string, mutable bool) *funcArg {
+func (me *hmfile) fnArgInit(typed, name string, mutable bool) (*funcArg, *parseError) {
 	f := &funcArg{}
-	f.variable = me.varInit(typed, name, mutable)
-	return f
+	var er *parseError
+	f.variable, er = me.varInit(typed, name, mutable)
+	if er != nil {
+		return nil, er
+	}
+	return f, nil
 }
 
 func fnArgInit(v *variable) *funcArg {
@@ -27,13 +31,17 @@ func fnArgInit(v *variable) *funcArg {
 	return f
 }
 
-func (me *hmlib) fnArgInit(typed, name string, mutable bool) *funcArg {
+func (me *hmlib) fnArgInit(typed, name string, mutable bool) (*funcArg, *parseError) {
 	f := &funcArg{}
 	v := &variable{}
 	v.name = name
 	v.cname = name
 	v.mutable = mutable
-	v.copyData(getdatatype(nil, typed))
+	data, er := getdatatype(nil, typed)
+	if er != nil {
+		return nil, er
+	}
+	v.copyData(data)
 	f.variable = v
-	return f
+	return f, nil
 }

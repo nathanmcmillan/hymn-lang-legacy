@@ -1,15 +1,18 @@
 package main
 
-func (me *parser) defineClass() {
+func (me *parser) defineClass() *parseError {
 	me.eat("class")
 	token := me.token
 	name := token.value
 	module := me.hmfile
 	if _, ok := module.namespace[name]; ok {
-		panic(me.fail() + "name \"" + name + "\" already defined")
+		return err(me, "name \""+name+"\" already defined")
 	}
 	me.eat("id")
-	typedGenerics, typedGenericsInterfaces := me.genericHeader()
+	typedGenerics, typedGenericsInterfaces, er := me.genericHeader()
+	if er != nil {
+		return er
+	}
 	generics := datatypels(typedGenerics)
 
 	var interfaces map[string]*classInterface
@@ -34,11 +37,14 @@ func (me *parser) defineClass() {
 
 			in, ok := interfaceModule.interfaces[interfaceName]
 			if !ok {
-				panic(me.fail() + "Unknown interface: " + interfaceName)
+				return err(me, "Unknown interface: "+interfaceName)
 			}
 
 			if in.requiresGenerics() {
-				generics := me.declareGeneric(len(in.generics))
+				generics, er := me.declareGeneric(len(in.generics))
+				if er != nil {
+					return er
+				}
 				if len(generics) != len(in.generics) {
 					e := me.fail()
 					e += "Class '" + name + "' implementing interface '" + in.name + "' does not have correct generics."
@@ -48,7 +54,10 @@ func (me *parser) defineClass() {
 				if gotInterface, ok := interfaceModule.interfaces[intname]; ok {
 					in = gotInterface
 				} else {
-					in = me.defineInterfaceImplementation(in, generics)
+					in, er = me.defineInterfaceImplementation(in, generics)
+					if er != nil {
+						return er
+					}
 				}
 			}
 			interfaces[in.uid()] = in
@@ -93,10 +102,10 @@ func (me *parser) defineClass() {
 			mname := me.token.value
 			me.eat("id")
 			if getVariable(members, mname) != nil {
-				panic(me.fail() + "Member name '" + mname + "' already used")
+				return err(me, "Member name '"+mname+"' already used")
 			}
 			if i := inList(generics, mname); i >= 0 {
-				panic(me.fail() + "Cannot use '" + mname + "' as member name")
+				return err(me, "Cannot use '"+mname+"' as member name")
 			}
 
 			isptr := true
@@ -105,18 +114,21 @@ func (me *parser) defineClass() {
 				isptr = false
 			}
 
-			mtype := me.declareType()
+			mtype, er := me.declareType()
+			if er != nil {
+				return er
+			}
 			mtype.setIsPointer(isptr)
 			if mcl, ok := mtype.isClass(); ok {
 				if mcl == classDef {
-					panic(me.fail() + "recursive type definition for \"" + classDef.name + "\"")
+					return err(me, "recursive type definition for \""+classDef.name+"\"")
 				}
 			}
 			me.eat("line")
 			members = append(members, mtype.getnamedvariable(mname, true))
 			continue
 		}
-		panic(me.fail() + "bad token \"" + token.is + "\" in class")
+		return err(me, "bad token \""+token.is+"\" in class")
 	}
 
 	classDef.initMembers(members)
@@ -124,4 +136,6 @@ func (me *parser) defineClass() {
 	for _, implementation := range classDef.implementations {
 		me.finishClassGenericDefinition(implementation)
 	}
+
+	return nil
 }

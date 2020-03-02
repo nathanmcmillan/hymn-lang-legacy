@@ -1,6 +1,6 @@
 package main
 
-func (me *parser) verifyFile() {
+func (me *parser) verifyFile() *parseError {
 	module := me.hmfile
 	for _, def := range module.defineOrder {
 		cl := def.class
@@ -12,15 +12,16 @@ func (me *parser) verifyFile() {
 				if clfn := cl.getFunction(fname); clfn != nil {
 					sig := clfn.asSig()
 					if !sig.equals(infn) {
-						e := me.fail()
-						e += "Class '" + cl.name + "' with function '" + fname + sig.print() + "'"
+						e := "Class '" + cl.name + "' with function '" + fname + sig.print() + "'"
 						e += " does not match interface '" + iname + "' with '" + fname + infn.print() + "'"
-						panic(e)
+						return err(me, e)
 					}
 				} else {
-					panic(me.fail() + "Class '" + cl.name + "' is missing function '" + fname + infn.print() + "' for interface '" + iname + "'")
+					e := "Class '" + cl.name + "' is missing function '" + fname + infn.print() + "' for interface '" + iname + "'"
+					return err(me, e)
 				}
 			}
 		}
 	}
+	return nil
 }

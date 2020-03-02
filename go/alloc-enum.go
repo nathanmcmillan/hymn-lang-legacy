@@ -5,24 +5,28 @@ import (
 	"strconv"
 )
 
-func (me *parser) pushEnumParams(n *node, un *union, params []*node, typed string) {
+func (me *parser) pushEnumParams(n *node, un *union, params []*node, typed string) *parseError {
 	for i, param := range params {
 		if param == nil {
 			v := un.types.get(i)
-			d := me.defaultValue(v, typed)
+			d, er := me.defaultValue(v, typed)
+			if er != nil {
+				return er
+			}
 			n.push(d)
 		} else {
 			n.push(param)
 		}
 	}
+	return nil
 }
 
-func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
+func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *parseError) {
 	if me.token.is != "(" {
 		if me.token.is == "<" {
-			panic(me.fail() + "Enum: " + en.join(un) + " was expects something like '" + en.name + "<>." + un.name + "()'")
+			return "", err(me, "Enum: "+en.join(un)+" was expects something like '"+en.name+"<>."+un.name+"()'")
 		}
-		panic(me.fail() + "Enum: " + en.join(un) + " must be instantiated with parenthesis\nExample: " + en.join(un) + "()")
+		return "", err(me, "Enum: "+en.join(un)+" must be instantiated with parenthesis\nExample: "+en.join(un)+"()")
 	}
 	me.eat("(")
 	if me.token.is == "line" {
@@ -48,7 +52,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 					break
 				}
 				if ndepth != depth+1 {
-					panic(me.fail() + "Unexpected line indentation")
+					return "", err(me, "Unexpected line indentation")
 				}
 				me.eat("line")
 			} else {
@@ -62,7 +66,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 			me.eat("id")
 			unvar, ok := un.types.table[vname]
 			if !ok {
-				panic(me.fail() + "Member variable: " + vname + " does not exist for enum: " + en.join(un))
+				return "", err(me, "Member variable: "+vname+" does not exist for enum: "+en.join(un))
 			}
 
 			me.eat(":")
@@ -71,7 +75,11 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 			if me.token.is == "_" {
 				me.eat("_")
 			} else {
-				param = me.calc(0, nil)
+				var er *parseError
+				param, er = me.calc(0, nil)
+				if er != nil {
+					return "", er
+				}
 
 				var update map[string]*datatype
 				if len(en.generics) > 0 {
@@ -85,15 +93,15 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for enum: " + en.join(un) + " is " + a + " but found " + b)
-						panic(me.fail() + f)
+						return "", err(me, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(unvar) && !unvar.isAnyType() {
-					err := "Parameter: " + vname + " with type \"" + param.data().print()
-					err += "\" does not match class variable \"" + en.join(un) + "."
-					err += vname + "\" with type \"" + unvar.print() + "\""
-					panic(me.fail() + err)
+					er := "Parameter: " + vname + " with type \"" + param.data().print()
+					er += "\" does not match class variable \"" + en.join(un) + "."
+					er += vname + "\" with type \"" + unvar.print() + "\""
+					return "", err(me, er)
 				}
 			}
 
@@ -105,14 +113,17 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 			}
 
 		} else if dict {
-			panic(me.fail() + "Regular paramater found after mapped parameter")
+			return "", err(me, "Regular paramater found after mapped parameter")
 		} else {
 			unvar := un.types.table[vars[pix]]
 			if me.token.is == "_" {
 				me.eat("_")
 				params[pix] = nil
 			} else {
-				param := me.calc(0, nil)
+				param, er := me.calc(0, nil)
+				if er != nil {
+					return "", er
+				}
 
 				var update map[string]*datatype
 				if len(en.generics) > 0 {
@@ -124,15 +135,15 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {
 						f := fmt.Sprint("Lazy generic for enum: "+en.join(un)+" is ", gtypes, " but found ", update)
-						panic(me.fail() + f)
+						return "", err(me, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(unvar) && !unvar.isAnyType() {
-					err := "Parameter " + strconv.Itoa(pix) + " with type: " + param.data().print()
-					err += " does not match enum variable: " + en.join(un) + "."
-					err += strconv.Itoa(pix) + "\" with type: " + unvar.print()
-					panic(me.fail() + err)
+					er := "Parameter " + strconv.Itoa(pix) + " with type: " + param.data().print()
+					er += " does not match enum variable: " + en.join(un) + "."
+					er += strconv.Itoa(pix) + "\" with type: " + unvar.print()
+					return "", err(me, er)
 				}
 				params[pix] = param
 			}
@@ -145,13 +156,13 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 		for k, v := range gtypes {
 			i := inList(en.generics, k)
 			if i >= len(glist) {
-				panic(me.fail() + "Incomplete enum: " + en.join(un) + " declaration")
+				return "", err(me, "Incomplete enum: "+en.join(un)+" declaration")
 			}
 			glist[i] = v.copy()
 		}
 		if len(glist) != len(en.generics) {
 			f := fmt.Sprint("Missing generic for enum: " + en.join(un) + "\"\nImplementation list was " + genericslist(glist))
-			panic(me.fail() + f)
+			return "", err(me, f)
 		}
 		typed := en.name + genericslist(glist)
 		if _, ok := module.enums[typed]; !ok {
@@ -161,24 +172,27 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) string {
 	}
 	typed := en.join(un)
 	me.pushEnumParams(n, un, params, typed)
-	return typed
+	return typed, nil
 }
 
-func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
+func (me *parser) buildEnum(n *node, module *hmfile) (*datatype, *parseError) {
 	typed := me.token.value
 	depth := me.token.depth
 	me.eat("id")
 	en, ok := module.enums[typed]
 	if !ok {
-		panic(me.fail() + "Enum: " + typed + " does not exist")
+		return nil, err(me, "Enum: "+typed+" does not exist")
 	}
 	uid := module.reference(typed)
 	gsize := len(en.generics)
 	if gsize > 0 {
 		if me.token.is == "<" {
-			gtypes := me.declareGeneric(len(en.generics))
+			gtypes, er := me.declareGeneric(len(en.generics))
+			if er != nil {
+				return nil, er
+			}
 			if len(gtypes) != len(en.generics) {
-				panic(me.fail() + "Enum \"" + en.name + " with implementation " + fmt.Sprint(gtypes) + " does not match " + fmt.Sprint(en.generics))
+				return nil, err(me, "Enum \""+en.name+" with implementation "+fmt.Sprint(gtypes)+" does not match "+fmt.Sprint(en.generics))
 			}
 			typed = uid + genericslist(gtypes)
 			if _, ok := module.enums[typed]; !ok {
@@ -206,10 +220,14 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	me.eat("id")
 	un := en.getType(unvalue)
 	if un == nil {
-		panic(me.fail() + "Enum: " + en.name + " does not have type: " + unvalue)
+		return nil, err(me, "Enum: "+en.name+" does not have type: "+unvalue)
 	}
 	if n != nil && !en.simple {
-		typed = me.enumParams(n, en, un, depth)
+		var er *parseError
+		typed, er = me.enumParams(n, en, un, depth)
+		if er != nil {
+			return nil, er
+		}
 	} else {
 		typed = en.join(un)
 	}
@@ -219,9 +237,12 @@ func (me *parser) buildEnum(n *node, module *hmfile) *datatype {
 	return getdatatype(module, typed)
 }
 
-func (me *parser) allocEnum(module *hmfile, hint *allocHint) *node {
+func (me *parser) allocEnum(module *hmfile, hint *allocHint) (*node, *parseError) {
 	n := nodeInit("enum")
-	data := me.buildEnum(n, module)
+	data, er := me.buildEnum(n, module)
+	if er != nil {
+		return nil, er
+	}
 	data = data.merge(hint)
 	n.copyData(data)
 	if hint != nil && hint.stack {
@@ -229,5 +250,5 @@ func (me *parser) allocEnum(module *hmfile, hint *allocHint) *node {
 		n.data().setIsPointer(false)
 		n.data().setIsOnStack(true)
 	}
-	return n
+	return n, nil
 }

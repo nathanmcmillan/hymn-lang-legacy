@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func (me *parser) pushSigParams(n *node, sig *fnSig) {
+func (me *parser) pushSigParams(n *node, sig *fnSig) *parseError {
 	params := make([]*node, 0)
 	me.eat("(")
 	ix := 0
@@ -17,20 +17,24 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) {
 			me.eat(",")
 		}
 		arg := sig.args[ix]
-		param := me.calc(0, arg.data())
+		param, er := me.calc(0, arg.data())
+		if er != nil {
+			return er
+		}
 		if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
-			err := "parameter \"" + param.data().print()
-			err += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().print() + "\" of function signature \"" + sig.print() + "\""
-			panic(me.fail() + err)
+			er := "parameter \"" + param.data().print()
+			er += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().print() + "\" of function signature \"" + sig.print() + "\""
+			return err(me, er)
 		}
 		params = append(params, param)
 	}
 	for _, param := range params {
 		n.push(param)
 	}
+	return nil
 }
 
-func (me *parser) pushFunctionParams(n *node, params []*node, fn *function) {
+func (me *parser) pushFunctionParams(n *node, params []*node, fn *function) *parseError {
 	for ix, param := range params {
 		if param == nil {
 			var arg *funcArg
@@ -41,16 +45,21 @@ func (me *parser) pushFunctionParams(n *node, params []*node, fn *function) {
 			}
 			d := arg.defaultNode
 			if d == nil {
-				d = me.defaultValue(arg.data(), fn.getname())
+				var er *parseError
+				d, er = me.defaultValue(arg.data(), fn.getname())
+				if er != nil {
+					return er
+				}
 			}
 			n.push(d)
 		} else {
 			n.push(param)
 		}
 	}
+	return nil
 }
 
-func (me *parser) functionParams(name string, pix int, params []*node, fn *function, lazy bool) (*function, []*node) {
+func (me *parser) functionParams(name string, pix int, params []*node, fn *function, lazy bool) (*function, []*node, *parseError) {
 	me.eat("(")
 	if me.token.is == "line" {
 		me.eat("line")
@@ -81,7 +90,10 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 				me.eat("_")
 				params[aix] = nil
 			} else {
-				param := me.calc(0, nil)
+				param, er := me.calc(0, nil)
+				if er != nil {
+					return nil, nil, er
+				}
 
 				var update map[string]*datatype
 				if len(fn.generics) > 0 {
@@ -95,21 +107,21 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for function '"+fn.getname()+"' is ", a, " but found ", b)
-						panic(me.fail() + f)
+						return nil, nil, err(me, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
-					err := "parameter \"" + param.data().print()
-					err += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().print() + "\" for function \"" + name + "\""
-					panic(me.fail() + err)
+					er := "parameter \"" + param.data().print()
+					er += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().print() + "\" for function \"" + name + "\""
+					return nil, nil, err(me, er)
 				}
 				params[aix] = param
 			}
 			dict = true
 
 		} else if dict {
-			panic(me.fail() + "regular paramater found after mapped parameter")
+			return nil, nil, err(me, "regular paramater found after mapped parameter")
 		} else {
 			var arg *funcArg
 			if pix >= size {
@@ -117,14 +129,18 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 					arg = fn.argVariadic
 					params = append(params, nil)
 				} else {
-					panic(me.fail() + "function \"" + name + "\" argument count exceeds parameter count")
+					return nil, nil, err(me, "function \""+name+"\" argument count exceeds parameter count")
 				}
 			}
 			if me.token.is == "_" {
 				me.eat("_")
 				params[pix] = nil
 			} else {
-				param := me.calc(0, nil)
+				param, er := me.calc(0, nil)
+				if er != nil {
+					return nil, nil, er
+				}
+
 				if arg == nil {
 					arg = fn.args[pix]
 				}
@@ -141,14 +157,14 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for function '"+fn.getname()+"' is ", a, " but found ", b)
-						panic(me.fail() + f)
+						return nil, nil, err(me, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
-					err := "Parameter: " + param.data().print()
-					err += " does not match expected: " + arg.data().print() + " for function: " + name
-					panic(me.fail() + err)
+					er := "Parameter: " + param.data().print()
+					er += " does not match expected: " + arg.data().print() + " for function: " + name
+					return nil, nil, err(me, er)
 				}
 				params[pix] = param
 			}
@@ -165,42 +181,57 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 		}
 		if len(glist) != len(fn.generics) {
 			f := fmt.Sprint("Missing generic for function '"+fn.getname()+"'\nImplementation list was ", genericslist(glist))
-			panic(me.fail() + f)
+			return nil, nil, err(me, f)
 		}
 		lazy := name + genericslist(glist)
 		if implementation, ok := module.functions[lazy]; ok {
 			fn = implementation
 		} else {
-			fn = remapFunctionImpl(lazy, gtypes, fn)
+			var er *parseError
+			fn, er = remapFunctionImpl(lazy, gtypes, fn)
+			if er != nil {
+				return nil, nil, er
+			}
 		}
 	}
-	return fn, params
+	return fn, params, nil
 }
 
-func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) *node {
+func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *function) (*node, *parseError) {
 	params := make([]*node, len(fn.args))
 	params[0] = root
-	_, params = me.functionParams(fn.getclsname(), 1, params, fn, false)
+	var er *parseError
+	_, params, er = me.functionParams(fn.getclsname(), 1, params, fn, false)
+	if er != nil {
+		return nil, er
+	}
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
-	me.pushFunctionParams(n, params, fn)
-	return n
+	er = me.pushFunctionParams(n, params, fn)
+	if er != nil {
+		return nil, er
+	}
+	return n, nil
 }
 
-func (me *parser) call(module *hmfile) *node {
+func (me *parser) call(module *hmfile) (*node, *parseError) {
 	name := me.token.value
 	me.eat("id")
 	var order []*datatype
 	bfn, ok := module.getFunction(name)
 	if !ok {
-		panic(me.fail() + "Missing function '" + name + "'")
+		return nil, err(me, "Missing function '"+name+"'")
 	}
 	fn := bfn
 	lazy := false
 	if bfn.generics != nil {
 		if me.token.is == "<" {
-			order, _ = me.genericHeader()
+			var er *parseError
+			order, _, er = me.genericHeader()
+			if er != nil {
+				return nil, er
+			}
 			name += genericslist(order)
 			gfn, ok := module.getFunction(name)
 			if ok {
@@ -210,22 +241,33 @@ func (me *parser) call(module *hmfile) *node {
 				for i, g := range bfn.generics {
 					mapping[g] = order[i]
 				}
-				fn = remapFunctionImpl(name, mapping, bfn)
+				var er *parseError
+				fn, er = remapFunctionImpl(name, mapping, bfn)
+				if er != nil {
+					return nil, er
+				}
 			}
 		} else {
 			lazy = true
 		}
 	}
 	params := make([]*node, len(fn.args))
-	fn, params = me.functionParams(name, 0, params, fn, lazy)
+	var er *parseError
+	fn, params, er = me.functionParams(name, 0, params, fn, lazy)
+	if er != nil {
+		return nil, er
+	}
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
-	me.pushFunctionParams(n, params, fn)
-	return n
+	er = me.pushFunctionParams(n, params, fn)
+	if er != nil {
+		return nil, er
+	}
+	return n, er
 }
 
-func (me *parser) parseFn(module *hmfile) *node {
+func (me *parser) parseFn(module *hmfile) (*node, *parseError) {
 	if me.peek().is == "(" || me.peek().is == "<" {
 		return me.call(module)
 	}
@@ -234,8 +276,11 @@ func (me *parser) parseFn(module *hmfile) *node {
 	fn := module.functions[name]
 	me.eat("id")
 	n := nodeInit("fn-ptr")
-	n.copyData(fn.data())
+	newdata, er := fn.data()
+	if er != nil {
+		return nil, er
+	}
+	n.copyData(newdata)
 	n.fn = fn
-
-	return n
+	return n, nil
 }

@@ -1,12 +1,15 @@
 package main
 
-func (me *parser) infixConcat(left *node) *node {
+func (me *parser) infixConcat(left *node) (*node, *parseError) {
 	node := nodeInit("concat")
 	node.copyDataOfNode(left)
 	node.push(left)
 	for me.token.is == "+" {
 		me.eat("+")
-		right := me.calc(getInfixPrecedence("+"), nil)
+		right, er := me.calc(getInfixPrecedence("+"), nil)
+		if er != nil {
+			return nil, er
+		}
 		if !right.data().isString() {
 			err := me.fail() + "concatenation operation must be strings but found \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 			err += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
@@ -14,10 +17,10 @@ func (me *parser) infixConcat(left *node) *node {
 		}
 		node.push(right)
 	}
-	return node
+	return node, nil
 }
 
-func infixBinary(me *parser, left *node, op string) *node {
+func infixBinary(me *parser, left *node, op string) (*node, *parseError) {
 	leftdata := left.data()
 	if op == "+" {
 		if leftdata.isString() {
@@ -27,7 +30,10 @@ func infixBinary(me *parser, left *node, op string) *node {
 	node := nodeInit(op)
 	node.value = me.token.value
 	me.eat(op)
-	right := me.calc(getInfixPrecedence(op), nil)
+	right, er := me.calc(getInfixPrecedence(op), nil)
+	if er != nil {
+		return nil, er
+	}
 	if !left.data().isNumber() || !right.data().isNumber() {
 		err := me.fail() + "operation expected numbers but was \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\n\nleft: " + left.string(me.hmfile, 0) + "\n\nright: " + right.string(me.hmfile, 0)
@@ -40,14 +46,17 @@ func infixBinary(me *parser, left *node, op string) *node {
 	node.push(left)
 	node.push(right)
 	node.copyDataOfNode(left)
-	return node
+	return node, nil
 }
 
-func infixBinaryInt(me *parser, left *node, op string) *node {
+func infixBinaryInt(me *parser, left *node, op string) (*node, *parseError) {
 	node := nodeInit(op)
 	node.value = me.token.value
 	me.eat(op)
-	right := me.calc(getInfixPrecedence(op), nil)
+	right, er := me.calc(getInfixPrecedence(op), nil)
+	if er != nil {
+		return nil, er
+	}
 	if !left.data().isAnyIntegerType() || !right.data().isAnyIntegerType() || left.data().notEquals(right.data()) {
 		err := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
 		err += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
@@ -56,46 +65,62 @@ func infixBinaryInt(me *parser, left *node, op string) *node {
 	node.push(left)
 	node.push(right)
 	node.copyDataOfNode(left)
-	return node
+	return node, nil
 }
 
-func infixCompare(me *parser, left *node, op string) *node {
+func infixCompare(me *parser, left *node, op string) (*node, *parseError) {
 	node := nodeInit(getInfixName(op))
 	node.value = me.token.value
 	me.eat(op)
-	right := me.calc(getInfixPrecedence(op), nil)
+	right, er := me.calc(getInfixPrecedence(op), nil)
+	if er != nil {
+		return nil, er
+	}
 	node.push(left)
 	node.push(right)
-	node.copyData(getdatatype(me.hmfile, "bool"))
-	return node
+	d, er := getdatatype(me.hmfile, "bool")
+	if er != nil {
+		return nil, er
+	}
+	node.copyData(d)
+	return node, nil
 }
 
-func infixCompareEnumIs(me *parser, left *node, op string) *node {
+func infixCompareEnumIs(me *parser, left *node, op string) (*node, *parseError) {
 	n := nodeInit(getInfixName(op))
 	return me.parseIs(left, op, n)
 }
 
-func infixTernary(me *parser, condition *node, op string) *node {
+func infixTernary(me *parser, condition *node, op string) (*node, *parseError) {
 	node := nodeInit(getInfixName(op))
 	node.value = me.token.value
 	me.eat(op)
-	one := me.calc(getInfixPrecedence(op), nil)
+	one, er := me.calc(getInfixPrecedence(op), nil)
+	if er != nil {
+		return nil, er
+	}
 	if one.data().isVoid() {
-		panic(me.fail() + "left type cannot be void")
+		return nil, err(me, "left type cannot be void")
 	}
 	node.push(condition)
 	node.push(one)
 	me.eat(":")
-	two := me.calc(getInfixPrecedence(op), nil)
+	two, er := me.calc(getInfixPrecedence(op), nil)
+	if er != nil {
+		return nil, er
+	}
 	if one.data().notEquals(two.data()) {
-		panic(me.fail() + "left \"" + one.data().print() + "\" and right \"" + two.data().print() + "\" types do not match")
+		return nil, err(me, "left \""+one.data().print()+"\" and right \""+two.data().print()+"\" types do not match")
 	}
 	node.push(two)
 	node.copyDataOfNode(one)
-	return node
+	return node, nil
 }
 
-func infixWalrus(me *parser, left *node, op string) *node {
-	node := me.assign(left, true, false)
-	return node
+func infixWalrus(me *parser, left *node, op string) (*node, *parseError) {
+	node, er := me.assign(left, true, false)
+	if er != nil {
+		return nil, er
+	}
+	return node, nil
 }

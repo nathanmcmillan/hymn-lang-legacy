@@ -1,6 +1,6 @@
 package main
 
-func (me *parser) defineInterfaceImplementation(in *classInterface, generics []*datatype) *classInterface {
+func (me *parser) defineInterfaceImplementation(in *classInterface, generics []*datatype) (*classInterface, *parseError) {
 
 	super := in.getSuper()
 	module := super.module
@@ -23,8 +23,13 @@ func (me *parser) defineInterfaceImplementation(in *classInterface, generics []*
 
 	functions := make(map[string]*fnSig)
 
+	var er *parseError
+
 	for fname, superfn := range super.functions {
-		functions[fname] = superfn.genericsReplacer(me, mapping)
+		functions[fname], er = superfn.genericsReplacer(me, mapping)
+		if er != nil {
+			return nil, er
+		}
 	}
 
 	interfaceDef := interfaceInit(module, implementation, generics, functions)
@@ -35,5 +40,5 @@ func (me *parser) defineInterfaceImplementation(in *classInterface, generics []*
 
 	super.implementations = append(super.implementations, interfaceDef)
 
-	return interfaceDef
+	return interfaceDef, nil
 }

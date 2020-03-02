@@ -2,13 +2,17 @@ package main
 
 import "fmt"
 
-func (me *parser) macro() *node {
+func (me *parser) macro() *parseError {
 	me.eat("macro")
 	name := me.token.value
 	me.eat("id")
 	var value *node
 	if me.token.is != "line" {
-		value = me.calc(0, nil)
+		var er *parseError
+		value, er = me.calc(0, nil)
+		if er != nil {
+			return er
+		}
 		fmt.Println("NEW DEF IS", name, ":=", value.string(me.hmfile, 0))
 	} else {
 		fmt.Println("NEW DEF IS", name)
@@ -20,7 +24,7 @@ func (me *parser) macro() *node {
 	return nil
 }
 
-func (me *parser) ifdef() *node {
+func (me *parser) ifdef() *parseError {
 	me.eat("ifdef")
 	name := me.token.value
 	me.eat("id")
@@ -30,7 +34,7 @@ func (me *parser) ifdef() *node {
 				break
 			}
 			if me.token.is == "eof" {
-				panic(me.fail() + "ifdef " + name + " missing enddef")
+				return err(me, "ifdef "+name+" missing enddef")
 			}
 		}
 	} else {
@@ -39,25 +43,25 @@ func (me *parser) ifdef() *node {
 				break
 			}
 			if me.token.is == "eof" {
-				panic(me.fail() + "ifdef " + name + " missing enddef")
+				return err(me, "ifdef "+name+" missing enddef")
 			}
 		}
 	}
 	return nil
 }
 
-func (me *parser) elsedef() *node {
+func (me *parser) elsedef() *parseError {
 	me.eat("elsedef")
 	return nil
 }
 
-func (me *parser) enddef() *node {
+func (me *parser) enddef() *parseError {
 	me.eat("enddef")
 	return nil
 }
 
-func (me *parser) exprDef(name string, def *node) *node {
+func (me *parser) exprDef(name string, def *node) (*node, *parseError) {
 	me.eat("id")
 	fmt.Println("DEF", name, ":=", def.string(me.hmfile, 0))
-	return def
+	return def, nil
 }

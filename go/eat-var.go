@@ -1,6 +1,6 @@
 package main
 
-func (me *parser) eatvar(from *hmfile) *node {
+func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 	module := me.hmfile
 	head := nodeInit("variable")
 	localvarname := me.token.value
@@ -15,10 +15,9 @@ func (me *parser) eatvar(from *hmfile) *node {
 	} else {
 		sv := from.getStatic(localvarname)
 		if sv == nil {
-			panic(me.fail() + "static variable \"" + localvarname + "\" in module \"" + from.name + "\" not found")
-		} else {
-			head.copyData(sv.data())
+			return nil, err(me, "static variable \""+localvarname+"\" in module \""+from.name+"\" not found")
 		}
+		head.copyData(sv.data())
 	}
 	me.eat("id")
 	for {
@@ -26,7 +25,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			if head.is == "variable" {
 				sv := module.getvar(head.idata.name)
 				if sv == nil {
-					panic(me.fail() + "Variable '" + head.idata.name + "' out of scope")
+					return nil, err(me, "Variable '"+head.idata.name+"' out of scope")
 				}
 				head.copyData(sv.data())
 				head.is = "root-variable"
@@ -43,9 +42,13 @@ func (me *parser) eatvar(from *hmfile) *node {
 					member.idata = newidvariable(from, dotName)
 					member.push(head)
 				} else if classFunc := rootClass.getFunction(dotName); classFunc != nil {
-					member = me.callClassFunction(data.getmodule(), head, rootClass, classFunc)
+					var er *parseError
+					member, er = me.callClassFunction(data.getmodule(), head, rootClass, classFunc)
+					if er != nil {
+						return nil, er
+					}
 				} else {
-					panic(me.fail() + "Class: " + rootClass.name + " does not have a variable or function named: " + dotName)
+					return nil, err(me, "Class: "+rootClass.name+" does not have a variable or function named: "+dotName)
 				}
 				head = member
 
@@ -55,7 +58,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 				me.eat("id")
 				_, sig, ok := module.scope.fn.searchInterface(data, dotName)
 				if !ok {
-					panic(me.fail() + "Generic '" + data.print() + " does not have an interface function called '" + dotName + "'")
+					return nil, err(me, "Generic '"+data.print()+" does not have an interface function called '"+dotName+"'")
 				}
 				member := nodeInit("call")
 				member.copyData(sig.returns)
@@ -70,12 +73,16 @@ func (me *parser) eatvar(from *hmfile) *node {
 						me.eat(".")
 						me.eat("id")
 						member := nodeInit("member-variable")
-						member.copyData(getdatatype(module, TokenInt))
+						newdata, er := getdatatype(module, TokenInt)
+						if er != nil {
+							return nil, er
+						}
+						member.copyData(newdata)
 						member.idata = newidvariable(from, "class")
 						member.push(head)
 						head = member
 					} else {
-						panic(me.fail() + "enum \"" + rootEnum.name + "\" must be union type; missing root enum")
+						return nil, err(me, "enum \""+rootEnum.name+"\" must be union type; missing root enum")
 					}
 				} else {
 					me.eat(".")
@@ -83,7 +90,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 					me.eat("id")
 					typeInUnion, ok := rootUnion.types.table[key]
 					if !ok {
-						panic(me.fail() + "Union key: " + key + " does not exist for: " + rootUnion.name)
+						return nil, err(me, "Union key: "+key+" does not exist for: "+rootUnion.name)
 					}
 					member := nodeInit("union-member-variable")
 					member.copyData(typeInUnion)
@@ -92,15 +99,15 @@ func (me *parser) eatvar(from *hmfile) *node {
 					head = member
 				}
 			} else if data.isSomeOrNone() {
-				panic(me.fail() + "Unexpected maybe type \"" + head.data().print() + "\". Do you need a match statement?")
+				return nil, err(me, "Unexpected maybe type \""+head.data().print()+"\". Do you need a match statement?")
 			} else {
-				panic(me.fail() + "Unknown type: " + head.data().error())
+				return nil, err(me, "Unknown type: "+head.data().error())
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {
 				sv := module.getvar(head.idata.name)
 				if sv == nil {
-					panic(me.fail() + "variable out of scope")
+					return nil, err(me, "variable out of scope")
 				}
 				head.copyTypeFromVar(sv)
 				head.is = "root-variable"
@@ -108,7 +115,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			me.eat("[")
 			if me.token.is == ":" {
 				if !head.data().isArray() {
-					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().print() + "\" is not an array")
+					return nil, err(me, "root variable \""+head.idata.name+"\" of type \""+head.data().print()+"\" is not an array")
 				}
 				me.eat(":")
 				member := nodeInit("array-to-slice")
@@ -118,10 +125,13 @@ func (me *parser) eatvar(from *hmfile) *node {
 				head = member
 			} else {
 				if !head.data().isIndexable() {
-					panic(me.fail() + "root variable \"" + head.idata.name + "\" of type \"" + head.data().print() + "\" is not indexable")
+					return nil, err(me, "root variable \""+head.idata.name+"\" of type \""+head.data().print()+"\" is not indexable")
 				}
 				member := nodeInit("array-member")
-				index := me.calc(0, nil)
+				index, er := me.calc(0, nil)
+				if er != nil {
+					return nil, er
+				}
 				member.copyData(head.data().getmember())
 				member.push(index)
 				member.push(head)
@@ -133,7 +143,7 @@ func (me *parser) eatvar(from *hmfile) *node {
 			if head.is == "variable" {
 				sv := module.getvar(head.idata.name)
 				if sv == nil {
-					panic(me.fail() + "variable \"" + head.idata.name + "\" not found in scope.")
+					return nil, err(me, "variable \""+head.idata.name+"\" not found in scope.")
 				}
 				sig = sv.data().functionSignature()
 
@@ -150,5 +160,5 @@ func (me *parser) eatvar(from *hmfile) *node {
 			break
 		}
 	}
-	return head
+	return head, nil
 }

@@ -1,11 +1,11 @@
 package main
 
-func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterface) {
+func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterface, *parseError) {
 	if me.token.is != "with" {
 		if me.token.is == "line" && me.peek().is == "with" {
 			me.eat("line")
 		} else {
-			return nil, nil
+			return nil, nil, nil
 		}
 	}
 	me.eat("with")
@@ -15,7 +15,10 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 	for {
 		gname := me.token.value
 		me.wordOrPrimitive()
-		data := getdatatype(module, gname)
+		data, er := getdatatype(module, gname)
+		if er != nil {
+			return nil, nil, er
+		}
 		if me.token.is == ":" {
 			me.eat(":")
 			interfaces := make([]*classInterface, 0)
@@ -34,11 +37,11 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 
 				interfaceDef, ok := moduleReq.interfaces[requires]
 				if !ok {
-					panic(me.fail() + "Missing interface '" + requires + "'")
+					return nil, nil, err(me, "Missing interface '"+requires+"'")
 				}
 				for fname := range interfaceDef.functions {
 					if def, _, ok := searchInterface(interfaces, fname); ok {
-						panic(me.fail() + "Conflicting '" + fname + "' from '" + interfaceDef.name + "' and '" + def.name + "'")
+						return nil, nil, err(me, "Conflicting '"+fname+"' from '"+interfaceDef.name+"' and '"+def.name+"'")
 					}
 				}
 				interfaces = append(interfaces, interfaceDef)
@@ -67,13 +70,13 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 			}
 			break
 		} else {
-			panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
+			return nil, nil, err(me, "Bad token \""+me.token.is+"\" in class generic.")
 		}
 	}
-	return list, requirements
+	return list, requirements, nil
 }
 
-func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
+func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *parseError) {
 	module := me.hmfile
 	var list []*datatype
 	var requirements map[string][]*classInterface
@@ -82,7 +85,10 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
 		for {
 			gname := me.token.value
 			me.wordOrPrimitive()
-			data := getdatatype(module, gname)
+			data, er := getdatatype(module, gname)
+			if er != nil {
+				return nil, nil, er
+			}
 			if me.token.is == ":" {
 				me.eat(":")
 				interfaces := make([]*classInterface, 0)
@@ -101,11 +107,11 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
 
 					interfaceDef, ok := moduleReq.interfaces[requires]
 					if !ok {
-						panic(me.fail() + "Missing interface '" + requires + "'")
+						return nil, nil, err(me, "Missing interface '"+requires+"'")
 					}
 					for fname := range interfaceDef.functions {
 						if def, _, ok := searchInterface(interfaces, fname); ok {
-							panic(me.fail() + "Conflicting '" + fname + "' from '" + interfaceDef.name + "' and '" + def.name + "'")
+							return nil, nil, err(me, "Conflicting '"+fname+"' from '"+interfaceDef.name+"' and '"+def.name+"'")
 						}
 					}
 					interfaces = append(interfaces, interfaceDef)
@@ -129,24 +135,28 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface) {
 			} else if me.token.is == ">" {
 				break
 			} else {
-				panic(me.fail() + "Bad token \"" + me.token.is + "\" in class generic.")
+				return nil, nil, err(me, "Bad token \""+me.token.is+"\" in class generic.")
 			}
 		}
 		me.eat(">")
 	}
-	return list, requirements
+	return list, requirements, nil
 }
 
-func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) []*datatype {
+func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) ([]*datatype, *parseError) {
 	mapped := make([]*datatype, len(en.generics))
 	for i, e := range en.generics {
 		to, ok := dict[e]
 		if !ok {
-			panic(me.fail() + "Generic \"" + e + "\" not implemented for \"" + en.name + "\".")
+			return nil, err(me, "Generic \""+e+"\" not implemented for \""+en.name+"\".")
 		}
-		mapped[i] = getdatatype(me.hmfile, to)
+		var er *parseError
+		mapped[i], er = getdatatype(me.hmfile, to)
+		if er != nil {
+			return nil, er
+		}
 	}
-	return mapped
+	return mapped, nil
 }
 
 type gstack struct {
@@ -162,26 +172,42 @@ func mapGenericSingle(typed string, gmapper map[string]string) string {
 	return typed
 }
 
-func (me *parser) genericsReplacer(module *hmfile, original *datatype, gmapper map[string]string) *datatype {
+func (me *parser) genericsReplacer(module *hmfile, original *datatype, gmapper map[string]string) (*datatype, *parseError) {
+	var er *parseError
 	data := original.copy()
 	if data.generics != nil {
 		for i, g := range data.generics {
-			data.generics[i] = me.genericsReplacer(module, g, gmapper)
+			data.generics[i], er = me.genericsReplacer(module, g, gmapper)
+			if er != nil {
+				return nil, er
+			}
 		}
 	}
 	if data.parameters != nil {
 		for i, p := range data.parameters {
-			data.parameters[i] = me.genericsReplacer(module, p, gmapper)
+			data.parameters[i], er = me.genericsReplacer(module, p, gmapper)
+			if er != nil {
+				return nil, er
+			}
 		}
 	}
 	if data.variadic != nil {
-		data.variadic = me.genericsReplacer(module, data.variadic, gmapper)
+		data.variadic, er = me.genericsReplacer(module, data.variadic, gmapper)
+		if er != nil {
+			return nil, er
+		}
 	}
 	if data.returns != nil {
-		data.returns = me.genericsReplacer(module, data.returns, gmapper)
+		data.returns, er = me.genericsReplacer(module, data.returns, gmapper)
+		if er != nil {
+			return nil, er
+		}
 	}
 	if data.member != nil {
-		data.member = me.genericsReplacer(module, data.member, gmapper)
+		data.member, er = me.genericsReplacer(module, data.member, gmapper)
+		if er != nil {
+			return nil, er
+		}
 	}
 	data.canonical = mapGenericSingle(data.canonical, gmapper)
 	if data.generics != nil {
@@ -190,13 +216,19 @@ func (me *parser) genericsReplacer(module *hmfile, original *datatype, gmapper m
 			if cl, ok := data.module.classes[implementation]; ok {
 				data.class = cl
 			} else {
-				data.class = me.defineClassImplGeneric(data.class, data.generics)
+				data.class, er = me.defineClassImplGeneric(data.class, data.generics)
+				if er != nil {
+					return nil, er
+				}
 			}
 		} else if data.enum != nil {
 			if en, ok := data.module.enums[implementation]; ok {
 				data.enum = en
 			} else {
-				data.enum = me.defineEnumImplGeneric(data.enum, data.generics)
+				data.enum, er = me.defineEnumImplGeneric(data.enum, data.generics)
+				if er != nil {
+					return nil, er
+				}
 			}
 		}
 	}

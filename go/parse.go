@@ -135,11 +135,12 @@ func (me *parser) peek() *token {
 	return me.tokens.get(me.pos + 1)
 }
 
-func (me *parser) verify(want string) {
+func (me *parser) verify(want string) *parseError {
 	token := me.token
 	if token.is != want {
-		panic(me.fail() + "unexpected token was " + token.string() + " instead of {type:" + want + "}")
+		return err(me, "unexpected token was "+token.string()+" instead of {type:"+want+"}")
 	}
+	return nil
 }
 
 func (me *parser) eat(want string) {

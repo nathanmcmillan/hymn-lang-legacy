@@ -1,6 +1,6 @@
 package main
 
-func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
+func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) (*enum, *parseError) {
 
 	base = base.baseEnum()
 	module := base.module
@@ -45,11 +45,11 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 			if cl, ok := m.isClass(); ok {
 				for _, t := range i {
 					if _, ok := cl.selfInterfaces[t.uid()]; !ok {
-						panic(me.fail() + "Class '" + cl.name + "' for enum '" + implementation + "' requires interface '" + t.name + "'")
+						return nil, err(me, "Class '"+cl.name+"' for enum '"+implementation+"' requires interface '"+t.name+"'")
 					}
 				}
 			} else {
-				panic(me.fail() + "Enum '" + implementation + "' requires interface implementation but type was " + m.error())
+				return nil, err(me, "Enum '"+implementation+"' requires interface implementation but type was "+m.error())
 			}
 		}
 	}
@@ -58,10 +58,10 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) *enum {
 		me.finishEnumGenericDefinition(enumDef)
 	}
 
-	return enumDef
+	return enumDef, nil
 }
 
-func (me *parser) finishEnumGenericDefinition(enumDef *enum) {
+func (me *parser) finishEnumGenericDefinition(enumDef *enum) *parseError {
 
 	unionList := make([]*union, len(enumDef.base.types))
 	for i, v := range enumDef.base.types {
@@ -77,9 +77,15 @@ func (me *parser) finishEnumGenericDefinition(enumDef *enum) {
 	for _, un := range unionList {
 		for _, dataKey := range un.types.order {
 			data := un.types.table[dataKey]
-			un.types.table[dataKey] = me.genericsReplacer(enumDef.module, data, mapping)
+			replacement, er := me.genericsReplacer(enumDef.module, data, mapping)
+			if er != nil {
+				return er
+			}
+			un.types.table[dataKey] = replacement
 		}
 	}
 
 	enumDef.finishInit(false, unionList, nil, nil)
+
+	return nil
 }

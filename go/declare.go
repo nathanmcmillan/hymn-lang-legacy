@@ -4,26 +4,32 @@ import (
 	"strings"
 )
 
-func (me *parser) declareGeneric(size int) []*datatype {
+func (me *parser) declareGeneric(size int) ([]*datatype, *parseError) {
 	me.eat("<")
 	order := make([]*datatype, 0)
 	for i := 0; i < size; i++ {
 		if i != 0 {
 			me.eat(",")
 		}
-		gimpl := me.declareType()
+		gimpl, er := me.declareType()
+		if er != nil {
+			return nil, er
+		}
 		order = append(order, gimpl)
 	}
 	me.eat(">")
-	return order
+	return order, nil
 }
 
-func (me *parser) declareFn() *datatype {
+func (me *parser) declareFn() (*datatype, *parseError) {
 	me.eat("(")
 	fn := fnSigInit(me.hmfile)
 	if me.token.is != ")" {
 		for {
-			typed := me.declareType()
+			typed, er := me.declareType()
+			if er != nil {
+				return nil, er
+			}
 			fn.args = append(fn.args, fnArgInit(typed.getvariable()))
 			if me.token.is == ")" {
 				break
@@ -31,12 +37,16 @@ func (me *parser) declareFn() *datatype {
 				me.eat(",")
 				continue
 			}
-			panic(me.fail() + "unexpected token in function pointer")
+			return nil, err(me, "unexpected token in function pointer")
 		}
 	}
 	me.eat(")")
 	if me.token.is != "line" && me.token.is != "," {
-		fn.returns = me.declareType()
+		var er *parseError
+		fn.returns, er = me.declareType()
+		if er != nil {
+			return nil, er
+		}
 	} else {
 		fn.returns = newdatavoid()
 	}
@@ -44,24 +54,35 @@ func (me *parser) declareFn() *datatype {
 	return fn.newdatatype()
 }
 
-func (me *parser) declareFnPtr(fn *function) *datatype {
+func (me *parser) declareFnPtr(fn *function) (*datatype, *parseError) {
 	return getdatatype(me.hmfile, fn._name)
 }
 
-func (me *parser) declareType() *datatype {
+func (me *parser) declareType() (*datatype, *parseError) {
 
 	if me.token.is == "[" {
 		me.eat("[")
 		if me.token.is == "]" {
 			me.eat("]")
-			return newdataslice(me.declareType())
+			decl, er := me.declareType()
+			if er != nil {
+				return nil, er
+			}
+			return newdataslice(decl), nil
 		}
-		sizeNode := me.calc(0, nil)
+		sizeNode, er := me.calc(0, nil)
+		if er != nil {
+			return nil, er
+		}
 		if sizeNode.value == "" || !sizeNode.data().isInt() {
-			panic(me.fail() + "array size must be constant integer")
+			return nil, err(me, "array size must be constant integer")
 		}
 		me.eat("]")
-		return newdataarray(sizeNode.value, me.declareType())
+		decl, er := me.declareType()
+		if er != nil {
+			return nil, er
+		}
+		return newdataarray(sizeNode.value, decl), nil
 	}
 
 	module := me.hmfile
@@ -73,48 +94,54 @@ func (me *parser) declareType() *datatype {
 	} else if me.token.is == "maybe" {
 		me.eat("maybe")
 		me.eat("<")
-		option := me.declareType()
+		option, er := me.declareType()
+		if er != nil {
+			return nil, er
+		}
 		me.eat(">")
 		if !option.isPointer() {
-			panic(me.fail() + "Maybe type requires a pointer. Found: " + option.print())
+			return nil, err(me, "Maybe type requires a pointer. Found: "+option.print())
 		}
-		return newdatamaybe(option)
+		return newdatamaybe(option), nil
 
 	} else if me.token.is == "none" {
 		me.eat("none")
 		if me.token.is == "<" {
 			me.eat("<")
-			option := me.declareType()
+			option, er := me.declareType()
+			if er != nil {
+				return nil, er
+			}
 			me.eat(">")
 			if !option.isPointer() {
-				panic(me.fail() + "None type requires a pointer. Found: " + option.print())
+				return nil, err(me, "None type requires a pointer. Found: "+option.print())
 			}
-			return newdatamaybe(option)
+			return newdatamaybe(option), nil
 		}
-		return newdatanone()
+		return newdatanone(), nil
 	} else {
 		value += me.token.value
 		me.wordOrPrimitive()
 	}
 
 	if value == "void" {
-		return newdatavoid()
+		return newdatavoid(), nil
 	}
 
 	if value == "?" {
-		return newdataany()
+		return newdataany(), nil
 	}
 
 	if value == "*" {
-		return newdataany()
+		return newdataany(), nil
 	}
 
 	if value == TokenString {
-		return newdatastring()
+		return newdatastring(), nil
 	}
 
 	if checkIsPrimitive(value) {
-		return newdataprimitive(value)
+		return newdataprimitive(value), nil
 	}
 
 	if strings.HasPrefix(value, "%") {
@@ -138,7 +165,11 @@ func (me *parser) declareType() *datatype {
 	if en, ok := module.enums[value]; ok {
 		var gtypes []*datatype
 		if me.token.is == "<" {
-			gtypes = me.declareGeneric(len(en.generics))
+			var er *parseError
+			gtypes, er = me.declareGeneric(len(en.generics))
+			if er != nil {
+				return nil, er
+			}
 			value += genericslist(gtypes)
 			if _, ok := en.module.enums[value]; !ok {
 				me.defineEnumImplGeneric(en, gtypes)
@@ -151,17 +182,21 @@ func (me *parser) declareType() *datatype {
 		if me.token.is == "." {
 			me.eat(".")
 			if un = en.getType(me.token.value); un == nil {
-				panic(me.fail() + "Union type \"" + me.token.value + "\" not found for enum \"" + en.name + "\".")
+				return nil, err(me, "Union type \""+me.token.value+"\" not found for enum \""+en.name+"\".")
 			}
 			me.eat("id")
 		}
-		return newdataenum(me.hmfile, en, un, gtypes)
+		return newdataenum(me.hmfile, en, un, gtypes), nil
 	}
 
 	if cl, ok := module.classes[value]; ok {
 		var gtypes []*datatype
 		if me.token.is == "<" {
-			gtypes = me.declareGeneric(len(cl.generics))
+			var er *parseError
+			gtypes, er = me.declareGeneric(len(cl.generics))
+			if er != nil {
+				return nil, er
+			}
 			value += genericslist(gtypes)
 			if _, ok := cl.module.classes[value]; !ok {
 				me.defineClassImplGeneric(cl, gtypes)
@@ -170,11 +205,11 @@ func (me *parser) declareType() *datatype {
 				cl = clgen
 			}
 		}
-		return newdataclass(me.hmfile, cl, gtypes)
+		return newdataclass(me.hmfile, cl, gtypes), nil
 	}
 
 	if module != me.hmfile {
-		panic(me.fail() + "Unknown declared type \"" + value + "\".")
+		return nil, err(me, "Unknown declared type \""+value+"\".")
 	}
 
 	return getdatatype(me.hmfile, value)

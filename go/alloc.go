@@ -1,6 +1,6 @@
 package main
 
-func (me *parser) defaultValue(data *datatype, from string) *node {
+func (me *parser) defaultValue(data *datatype, from string) (*node, *parseError) {
 	d := nodeInit(data.getRaw())
 	d.copyData(data)
 	if data.isString() {
@@ -19,7 +19,11 @@ func (me *parser) defaultValue(data *datatype, from string) *node {
 		t := nodeInit("slice")
 		t.copyData(d.data())
 		s := nodeInit(TokenInt)
-		s.copyData(getdatatype(me.hmfile, TokenInt))
+		newdata, er := getdatatype(me.hmfile, TokenInt)
+		if er != nil {
+			return nil, er
+		}
+		s.copyData(newdata)
 		s.value = "0"
 		t.push(s)
 		d = t
@@ -34,12 +38,12 @@ func (me *parser) defaultValue(data *datatype, from string) *node {
 		t.value = "NULL"
 		d = t
 	} else {
-		e := me.fail()
+		e := ""
 		if from != "" {
 			e += "\nFrom: " + from
 		}
 		e += "\nType: " + d.is + "\nProblem: No default value available."
-		panic(e)
+		return nil, err(me, e)
 	}
-	return d
+	return d, nil
 }

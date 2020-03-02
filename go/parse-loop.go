@@ -1,24 +1,48 @@
 package main
 
-func (me *parser) forloop() *node {
+func (me *parser) forloop() (*node, *parseError) {
 	me.eat("for")
 	var no *node
 	var templs []*variableNode
 	no = nodeInit("for")
-	no.push(me.forceassign(me.eatvar(me.hmfile), true, true))
+	v, er := me.eatvar(me.hmfile)
+	if er != nil {
+		return nil, er
+	}
+	f, er := me.forceassign(v, true, true)
+	if er != nil {
+		return nil, er
+	}
+	no.push(f)
 	me.eat(";")
-	no.push(me.calcBool())
+	b, er := me.calcBool()
+	if er != nil {
+		return nil, er
+	}
+	no.push(b)
 	me.eat(";")
-	no.push(me.forceassign(me.eatvar(me.hmfile), true, true))
+	v, er = me.eatvar(me.hmfile)
+	if er != nil {
+		return nil, er
+	}
+	a, er := me.forceassign(v, true, true)
+	if er != nil {
+		return nil, er
+	}
+	no.push(a)
 	me.eat("line")
-	no.push(me.block())
+	b, er = me.block()
+	if er != nil {
+		return nil, er
+	}
+	no.push(b)
 	if templs != nil {
 		me.enumstackclr(templs)
 	}
-	return no
+	return no, nil
 }
 
-func (me *parser) whileloop() *node {
+func (me *parser) whileloop() (*node, *parseError) {
 	me.eat("while")
 	var no *node
 	var templs []*variableNode
@@ -27,18 +51,26 @@ func (me *parser) whileloop() *node {
 		no = nodeInit("loop")
 	} else {
 		no = nodeInit("while")
-		no.push(me.calcBool())
+		b, er := me.calcBool()
+		if er != nil {
+			return nil, er
+		}
+		no.push(b)
 		templs = me.getenumstack(no)
 		me.eat("line")
 	}
-	no.push(me.block())
+	b, er := me.block()
+	if er != nil {
+		return nil, er
+	}
+	no.push(b)
 	if templs != nil {
 		me.enumstackclr(templs)
 	}
-	return no
+	return no, nil
 }
 
-func (me *parser) iterloop() *node {
+func (me *parser) iterloop() (*node, *parseError) {
 	me.eat("iterate")
 	var1 := me.token.value
 	var2 := ""
@@ -54,9 +86,12 @@ func (me *parser) iterloop() *node {
 		}
 	}
 	me.eat("in")
-	using := me.calc(0, nil)
+	using, er := me.calc(0, nil)
+	if er != nil {
+		return nil, er
+	}
 	if !using.data().isArrayOrSlice() && !using.data().isString() {
-		panic(me.fail() + "expected array, slice, string but was \"" + using.data().print() + "\"")
+		return nil, err(me, "expected array, slice, string but was \""+using.data().print()+"\"")
 	}
 	me.eat("line")
 
@@ -66,7 +101,10 @@ func (me *parser) iterloop() *node {
 	d.idata = newidvariable(me.hmfile, var1)
 
 	if var2 != "" {
-		iterid := me.hmfile.varInit("int", var1, false)
+		iterid, er := me.hmfile.varInit("int", var1, false)
+		if er != nil {
+			return nil, er
+		}
 		me.hmfile.scope.variables[iterid.name] = iterid
 		e := nodeInit("variable")
 		e.idata = newidvariable(me.hmfile, iterid.name)
@@ -80,10 +118,13 @@ func (me *parser) iterloop() *node {
 	me.hmfile.scope.variables[itermint.name] = itermint
 	d.copyData(itermint.data())
 
-	block := me.block()
+	block, er := me.block()
+	if er != nil {
+		return nil, er
+	}
 
 	no.push(d)
 	no.push(using)
 	no.push(block)
-	return no
+	return no, nil
 }

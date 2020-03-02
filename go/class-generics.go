@@ -1,6 +1,6 @@
 package main
 
-func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class {
+func (me *parser) defineClassImplGeneric(super *class, order []*datatype) (*class, *parseError) {
 
 	super = super.baseClass()
 	module := super.module
@@ -45,11 +45,11 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 			if cl, ok := m.isClass(); ok {
 				for _, t := range i {
 					if _, ok := cl.selfInterfaces[t.uid()]; !ok {
-						panic(me.fail() + "Class '" + cl.name + "' for '" + implementation + "' requires interface '" + t.name + "'")
+						return nil, err(me, "Class '"+cl.name+"' for '"+implementation+"' requires interface '"+t.name+"'")
 					}
 				}
 			} else {
-				panic(me.fail() + "Class '" + implementation + "' requires interface implementation but type was " + m.error())
+				return nil, err(me, "Class '"+implementation+"' requires interface implementation but type was "+m.error())
 			}
 		}
 	}
@@ -73,7 +73,11 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 		if gotInterface, ok := module.interfaces[intname]; ok {
 			in = gotInterface
 		} else {
-			in = me.defineInterfaceImplementation(in, generics)
+			var er *parseError
+			in, er = me.defineInterfaceImplementation(in, generics)
+			if er != nil {
+				return nil, er
+			}
 		}
 		classDef.selfInterfaces[key] = in
 	}
@@ -82,10 +86,10 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) *class
 		me.finishClassGenericDefinition(classDef)
 	}
 
-	return classDef
+	return classDef, nil
 }
 
-func (me *parser) finishClassGenericDefinition(classDef *class) {
+func (me *parser) finishClassGenericDefinition(classDef *class) *parseError {
 
 	members := make([]*variable, len(classDef.base.variables))
 	for i, v := range classDef.base.variables {
@@ -100,11 +104,16 @@ func (me *parser) finishClassGenericDefinition(classDef *class) {
 	}
 
 	for _, mem := range members {
-		data := me.genericsReplacer(classDef.module, mem.data(), mapping)
+		data, er := me.genericsReplacer(classDef.module, mem.data(), mapping)
+		if er != nil {
+			return er
+		}
 		mem._vdata = data
 	}
 
 	for _, fn := range classDef.base.functions {
 		remapClassFunctionImpl(classDef, fn)
 	}
+
+	return nil
 }

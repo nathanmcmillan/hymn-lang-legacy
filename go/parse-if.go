@@ -21,20 +21,33 @@ func (me *parser) getenumstack(n *node) []*variableNode {
 	return nil
 }
 
-func (me *parser) ifexpr() *node {
+func (me *parser) ifexpr() (*node, *parseError) {
+	var er *parseError
 	depth := me.token.depth
 	me.eat("if")
 	n := nodeInit("if")
-	n.push(me.calcBool())
+	b, er := me.calcBool()
+	if er != nil {
+		return nil, er
+	}
+	n.push(b)
 	templs := me.getenumstack(n)
 	if me.token.is == ":" {
 		me.eat(":")
 		block := nodeInit("block")
-		block.push(me.expression())
+		e, er := me.expression()
+		if er != nil {
+			return nil, er
+		}
+		block.push(e)
 		n.push(block)
 	} else {
 		me.eat("line")
-		n.push(me.block())
+		b, er = me.block()
+		if er != nil {
+			return nil, er
+		}
+		n.push(b)
 	}
 	if (me.peek().is == "elif" || me.peek().is == "else") && me.peek().depth == depth && me.token.is == "line" {
 		me.eat("line")
@@ -43,16 +56,28 @@ func (me *parser) ifexpr() *node {
 	for me.token.is == "elif" && me.token.depth == depth {
 		me.eat("elif")
 		elif := nodeInit("elif")
-		elif.push(me.calcBool())
+		b, er := me.calcBool()
+		if er != nil {
+			return nil, er
+		}
+		elif.push(b)
 		templs := me.getenumstack(elif)
 		if me.token.is == ":" {
 			me.eat(":")
 			block := nodeInit("block")
-			block.push(me.expression())
+			e, er := me.expression()
+			if er != nil {
+				return nil, er
+			}
+			block.push(e)
 			n.push(block)
 		} else {
 			me.eat("line")
-			elif.push(me.block())
+			b, er := me.block()
+			if er != nil {
+				return nil, er
+			}
+			elif.push(b)
 		}
 		me.enumstackclr(templs)
 		n.push(elif)
@@ -65,18 +90,25 @@ func (me *parser) ifexpr() *node {
 		el := nodeInit("else")
 		if me.token.is == ":" {
 			me.eat(":")
-			exp := me.expression()
+			exp, er := me.expression()
+			if er != nil {
+				return nil, er
+			}
 			block := nodeInit("block")
 			block.push(exp)
 			el.push(block)
 		} else {
 			me.eat("line")
-			el.push(me.block())
+			b, er := me.block()
+			if er != nil {
+				return nil, er
+			}
+			el.push(b)
 		}
 		n.push(el)
 		if me.token.is == "line" {
 			me.eat("line")
 		}
 	}
-	return n
+	return n, nil
 }

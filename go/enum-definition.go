@@ -1,14 +1,17 @@
 package main
 
-func (me *parser) defineEnum() {
+func (me *parser) defineEnum() *parseError {
 	me.eat("enum")
 	token := me.token
 	name := token.value
 	if _, ok := me.hmfile.namespace[name]; ok {
-		panic(me.fail() + "name \"" + name + "\" already defined")
+		return err(me, "name \""+name+"\" already defined")
 	}
 	me.eat("id")
-	genericsOrder, interfaces := me.genericHeader()
+	genericsOrder, interfaces, er := me.genericHeader()
+	if er != nil {
+		return er
+	}
 	me.eat("line")
 
 	uid := me.hmfile.reference(name)
@@ -42,7 +45,7 @@ func (me *parser) defineEnum() {
 			typeName := token.value
 			me.eat("id")
 			if getUnionType(types, typeName) != nil {
-				panic(me.fail() + "type name \"" + typeName + "\" already used")
+				return err(me, "type name \""+typeName+"\" already used")
 			}
 			unionOrderedData := newordereddata()
 			if me.token.is == "(" {
@@ -60,7 +63,10 @@ func (me *parser) defineEnum() {
 					}
 					key := me.token.value
 					me.eat("id")
-					unionArgType := me.declareType()
+					unionArgType, er := me.declareType()
+					if er != nil {
+						return er
+					}
 					unionOrderedData.push(key, unionArgType)
 
 					if me.token.is == "," {
@@ -79,7 +85,7 @@ func (me *parser) defineEnum() {
 			types = append(types, un)
 			continue
 		}
-		panic(me.fail() + "bad token \"" + token.is + "\" in enum")
+		return err(me, "bad token \""+token.is+"\" in enum")
 	}
 
 	enumDef.finishInit(isSimple, types, datatypels(genericsOrder), interfaces)
@@ -87,4 +93,6 @@ func (me *parser) defineEnum() {
 	for _, implementation := range enumDef.implementations {
 		me.finishEnumGenericDefinition(implementation)
 	}
+
+	return nil
 }

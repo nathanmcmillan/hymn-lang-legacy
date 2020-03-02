@@ -84,58 +84,72 @@ func (me *datatype) copy() *datatype {
 	return c
 }
 
-func getdatatype(me *hmfile, typed string) *datatype {
+func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 
 	if me != nil {
 		typed = me.alias(typed)
 	}
 
 	if typed == "void" {
-		return newdatavoid()
+		return newdatavoid(), nil
 	}
 
 	if typed == "?" {
-		return newdataany()
+		return newdataany(), nil
 	}
 
 	if typed == "*" {
-		return newdataanypointer()
+		return newdataanypointer(), nil
 	}
 
 	if typed == TokenString {
-		return newdatastring()
+		return newdatastring(), nil
 	}
 
 	if checkIsPrimitive(typed) {
-		return newdataprimitive(typed)
+		return newdataprimitive(typed), nil
 	}
 
 	if strings.HasPrefix(typed, "maybe<") {
-		member := getdatatype(me, typed[6:len(typed)-1])
-		if !member.isPointer() {
-			panic(me.parser.fail() + "Maybe type requires a pointer. Found: " + member.print())
+		member, er := getdatatype(me, typed[6:len(typed)-1])
+		if er != nil {
+			return nil, er
 		}
-		return newdatamaybe(member)
+		if !member.isPointer() {
+			return nil, err(me.parser, "Maybe type requires a pointer. Found: "+member.print())
+		}
+		return newdatamaybe(member), nil
 
 	} else if typed == "none" {
-		return newdatanone()
+		return newdatanone(), nil
 
 	} else if strings.HasPrefix(typed, "none<") {
-		member := getdatatype(me, typed[5:len(typed)-1])
-		if !member.isPointer() {
-			panic(me.parser.fail() + "None type requires a pointer. Found: " + member.print())
+		member, er := getdatatype(me, typed[5:len(typed)-1])
+		if er != nil {
+			return nil, er
 		}
-		return newdatamaybe(member)
+		if !member.isPointer() {
+			return nil, err(me.parser, "None type requires a pointer. Found: "+member.print())
+		}
+		return newdatamaybe(member), nil
 	}
 
 	if checkIsArray(typed) {
 		size, member := typeOfArrayOrSlice(typed)
-		return newdataarray(size, getdatatype(me, member))
+		mem, er := getdatatype(me, member)
+		if er != nil {
+			return nil, er
+		}
+		return newdataarray(size, mem), nil
 	}
 
 	if checkIsSlice(typed) {
 		_, member := typeOfArrayOrSlice(typed)
-		return newdataslice(getdatatype(me, member))
+		mem, er := getdatatype(me, member)
+		if er != nil {
+			return nil, er
+		}
+		return newdataslice(mem), nil
 	}
 
 	if checkIsFunction(typed) {
@@ -143,15 +157,31 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		list := make([]*datatype, len(parameters))
 		funcSig := fnSigInit(me)
 		for i, p := range parameters {
-			list[i] = getdatatype(me, p)
-			funcSig.args = append(funcSig.args, getdatatype(me, p).tofnarg())
+			ls, er := getdatatype(me, p)
+			if er != nil {
+				return nil, er
+			}
+			list[i] = ls
+			a, er := getdatatype(me, p)
+			if er != nil {
+				return nil, er
+			}
+			funcSig.args = append(funcSig.args, a.tofnarg())
 		}
-		funcSig.returns = getdatatype(me, returns)
-		return newdatafunction(funcSig, list, nil, getdatatype(me, returns))
+		var er *parseError
+		funcSig.returns, er = getdatatype(me, returns)
+		if er != nil {
+			return nil, er
+		}
+		ret, er := getdatatype(me, returns)
+		if er != nil {
+			return nil, er
+		}
+		return newdatafunction(funcSig, list, nil, ret), nil
 	}
 
 	if me == nil {
-		return newdataunknown(nil, nil, typed, nil)
+		return newdataunknown(nil, nil, typed, nil), nil
 	}
 
 	origin := me
@@ -189,7 +219,11 @@ func getdatatype(me *hmfile, typed string) *datatype {
 		remainder := typed[gt:]
 		glist = make([]*datatype, len(graw))
 		for i, r := range graw {
-			glist[i] = getdatatype(me, r)
+			var er *parseError
+			glist[i], er = getdatatype(me, r)
+			if er != nil {
+				return nil, er
+			}
 		}
 
 		d = strings.Index(remainder, ".")
@@ -197,9 +231,9 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			base = typed[0:gt]
 			if en, ok := module.enums[base]; ok {
 				un := en.getType(remainder[d+1:])
-				return newdataenum(origin, en, un, glist)
+				return newdataenum(origin, en, un, glist), nil
 			}
-			return newdataunknown(origin, module, typed, glist)
+			return newdataunknown(origin, module, typed, glist), nil
 		}
 	} else {
 		d = strings.Index(base, ".")
@@ -207,35 +241,35 @@ func getdatatype(me *hmfile, typed string) *datatype {
 			base = typed[0:d]
 			if en, ok := module.enums[base]; ok {
 				un := en.getType(typed[d+1:])
-				return newdataenum(origin, en, un, glist)
+				return newdataenum(origin, en, un, glist), nil
 			}
-			return newdataunknown(origin, module, typed, glist)
+			return newdataunknown(origin, module, typed, glist), nil
 		}
 	}
 
 	if cl, ok := module.classes[typed]; ok {
-		return newdataclass(origin, cl, glist)
+		return newdataclass(origin, cl, glist), nil
 	} else if en, ok := module.enums[typed]; ok {
-		return newdataenum(origin, en, nil, glist)
+		return newdataenum(origin, en, nil, glist), nil
 	} else if base != typed {
 		if cl, ok := module.classes[base]; ok {
 			if cl.module != module {
 				if cl, ok := cl.module.classes[typed]; ok {
-					return newdataclass(origin, cl, glist)
+					return newdataclass(origin, cl, glist), nil
 				}
 			}
-			return newdataclass(origin, cl, glist)
+			return newdataclass(origin, cl, glist), nil
 		} else if en, ok := module.enums[base]; ok {
 			if en.module != module {
 				if en, ok := en.module.enums[typed]; ok {
-					return newdataenum(origin, en, nil, glist)
+					return newdataenum(origin, en, nil, glist), nil
 				}
 			}
-			return newdataenum(origin, en, nil, glist)
+			return newdataenum(origin, en, nil, glist), nil
 		}
 	}
 
-	return newdataunknown(origin, module, typed, glist)
+	return newdataunknown(origin, module, typed, glist), nil
 }
 
 func (me *datatype) missingCase() bool {
@@ -820,17 +854,9 @@ func newdataclass(origin *hmfile, class *class, generics []*datatype) *datatype 
 	d.origin = origin
 	d.module = class.module
 	d.class = class
-
 	if generics != nil && len(generics) > 0 {
 		d.generics = generics
 	}
-
-	actual := d.print()
-	expected := class.module.reference(class.name)
-	if actual != expected {
-		panic("Parsing error: New class does not match: " + actual + " Expected: " + expected)
-	}
-
 	return d
 }
 
@@ -840,20 +866,9 @@ func newdataenum(origin *hmfile, enum *enum, union *union, generics []*datatype)
 	d.module = enum.module
 	d.enum = enum
 	d.union = union
-
 	if generics != nil && len(generics) > 0 {
 		d.generics = generics
 	}
-
-	actual := d.print()
-	expected := enum.module.reference(enum.name)
-	if union != nil {
-		expected += "." + union.name
-	}
-	if actual != expected {
-		panic("Parsing error: New enum does not match: " + actual + " Expected: " + expected)
-	}
-
 	return d
 }
 
@@ -1150,12 +1165,16 @@ func datatypels(data []*datatype) []string {
 	return ls
 }
 
-func listofgenerics(module *hmfile, generics []string) []*datatype {
+func listofgenerics(module *hmfile, generics []string) ([]*datatype, *parseError) {
 	order := make([]*datatype, len(generics))
 	for i, g := range generics {
-		order[i] = getdatatype(module, g)
+		var er *parseError
+		order[i], er = getdatatype(module, g)
+		if er != nil {
+			return nil, er
+		}
 	}
-	return order
+	return order, nil
 }
 
 func copydatalist(generics []*datatype) []*datatype {

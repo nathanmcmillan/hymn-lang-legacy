@@ -30,7 +30,7 @@ type parseError struct {
 	trace       string
 }
 
-func err(parser *parser, description string) *parseError {
+func err(parser *parser, code int, description string) *parseError {
 	bytes := make([]byte, 1<<16)
 	runtime.Stack(bytes, true)
 	stacktrace := fmt.Sprintf("%s", bytes)
@@ -89,6 +89,7 @@ gather:
 	report := b.String()
 
 	e := &parseError{}
+	e.code = 1
 	e.description = parser.fail() + description
 	e.trace = stacktrace
 	e.lines = lines
@@ -120,7 +121,7 @@ func (me *parseError) print() string {
 	out += "--------------------------------------------------------------------------------\n"
 	out += me.report
 	out += "--------------------------------------------------------------------------------\n"
-	out += me.description
+	out += fmt.Sprintf("Code: %04d%s", me.code, me.description)
 	out += "\n--------------------------------------------------------------------------------\n"
 	out += me.trace
 

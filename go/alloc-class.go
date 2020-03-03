@@ -36,7 +36,9 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 		return "", er
 	}
 	if me.token.is == "line" {
-		me.eat("line")
+		if er := me.eat("line"); er != nil {
+			return "", er
+		}
 	}
 	params := make([]*node, len(cl.variables))
 	pix := 0
@@ -45,40 +47,56 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 	gtypes := make(map[string]*datatype)
 	for {
 		if me.token.is == ")" {
-			me.eat(")")
+			if er := me.eat(")"); er != nil {
+				return "", er
+			}
 			break
 		}
 		if pix > 0 || dict {
 			if me.token.is == "line" {
 				ndepth := me.peek().depth
 				if ndepth == depth && me.peek().is == ")" {
-					me.eat("line")
-					me.eat(")")
+					if er := me.eat("line"); er != nil {
+						return "", er
+					}
+					if er := me.eat(")"); er != nil {
+						return "", er
+					}
 					break
 				}
 				if ndepth != depth+1 {
 					return "", erc(me, ECodeLineIndentation)
 				}
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return "", er
+				}
 			} else {
-				me.eat(",")
+				if er := me.eat(","); er != nil {
+					return "", er
+				}
 			}
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
 			dict = true
 
 			vname := me.token.value
-			me.eat("id")
+			if er := me.eat("id"); er != nil {
+				return "", er
+			}
 			clsvar := cl.getVariable(vname)
 			if clsvar == nil {
 				return "", err(me, ECodeClassMemberNotFound, "Member variable: "+vname+" does not exist for class: "+cl.name)
 			}
 
-			me.eat(":")
+			if er := me.eat(":"); er != nil {
+				return "", er
+			}
 			var param *node
 
 			if me.token.is == "_" {
-				me.eat("_")
+				if er := me.eat("_"); er != nil {
+					return "", er
+				}
 			} else {
 				var er *parseError
 				param, er = me.calc(0, nil)
@@ -122,7 +140,9 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 		} else {
 			clsvar := cl.variables[pix]
 			if me.token.is == "_" {
-				me.eat("_")
+				if er := me.eat("_"); er != nil {
+					return "", er
+				}
 				params[pix] = nil
 			} else {
 				param, er := me.calc(0, nil)
@@ -181,7 +201,9 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 func (me *parser) buildClass(n *node, module *hmfile) (*datatype, *parseError) {
 	typed := me.token.value
 	depth := me.token.depth
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	cl, ok := module.classes[typed]
 	if !ok {
 		return nil, err(me, ECodeClassDoesNotExist, "Class: "+typed+" does not exist")

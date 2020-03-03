@@ -5,7 +5,9 @@ func (me *parser) infixConcat(left *node) (*node, *parseError) {
 	node.copyDataOfNode(left)
 	node.push(left)
 	for me.token.is == "+" {
-		me.eat("+")
+		if er := me.eat("+"); er != nil {
+			return nil, er
+		}
 		right, er := me.calc(getInfixPrecedence("+"), nil)
 		if er != nil {
 			return nil, er
@@ -29,7 +31,9 @@ func infixBinary(me *parser, left *node, op string) (*node, *parseError) {
 	}
 	node := nodeInit(op)
 	node.value = me.token.value
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	right, er := me.calc(getInfixPrecedence(op), nil)
 	if er != nil {
 		return nil, er
@@ -52,7 +56,9 @@ func infixBinary(me *parser, left *node, op string) (*node, *parseError) {
 func infixBinaryInt(me *parser, left *node, op string) (*node, *parseError) {
 	node := nodeInit(op)
 	node.value = me.token.value
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	right, er := me.calc(getInfixPrecedence(op), nil)
 	if er != nil {
 		return nil, er
@@ -71,7 +77,9 @@ func infixBinaryInt(me *parser, left *node, op string) (*node, *parseError) {
 func infixCompare(me *parser, left *node, op string) (*node, *parseError) {
 	node := nodeInit(getInfixName(op))
 	node.value = me.token.value
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	right, er := me.calc(getInfixPrecedence(op), nil)
 	if er != nil {
 		return nil, er
@@ -94,7 +102,9 @@ func infixCompareEnumIs(me *parser, left *node, op string) (*node, *parseError) 
 func infixTernary(me *parser, condition *node, op string) (*node, *parseError) {
 	node := nodeInit(getInfixName(op))
 	node.value = me.token.value
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	one, er := me.calc(getInfixPrecedence(op), nil)
 	if er != nil {
 		return nil, er
@@ -104,7 +114,9 @@ func infixTernary(me *parser, condition *node, op string) (*node, *parseError) {
 	}
 	node.push(condition)
 	node.push(one)
-	me.eat(":")
+	if er := me.eat(":"); er != nil {
+		return nil, er
+	}
 	two, er := me.calc(getInfixPrecedence(op), nil)
 	if er != nil {
 		return nil, er

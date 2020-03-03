@@ -6,7 +6,9 @@ import (
 
 func prefixSign(me *parser, op string) (*node, *parseError) {
 	node := nodeInit(getPrefixName(op))
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	right, er := me.calc(getPrefixPrecedence(op), nil)
 	if er != nil {
 		return nil, er
@@ -17,13 +19,17 @@ func prefixSign(me *parser, op string) (*node, *parseError) {
 }
 
 func prefixGroup(me *parser, op string) (*node, *parseError) {
-	me.eat("(")
+	if er := me.eat("("); er != nil {
+		return nil, er
+	}
 	node, er := me.calc(0, nil)
 	if er != nil {
 		return nil, er
 	}
 	node.attributes["parenthesis"] = "true"
-	me.eat(")")
+	if er := me.eat(")"); er != nil {
+		return nil, er
+	}
 	return node, nil
 }
 
@@ -39,7 +45,9 @@ func prefixPrimitive(me *parser, op string) (*node, *parseError) {
 	}
 	node.copyData(d)
 	node.value = me.token.value
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	return node, nil
 }
 
@@ -51,7 +59,9 @@ func prefixString(me *parser, op string) (*node, *parseError) {
 	}
 	node.copyData(d)
 	node.value = me.token.value
-	me.eat(TokenStringLiteral)
+	if er := me.eat(TokenStringLiteral); er != nil {
+		return nil, er
+	}
 	return node, nil
 }
 
@@ -63,15 +73,21 @@ func prefixChar(me *parser, op string) (*node, *parseError) {
 	}
 	node.copyData(d)
 	node.value = me.token.value
-	me.eat(TokenCharLiteral)
+	if er := me.eat(TokenCharLiteral); er != nil {
+		return nil, er
+	}
 	return node, nil
 }
 
 func prefixNot(me *parser, op string) (*node, *parseError) {
 	if me.token.is == "!" {
-		me.eat("!")
+		if er := me.eat("!"); er != nil {
+			return nil, er
+		}
 	} else {
-		me.eat("not")
+		if er := me.eat("not"); er != nil {
+			return nil, er
+		}
 	}
 	node := nodeInit("not")
 	newdata, er := getdatatype(me.hmfile, "bool")
@@ -88,7 +104,9 @@ func prefixNot(me *parser, op string) (*node, *parseError) {
 }
 
 func prefixCast(me *parser, op string) (*node, *parseError) {
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	node := nodeInit("cast")
 	newdata, er := getdatatype(me.hmfile, op)
 	if er != nil {
@@ -110,7 +128,9 @@ func prefixCast(me *parser, op string) (*node, *parseError) {
 func prefixIdent(me *parser, op string) (*node, *parseError) {
 	useStack := false
 	if me.token.is == "$" {
-		me.eat("$")
+		if er := me.eat("$"); er != nil {
+			return nil, er
+		}
 		useStack = true
 	}
 
@@ -153,7 +173,9 @@ func prefixIdent(me *parser, op string) (*node, *parseError) {
 }
 
 func prefixArray(me *parser, op string) (*node, *parseError) {
-	me.eat("[")
+	if er := me.eat("["); er != nil {
+		return nil, er
+	}
 	hint := &allocHint{}
 	var no *node
 	var size *node
@@ -163,7 +185,9 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 		no = nodeInit("slice")
 		simple = true
 	} else if me.token.is == ":" {
-		me.eat(":")
+		if er := me.eat(":"); er != nil {
+			return nil, er
+		}
 		hint.slice = true
 		no = nodeInit("slice")
 		if me.token.is != "]" {
@@ -196,7 +220,9 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 		slice := false
 		var capacity *node
 		if me.token.is == ":" {
-			me.eat(":")
+			if er := me.eat(":"); er != nil {
+				return nil, er
+			}
 			slice = true
 			if me.token.is != "]" {
 				capacity, er = me.calc(0, nil)
@@ -221,14 +247,18 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 			no.push(capacity)
 		}
 	}
-	me.eat("]")
+	if er := me.eat("]"); er != nil {
+		return nil, er
+	}
 	data, er := me.declareType()
 	if er != nil {
 		return nil, er
 	}
 	if me.token.is == "(" {
 		items := nodeInit("items")
-		me.eat("(")
+		if er := me.eat("("); er != nil {
+			return nil, er
+		}
 		for {
 			item, er := me.calc(0, data)
 			if er != nil {
@@ -241,9 +271,13 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 			if me.token.is == ")" {
 				break
 			}
-			me.eat(",")
+			if er := me.eat(","); er != nil {
+				return nil, er
+			}
 		}
-		me.eat(")")
+		if er := me.eat(")"); er != nil {
+			return nil, er
+		}
 
 		if size != nil {
 			sizeint, er := strconv.Atoi(size.value)
@@ -267,7 +301,9 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 }
 
 func prefixNone(me *parser, op string) (*node, *parseError) {
-	me.verify("none")
+	if er := me.verify("none"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("none")
 	var er *parseError
 	n._vdata, er = me.declareType()
@@ -278,7 +314,9 @@ func prefixNone(me *parser, op string) (*node, *parseError) {
 }
 
 func prefixMaybe(me *parser, op string) (*node, *parseError) {
-	me.verify("maybe")
+	if er := me.verify("maybe"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("maybe")
 	var er *parseError
 	n._vdata, er = me.declareType()

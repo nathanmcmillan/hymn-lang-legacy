@@ -5,11 +5,15 @@ import (
 )
 
 func (me *parser) declareGeneric(size int) ([]*datatype, *parseError) {
-	me.eat("<")
+	if er := me.eat("<"); er != nil {
+		return nil, er
+	}
 	order := make([]*datatype, 0)
 	for i := 0; i < size; i++ {
 		if i != 0 {
-			me.eat(",")
+			if er := me.eat(","); er != nil {
+				return nil, er
+			}
 		}
 		gimpl, er := me.declareType()
 		if er != nil {
@@ -17,12 +21,16 @@ func (me *parser) declareGeneric(size int) ([]*datatype, *parseError) {
 		}
 		order = append(order, gimpl)
 	}
-	me.eat(">")
+	if er := me.eat(">"); er != nil {
+		return nil, er
+	}
 	return order, nil
 }
 
 func (me *parser) declareFn() (*datatype, *parseError) {
-	me.eat("(")
+	if er := me.eat("("); er != nil {
+		return nil, er
+	}
 	fn := fnSigInit(me.hmfile)
 	if me.token.is != ")" {
 		for {
@@ -34,13 +42,17 @@ func (me *parser) declareFn() (*datatype, *parseError) {
 			if me.token.is == ")" {
 				break
 			} else if me.token.is == "," {
-				me.eat(",")
+				if er := me.eat(","); er != nil {
+					return nil, er
+				}
 				continue
 			}
 			return nil, err(me, ECodeUnexpectedToken, "unexpected token in function pointer")
 		}
 	}
-	me.eat(")")
+	if er := me.eat(")"); er != nil {
+		return nil, er
+	}
 	if me.token.is != "line" && me.token.is != "," {
 		var er *parseError
 		fn.returns, er = me.declareType()
@@ -61,9 +73,13 @@ func (me *parser) declareFnPtr(fn *function) (*datatype, *parseError) {
 func (me *parser) declareType() (*datatype, *parseError) {
 
 	if me.token.is == "[" {
-		me.eat("[")
+		if er := me.eat("["); er != nil {
+			return nil, er
+		}
 		if me.token.is == "]" {
-			me.eat("]")
+			if er := me.eat("]"); er != nil {
+				return nil, er
+			}
 			decl, er := me.declareType()
 			if er != nil {
 				return nil, er
@@ -77,7 +93,9 @@ func (me *parser) declareType() (*datatype, *parseError) {
 		if sizeNode.value == "" || !sizeNode.data().isInt() {
 			return nil, err(me, ECodeArraySizeRequiresInteger, "array size must be constant integer")
 		}
-		me.eat("]")
+		if er := me.eat("]"); er != nil {
+			return nil, er
+		}
 		decl, er := me.declareType()
 		if er != nil {
 			return nil, er
@@ -92,27 +110,39 @@ func (me *parser) declareType() (*datatype, *parseError) {
 		return me.declareFn()
 
 	} else if me.token.is == "maybe" {
-		me.eat("maybe")
-		me.eat("<")
+		if er := me.eat("maybe"); er != nil {
+			return nil, er
+		}
+		if er := me.eat("<"); er != nil {
+			return nil, er
+		}
 		option, er := me.declareType()
 		if er != nil {
 			return nil, er
 		}
-		me.eat(">")
+		if er := me.eat(">"); er != nil {
+			return nil, er
+		}
 		if !option.isPointer() {
 			return nil, err(me, ECodeMaybeTypeRequiresPointer, "Maybe type requires a pointer but found: "+option.print())
 		}
 		return newdatamaybe(option), nil
 
 	} else if me.token.is == "none" {
-		me.eat("none")
+		if er := me.eat("none"); er != nil {
+			return nil, er
+		}
 		if me.token.is == "<" {
-			me.eat("<")
+			if er := me.eat("<"); er != nil {
+				return nil, er
+			}
 			option, er := me.declareType()
 			if er != nil {
 				return nil, er
 			}
-			me.eat(">")
+			if er := me.eat(">"); er != nil {
+				return nil, er
+			}
 			if !option.isPointer() {
 				return nil, err(me, ECodeNoneTypeRequiresPointer, "None type requires a pointer but found: "+option.print())
 			}
@@ -146,16 +176,24 @@ func (me *parser) declareType() (*datatype, *parseError) {
 
 	if strings.HasPrefix(value, "%") {
 		if m, ok := me.hmfile.program.modules[value]; ok && me.token.is == "." {
-			me.eat(".")
+			if er := me.eat("."); er != nil {
+				return nil, er
+			}
 			module = m
 			value = me.token.value
-			me.eat("id")
+			if er := me.eat("id"); er != nil {
+				return nil, er
+			}
 		}
 	} else if m, ok := me.hmfile.imports[value]; ok && me.token.is == "." {
-		me.eat(".")
+		if er := me.eat("."); er != nil {
+			return nil, er
+		}
 		module = m
 		value = me.token.value
-		me.eat("id")
+		if er := me.eat("id"); er != nil {
+			return nil, er
+		}
 	}
 
 	if fn, ok := module.functions[value]; ok {
@@ -180,11 +218,15 @@ func (me *parser) declareType() (*datatype, *parseError) {
 		}
 		var un *union
 		if me.token.is == "." {
-			me.eat(".")
+			if er := me.eat("."); er != nil {
+				return nil, er
+			}
 			if un = en.getType(me.token.value); un == nil {
 				return nil, err(me, ECodeEnumDoesNotHaveType, "Union type \""+me.token.value+"\" not found for enum \""+en.name+"\".")
 			}
-			me.eat("id")
+			if er := me.eat("id"); er != nil {
+				return nil, er
+			}
 		}
 		return newdataenum(me.hmfile, en, un, gtypes), nil
 	}

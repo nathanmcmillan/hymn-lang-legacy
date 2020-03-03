@@ -80,7 +80,7 @@ func (me *parser) expression() (*node, *parseError) {
 	} else if op == "enddef" {
 		return nil, me.enddef()
 	} else if op == "comment" {
-		return me.comment(), nil
+		return me.comment()
 	} else if op == "line" || op == "eof" {
 		return nil, nil
 	}
@@ -88,7 +88,9 @@ func (me *parser) expression() (*node, *parseError) {
 }
 
 func (me *parser) parseMutable() (*node, *parseError) {
-	me.eat("mutable")
+	if er := me.eat("mutable"); er != nil {
+		return nil, er
+	}
 	ev, er := me.eatvar(me.hmfile)
 	if er != nil {
 		return nil, er
@@ -97,7 +99,9 @@ func (me *parser) parseMutable() (*node, *parseError) {
 	if er != nil {
 		return nil, er
 	}
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
@@ -131,14 +135,18 @@ func (me *parser) parseIdent() (*node, *parseError) {
 		return nil, err(me, ECodeExpectingExpression, "Expected assignment or call expression for '"+name+"'")
 	}
 
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
-func (me *parser) maybeIgnore(depth int) {
+func (me *parser) maybeIgnore(depth int) *parseError {
 	for {
 		if me.token.is == "line" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return er
+			}
 			break
 		}
 	}
@@ -149,51 +157,78 @@ func (me *parser) maybeIgnore(depth int) {
 		}
 		me.next()
 	}
+	return nil
 }
 
 func (me *parser) gotoLabel() (*node, *parseError) {
-	me.eat("goto")
+	if er := me.eat("goto"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("goto")
 	name := me.token.value
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	n.value = name
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
 func (me *parser) label() (*node, *parseError) {
-	me.eat("label")
+	if er := me.eat("label"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("label")
 	name := me.token.value
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	n.value = name
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
 func (me *parser) pass() (*node, *parseError) {
-	me.eat("pass")
+	if er := me.eat("pass"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("pass")
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
 func (me *parser) continuing() (*node, *parseError) {
-	me.eat("continue")
+	if er := me.eat("continue"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("continue")
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
 func (me *parser) breaking() (*node, *parseError) {
-	me.eat("break")
+	if er := me.eat("break"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("break")
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
 func (me *parser) parseReturn() (*node, *parseError) {
-	me.eat("return")
+	if er := me.eat("return"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("return")
 	if me.token.is != "line" {
 		fn := me.hmfile.scope.fn
@@ -216,13 +251,17 @@ func (me *parser) parseReturn() (*node, *parseError) {
 			return nil, err(me, ECodeReturnTypeMismatch, "Function "+fn.canonical(me.hmfile)+" returns "+fn.returns.error()+" but found "+ret.error())
 		}
 	}
-	me.verify("line")
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return n, nil
 }
 
 func (me *parser) defineNewFunction() *parseError {
 	if me.token.is == "def" {
-		me.eat("def")
+		if er := me.eat("def"); er != nil {
+			return er
+		}
 	}
 	name := me.token.value
 	if _, ok := me.hmfile.classes[name]; ok {
@@ -231,36 +270,49 @@ func (me *parser) defineNewFunction() *parseError {
 	return me.defineStaticFunction()
 }
 
-func (me *parser) comment() *node {
+func (me *parser) comment() (*node, *parseError) {
 	token := me.token
-	me.eat("comment")
+	if er := me.eat("comment"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("comment")
 	n.value = token.value
-	return n
+	return n, nil
 }
 
-func (me *parser) topComment() {
+func (me *parser) topComment() *parseError {
 	token := me.token
-	me.eat("comment")
+	if er := me.eat("comment"); er != nil {
+		return er
+	}
 	me.hmfile.comments = append(me.hmfile.comments, token.value)
+	return nil
 }
 
-func (me *parser) free() *node {
-	me.eat("free")
+func (me *parser) free() (*node, *parseError) {
+	if er := me.eat("free"); er != nil {
+		return nil, er
+	}
 	token := me.token
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("free")
 	n.value = token.value
-	return n
+	return n, nil
 }
 
 func (me *parser) extern() (*node, *parseError) {
 	ext := me.token
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	if me.token.is != "." {
 		return nil, err(me, ECodeUnexpectedToken, "expecting \".\" after module name")
 	}
-	me.eat(".")
+	if er := me.eat("."); er != nil {
+		return nil, er
+	}
 	extname := ext.value
 	id := me.token
 	if id.is != "id" {
@@ -287,7 +339,9 @@ func (me *parser) block() (*node, *parseError) {
 	block := nodeInit("block")
 	for {
 		for me.token.is == "line" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, er
+			}
 		}
 		if me.token.depth < depth || me.token.is == "eof" || me.token.is == "comment" {
 			goto blockEnd
@@ -314,9 +368,13 @@ func (me *parser) calcBool() (*node, *parseError) {
 }
 
 func (me *parser) importing() *parseError {
-	me.eat("import")
+	if er := me.eat("import"); er != nil {
+		return er
+	}
 	value := me.token.value
-	me.eat(TokenStringLiteral)
+	if er := me.eat(TokenStringLiteral); er != nil {
+		return er
+	}
 	value = variableSubstitution(value, me.hmfile.program.shellvar)
 	absolute, er := filepath.Abs(value)
 	if er != nil {
@@ -324,27 +382,43 @@ func (me *parser) importing() *parseError {
 	}
 	alias := filepath.Base(absolute)
 	if me.token.is == "as" {
-		me.eat("as")
+		if er := me.eat("as"); er != nil {
+			return er
+		}
 		alias = me.token.value
-		me.eat("id")
+		if er := me.eat("id"); er != nil {
+			return er
+		}
 	}
 	statics := make([]string, 0)
 	if me.token.is == "(" {
-		me.eat("(")
+		if er := me.eat("("); er != nil {
+			return er
+		}
 		if me.token.is == "line" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return er
+			}
 		}
 		for me.token.is != ")" {
 			value := me.token.value
-			me.eat("id")
+			if er := me.eat("id"); er != nil {
+				return er
+			}
 			statics = append(statics, value)
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return er
+				}
 			} else if me.token.is == "," {
-				me.eat(",")
+				if er := me.eat(","); er != nil {
+					return er
+				}
 			}
 		}
-		me.eat(")")
+		if er := me.eat(")"); er != nil {
+			return er
+		}
 	}
 
 	module := me.hmfile
@@ -438,7 +512,9 @@ func (me *parser) importing() *parseError {
 		}
 	}
 
-	me.eat("line")
+	if er := me.eat("line"); er != nil {
+		return er
+	}
 
 	return nil
 }
@@ -461,17 +537,23 @@ func (me *parser) global(mutable bool) *parseError {
 	}
 	module.statics = append(module.statics, n)
 	module.staticScope[name] = &variableNode{n, me.hmfile.scope.variables[name]}
-	me.eat("line")
+	if er := me.eat("line"); er != nil {
+		return er
+	}
 	return nil
 }
 
 func (me *parser) immutable() *parseError {
-	me.eat("const")
+	if er := me.eat("const"); er != nil {
+		return er
+	}
 	return me.global(false)
 }
 
 func (me *parser) mutable() *parseError {
-	me.eat("mutable")
+	if er := me.eat("mutable"); er != nil {
+		return er
+	}
 	return me.global(true)
 }
 

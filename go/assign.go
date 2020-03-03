@@ -18,7 +18,9 @@ func (me *parser) assign(left *node, malloc, mutable bool) (*node, *parseError) 
 		}
 		return nil, err(me, ECodeUnknownAssignOperation, "Unknown assign operation \""+op+"\".")
 	}
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 	right, er := me.calc(0, left.data())
 	if er != nil {
 		return nil, er

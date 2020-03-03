@@ -1,7 +1,9 @@
 package main
 
 func (me *parser) forloop() (*node, *parseError) {
-	me.eat("for")
+	if er := me.eat("for"); er != nil {
+		return nil, er
+	}
 	var no *node
 	var templs []*variableNode
 	no = nodeInit("for")
@@ -14,13 +16,17 @@ func (me *parser) forloop() (*node, *parseError) {
 		return nil, er
 	}
 	no.push(f)
-	me.eat(";")
+	if er := me.eat(";"); er != nil {
+		return nil, er
+	}
 	b, er := me.calcBool()
 	if er != nil {
 		return nil, er
 	}
 	no.push(b)
-	me.eat(";")
+	if er := me.eat(";"); er != nil {
+		return nil, er
+	}
 	v, er = me.eatvar(me.hmfile)
 	if er != nil {
 		return nil, er
@@ -30,7 +36,9 @@ func (me *parser) forloop() (*node, *parseError) {
 		return nil, er
 	}
 	no.push(a)
-	me.eat("line")
+	if er := me.eat("line"); er != nil {
+		return nil, er
+	}
 	b, er = me.block()
 	if er != nil {
 		return nil, er
@@ -43,11 +51,15 @@ func (me *parser) forloop() (*node, *parseError) {
 }
 
 func (me *parser) whileloop() (*node, *parseError) {
-	me.eat("while")
+	if er := me.eat("while"); er != nil {
+		return nil, er
+	}
 	var no *node
 	var templs []*variableNode
 	if me.token.is == "line" {
-		me.eat("line")
+		if er := me.eat("line"); er != nil {
+			return nil, er
+		}
 		no = nodeInit("loop")
 	} else {
 		no = nodeInit("while")
@@ -57,7 +69,9 @@ func (me *parser) whileloop() (*node, *parseError) {
 		}
 		no.push(b)
 		templs = me.getenumstack(no)
-		me.eat("line")
+		if er := me.eat("line"); er != nil {
+			return nil, er
+		}
 	}
 	b, er := me.block()
 	if er != nil {
@@ -71,21 +85,33 @@ func (me *parser) whileloop() (*node, *parseError) {
 }
 
 func (me *parser) iterloop() (*node, *parseError) {
-	me.eat("iterate")
+	if er := me.eat("iterate"); er != nil {
+		return nil, er
+	}
 	var1 := me.token.value
 	var2 := ""
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	if me.token.is == "," {
-		me.eat(",")
+		if er := me.eat(","); er != nil {
+			return nil, er
+		}
 		if me.token.is == "_" {
 			var2 = me.token.is
-			me.eat("_")
+			if er := me.eat("_"); er != nil {
+				return nil, er
+			}
 		} else {
 			var2 = me.token.value
-			me.eat("id")
+			if er := me.eat("id"); er != nil {
+				return nil, er
+			}
 		}
 	}
-	me.eat("in")
+	if er := me.eat("in"); er != nil {
+		return nil, er
+	}
 	using, er := me.calc(0, nil)
 	if er != nil {
 		return nil, er
@@ -93,7 +119,9 @@ func (me *parser) iterloop() (*node, *parseError) {
 	if !using.data().isArrayOrSlice() && !using.data().isString() {
 		return nil, err(me, ECodeVariableNotIndexable, "expected array, slice, string but was \""+using.data().print()+"\"")
 	}
-	me.eat("line")
+	if er := me.eat("line"); er != nil {
+		return nil, er
+	}
 
 	no := nodeInit("iterate")
 

@@ -108,7 +108,9 @@ func (me *hmfile) parse(out, path string) *parseError {
 			return er
 		}
 		if parsing.token.is == "line" {
-			parsing.eat("line")
+			if er := parsing.eat("line"); er != nil {
+				return er
+			}
 		}
 	}
 
@@ -152,8 +154,7 @@ func (me *parser) verify(want string) *parseError {
 }
 
 func (me *parser) eat(want string) *parseError {
-	er := me.verify(want)
-	if er != nil {
+	if er := me.verify(want); er != nil {
 		return er
 	}
 	me.next()
@@ -161,8 +162,7 @@ func (me *parser) eat(want string) *parseError {
 }
 
 func (me *parser) replace(want, is string) *parseError {
-	er := me.verify(want)
-	if er != nil {
+	if er := me.verify(want); er != nil {
 		return er
 	}
 	me.token.is = is

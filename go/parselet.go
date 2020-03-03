@@ -108,14 +108,16 @@ func getInfixName(op string) string {
 	return op
 }
 
-func (me *parser) infixOp() string {
+func (me *parser) infixOp() (string, *parseError) {
 	op := me.token.is
 	if op == ">" {
 		if me.peek().is == ">" {
-			me.eat(">")
+			if er := me.eat(">"); er != nil {
+				return "", er
+			}
 			op = ">>"
 			me.replace(">", op)
 		}
 	}
-	return op
+	return op, nil
 }

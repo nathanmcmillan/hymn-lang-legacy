@@ -3,9 +3,13 @@ package main
 import "fmt"
 
 func (me *parser) macro() *parseError {
-	me.eat("macro")
+	if er := me.eat("macro"); er != nil {
+		return er
+	}
 	name := me.token.value
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return er
+	}
 	var value *node
 	if me.token.is != "line" {
 		var er *parseError
@@ -17,7 +21,9 @@ func (me *parser) macro() *parseError {
 	} else {
 		fmt.Println("NEW DEF IS", name)
 	}
-	me.eat("line")
+	if er := me.eat("line"); er != nil {
+		return er
+	}
 	me.hmfile.defs[name] = value
 	me.hmfile.namespace[name] = "def"
 	me.hmfile.types[name] = "def"
@@ -25,9 +31,13 @@ func (me *parser) macro() *parseError {
 }
 
 func (me *parser) ifdef() *parseError {
-	me.eat("ifdef")
+	if er := me.eat("ifdef"); er != nil {
+		return er
+	}
 	name := me.token.value
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return er
+	}
 	if _, ok := me.hmfile.defs[name]; ok {
 		for {
 			if me.token.is == "elsedef" || me.token.is == "enddef" {
@@ -51,17 +61,23 @@ func (me *parser) ifdef() *parseError {
 }
 
 func (me *parser) elsedef() *parseError {
-	me.eat("elsedef")
+	if er := me.eat("elsedef"); er != nil {
+		return er
+	}
 	return nil
 }
 
 func (me *parser) enddef() *parseError {
-	me.eat("enddef")
+	if er := me.eat("enddef"); er != nil {
+		return er
+	}
 	return nil
 }
 
 func (me *parser) exprDef(name string, def *node) (*node, *parseError) {
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	fmt.Println("DEF", name, ":=", def.string(me.hmfile, 0))
 	return def, nil
 }

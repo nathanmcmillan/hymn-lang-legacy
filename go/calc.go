@@ -9,7 +9,10 @@ func (me *parser) prefix() (*node, *parseError) {
 }
 
 func (me *parser) infix(left *node) (*node, *parseError) {
-	op := me.infixOp()
+	op, er := me.infixOp()
+	if er != nil {
+		return nil, er
+	}
 	if inf, ok := infixes[op]; ok {
 		return inf.fn(me, left, op)
 	}
@@ -23,7 +26,10 @@ func (me *parser) calc(precedence int, hint *datatype) (*node, *parseError) {
 		return nil, er
 	}
 	for {
-		op := me.infixOp()
+		op, er := me.infixOp()
+		if er != nil {
+			return nil, er
+		}
 		if precedence >= getInfixPrecedence(op) {
 			break
 		}

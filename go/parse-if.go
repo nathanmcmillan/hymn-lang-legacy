@@ -24,7 +24,9 @@ func (me *parser) getenumstack(n *node) []*variableNode {
 func (me *parser) ifexpr() (*node, *parseError) {
 	var er *parseError
 	depth := me.token.depth
-	me.eat("if")
+	if er := me.eat("if"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("if")
 	b, er := me.calcBool()
 	if er != nil {
@@ -33,7 +35,9 @@ func (me *parser) ifexpr() (*node, *parseError) {
 	n.push(b)
 	templs := me.getenumstack(n)
 	if me.token.is == ":" {
-		me.eat(":")
+		if er := me.eat(":"); er != nil {
+			return nil, er
+		}
 		block := nodeInit("block")
 		e, er := me.expression()
 		if er != nil {
@@ -42,7 +46,9 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		block.push(e)
 		n.push(block)
 	} else {
-		me.eat("line")
+		if er := me.eat("line"); er != nil {
+			return nil, er
+		}
 		b, er = me.block()
 		if er != nil {
 			return nil, er
@@ -50,11 +56,15 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		n.push(b)
 	}
 	if (me.peek().is == "elif" || me.peek().is == "else") && me.peek().depth == depth && me.token.is == "line" {
-		me.eat("line")
+		if er := me.eat("line"); er != nil {
+			return nil, er
+		}
 	}
 	me.enumstackclr(templs)
 	for me.token.is == "elif" && me.token.depth == depth {
-		me.eat("elif")
+		if er := me.eat("elif"); er != nil {
+			return nil, er
+		}
 		elif := nodeInit("elif")
 		b, er := me.calcBool()
 		if er != nil {
@@ -63,7 +73,9 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		elif.push(b)
 		templs := me.getenumstack(elif)
 		if me.token.is == ":" {
-			me.eat(":")
+			if er := me.eat(":"); er != nil {
+				return nil, er
+			}
 			block := nodeInit("block")
 			e, er := me.expression()
 			if er != nil {
@@ -72,7 +84,9 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			block.push(e)
 			n.push(block)
 		} else {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, er
+			}
 			b, er := me.block()
 			if er != nil {
 				return nil, er
@@ -82,14 +96,20 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		me.enumstackclr(templs)
 		n.push(elif)
 		if (me.peek().is == "elif" || me.peek().is == "else") && me.peek().depth == depth && me.token.is == "line" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, er
+			}
 		}
 	}
 	if me.token.is == "else" && me.token.depth == depth {
-		me.eat("else")
+		if er := me.eat("else"); er != nil {
+			return nil, er
+		}
 		el := nodeInit("else")
 		if me.token.is == ":" {
-			me.eat(":")
+			if er := me.eat(":"); er != nil {
+				return nil, er
+			}
 			exp, er := me.expression()
 			if er != nil {
 				return nil, er
@@ -98,7 +118,9 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			block.push(exp)
 			el.push(block)
 		} else {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, er
+			}
 			b, er := me.block()
 			if er != nil {
 				return nil, er
@@ -107,7 +129,9 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		}
 		n.push(el)
 		if me.token.is == "line" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, er
+			}
 		}
 	}
 	return n, nil

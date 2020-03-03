@@ -28,9 +28,13 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 		}
 		return "", err(me, ECodeEnumMissingParenthesis, "Enum: "+en.join(un)+" must be instantiated with parenthesis\nExample: "+en.join(un)+"()")
 	}
-	me.eat("(")
+	if er := me.eat("("); er != nil {
+		return "", er
+	}
 	if me.token.is == "line" {
-		me.eat("line")
+		if er := me.eat("line"); er != nil {
+			return "", er
+		}
 	}
 	vars := un.types.order
 	params := make([]*node, len(vars))
@@ -40,40 +44,56 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 	gtypes := make(map[string]*datatype)
 	for {
 		if me.token.is == ")" {
-			me.eat(")")
+			if er := me.eat(")"); er != nil {
+				return "", er
+			}
 			break
 		}
 		if pix > 0 || dict {
 			if me.token.is == "line" {
 				ndepth := me.peek().depth
 				if ndepth == depth && me.peek().is == ")" {
-					me.eat("line")
-					me.eat(")")
+					if er := me.eat("line"); er != nil {
+						return "", er
+					}
+					if er := me.eat(")"); er != nil {
+						return "", er
+					}
 					break
 				}
 				if ndepth != depth+1 {
 					return "", erc(me, ECodeLineIndentation)
 				}
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return "", er
+				}
 			} else {
-				me.eat(",")
+				if er := me.eat(","); er != nil {
+					return "", er
+				}
 			}
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
 			dict = true
 
 			vname := me.token.value
-			me.eat("id")
+			if er := me.eat("id"); er != nil {
+				return "", er
+			}
 			unvar, ok := un.types.table[vname]
 			if !ok {
 				return "", err(me, ECodeEnumMemberNotFound, "Member variable: "+vname+" does not exist for enum: "+en.join(un))
 			}
 
-			me.eat(":")
+			if er := me.eat(":"); er != nil {
+				return "", er
+			}
 			var param *node
 
 			if me.token.is == "_" {
-				me.eat("_")
+				if er := me.eat("_"); er != nil {
+					return "", er
+				}
 			} else {
 				var er *parseError
 				param, er = me.calc(0, nil)
@@ -117,7 +137,9 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 		} else {
 			unvar := un.types.table[vars[pix]]
 			if me.token.is == "_" {
-				me.eat("_")
+				if er := me.eat("_"); er != nil {
+					return "", er
+				}
 				params[pix] = nil
 			} else {
 				param, er := me.calc(0, nil)
@@ -178,7 +200,9 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 func (me *parser) buildEnum(n *node, module *hmfile) (*datatype, *parseError) {
 	typed := me.token.value
 	depth := me.token.depth
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	en, ok := module.enums[typed]
 	if !ok {
 		return nil, err(me, ECodeEnumDoesNotExist, "Enum: "+typed+" does not exist")
@@ -215,9 +239,13 @@ func (me *parser) buildEnum(n *node, module *hmfile) (*datatype, *parseError) {
 		}
 	}
 
-	me.eat(".")
+	if er := me.eat("."); er != nil {
+		return nil, er
+	}
 	unvalue := me.token.value
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	un := en.getType(unvalue)
 	if un == nil {
 		return nil, err(me, ECodeEnumDoesNotHaveType, "Enum: "+en.name+" does not have type: "+unvalue)

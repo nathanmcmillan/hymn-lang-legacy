@@ -160,10 +160,14 @@ func (me *parser) defineClassFunction() *parseError {
 	module := me.hmfile
 	className := me.token.value
 	class := module.classes[className]
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return er
+	}
 	funcName := me.token.value
 	globalFuncName := nameOfClassFunc(class.name, funcName)
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return er
+	}
 	if _, ok := module.functions[globalFuncName]; ok {
 		return err(me, ECodeNameAlreadyDefined, "Class '"+className+"' with function '"+funcName+"' is already defined")
 	} else if class.getVariable(funcName) != nil {
@@ -191,7 +195,9 @@ func (me *parser) defineStaticFunction() *parseError {
 	if name == "static" {
 		return err(me, ECodeReservedName, "Function \""+name+"\" is reserved.")
 	}
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return er
+	}
 	fn, er := me.defineFunction(name, nil, nil, nil)
 	if er != nil {
 		return er
@@ -250,16 +256,22 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if er != nil {
 			return nil, er
 		}
-		me.verify("(")
+		if er := me.verify("("); er != nil {
+			return nil, er
+		}
 		fn.generics = datatypels(order)
 		fn.interfaces = interfaces
 	}
 	fn.start = me.save()
 	parenthesis := false
 	if me.token.is == "(" {
-		me.eat("(")
+		if er := me.eat("("); er != nil {
+			return nil, er
+		}
 		if me.token.is == "line" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, er
+			}
 		}
 		parenthesis = true
 		if me.token.is != ")" {
@@ -268,16 +280,22 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 					return nil, err(me, ECodeUnexpectedToken, "Unexpected token in function definition")
 				}
 				argname := me.token.value
-				me.eat("id")
+				if er := me.eat("id"); er != nil {
+					return nil, er
+				}
 				defaultValue := ""
 				defaultType := ""
 				if me.token.is == ":" {
-					me.eat(":")
+					if er := me.eat(":"); er != nil {
+						return nil, er
+					}
 					op := me.token.is
 					if literal, ok := literals[op]; ok {
 						defaultValue = me.token.value
 						defaultType = literal
-						me.eat(op)
+						if er := me.eat(op); er != nil {
+							return nil, er
+						}
 					} else {
 						return nil, err(me, ECodeOnlyPrimitiveLitreralsAllowed, "only primitive literals allowed for parameter defaults. was \""+me.token.is+"\"")
 					}
@@ -305,13 +323,19 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 				if me.token.is == ")" {
 					break
 				} else if me.token.is == "line" {
-					me.eat("line")
+					if er := me.eat("line"); er != nil {
+						return nil, er
+					}
 				} else {
-					me.eat(",")
+					if er := me.eat(","); er != nil {
+						return nil, er
+					}
 				}
 			}
 		}
-		me.eat(")")
+		if er := me.eat(")"); er != nil {
+			return nil, er
+		}
 	} else {
 		if self != nil {
 			return nil, err(me, ECodeFunctionMissingParenthesis, "class function \""+fname+"\" must include parenthesis")
@@ -336,7 +360,9 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	} else {
 		fn.returns = newdatavoid()
 	}
-	me.eat("line")
+	if er := me.eat("line"); er != nil {
+		return nil, er
+	}
 
 	if self == nil && name == "main" {
 		if len(fn.args) != 0 {
@@ -359,7 +385,9 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 
 	for {
 		for me.token.is == "line" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, er
+			}
 			if me.token.is != "line" {
 				if me.token.depth != 1 {
 					goto fnEnd

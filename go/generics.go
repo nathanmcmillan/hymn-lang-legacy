@@ -3,12 +3,16 @@ package main
 func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterface, *parseError) {
 	if me.token.is != "with" {
 		if me.token.is == "line" && me.peek().is == "with" {
-			me.eat("line")
+			if er := me.eat("line"); er != nil {
+				return nil, nil, er
+			}
 		} else {
 			return nil, nil, nil
 		}
 	}
-	me.eat("with")
+	if er := me.eat("with"); er != nil {
+		return nil, nil, er
+	}
 	module := me.hmfile
 	var list []*datatype
 	var requirements map[string][]*classInterface
@@ -20,19 +24,27 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 			return nil, nil, er
 		}
 		if me.token.is == ":" {
-			me.eat(":")
+			if er := me.eat(":"); er != nil {
+				return nil, nil, er
+			}
 			interfaces := make([]*classInterface, 0)
 			for {
 				requires := me.token.value
-				me.eat("id")
+				if er := me.eat("id"); er != nil {
+					return nil, nil, er
+				}
 
 				moduleReq := module
 
 				if m, ok := module.imports[requires]; ok && me.token.is == "." {
 					moduleReq = m
-					me.eat(".")
+					if er := me.eat("."); er != nil {
+						return nil, nil, er
+					}
 					requires = me.token.value
-					me.eat("id")
+					if er := me.eat("id"); er != nil {
+						return nil, nil, er
+					}
 				}
 
 				interfaceDef, ok := moduleReq.interfaces[requires]
@@ -48,7 +60,9 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 				if me.token.is != "," {
 					break
 				}
-				me.eat("+")
+				if er := me.eat("+"); er != nil {
+					return nil, nil, er
+				}
 			}
 			if requirements == nil {
 				requirements = make(map[string][]*classInterface)
@@ -60,12 +74,18 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 		}
 		list = append(list, data)
 		if me.token.is == "and" {
-			me.eat("and")
+			if er := me.eat("and"); er != nil {
+				return nil, nil, er
+			}
 			continue
 		} else if me.token.is == "line" {
 			if me.peek().is == "and" {
-				me.eat("line")
-				me.eat("and")
+				if er := me.eat("line"); er != nil {
+					return nil, nil, er
+				}
+				if er := me.eat("and"); er != nil {
+					return nil, nil, er
+				}
 				continue
 			}
 			break
@@ -81,7 +101,9 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 	var list []*datatype
 	var requirements map[string][]*classInterface
 	if me.token.is == "<" {
-		me.eat("<")
+		if er := me.eat("<"); er != nil {
+			return nil, nil, er
+		}
 		for {
 			gname := me.token.value
 			me.wordOrPrimitive()
@@ -90,19 +112,27 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 				return nil, nil, er
 			}
 			if me.token.is == ":" {
-				me.eat(":")
+				if er := me.eat(":"); er != nil {
+					return nil, nil, er
+				}
 				interfaces := make([]*classInterface, 0)
 				for {
 					requires := me.token.value
-					me.eat("id")
+					if er := me.eat("id"); er != nil {
+						return nil, nil, er
+					}
 
 					moduleReq := module
 
 					if m, ok := module.imports[requires]; ok && me.token.is == "." {
 						moduleReq = m
-						me.eat(".")
+						if er := me.eat("."); er != nil {
+							return nil, nil, er
+						}
 						requires = me.token.value
-						me.eat("id")
+						if er := me.eat("id"); er != nil {
+							return nil, nil, er
+						}
 					}
 
 					interfaceDef, ok := moduleReq.interfaces[requires]
@@ -118,7 +148,9 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 					if me.token.is != "+" {
 						break
 					}
-					me.eat("+")
+					if er := me.eat("+"); er != nil {
+						return nil, nil, er
+					}
 				}
 				if requirements == nil {
 					requirements = make(map[string][]*classInterface)
@@ -130,7 +162,9 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 			}
 			list = append(list, data)
 			if me.token.is == "," {
-				me.eat(",")
+				if er := me.eat(","); er != nil {
+					return nil, nil, er
+				}
 				continue
 			} else if me.token.is == ">" {
 				break
@@ -138,7 +172,9 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 				return nil, nil, err(me, ECodeUnexpectedToken, "Bad token \""+me.token.is+"\" in class generic.")
 			}
 		}
-		me.eat(">")
+		if er := me.eat(">"); er != nil {
+			return nil, nil, er
+		}
 	}
 	return list, requirements, nil
 }

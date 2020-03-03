@@ -2,11 +2,15 @@ package main
 
 func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 	n.copyData(newdataprimitive("bool"))
-	me.eat(op)
+	if er := me.eat(op); er != nil {
+		return nil, er
+	}
 
 	negate := false
 	if me.token.is == "not" {
-		me.eat("not")
+		if er := me.eat("not"); er != nil {
+			return nil, er
+		}
 		negate = true
 	}
 
@@ -15,14 +19,18 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 	if data.isSomeOrNone() {
 		is := ""
 		if me.token.is == "some" {
-			me.eat("some")
+			if er := me.eat("some"); er != nil {
+				return nil, er
+			}
 			if negate {
 				is = "none"
 			} else {
 				is = "some"
 			}
 		} else if me.token.is == "none" {
-			me.eat("none")
+			if er := me.eat("none"); er != nil {
+				return nil, er
+			}
 			if negate {
 				is = "some"
 			} else {
@@ -37,10 +45,16 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 				if negate {
 					return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
 				}
-				me.eat("(")
+				if er := me.eat("("); er != nil {
+					return nil, er
+				}
 				temp := me.token.value
-				me.eat("id")
-				me.eat(")")
+				if er := me.eat("id"); er != nil {
+					return nil, er
+				}
+				if er := me.eat(")"); er != nil {
+					return nil, er
+				}
 				tempd := data.getmember().getnamedvariable(temp, false)
 				tempv := nodeInit("variable")
 				tempv.idata = newidvariable(me.hmfile, tempd.name)
@@ -73,7 +87,9 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 		if me.token.is == "id" {
 			name := me.token.value
 			if un := baseEnum.getType(name); un != nil {
-				me.eat("id")
+				if er := me.eat("id"); er != nil {
+					return nil, er
+				}
 				newenum := newdataenum(me.hmfile, baseEnum, un, copydatalist(data.generics))
 				if negate {
 					right = nodeInit("negate-match-enum")
@@ -85,10 +101,16 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 					if negate {
 						return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
 					}
-					me.eat("(")
+					if er := me.eat("("); er != nil {
+						return nil, er
+					}
 					temp := me.token.value
-					me.eat("id")
-					me.eat(")")
+					if er := me.eat("id"); er != nil {
+						return nil, er
+					}
+					if er := me.eat(")"); er != nil {
+						return nil, er
+					}
 					tempd := right.data().getnamedvariable(temp, false)
 					tempv := nodeInit("variable")
 					tempv.idata = newidvariable(me.hmfile, tempd.name)
@@ -124,7 +146,9 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 
 func (me *parser) parseMatch() (*node, *parseError) {
 	depth := me.token.depth
-	me.eat("match")
+	if er := me.eat("match"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("match")
 
 	matching, er := me.calc(0, nil)
@@ -152,22 +176,34 @@ func (me *parser) parseMatch() (*node, *parseError) {
 
 	n.push(matching)
 
-	me.eat("line")
+	if er := me.eat("line"); er != nil {
+		return nil, er
+	}
 	for {
 		if me.token.depth <= depth {
 			break
 		} else if me.token.is == "id" {
 			name := me.token.value
-			me.eat("id")
+			if er := me.eat("id"); er != nil {
+				return nil, er
+			}
 			caseNode := nodeInit(name)
 			temp := ""
 			if me.token.is == "(" {
-				me.eat("(")
+				if er := me.eat("("); er != nil {
+					return nil, er
+				}
 				temp = me.token.value
-				me.eat("id")
-				me.eat(")")
+				if er := me.eat("id"); er != nil {
+					return nil, er
+				}
+				if er := me.eat(")"); er != nil {
+					return nil, er
+				}
 			}
-			me.eat("=>")
+			if er := me.eat("=>"); er != nil {
+				return nil, er
+			}
 			n.push(caseNode)
 			if temp != "" {
 				en, _, ok := matchType.isEnum()
@@ -185,7 +221,9 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				caseNode.push(tempv)
 			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -199,13 +237,17 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				n.push(e)
 			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 			}
 			if temp != "" {
 				delete(me.hmfile.scope.variables, temp)
 			}
 		} else if me.token.is == "some" {
-			me.eat("some")
+			if er := me.eat("some"); er != nil {
+				return nil, er
+			}
 			if matchVar != nil {
 				if !matchType.isSomeOrNone() {
 					panic("type \"" + matchVar.name + "\" is not \"maybe\"")
@@ -213,12 +255,20 @@ func (me *parser) parseMatch() (*node, *parseError) {
 			}
 			temp := ""
 			if me.token.is == "(" {
-				me.eat("(")
+				if er := me.eat("("); er != nil {
+					return nil, er
+				}
 				temp = me.token.value
-				me.eat("id")
-				me.eat(")")
+				if er := me.eat("id"); er != nil {
+					return nil, er
+				}
+				if er := me.eat(")"); er != nil {
+					return nil, er
+				}
 			}
-			me.eat("=>")
+			if er := me.eat("=>"); er != nil {
+				return nil, er
+			}
 			some := nodeInit("some")
 			n.push(some)
 			if temp != "" {
@@ -230,7 +280,9 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				some.push(tempv)
 			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -244,17 +296,25 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				n.push(e)
 			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 			}
 			if temp != "" {
 				delete(me.hmfile.scope.variables, temp)
 			}
 		} else if me.token.is == "none" {
-			me.eat("none")
-			me.eat("=>")
+			if er := me.eat("none"); er != nil {
+				return nil, er
+			}
+			if er := me.eat("=>"); er != nil {
+				return nil, er
+			}
 			n.push(nodeInit("none"))
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -268,14 +328,22 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				n.push(e)
 			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 			}
 		} else if me.token.is == "_" {
-			me.eat("_")
-			me.eat("=>")
+			if er := me.eat("_"); er != nil {
+				return nil, er
+			}
+			if er := me.eat("=>"); er != nil {
+				return nil, er
+			}
 			n.push(nodeInit("_"))
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -289,7 +357,9 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				n.push(e)
 			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 			}
 		} else if literal, ok := literals[me.token.is]; ok {
 			if literal != matchType.print() {
@@ -297,12 +367,18 @@ func (me *parser) parseMatch() (*node, *parseError) {
 			}
 			value := me.token.value
 			caseNodes := nodeInit(me.token.is)
-			me.eat(me.token.is)
+			if er := me.eat(me.token.is); er != nil {
+				return nil, er
+			}
 			caseNodes.push(nodeInit(value))
 			for me.token.is == "|" {
-				me.eat("|")
+				if er := me.eat("|"); er != nil {
+					return nil, er
+				}
 				if me.token.is == "line" {
-					me.eat("line")
+					if er := me.eat("line"); er != nil {
+						return nil, er
+					}
 				}
 				literal, ok := literals[me.token.is]
 				if !ok {
@@ -312,13 +388,19 @@ func (me *parser) parseMatch() (*node, *parseError) {
 					return nil, err(me, ECodeTypeMismatch, "Literal does not match type.")
 				}
 				value := me.token.value
-				me.eat(me.token.is)
+				if er := me.eat(me.token.is); er != nil {
+					return nil, er
+				}
 				caseNodes.push(nodeInit(value))
 			}
 			n.push(caseNodes)
-			me.eat("=>")
+			if er := me.eat("=>"); er != nil {
+				return nil, er
+			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -332,7 +414,9 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				n.push(e)
 			}
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, er
+				}
 			}
 		} else {
 			return nil, err(me, ECodeUnexpectedToken, "Unknown match expression.")

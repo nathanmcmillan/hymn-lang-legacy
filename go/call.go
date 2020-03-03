@@ -7,14 +7,20 @@ import (
 
 func (me *parser) pushSigParams(n *node, sig *fnSig) *parseError {
 	params := make([]*node, 0)
-	me.eat("(")
+	if er := me.eat("("); er != nil {
+		return er
+	}
 	ix := 0
 	for {
 		if me.token.is == ")" {
-			me.eat(")")
+			if er := me.eat(")"); er != nil {
+				return er
+			}
 			break
 		} else if ix > 0 {
-			me.eat(",")
+			if er := me.eat(","); er != nil {
+				return er
+			}
 		}
 		arg := sig.args[ix]
 		param, er := me.calc(0, arg.data())
@@ -60,9 +66,13 @@ func (me *parser) pushFunctionParams(n *node, params []*node, fn *function) *par
 }
 
 func (me *parser) functionParams(name string, pix int, params []*node, fn *function, lazy bool) (*function, []*node, *parseError) {
-	me.eat("(")
+	if er := me.eat("("); er != nil {
+		return nil, nil, er
+	}
 	if me.token.is == "line" {
-		me.eat("line")
+		if er := me.eat("line"); er != nil {
+			return nil, nil, er
+		}
 	}
 	min := pix
 	dict := false
@@ -73,21 +83,31 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 			break
 		} else if pix > min || dict {
 			if me.token.is == "line" {
-				me.eat("line")
+				if er := me.eat("line"); er != nil {
+					return nil, nil, er
+				}
 				if me.token.is == ")" {
 					break
 				}
 			} else {
-				me.eat(",")
+				if er := me.eat(","); er != nil {
+					return nil, nil, er
+				}
 			}
 		}
 		if me.token.is == "id" && me.peek().is == ":" {
 			argname := me.token.value
-			me.eat("id")
-			me.eat(":")
+			if er := me.eat("id"); er != nil {
+				return nil, nil, er
+			}
+			if er := me.eat(":"); er != nil {
+				return nil, nil, er
+			}
 			aix, arg := getParameter(fn.args, argname)
 			if me.token.is == "_" {
-				me.eat("_")
+				if er := me.eat("_"); er != nil {
+					return nil, nil, er
+				}
 				params[aix] = nil
 			} else {
 				param, er := me.calc(0, nil)
@@ -133,7 +153,9 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 				}
 			}
 			if me.token.is == "_" {
-				me.eat("_")
+				if er := me.eat("_"); er != nil {
+					return nil, nil, er
+				}
 				params[pix] = nil
 			} else {
 				param, er := me.calc(0, nil)
@@ -171,7 +193,9 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 			pix++
 		}
 	}
-	me.eat(")")
+	if er := me.eat(")"); er != nil {
+		return nil, nil, er
+	}
 	if lazy {
 		module := me.hmfile
 		glist := make([]*datatype, len(gtypes))
@@ -217,7 +241,9 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 
 func (me *parser) call(module *hmfile) (*node, *parseError) {
 	name := me.token.value
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	var order []*datatype
 	bfn, ok := module.getFunction(name)
 	if !ok {
@@ -274,7 +300,9 @@ func (me *parser) parseFn(module *hmfile) (*node, *parseError) {
 
 	name := me.token.value
 	fn := module.functions[name]
-	me.eat("id")
+	if er := me.eat("id"); er != nil {
+		return nil, er
+	}
 	n := nodeInit("fn-ptr")
 	newdata, er := fn.data()
 	if er != nil {

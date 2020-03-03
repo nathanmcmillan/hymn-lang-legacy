@@ -116,7 +116,7 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 			return nil, er
 		}
 		if !member.isPointer() {
-			return nil, err(me.parser, ECodeMaybeTypeRequiresPointer, "Maybe type requires a pointer. Found: "+member.print())
+			return nil, err(me.parser, ECodeMaybeTypeRequiresPointer, "Maybe type requires a pointer found: "+member.print())
 		}
 		return newdatamaybe(member), nil
 
@@ -129,7 +129,7 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 			return nil, er
 		}
 		if !member.isPointer() {
-			return nil, err(me.parser, ECodeNoneTypeRequiresPointer, "None type requires a pointer. Found: "+member.print())
+			return nil, err(me.parser, ECodeNoneTypeRequiresPointer, "None type requires a pointer found: "+member.print())
 		}
 		return newdatamaybe(member), nil
 	}

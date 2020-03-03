@@ -32,7 +32,9 @@ func (me *parser) pushClassParams(n *node, classDef *class, params []*node, type
 }
 
 func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseError) {
-	me.eat("(")
+	if er := me.eat("("); er != nil {
+		return "", er
+	}
 	if me.token.is == "line" {
 		me.eat("line")
 	}

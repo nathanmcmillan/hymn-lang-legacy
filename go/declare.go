@@ -100,7 +100,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 		}
 		me.eat(">")
 		if !option.isPointer() {
-			return nil, err(me, ECodeMaybeTypeRequiresPointer, "Maybe type requires a pointer. Found: "+option.print())
+			return nil, err(me, ECodeMaybeTypeRequiresPointer, "Maybe type requires a pointer but found: "+option.print())
 		}
 		return newdatamaybe(option), nil
 
@@ -114,7 +114,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 			}
 			me.eat(">")
 			if !option.isPointer() {
-				return nil, err(me, ECodeNoneTypeRequiresPointer, "None type requires a pointer. Found: "+option.print())
+				return nil, err(me, ECodeNoneTypeRequiresPointer, "None type requires a pointer but found: "+option.print())
 			}
 			return newdatamaybe(option), nil
 		}

@@ -151,9 +151,41 @@ func (me *parser) verify(want string) *parseError {
 	return nil
 }
 
-func (me *parser) eat(want string) {
-	me.verify(want)
+func (me *parser) eat(want string) *parseError {
+	er := me.verify(want)
+	if er != nil {
+		return er
+	}
 	me.next()
+	return nil
+}
+
+func (me *parser) replace(want, is string) *parseError {
+	er := me.verify(want)
+	if er != nil {
+		return er
+	}
+	me.token.is = is
+	return nil
+}
+
+func (me *parser) wordOrPrimitive() *parseError {
+	er := me.verifyWordOrPrimitive()
+	if er != nil {
+		return er
+	}
+	me.next()
+	return nil
+}
+
+func (me *parser) verifyWordOrPrimitive() *parseError {
+	t := me.token.is
+	if t == "id" {
+		return me.verify("id")
+	} else if checkIsPrimitive(t) {
+		return me.verify(t)
+	}
+	return me.verify("id or primitive")
 }
 
 func (me *parser) save() *parsepoint {
@@ -164,26 +196,4 @@ func (me *parser) jump(p *parsepoint) {
 	me.pos = p.pos
 	me.token = me.tokens.get(me.pos)
 	me.line = p.line
-}
-
-func (me *parser) replace(want, is string) {
-	me.verify(want)
-	me.token.is = is
-}
-
-func (me *parser) wordOrPrimitive() {
-	me.verifyWordOrPrimitive()
-	me.next()
-}
-
-func (me *parser) verifyWordOrPrimitive() {
-	t := me.token.is
-	if t == "id" {
-		me.verify("id")
-		return
-	} else if checkIsPrimitive(t) {
-		me.verify(t)
-		return
-	}
-	me.verify("id or primitive")
 }

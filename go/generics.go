@@ -37,11 +37,11 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 
 				interfaceDef, ok := moduleReq.interfaces[requires]
 				if !ok {
-					return nil, nil, err(me, "Missing interface '"+requires+"'")
+					return nil, nil, err(me, ECodeMissingInterface, "Missing interface '"+requires+"'")
 				}
 				for fname := range interfaceDef.functions {
 					if def, _, ok := searchInterface(interfaces, fname); ok {
-						return nil, nil, err(me, "Conflicting '"+fname+"' from '"+interfaceDef.name+"' and '"+def.name+"'")
+						return nil, nil, err(me, ECodeInterfaceNameConflict, "Conflicting '"+fname+"' from '"+interfaceDef.name+"' and '"+def.name+"'")
 					}
 				}
 				interfaces = append(interfaces, interfaceDef)
@@ -70,7 +70,7 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 			}
 			break
 		} else {
-			return nil, nil, err(me, "Bad token \""+me.token.is+"\" in class generic.")
+			return nil, nil, err(me, ECodeUnexpectedToken, "Bad token \""+me.token.is+"\" in class generic.")
 		}
 	}
 	return list, requirements, nil
@@ -107,11 +107,11 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 
 					interfaceDef, ok := moduleReq.interfaces[requires]
 					if !ok {
-						return nil, nil, err(me, "Missing interface '"+requires+"'")
+						return nil, nil, err(me, ECodeMissingInterface, "Missing interface '"+requires+"'")
 					}
 					for fname := range interfaceDef.functions {
 						if def, _, ok := searchInterface(interfaces, fname); ok {
-							return nil, nil, err(me, "Conflicting '"+fname+"' from '"+interfaceDef.name+"' and '"+def.name+"'")
+							return nil, nil, err(me, ECodeInterfaceNameConflict, "Conflicting '"+fname+"' from '"+interfaceDef.name+"' and '"+def.name+"'")
 						}
 					}
 					interfaces = append(interfaces, interfaceDef)
@@ -135,7 +135,7 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 			} else if me.token.is == ">" {
 				break
 			} else {
-				return nil, nil, err(me, "Bad token \""+me.token.is+"\" in class generic.")
+				return nil, nil, err(me, ECodeUnexpectedToken, "Bad token \""+me.token.is+"\" in class generic.")
 			}
 		}
 		me.eat(">")
@@ -148,7 +148,7 @@ func (me *parser) mapUnionGenerics(en *enum, dict map[string]string) ([]*datatyp
 	for i, e := range en.generics {
 		to, ok := dict[e]
 		if !ok {
-			return nil, err(me, "Generic \""+e+"\" not implemented for \""+en.name+"\".")
+			return nil, err(me, ECodeGenericNotImplemented, "Generic \""+e+"\" not implemented for \""+en.name+"\".")
 		}
 		var er *parseError
 		mapped[i], er = getdatatype(me.hmfile, to)

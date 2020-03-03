@@ -100,7 +100,7 @@ func infixTernary(me *parser, condition *node, op string) (*node, *parseError) {
 		return nil, er
 	}
 	if one.data().isVoid() {
-		return nil, err(me, "left type cannot be void")
+		return nil, err(me, ECodeTernaryVoid, "left type cannot be void")
 	}
 	node.push(condition)
 	node.push(one)
@@ -110,7 +110,7 @@ func infixTernary(me *parser, condition *node, op string) (*node, *parseError) {
 		return nil, er
 	}
 	if one.data().notEquals(two.data()) {
-		return nil, err(me, "left \""+one.data().print()+"\" and right \""+two.data().print()+"\" types do not match")
+		return nil, err(me, ECodeTernaryTypeMismatch, "left \""+one.data().print()+"\" and right \""+two.data().print()+"\" types do not match")
 	}
 	node.push(two)
 	node.copyDataOfNode(one)

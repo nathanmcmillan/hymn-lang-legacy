@@ -14,11 +14,11 @@ func (me *parser) verifyFile() *parseError {
 					if !sig.equals(infn) {
 						e := "Class '" + cl.name + "' with function '" + fname + sig.print() + "'"
 						e += " does not match interface '" + iname + "' with '" + fname + infn.print() + "'"
-						return err(me, e)
+						return err(me, ECodeClassInterfaceSignatureMismatch, e)
 					}
 				} else {
 					e := "Class '" + cl.name + "' is missing function '" + fname + infn.print() + "' for interface '" + iname + "'"
-					return err(me, e)
+					return err(me, ECodeClassMissingRequiredInterface, e)
 				}
 			}
 		}

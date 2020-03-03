@@ -5,7 +5,7 @@ func (me *parser) defineEnum() *parseError {
 	token := me.token
 	name := token.value
 	if _, ok := me.hmfile.namespace[name]; ok {
-		return err(me, "name \""+name+"\" already defined")
+		return err(me, ECodeNameConflict, "name \""+name+"\" already defined")
 	}
 	me.eat("id")
 	genericsOrder, interfaces, er := me.genericHeader()
@@ -45,7 +45,7 @@ func (me *parser) defineEnum() *parseError {
 			typeName := token.value
 			me.eat("id")
 			if getUnionType(types, typeName) != nil {
-				return err(me, "type name \""+typeName+"\" already used")
+				return err(me, ECodeNameConflict, "type name \""+typeName+"\" already used")
 			}
 			unionOrderedData := newordereddata()
 			if me.token.is == "(" {
@@ -85,7 +85,7 @@ func (me *parser) defineEnum() *parseError {
 			types = append(types, un)
 			continue
 		}
-		return err(me, "bad token \""+token.is+"\" in enum")
+		return err(me, ECodeUnexpectedToken, "bad token \""+token.is+"\" in enum")
 	}
 
 	enumDef.finishInit(isSimple, types, datatypels(genericsOrder), interfaces)

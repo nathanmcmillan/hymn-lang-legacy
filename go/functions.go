@@ -165,9 +165,9 @@ func (me *parser) defineClassFunction() *parseError {
 	globalFuncName := nameOfClassFunc(class.name, funcName)
 	me.eat("id")
 	if _, ok := module.functions[globalFuncName]; ok {
-		return err(me, "Class '"+className+"' with function '"+funcName+"' is already defined")
+		return err(me, ECodeNameAlreadyDefined, "Class '"+className+"' with function '"+funcName+"' is already defined")
 	} else if class.getVariable(funcName) != nil {
-		return err(me, "Class '"+className+"' with variable '"+funcName+"' is already defined")
+		return err(me, ECodeNameAlreadyDefined, "Class '"+className+"' with variable '"+funcName+"' is already defined")
 	}
 	fn, er := me.defineFunction(funcName, nil, nil, class)
 	if er != nil {
@@ -186,10 +186,10 @@ func (me *parser) defineStaticFunction() *parseError {
 	token := me.token
 	name := token.value
 	if _, ok := module.functions[name]; ok {
-		return err(me, "Function \""+name+"\" is already defined.")
+		return err(me, ECodeNameConflict, "Function \""+name+"\" is already defined.")
 	}
 	if name == "static" {
-		return err(me, "Function \""+name+"\" is reserved.")
+		return err(me, ECodeReservedName, "Function \""+name+"\" is reserved.")
 	}
 	me.eat("id")
 	fn, er := me.defineFunction(name, nil, nil, nil)
@@ -241,10 +241,10 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	}
 	if me.token.is == "<" {
 		if self != nil {
-			return nil, err(me, "class functions cannot have additional generics")
+			return nil, err(me, ECodeNoAdditionalGenerics, "class functions cannot have additional generics")
 		}
 		if base != nil {
-			return nil, err(me, "implementation of static function cannot have additional generics")
+			return nil, err(me, ECodeNoAdditionalGenerics, "implementation of static function cannot have additional generics")
 		}
 		order, interfaces, er := me.genericHeader()
 		if er != nil {
@@ -265,7 +265,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if me.token.is != ")" {
 			for {
 				if me.token.is != "id" {
-					return nil, err(me, "Unexpected token in function definition")
+					return nil, err(me, ECodeUnexpectedToken, "Unexpected token in function definition")
 				}
 				argname := me.token.value
 				me.eat("id")
@@ -279,7 +279,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 						defaultType = literal
 						me.eat(op)
 					} else {
-						return nil, err(me, "only primitive literals allowed for parameter defaults. was \""+me.token.is+"\"")
+						return nil, err(me, ECodeOnlyPrimitiveLitreralsAllowed, "only primitive literals allowed for parameter defaults. was \""+me.token.is+"\"")
 					}
 				}
 				typed, er := me.declareType()
@@ -294,7 +294,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 						return nil, er
 					}
 					if typed.notEquals(defaultTypeVarData) {
-						return nil, err(me, "function parameter default type \""+defaultType+"\" and signature \""+typed.print()+"\" do not match")
+						return nil, err(me, ECodeFunctionAndSignatureMismatch, "function parameter default type \""+defaultType+"\" and signature \""+typed.print()+"\" do not match")
 					}
 					defaultNode := nodeInit(defaultTypeVarData.getRaw())
 					defaultNode.copyData(defaultTypeVarData)
@@ -314,7 +314,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		me.eat(")")
 	} else {
 		if self != nil {
-			return nil, err(me, "class function \""+fname+"\" must include parenthesis")
+			return nil, err(me, ECodeFunctionMissingParenthesis, "class function \""+fname+"\" must include parenthesis")
 		}
 	}
 	// TODO ::
@@ -326,7 +326,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	// }
 	if me.token.is != "line" {
 		if !parenthesis {
-			return nil, err(me, "function \""+name+"\" returns a value and must include parenthesis")
+			return nil, err(me, ECodeFunctionMissingParenthesis, "function \""+name+"\" returns a value and must include parenthesis")
 		}
 		var er *parseError
 		fn.returns, er = me.declareType()
@@ -342,14 +342,14 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if len(fn.args) != 0 {
 			if len(fn.args) == 1 {
 				if !fn.args[0].data().isSlice() || !fn.args[0].data().member.isString() {
-					return nil, err(me, "Function main argument must be []string")
+					return nil, err(me, ECodeFunctionMainSignature, "Function main argument must be []string")
 				}
 			} else {
-				return nil, err(me, "Function main cannot have more than one argument.")
+				return nil, err(me, ECodeFunctionMainSignature, "Function main cannot have more than one argument.")
 			}
 		}
 		if fn.returns != nil && !fn.returns.isInt() && !fn.returns.isVoid() {
-			return nil, err(me, "Function main must return an integer but was: "+fn.returns.error())
+			return nil, err(me, ECodeFunctionMainSignature, "Function main must return an integer but was: "+fn.returns.error())
 		}
 	}
 

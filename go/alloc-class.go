@@ -55,7 +55,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 					break
 				}
 				if ndepth != depth+1 {
-					return "", err(me, "unexpected line indentation")
+					return "", erc(me, ECodeLineIndentation)
 				}
 				me.eat("line")
 			} else {
@@ -69,7 +69,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 			me.eat("id")
 			clsvar := cl.getVariable(vname)
 			if clsvar == nil {
-				return "", err(me, "Member variable: "+vname+" does not exist for class: "+cl.name)
+				return "", err(me, ECodeClassMemberNotFound, "Member variable: "+vname+" does not exist for class: "+cl.name)
 			}
 
 			me.eat(":")
@@ -96,7 +96,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", a, " but found ", b)
-						return "", err(me, f)
+						return "", err(me, ECodeClassLazyParameter, f)
 					}
 					gtypes = newtypes
 
@@ -104,7 +104,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 					er := "parameter \"" + vname + "\" with type \"" + param.data().print()
 					er += "\" does not match class variable \"" + cl.name + "."
 					er += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
-					return "", err(me, er)
+					return "", err(me, ECodeClassParameter, er)
 				}
 			}
 
@@ -116,7 +116,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 			}
 
 		} else if dict {
-			return "", err(me, "Regular paramater found after mapped parameter")
+			return "", err(me, ECodeMixedParameters, "Regular paramater found after mapped parameter")
 		} else {
 			clsvar := cl.variables[pix]
 			if me.token.is == "_" {
@@ -138,7 +138,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {
 						f := fmt.Sprint("Lazy generic for class '"+cl.name+"' is ", gtypes, " but found ", update)
-						return "", err(me, f)
+						return "", err(me, ECodeClassLazyParameter, f)
 					}
 					gtypes = newtypes
 
@@ -146,7 +146,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 					er := "parameter " + strconv.Itoa(pix) + " with type \"" + param.data().print()
 					er += "\" does not match class variable \"" + cl.name + "."
 					er += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
-					return "", err(me, er)
+					return "", err(me, ECodeClassParameter, er)
 				}
 				params[pix] = param
 			}
@@ -163,7 +163,7 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 		}
 		if len(glist) != len(cl.generics) {
 			f := fmt.Sprint("Missing generic for class \""+cl.name+"\"\nimplementation list was ", genericslist(glist))
-			return "", err(me, f)
+			return "", err(me, ECodeClassMissingGeneric, f)
 		}
 		lazy := typed + genericslist(glist)
 		if _, ok := module.classes[lazy]; !ok {
@@ -182,7 +182,7 @@ func (me *parser) buildClass(n *node, module *hmfile) (*datatype, *parseError) {
 	me.eat("id")
 	cl, ok := module.classes[typed]
 	if !ok {
-		return nil, err(me, "Class: "+typed+" does not exist")
+		return nil, err(me, ECodeClassDoesNotExist, "Class: "+typed+" does not exist")
 	}
 	uid := module.reference(typed)
 	gsize := len(cl.generics)
@@ -193,7 +193,7 @@ func (me *parser) buildClass(n *node, module *hmfile) (*datatype, *parseError) {
 				return nil, er
 			}
 			if len(gtypes) != gsize {
-				return nil, err(me, "Class:"+cl.name+" with implementation "+fmt.Sprint(gtypes)+" does not match "+fmt.Sprint(cl.generics))
+				return nil, err(me, ECodeClassImplementationMismatch, "Class:"+cl.name+" with implementation "+fmt.Sprint(gtypes)+" does not match "+fmt.Sprint(cl.generics))
 			}
 			typed = uid + genericslist(gtypes)
 			if _, ok := me.hmfile.classes[typed]; !ok {

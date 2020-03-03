@@ -5,7 +5,7 @@ func (me *parser) prefix() (*node, *parseError) {
 	if pre, ok := prefixes[op]; ok {
 		return pre.fn(me, op)
 	}
-	return nil, err(me, "unknown calc prefix \""+op+"\"")
+	return nil, err(me, ECodeUnknownCalcPrefix, "unknown calc prefix \""+op+"\"")
 }
 
 func (me *parser) infix(left *node) (*node, *parseError) {
@@ -13,7 +13,7 @@ func (me *parser) infix(left *node) (*node, *parseError) {
 	if inf, ok := infixes[op]; ok {
 		return inf.fn(me, left, op)
 	}
-	return nil, err(me, "unknown calc infix \""+op+"\"")
+	return nil, err(me, ECodeUnknownCalcInfix, "unknown calc infix \""+op+"\"")
 }
 
 func (me *parser) calc(precedence int, hint *datatype) (*node, *parseError) {

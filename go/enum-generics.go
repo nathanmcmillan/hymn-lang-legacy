@@ -45,11 +45,11 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) (*enum, *
 			if cl, ok := m.isClass(); ok {
 				for _, t := range i {
 					if _, ok := cl.selfInterfaces[t.uid()]; !ok {
-						return nil, err(me, "Class '"+cl.name+"' for enum '"+implementation+"' requires interface '"+t.name+"'")
+						return nil, err(me, ECodeClassRequiresInterface, "Class '"+cl.name+"' for enum '"+implementation+"' requires interface '"+t.name+"'")
 					}
 				}
 			} else {
-				return nil, err(me, "Enum '"+implementation+"' requires interface implementation but type was "+m.error())
+				return nil, err(me, ECodeExpectedClassTypeForInterface, "Enum '"+implementation+"' requires interface implementation but type was "+m.error())
 			}
 		}
 	}

@@ -6,7 +6,7 @@ func (me *parser) defineInterface() *parseError {
 	name := token.value
 	module := me.hmfile
 	if _, ok := module.namespace[name]; ok {
-		return err(me, "name \""+name+"\" already defined")
+		return err(me, ECodeNameConflict, "name \""+name+"\" already defined")
 	}
 	me.eat("id")
 	generics, _, er := me.genericHeader()
@@ -36,7 +36,7 @@ func (me *parser) defineInterface() *parseError {
 			mname := me.token.value
 			me.eat("id")
 			if _, ok := functions[mname]; ok {
-				return err(me, "Name \""+mname+"\" already used")
+				return err(me, ECodeNameConflict, "Name \""+mname+"\" already used")
 			}
 			mtype, er := me.declareType()
 			if er != nil {
@@ -44,7 +44,7 @@ func (me *parser) defineInterface() *parseError {
 			}
 			sig := mtype.funcSig
 			if sig == nil {
-				return err(me, "Interface must define a function signature, but found: "+mtype.error())
+				return err(me, ECodeInterfaceDefinitionType, "Interface must define a function signature, but found: "+mtype.error())
 			}
 			me.eat("line")
 			self := fnArgInit(newdataanypointer().getvariable())
@@ -52,7 +52,7 @@ func (me *parser) defineInterface() *parseError {
 			functions[mname] = sig
 			continue
 		}
-		return err(me, "Bad token '"+token.is+"' in interface '"+name+"' definition")
+		return err(me, ECodeUnexpectedToken, "Bad token '"+token.is+"' in interface '"+name+"' definition")
 	}
 
 	interfaceDef := interfaceInit(module, name, generics, functions)

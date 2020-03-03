@@ -30,7 +30,7 @@ func prefixGroup(me *parser, op string) (*node, *parseError) {
 func prefixPrimitive(me *parser, op string) (*node, *parseError) {
 	t, ok := literals[op]
 	if !ok {
-		return nil, err(me, "unknown primitive \""+op+"\"")
+		return nil, err(me, ECodeUnknownPrimitive, "unknown primitive \""+op+"\"")
 	}
 	node := nodeInit(t)
 	d, er := getdatatype(me.hmfile, t)
@@ -104,7 +104,7 @@ func prefixCast(me *parser, op string) (*node, *parseError) {
 		node.push(calc)
 		return node, nil
 	}
-	return nil, err(me, "invalid cast \""+data.print()+"\"")
+	return nil, err(me, ECodeInvalidCast, "invalid cast \""+data.print()+"\"")
 }
 
 func prefixIdent(me *parser, op string) (*node, *parseError) {
@@ -138,16 +138,16 @@ func prefixIdent(me *parser, op string) (*node, *parseError) {
 		if def, ok := module.defs[name]; ok {
 			return me.exprDef(name, def)
 		}
-		return nil, err(me, "Bad type \""+name+"\" definition.")
+		return nil, err(me, ECodeUnknownType, "Bad type \""+name+"\" definition.")
 	}
 
 	v := module.getvar(name)
 	if me.peek().is == ":=" {
 		if v != nil && v.mutable == false {
-			return nil, err(me, "Variable: "+v.name+" is not mutable.")
+			return nil, err(me, ECodeVariableNotMutable, "Variable: "+v.name+" is not mutable.")
 		}
 	} else if v == nil {
-		return nil, err(me, "Unknown value: "+name)
+		return nil, err(me, ECodeUnknownIdentifier, "Unknown value: "+name)
 	}
 	return me.eatvar(module)
 }
@@ -172,7 +172,7 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 				return nil, er
 			}
 			if !capacity.data().isInt() {
-				return nil, err(me, "slice capacity "+capacity.string(me.hmfile, 0)+" is not an integer")
+				return nil, err(me, ECodeSliceCapacityRequiresInteger, "slice capacity "+capacity.string(me.hmfile, 0)+" is not an integer")
 			}
 			defaultSize := nodeInit(TokenInt)
 			defaultSize.value = "0"
@@ -191,7 +191,7 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 			return nil, er
 		}
 		if !size.data().isInt() {
-			return nil, err(me, "array or slice size "+size.string(me.hmfile, 0)+" is not an integer")
+			return nil, err(me, ECodeArraySizeRequiresInteger, "array or slice size "+size.string(me.hmfile, 0)+" is not an integer")
 		}
 		slice := false
 		var capacity *node
@@ -204,7 +204,7 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 					return nil, er
 				}
 				if !capacity.data().isInt() {
-					return nil, err(me, "slice capacity "+capacity.string(me.hmfile, 0)+" is not an integer")
+					return nil, err(me, ECodeSliceCapacityRequiresInteger, "slice capacity "+capacity.string(me.hmfile, 0)+" is not an integer")
 				}
 			}
 		}
@@ -235,7 +235,7 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 				return nil, er
 			}
 			if item.data().notEquals(data) {
-				return nil, err(me, "array member type \""+item.data().print()+"\" does not match array type \""+no.data().getmember().print()+"\"")
+				return nil, err(me, ECodeArrayMemberMismatch, "array member type \""+item.data().print()+"\" does not match array type \""+no.data().getmember().print()+"\"")
 			}
 			items.push(item)
 			if me.token.is == ")" {
@@ -248,7 +248,7 @@ func prefixArray(me *parser, op string) (*node, *parseError) {
 		if size != nil {
 			sizeint, er := strconv.Atoi(size.value)
 			if er != nil || sizeint < len(items.has) {
-				return nil, err(me, "defined array size is less than implied size")
+				return nil, err(me, ECodeArrayDefinedSizeLessThanImplied, "defined array size is less than implied size")
 			}
 		}
 		no.push(items)

@@ -37,7 +37,7 @@ func (me *parser) declareFn() (*datatype, *parseError) {
 				me.eat(",")
 				continue
 			}
-			return nil, err(me, "unexpected token in function pointer")
+			return nil, err(me, ECodeUnexpectedToken, "unexpected token in function pointer")
 		}
 	}
 	me.eat(")")
@@ -75,7 +75,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 			return nil, er
 		}
 		if sizeNode.value == "" || !sizeNode.data().isInt() {
-			return nil, err(me, "array size must be constant integer")
+			return nil, err(me, ECodeArraySizeRequiresInteger, "array size must be constant integer")
 		}
 		me.eat("]")
 		decl, er := me.declareType()
@@ -100,7 +100,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 		}
 		me.eat(">")
 		if !option.isPointer() {
-			return nil, err(me, "Maybe type requires a pointer. Found: "+option.print())
+			return nil, err(me, ECodeMaybeTypeRequiresPointer, "Maybe type requires a pointer. Found: "+option.print())
 		}
 		return newdatamaybe(option), nil
 
@@ -114,7 +114,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 			}
 			me.eat(">")
 			if !option.isPointer() {
-				return nil, err(me, "None type requires a pointer. Found: "+option.print())
+				return nil, err(me, ECodeNoneTypeRequiresPointer, "None type requires a pointer. Found: "+option.print())
 			}
 			return newdatamaybe(option), nil
 		}
@@ -182,7 +182,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 		if me.token.is == "." {
 			me.eat(".")
 			if un = en.getType(me.token.value); un == nil {
-				return nil, err(me, "Union type \""+me.token.value+"\" not found for enum \""+en.name+"\".")
+				return nil, err(me, ECodeEnumDoesNotHaveType, "Union type \""+me.token.value+"\" not found for enum \""+en.name+"\".")
 			}
 			me.eat("id")
 		}
@@ -209,7 +209,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 	}
 
 	if module != me.hmfile {
-		return nil, err(me, "Unknown declared type \""+value+"\".")
+		return nil, err(me, ECodeUnknownType, "Unknown declared type \""+value+"\".")
 	}
 
 	return getdatatype(me.hmfile, value)

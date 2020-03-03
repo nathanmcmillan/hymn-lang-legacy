@@ -91,7 +91,7 @@ func (me *parser) iterloop() (*node, *parseError) {
 		return nil, er
 	}
 	if !using.data().isArrayOrSlice() && !using.data().isString() {
-		return nil, err(me, "expected array, slice, string but was \""+using.data().print()+"\"")
+		return nil, err(me, ECodeVariableNotIndexable, "expected array, slice, string but was \""+using.data().print()+"\"")
 	}
 	me.eat("line")
 

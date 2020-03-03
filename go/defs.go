@@ -34,7 +34,7 @@ func (me *parser) ifdef() *parseError {
 				break
 			}
 			if me.token.is == "eof" {
-				return err(me, "ifdef "+name+" missing enddef")
+				return err(me, ECodeUnexpectedToken, "ifdef "+name+" missing enddef")
 			}
 		}
 	} else {
@@ -43,7 +43,7 @@ func (me *parser) ifdef() *parseError {
 				break
 			}
 			if me.token.is == "eof" {
-				return err(me, "ifdef "+name+" missing enddef")
+				return err(me, ECodeUnexpectedToken, "ifdef "+name+" missing enddef")
 			}
 		}
 	}

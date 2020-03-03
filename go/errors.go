@@ -7,12 +7,6 @@ import (
 	"strings"
 )
 
-// Parsing error codes
-const (
-	ParseCodeUnexpectedToken = 0
-	ParseCodeUnknownType     = 1
-)
-
 type parseLine struct {
 	number  int
 	content string
@@ -28,6 +22,10 @@ type parseError struct {
 	end         int
 	report      string
 	trace       string
+}
+
+func erc(parser *parser, code int) *parseError {
+	return err(parser, code, "")
 }
 
 func err(parser *parser, code int, description string) *parseError {
@@ -95,21 +93,6 @@ gather:
 	e.lines = lines
 	e.report = report
 
-	return e
-}
-
-type compileError struct {
-	code        int
-	description string
-	module      *hmfile
-	line        int
-	begin       int
-	end         int
-}
-
-func errC(description string) *compileError {
-	e := &compileError{}
-	e.description = description
 	return e
 }
 

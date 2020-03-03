@@ -43,7 +43,7 @@ func (me *parser) defaultValue(data *datatype, from string) (*node, *parseError)
 			e += "\nFrom: " + from
 		}
 		e += "\nType: " + d.is + "\nProblem: No default value available."
-		return nil, err(me, e)
+		return nil, err(me, ECodeNoDefaultValue, e)
 	}
 	return d, nil
 }

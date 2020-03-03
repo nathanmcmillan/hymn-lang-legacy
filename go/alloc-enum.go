@@ -24,9 +24,9 @@ func (me *parser) pushEnumParams(n *node, un *union, params []*node, typed strin
 func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *parseError) {
 	if me.token.is != "(" {
 		if me.token.is == "<" {
-			return "", err(me, "Enum: "+en.join(un)+" was expects something like '"+en.name+"<>."+un.name+"()'")
+			return "", err(me, ECodeEnumBracketPosition, "Enum: "+en.join(un)+" was expects something like '"+en.name+"<>."+un.name+"()'")
 		}
-		return "", err(me, "Enum: "+en.join(un)+" must be instantiated with parenthesis\nExample: "+en.join(un)+"()")
+		return "", err(me, ECodeEnumMissingParenthesis, "Enum: "+en.join(un)+" must be instantiated with parenthesis\nExample: "+en.join(un)+"()")
 	}
 	me.eat("(")
 	if me.token.is == "line" {
@@ -52,7 +52,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 					break
 				}
 				if ndepth != depth+1 {
-					return "", err(me, "Unexpected line indentation")
+					return "", erc(me, ECodeLineIndentation)
 				}
 				me.eat("line")
 			} else {
@@ -66,7 +66,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 			me.eat("id")
 			unvar, ok := un.types.table[vname]
 			if !ok {
-				return "", err(me, "Member variable: "+vname+" does not exist for enum: "+en.join(un))
+				return "", err(me, ECodeEnumMemberNotFound, "Member variable: "+vname+" does not exist for enum: "+en.join(un))
 			}
 
 			me.eat(":")
@@ -93,7 +93,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for enum: " + en.join(un) + " is " + a + " but found " + b)
-						return "", err(me, f)
+						return "", err(me, ECodeEnumLazyParameter, f)
 					}
 					gtypes = newtypes
 
@@ -101,7 +101,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 					er := "Parameter: " + vname + " with type \"" + param.data().print()
 					er += "\" does not match class variable \"" + en.join(un) + "."
 					er += vname + "\" with type \"" + unvar.print() + "\""
-					return "", err(me, er)
+					return "", err(me, ECodeEnumParameter, er)
 				}
 			}
 
@@ -113,7 +113,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 			}
 
 		} else if dict {
-			return "", err(me, "Regular paramater found after mapped parameter")
+			return "", err(me, ECodeMixedParameters, "Regular paramater found after mapped parameter")
 		} else {
 			unvar := un.types.table[vars[pix]]
 			if me.token.is == "_" {
@@ -135,7 +135,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 					good, newtypes := mergeMaps(update, gtypes)
 					if !good {
 						f := fmt.Sprint("Lazy generic for enum: "+en.join(un)+" is ", gtypes, " but found ", update)
-						return "", err(me, f)
+						return "", err(me, ECodeEnumLazyParameter, f)
 					}
 					gtypes = newtypes
 
@@ -143,7 +143,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 					er := "Parameter " + strconv.Itoa(pix) + " with type: " + param.data().print()
 					er += " does not match enum variable: " + en.join(un) + "."
 					er += strconv.Itoa(pix) + "\" with type: " + unvar.print()
-					return "", err(me, er)
+					return "", err(me, ECodeEnumParameter, er)
 				}
 				params[pix] = param
 			}
@@ -156,13 +156,13 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 		for k, v := range gtypes {
 			i := inList(en.generics, k)
 			if i >= len(glist) {
-				return "", err(me, "Incomplete enum: "+en.join(un)+" declaration")
+				return "", err(me, ECodeEnumIncompleteDeclaration, "Incomplete enum: "+en.join(un)+" declaration")
 			}
 			glist[i] = v.copy()
 		}
 		if len(glist) != len(en.generics) {
 			f := fmt.Sprint("Missing generic for enum: " + en.join(un) + "\"\nImplementation list was " + genericslist(glist))
-			return "", err(me, f)
+			return "", err(me, ECodeEnumMissingGeneric, f)
 		}
 		typed := en.name + genericslist(glist)
 		if _, ok := module.enums[typed]; !ok {
@@ -181,7 +181,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) (*datatype, *parseError) {
 	me.eat("id")
 	en, ok := module.enums[typed]
 	if !ok {
-		return nil, err(me, "Enum: "+typed+" does not exist")
+		return nil, err(me, ECodeEnumDoesNotExist, "Enum: "+typed+" does not exist")
 	}
 	uid := module.reference(typed)
 	gsize := len(en.generics)
@@ -192,7 +192,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) (*datatype, *parseError) {
 				return nil, er
 			}
 			if len(gtypes) != len(en.generics) {
-				return nil, err(me, "Enum \""+en.name+" with implementation "+fmt.Sprint(gtypes)+" does not match "+fmt.Sprint(en.generics))
+				return nil, err(me, ECodeEnumImplementationMismatch, "Enum \""+en.name+" with implementation "+fmt.Sprint(gtypes)+" does not match "+fmt.Sprint(en.generics))
 			}
 			typed = uid + genericslist(gtypes)
 			if _, ok := module.enums[typed]; !ok {
@@ -220,7 +220,7 @@ func (me *parser) buildEnum(n *node, module *hmfile) (*datatype, *parseError) {
 	me.eat("id")
 	un := en.getType(unvalue)
 	if un == nil {
-		return nil, err(me, "Enum: "+en.name+" does not have type: "+unvalue)
+		return nil, err(me, ECodeEnumDoesNotHaveType, "Enum: "+en.name+" does not have type: "+unvalue)
 	}
 	if n != nil && !en.simple {
 		var er *parseError

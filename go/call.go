@@ -24,7 +24,7 @@ func (me *parser) pushSigParams(n *node, sig *fnSig) *parseError {
 		if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 			er := "parameter \"" + param.data().print()
 			er += "\" does not match argument[" + strconv.Itoa(ix) + "] \"" + arg.data().print() + "\" of function signature \"" + sig.print() + "\""
-			return err(me, er)
+			return err(me, ECodeFunctionParameter, er)
 		}
 		params = append(params, param)
 	}
@@ -107,21 +107,21 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for function '"+fn.getname()+"' is ", a, " but found ", b)
-						return nil, nil, err(me, f)
+						return nil, nil, err(me, ECodeFunctionLazyParameter, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 					er := "parameter \"" + param.data().print()
 					er += "\" does not match argument \"" + argname + "\" typed \"" + arg.data().print() + "\" for function \"" + name + "\""
-					return nil, nil, err(me, er)
+					return nil, nil, err(me, ECodeFunctionParameter, er)
 				}
 				params[aix] = param
 			}
 			dict = true
 
 		} else if dict {
-			return nil, nil, err(me, "regular paramater found after mapped parameter")
+			return nil, nil, err(me, ECodeFunctionMixedParameters, "regular paramater found after mapped parameter")
 		} else {
 			var arg *funcArg
 			if pix >= size {
@@ -129,7 +129,7 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 					arg = fn.argVariadic
 					params = append(params, nil)
 				} else {
-					return nil, nil, err(me, "function \""+name+"\" argument count exceeds parameter count")
+					return nil, nil, err(me, ECodeFunctionTooManyParameters, "function \""+name+"\" argument count exceeds parameter count")
 				}
 			}
 			if me.token.is == "_" {
@@ -157,14 +157,14 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 						a := genericsmap(gtypes)
 						b := genericsmap(update)
 						f := fmt.Sprint("Lazy generic for function '"+fn.getname()+"' is ", a, " but found ", b)
-						return nil, nil, err(me, f)
+						return nil, nil, err(me, ECodeFunctionLazyParameter, f)
 					}
 					gtypes = newtypes
 
 				} else if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
 					er := "Parameter: " + param.data().print()
 					er += " does not match expected: " + arg.data().print() + " for function: " + name
-					return nil, nil, err(me, er)
+					return nil, nil, err(me, ECodeFunctionParameter, er)
 				}
 				params[pix] = param
 			}
@@ -181,7 +181,7 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 		}
 		if len(glist) != len(fn.generics) {
 			f := fmt.Sprint("Missing generic for function '"+fn.getname()+"'\nImplementation list was ", genericslist(glist))
-			return nil, nil, err(me, f)
+			return nil, nil, err(me, ECodeFunctionMissingGeneric, f)
 		}
 		lazy := name + genericslist(glist)
 		if implementation, ok := module.functions[lazy]; ok {
@@ -221,7 +221,7 @@ func (me *parser) call(module *hmfile) (*node, *parseError) {
 	var order []*datatype
 	bfn, ok := module.getFunction(name)
 	if !ok {
-		return nil, err(me, "Missing function '"+name+"'")
+		return nil, err(me, ECodeFunctionNotFound, "Missing function '"+name+"'")
 	}
 	fn := bfn
 	lazy := false

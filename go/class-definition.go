@@ -6,7 +6,7 @@ func (me *parser) defineClass() *parseError {
 	name := token.value
 	module := me.hmfile
 	if _, ok := module.namespace[name]; ok {
-		return err(me, "name \""+name+"\" already defined")
+		return err(me, ECodeNameConflict, "name \""+name+"\" already defined")
 	}
 	me.eat("id")
 	typedGenerics, typedGenericsInterfaces, er := me.genericHeader()
@@ -37,7 +37,7 @@ func (me *parser) defineClass() *parseError {
 
 			in, ok := interfaceModule.interfaces[interfaceName]
 			if !ok {
-				return err(me, "Unknown interface: "+interfaceName)
+				return err(me, ECodeUnknownInterface, "Unknown interface: "+interfaceName)
 			}
 
 			if in.requiresGenerics() {
@@ -102,10 +102,10 @@ func (me *parser) defineClass() *parseError {
 			mname := me.token.value
 			me.eat("id")
 			if getVariable(members, mname) != nil {
-				return err(me, "Member name '"+mname+"' already used")
+				return err(me, ECodeMemberNameConflict, "Member name '"+mname+"' already used")
 			}
 			if i := inList(generics, mname); i >= 0 {
-				return err(me, "Cannot use '"+mname+"' as member name")
+				return err(me, ECodeMemberNameConflict, "Cannot use '"+mname+"' as member name")
 			}
 
 			isptr := true
@@ -121,14 +121,14 @@ func (me *parser) defineClass() *parseError {
 			mtype.setIsPointer(isptr)
 			if mcl, ok := mtype.isClass(); ok {
 				if mcl == classDef {
-					return err(me, "recursive type definition for \""+classDef.name+"\"")
+					return err(me, ECodeClassRecursiveDefinition, "recursive type definition for \""+classDef.name+"\"")
 				}
 			}
 			me.eat("line")
 			members = append(members, mtype.getnamedvariable(mname, true))
 			continue
 		}
-		return err(me, "bad token \""+token.is+"\" in class")
+		return err(me, ECodeUnexpectedToken, "bad token \""+token.is+"\" in class")
 	}
 
 	classDef.initMembers(members)

@@ -38,7 +38,7 @@ func (me *parser) fileExpression() *parseError {
 	} else if op == "line" || op == "eof" {
 		return nil
 	} else {
-		return err(me, "unknown top level expression \""+op+"\"")
+		return err(me, ECodeUnexpectedToken, "unknown top level expression \""+op+"\"")
 	}
 }
 
@@ -84,7 +84,7 @@ func (me *parser) expression() (*node, *parseError) {
 	} else if op == "line" || op == "eof" {
 		return nil, nil
 	}
-	return nil, err(me, "Unknown token '"+op+"'")
+	return nil, err(me, ECodeUnexpectedToken, "Unknown token '"+op+"'")
 }
 
 func (me *parser) parseMutable() (*node, *parseError) {
@@ -114,7 +114,7 @@ func (me *parser) parseIdent() (*node, *parseError) {
 		if _, ok := module.getFunction(name); ok {
 			return me.parseFn(module)
 		}
-		return nil, err(me, "Type '"+name+"' must be assigned.")
+		return nil, err(me, ECodeExpectingExpression, "Type '"+name+"' must be assigned.")
 	}
 
 	n, er := me.eatvar(me.hmfile)
@@ -128,7 +128,7 @@ func (me *parser) parseIdent() (*node, *parseError) {
 			return nil, er
 		}
 	} else if n.is != "call" {
-		return nil, err(me, "Expected assignment or call expression for '"+name+"'")
+		return nil, err(me, ECodeExpectingExpression, "Expected assignment or call expression for '"+name+"'")
 	}
 
 	me.verify("line")
@@ -206,14 +206,14 @@ func (me *parser) parseReturn() (*node, *parseError) {
 		ret := calc.data()
 		if ret.isNone() {
 			if !fn.returns.isSome() {
-				return nil, err(me, "return type was \""+ret.print()+"\" but function is \""+fn.returns.print()+"\"")
+				return nil, err(me, ECodeReturnTypeMismatch, "return type was \""+ret.print()+"\" but function is \""+fn.returns.print()+"\"")
 			} else if ret.getmember() != nil {
 				if calc.is == "none" {
-					return nil, err(me, "unnecessary none definition for return "+calc.string(me.hmfile, 0))
+					return nil, err(me, ECodeRedundantNoneDefinition, "unnecessary none definition for return "+calc.string(me.hmfile, 0))
 				}
 			}
 		} else if fn.returns.notEquals(ret) {
-			return nil, err(me, "Function "+fn.canonical(me.hmfile)+" returns "+fn.returns.error()+" but found "+ret.error())
+			return nil, err(me, ECodeReturnTypeMismatch, "Function "+fn.canonical(me.hmfile)+" returns "+fn.returns.error()+" but found "+ret.error())
 		}
 	}
 	me.verify("line")
@@ -258,13 +258,13 @@ func (me *parser) extern() (*node, *parseError) {
 	ext := me.token
 	me.eat("id")
 	if me.token.is != "." {
-		return nil, err(me, "expecting \".\" after module name")
+		return nil, err(me, ECodeUnexpectedToken, "expecting \".\" after module name")
 	}
 	me.eat(".")
 	extname := ext.value
 	id := me.token
 	if id.is != "id" {
-		return nil, err(me, "expecting id token after extern "+extname)
+		return nil, err(me, ECodeUnexpectedToken, "expecting id token after extern "+extname)
 	}
 	idname := id.value
 	module := me.hmfile.imports[extname]
@@ -278,7 +278,7 @@ func (me *parser) extern() (*node, *parseError) {
 	} else if module.getStatic(idname) != nil {
 		return me.eatvar(module)
 	} else {
-		return nil, err(me, "external type \""+extname+"."+idname+"\" does not exist")
+		return nil, err(me, ECodeUnknownType, "external type \""+extname+"."+idname+"\" does not exist")
 	}
 }
 
@@ -308,7 +308,7 @@ func (me *parser) calcBool() (*node, *parseError) {
 		return nil, er
 	}
 	if !n.data().isBoolean() {
-		return nil, err(me, "must be boolean expression")
+		return nil, err(me, ECodeBooleanRequired, "must be boolean expression")
 	}
 	return n, nil
 }
@@ -320,7 +320,7 @@ func (me *parser) importing() *parseError {
 	value = variableSubstitution(value, me.hmfile.program.shellvar)
 	absolute, er := filepath.Abs(value)
 	if er != nil {
-		return err(me, "Failed to parse import \""+value+"\". "+er.Error())
+		return err(me, ECodeImportPath, "Failed to parse import \""+value+"\". "+er.Error())
 	}
 	alias := filepath.Base(absolute)
 	if me.token.is == "as" {
@@ -351,20 +351,20 @@ func (me *parser) importing() *parseError {
 
 	path, er := filepath.Abs(filepath.Join(module.program.directory, value+".hm"))
 	if er != nil {
-		return err(me, "Failed to parse import \""+value+"\". "+er.Error())
+		return err(me, ECodeImportPath, "Failed to parse import \""+value+"\". "+er.Error())
 	}
 
 	var importing *hmfile
 	found, ok := module.program.hmfiles[path]
 	if ok {
 		if _, ok := module.importPaths[path]; ok {
-			return err(me, "Module \""+path+"\" was already imported.")
+			return err(me, ECodeDoubleModuleImport, "Module \""+path+"\" was already imported.")
 		}
 		importing = found
 	} else {
 		out, fer := filepath.Abs(filepath.Join(module.program.out, value))
 		if fer != nil {
-			return err(me, "Failed to parse import \""+value+"\". "+er.Error())
+			return err(me, ECodeImportPath, "Failed to parse import \""+value+"\". "+er.Error())
 		}
 
 		var er *parseError
@@ -386,7 +386,7 @@ func (me *parser) importing() *parseError {
 	for _, s := range statics {
 		if cl, ok := importing.classes[s]; ok {
 			if _, ok := module.types[cl.name]; ok {
-				return err(me, "Cannot import class \""+cl.name+"\". It is already defined.")
+				return err(me, ECodeDoubleClassImport, "Cannot import class \""+cl.name+"\". It is already defined.")
 			}
 			module.classes[cl.name] = cl
 			module.namespace[cl.name] = "class"
@@ -398,7 +398,7 @@ func (me *parser) importing() *parseError {
 
 		} else if in, ok := importing.interfaces[s]; ok {
 			if _, ok := module.types[in.name]; ok {
-				return err(me, "Cannot import interface \""+in.name+"\". It is already defined.")
+				return err(me, ECodeDoubleInterfaceImport, "Cannot import interface \""+in.name+"\". It is already defined.")
 			}
 			module.interfaces[in.name] = in
 			module.namespace[in.name] = "interface"
@@ -410,7 +410,7 @@ func (me *parser) importing() *parseError {
 
 		} else if en, ok := importing.enums[s]; ok {
 			if _, ok := module.types[en.name]; ok {
-				return err(me, "Cannot import enum \""+en.name+"\". It is already defined.")
+				return err(me, ECodeDoubleEnumImport, "Cannot import enum \""+en.name+"\". It is already defined.")
 			}
 			module.enums[en.name] = en
 			module.namespace[en.name] = "enum"
@@ -423,7 +423,7 @@ func (me *parser) importing() *parseError {
 		} else if fn, ok := importing.functions[s]; ok {
 			name := fn.getname()
 			if _, ok := module.types[name]; ok {
-				return err(me, "Cannot import function \""+name+"\". It is already defined.")
+				return err(me, ECodeDoubleFunctionImport, "Cannot import function \""+name+"\". It is already defined.")
 			}
 			module.functions[name] = fn
 			module.namespace[name] = "function"
@@ -431,7 +431,7 @@ func (me *parser) importing() *parseError {
 
 		} else if st, ok := importing.staticScope[s]; ok {
 			if _, ok := module.types[st.v.name]; ok {
-				return err(me, "Cannot import variable \""+st.v.name+"\". It is already defined.")
+				return err(me, ECodeDoubleStaticVariableImport, "Cannot import variable \""+st.v.name+"\". It is already defined.")
 			}
 			module.staticScope[st.v.name] = st
 			module.scope.variables[st.v.name] = st.v
@@ -452,7 +452,7 @@ func (me *parser) global(mutable bool) *parseError {
 	name := v.idata.name
 	existing := module.getvar(name)
 	if existing != nil {
-		return err(me, "Variable \""+name+"\" already defined.")
+		return err(me, ECodeNameConflict, "Variable \""+name+"\" already defined.")
 	}
 	v.idata.setGlobal(true)
 	n, er := me.forceassign(v, true, mutable)

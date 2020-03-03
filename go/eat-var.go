@@ -15,7 +15,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 	} else {
 		sv := from.getStatic(localvarname)
 		if sv == nil {
-			return nil, err(me, "static variable \""+localvarname+"\" in module \""+from.name+"\" not found")
+			return nil, err(me, ECodeStaticVariableNotFound, "static variable \""+localvarname+"\" in module \""+from.name+"\" not found")
 		}
 		head.copyData(sv.data())
 	}
@@ -25,7 +25,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 			if head.is == "variable" {
 				sv := module.getvar(head.idata.name)
 				if sv == nil {
-					return nil, err(me, "Variable '"+head.idata.name+"' out of scope")
+					return nil, err(me, ECodeVariableOutOfScope, "Variable '"+head.idata.name+"' out of scope")
 				}
 				head.copyData(sv.data())
 				head.is = "root-variable"
@@ -48,7 +48,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 						return nil, er
 					}
 				} else {
-					return nil, err(me, "Class: "+rootClass.name+" does not have a variable or function named: "+dotName)
+					return nil, err(me, ECodeClassMemberNotFound, "Class: "+rootClass.name+" does not have a variable or function named: "+dotName)
 				}
 				head = member
 
@@ -58,7 +58,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 				me.eat("id")
 				_, sig, ok := module.scope.fn.searchInterface(data, dotName)
 				if !ok {
-					return nil, err(me, "Generic '"+data.print()+" does not have an interface function called '"+dotName+"'")
+					return nil, err(me, ECodeInterfaceNotFound, "Generic '"+data.print()+" does not have an interface function called '"+dotName+"'")
 				}
 				member := nodeInit("call")
 				member.copyData(sig.returns)
@@ -82,7 +82,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 						member.push(head)
 						head = member
 					} else {
-						return nil, err(me, "enum \""+rootEnum.name+"\" must be union type; missing root enum")
+						return nil, err(me, ECodeMissingRootEnum, "enum \""+rootEnum.name+"\" must be union type; missing root enum")
 					}
 				} else {
 					me.eat(".")
@@ -90,7 +90,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 					me.eat("id")
 					typeInUnion, ok := rootUnion.types.table[key]
 					if !ok {
-						return nil, err(me, "Union key: "+key+" does not exist for: "+rootUnion.name)
+						return nil, err(me, ECodeEnumDoesNotHaveType, "Union key: "+key+" does not exist for: "+rootUnion.name)
 					}
 					member := nodeInit("union-member-variable")
 					member.copyData(typeInUnion)
@@ -99,15 +99,15 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 					head = member
 				}
 			} else if data.isSomeOrNone() {
-				return nil, err(me, "Unexpected maybe type \""+head.data().print()+"\". Do you need a match statement?")
+				return nil, err(me, ECodeUnexpectedMaybeType, "Unexpected maybe type \""+head.data().print()+"\". Do you need a match statement?")
 			} else {
-				return nil, err(me, "Unknown type: "+head.data().error())
+				return nil, err(me, ECodeUnknownType, "Unknown type: "+head.data().error())
 			}
 		} else if me.token.is == "[" {
 			if head.is == "variable" {
 				sv := module.getvar(head.idata.name)
 				if sv == nil {
-					return nil, err(me, "variable out of scope")
+					return nil, err(me, ECodeVariableOutOfScope, "variable out of scope")
 				}
 				head.copyTypeFromVar(sv)
 				head.is = "root-variable"
@@ -115,7 +115,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 			me.eat("[")
 			if me.token.is == ":" {
 				if !head.data().isArray() {
-					return nil, err(me, "root variable \""+head.idata.name+"\" of type \""+head.data().print()+"\" is not an array")
+					return nil, err(me, ECodeVariableNotAnArray, "root variable \""+head.idata.name+"\" of type \""+head.data().print()+"\" is not an array")
 				}
 				me.eat(":")
 				member := nodeInit("array-to-slice")
@@ -125,7 +125,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 				head = member
 			} else {
 				if !head.data().isIndexable() {
-					return nil, err(me, "root variable \""+head.idata.name+"\" of type \""+head.data().print()+"\" is not indexable")
+					return nil, err(me, ECodeVariableNotIndexable, "root variable \""+head.idata.name+"\" of type \""+head.data().print()+"\" is not indexable")
 				}
 				member := nodeInit("array-member")
 				index, er := me.calc(0, nil)
@@ -143,7 +143,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 			if head.is == "variable" {
 				sv := module.getvar(head.idata.name)
 				if sv == nil {
-					return nil, err(me, "variable \""+head.idata.name+"\" not found in scope.")
+					return nil, err(me, ECodeVariableOutOfScope, "variable \""+head.idata.name+"\" not found in scope.")
 				}
 				sig = sv.data().functionSignature()
 

@@ -146,7 +146,7 @@ func (me *parser) peek() *token {
 func (me *parser) verify(want string) *parseError {
 	token := me.token
 	if token.is != want {
-		return err(me, "unexpected token was "+token.string()+" instead of {type:"+want+"}")
+		return err(me, ECodeUnexpectedToken, "unexpected token was "+token.string()+" instead of {type:"+want+"}")
 	}
 	return nil
 }

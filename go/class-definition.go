@@ -2,8 +2,8 @@ package main
 
 func (me *parser) defineClass() *parseError {
 	if er := me.eat("class"); er != nil {
-	return er
-}
+		return er
+	}
 	token := me.token
 	name := token.value
 	module := me.hmfile
@@ -11,8 +11,8 @@ func (me *parser) defineClass() *parseError {
 		return err(me, ECodeNameConflict, "name \""+name+"\" already defined")
 	}
 	if er := me.eat("id"); er != nil {
-	return er
-}
+		return er
+	}
 	typedGenerics, typedGenericsInterfaces, er := me.genericHeader()
 	if er != nil {
 		return er
@@ -22,31 +22,31 @@ func (me *parser) defineClass() *parseError {
 	var interfaces map[string]*classInterface
 	if me.token.is == "line" && me.peek().is == "implements" {
 		if er := me.eat("line"); er != nil {
-	return er
-}
+			return er
+		}
 	}
 	if me.token.is == "implements" {
 		if er := me.eat("implements"); er != nil {
-	return er
-}
+			return er
+		}
 		interfaces = make(map[string]*classInterface)
 		for {
 			interfaceName := me.token.value
 			if er := me.eat("id"); er != nil {
-	return er
-}
+				return er
+			}
 
 			interfaceModule := module
 
 			if m, ok := module.imports[interfaceName]; ok && me.token.is == "." {
 				interfaceModule = m
 				if er := me.eat("."); er != nil {
-	return er
-}
+					return er
+				}
 				interfaceName = me.token.value
 				if er := me.eat("id"); er != nil {
-	return er
-}
+					return er
+				}
 			}
 
 			in, ok := interfaceModule.interfaces[interfaceName]
@@ -77,13 +77,13 @@ func (me *parser) defineClass() *parseError {
 			interfaces[in.uid()] = in
 			if me.token.is == "line" && me.peek().is == "and" {
 				if er := me.eat("line"); er != nil {
-	return er
-}
+					return er
+				}
 			}
 			if me.token.is == "and" {
 				if er := me.eat("and"); er != nil {
-	return er
-}
+					return er
+				}
 				continue
 			}
 			break
@@ -91,8 +91,8 @@ func (me *parser) defineClass() *parseError {
 	}
 
 	if er := me.eat("line"); er != nil {
-	return er
-}
+		return er
+	}
 
 	uid := module.reference(name)
 
@@ -121,8 +121,8 @@ func (me *parser) defineClass() *parseError {
 		if me.token.is == "id" {
 			mname := me.token.value
 			if er := me.eat("id"); er != nil {
-	return er
-}
+				return er
+			}
 			if getVariable(members, mname) != nil {
 				return err(me, ECodeMemberNameConflict, "Member name '"+mname+"' already used")
 			}
@@ -133,8 +133,8 @@ func (me *parser) defineClass() *parseError {
 			isptr := true
 			if me.token.is == "'" {
 				if er := me.eat("'"); er != nil {
-	return er
-}
+					return er
+				}
 				isptr = false
 			}
 
@@ -149,8 +149,8 @@ func (me *parser) defineClass() *parseError {
 				}
 			}
 			if er := me.eat("line"); er != nil {
-	return er
-}
+				return er
+			}
 			members = append(members, mtype.getnamedvariable(mname, true))
 			continue
 		}

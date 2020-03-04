@@ -232,8 +232,7 @@ func (me *parser) callClassFunction(module *hmfile, root *node, c *class, fn *fu
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
-	er = me.pushFunctionParams(n, params, fn)
-	if er != nil {
+	if er = me.pushFunctionParams(n, params, fn); er != nil {
 		return nil, er
 	}
 	return n, nil
@@ -286,8 +285,7 @@ func (me *parser) call(module *hmfile) (*node, *parseError) {
 	n := nodeInit("call")
 	n.fn = fn
 	n.copyData(fn.returns)
-	er = me.pushFunctionParams(n, params, fn)
-	if er != nil {
+	if er = me.pushFunctionParams(n, params, fn); er != nil {
 		return nil, er
 	}
 	return n, er

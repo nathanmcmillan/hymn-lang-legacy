@@ -2,8 +2,8 @@ package main
 
 func (me *parser) defineInterface() *parseError {
 	if er := me.eat("interface"); er != nil {
-	return er
-}
+		return er
+	}
 	token := me.token
 	name := token.value
 	module := me.hmfile
@@ -11,15 +11,15 @@ func (me *parser) defineInterface() *parseError {
 		return err(me, ECodeNameConflict, "name \""+name+"\" already defined")
 	}
 	if er := me.eat("id"); er != nil {
-	return er
-}
+		return er
+	}
 	generics, _, er := me.genericHeader()
 	if er != nil {
 		return er
 	}
 	if er := me.eat("line"); er != nil {
-	return er
-}
+		return er
+	}
 
 	uid := module.reference(name)
 
@@ -41,8 +41,8 @@ func (me *parser) defineInterface() *parseError {
 		if me.token.is == "id" {
 			mname := me.token.value
 			if er := me.eat("id"); er != nil {
-	return er
-}
+				return er
+			}
 			if _, ok := functions[mname]; ok {
 				return err(me, ECodeNameConflict, "Name \""+mname+"\" already used")
 			}
@@ -55,8 +55,8 @@ func (me *parser) defineInterface() *parseError {
 				return err(me, ECodeInterfaceDefinitionType, "Interface must define a function signature, but found: "+mtype.error())
 			}
 			if er := me.eat("line"); er != nil {
-	return er
-}
+				return er
+			}
 			self := fnArgInit(newdataanypointer().getvariable())
 			sig.args = append([]*funcArg{self}, sig.args...)
 			functions[mname] = sig

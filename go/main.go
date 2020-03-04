@@ -121,8 +121,7 @@ func execCompile(flags *flags) (string, *parseError, error) {
 	hmlib.libs()
 	program.hmlib = hmlib
 
-	_, er := program.parse(flags.writeTo, flags.path, flags.hmlib)
-	if er != nil {
+	if _, er := program.parse(flags.writeTo, flags.path, flags.hmlib); er != nil {
 		return "", er, nil
 	}
 
@@ -153,8 +152,7 @@ func (me *program) parse(out, path, libs string) (*hmfile, *parseError) {
 	me.hmfiles[path] = module
 	me.hmorder = append(me.hmorder, module)
 
-	er := module.parse(out, path)
-	if er != nil {
+	if er := module.parse(out, path); er != nil {
 		return nil, er
 	}
 

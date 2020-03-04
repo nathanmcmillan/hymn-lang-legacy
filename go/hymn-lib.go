@@ -239,143 +239,115 @@ func (me *hmlib) libs() *parseError {
 
 	var er *parseError
 
-	er = me.newLibSimpleIn(libExit, TokenInt, "void")
-	if er != nil {
+	if er = me.newLibSimpleIn(libExit, TokenInt, "void"); er != nil {
 		return er
 	}
 
-	er = me.newLibSimpleIn(libChdir, TokenString, "void")
-	if er != nil {
+	if er = me.newLibSimpleIn(libChdir, TokenString, "void"); er != nil {
 		return er
 	}
 
-	er = me.newLibSimpleVardiac(libEcho, "void")
-	if er != nil {
+	if er = me.newLibSimpleVardiac(libEcho, "void"); er != nil {
 		return er
 	}
 
-	er = me.newLibSimpleVardiac(libFormat, TokenString)
-	if er != nil {
+	if er = me.newLibSimpleVardiac(libFormat, TokenString); er != nil {
 		return er
 	}
 
-	er = me.newLibSimplePrint(libPrintf, "void")
-	if er != nil {
+	if er = me.newLibSimplePrint(libPrintf, "void"); er != nil {
 		return er
 	}
 
-	er = me.newLibSimplePrint(libPrintln, "void")
-	if er != nil {
+	if er = me.newLibSimplePrint(libPrintln, "void"); er != nil {
 		return er
 	}
 
-	er = me.newLibSimplePrint(libSprintf, TokenString)
-	if er != nil {
+	if er = me.newLibSimplePrint(libSprintf, TokenString); er != nil {
 		return er
 	}
 
-	er = me.newLibSimplePrint(libSprintln, TokenString)
-	if er != nil {
+	if er = me.newLibSimplePrint(libSprintln, TokenString); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libCat, TokenString)
-	if er != nil {
+	if er = me.newLibSimple(libCat, TokenString); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libSystem, TokenString)
-	if er != nil {
+	if er = me.newLibSimple(libSystem, TokenString); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToStr, TokenString)
-	if er != nil {
+	if er = me.newLibSimple(libToStr, TokenString); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToInt, TokenInt)
-	if er != nil {
+	if er = me.newLibSimple(libToInt, TokenInt); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToInt8, TokenInt8)
-	if er != nil {
+	if er = me.newLibSimple(libToInt8, TokenInt8); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToInt16, TokenInt16)
-	if er != nil {
+	if er = me.newLibSimple(libToInt16, TokenInt16); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToInt32, TokenInt32)
-	if er != nil {
+	if er = me.newLibSimple(libToInt32, TokenInt32); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToInt64, TokenInt64)
-	if er != nil {
+	if er = me.newLibSimple(libToInt64, TokenInt64); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToUInt, TokenUInt)
-	if er != nil {
+	if er = me.newLibSimple(libToUInt, TokenUInt); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToUInt8, TokenUInt8)
-	if er != nil {
+	if er = me.newLibSimple(libToUInt8, TokenUInt8); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToUInt16, TokenUInt16)
-	if er != nil {
+	if er = me.newLibSimple(libToUInt16, TokenUInt16); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToUInt32, TokenUInt32)
-	if er != nil {
+	if er = me.newLibSimple(libToUInt32, TokenUInt32); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToUInt64, TokenUInt64)
-	if er != nil {
+	if er = me.newLibSimple(libToUInt64, TokenUInt64); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToFloat, TokenFloat)
-	if er != nil {
+	if er = me.newLibSimple(libToFloat, TokenFloat); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToFloat32, TokenFloat32)
-	if er != nil {
+	if er = me.newLibSimple(libToFloat32, TokenFloat32); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libToFloat64, TokenFloat64)
-	if er != nil {
+	if er = me.newLibSimple(libToFloat64, TokenFloat64); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libLength, TokenInt)
-	if er != nil {
+	if er = me.newLibSimple(libLength, TokenInt); er != nil {
 		return er
 	}
 
-	er = me.newLibSimple(libCapacity, TokenInt)
-	if er != nil {
+	if er = me.newLibSimple(libCapacity, TokenInt); er != nil {
 		return er
 	}
 
-	er = me.newLibRegular(libWrite, "void", TokenString, TokenString)
-	if er != nil {
+	if er = me.newLibRegular(libWrite, "void", TokenString, TokenString); er != nil {
 		return er
 	}
 
-	er = me.newLibRegular(libSubstring, TokenString, TokenString, TokenInt, TokenInt)
-	if er != nil {
+	if er = me.newLibRegular(libSubstring, TokenString, TokenString, TokenInt, TokenInt); er != nil {
 		return er
 	}
 

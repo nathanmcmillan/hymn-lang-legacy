@@ -103,8 +103,7 @@ func (me *hmfile) parse(out, path string) *parseError {
 
 	parsing.skipLines()
 	for parsing.token.is != "eof" {
-		er := parsing.fileExpression()
-		if er != nil {
+		if er := parsing.fileExpression(); er != nil {
 			return er
 		}
 		if parsing.token.is == "line" {
@@ -114,8 +113,7 @@ func (me *hmfile) parse(out, path string) *parseError {
 		}
 	}
 
-	er := parsing.verifyFile()
-	if er != nil {
+	if er := parsing.verifyFile(); er != nil {
 		return er
 	}
 
@@ -170,8 +168,7 @@ func (me *parser) replace(want, is string) *parseError {
 }
 
 func (me *parser) wordOrPrimitive() *parseError {
-	er := me.verifyWordOrPrimitive()
-	if er != nil {
+	if er := me.verifyWordOrPrimitive(); er != nil {
 		return er
 	}
 	me.next()

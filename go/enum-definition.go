@@ -2,23 +2,23 @@ package main
 
 func (me *parser) defineEnum() *parseError {
 	if er := me.eat("enum"); er != nil {
-	return er
-}
+		return er
+	}
 	token := me.token
 	name := token.value
 	if _, ok := me.hmfile.namespace[name]; ok {
 		return err(me, ECodeNameConflict, "name \""+name+"\" already defined")
 	}
 	if er := me.eat("id"); er != nil {
-	return er
-}
+		return er
+	}
 	genericsOrder, interfaces, er := me.genericHeader()
 	if er != nil {
 		return er
 	}
 	if er := me.eat("line"); er != nil {
-	return er
-}
+		return er
+	}
 
 	uid := me.hmfile.reference(name)
 
@@ -42,8 +42,8 @@ func (me *parser) defineEnum() *parseError {
 		token := me.token
 		if token.is == "line" {
 			if er := me.eat("line"); er != nil {
-	return er
-}
+				return er
+			}
 			break
 		}
 		if token.is == "eof" || token.is == "comment" {
@@ -52,24 +52,24 @@ func (me *parser) defineEnum() *parseError {
 		if token.is == "id" {
 			typeName := token.value
 			if er := me.eat("id"); er != nil {
-	return er
-}
+				return er
+			}
 			if getUnionType(types, typeName) != nil {
 				return err(me, ECodeNameConflict, "type name \""+typeName+"\" already used")
 			}
 			unionOrderedData := newordereddata()
 			if me.token.is == "(" {
 				if er := me.eat("("); er != nil {
-	return er
-}
+					return er
+				}
 				if me.token.is == ")" {
 					goto closing
 				}
 				isSimple = false
 				if me.token.is == "line" {
 					if er := me.eat("line"); er != nil {
-	return er
-}
+						return er
+					}
 				}
 				for {
 					if me.token.is == ")" {
@@ -77,8 +77,8 @@ func (me *parser) defineEnum() *parseError {
 					}
 					key := me.token.value
 					if er := me.eat("id"); er != nil {
-	return er
-}
+						return er
+					}
 					unionArgType, er := me.declareType()
 					if er != nil {
 						return er
@@ -87,24 +87,24 @@ func (me *parser) defineEnum() *parseError {
 
 					if me.token.is == "," {
 						if er := me.eat(","); er != nil {
-	return er
-}
+							return er
+						}
 					} else if me.token.is == "line" {
 						if er := me.eat("line"); er != nil {
-	return er
-}
+							return er
+						}
 					} else {
 						goto closing
 					}
 				}
 			closing:
 				if er := me.eat(")"); er != nil {
-	return er
-}
+					return er
+				}
 			}
 			if er := me.eat("line"); er != nil {
-	return er
-}
+				return er
+			}
 			un := unionInit(me.hmfile, name, typeName, unionOrderedData)
 			types = append(types, un)
 			continue

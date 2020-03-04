@@ -13,9 +13,9 @@ func (me *parser) infixConcat(left *node) (*node, *parseError) {
 			return nil, er
 		}
 		if !right.data().isString() {
-			err := me.fail() + "concatenation operation must be strings but found \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
-			err += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
-			panic(err)
+			e := me.fail() + "concatenation operation must be strings but found \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
+			e += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
+			return nil, err(me, ECodeStringConcatenation, e)
 		}
 		node.push(right)
 	}
@@ -39,13 +39,13 @@ func infixBinary(me *parser, left *node, op string) (*node, *parseError) {
 		return nil, er
 	}
 	if !left.data().isNumber() || !right.data().isNumber() {
-		err := me.fail() + "operation expected numbers but was \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
-		err += "\n\nleft: " + left.string(me.hmfile, 0) + "\n\nright: " + right.string(me.hmfile, 0)
-		panic(err)
+		e := me.fail() + "operation expected numbers but was \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
+		e += "\n\nleft: " + left.string(me.hmfile, 0) + "\n\nright: " + right.string(me.hmfile, 0)
+		return nil, err(me, ECodeOperationExpectedNumber, e)
 	}
 	if leftdata.notEquals(right.data()) {
-		err := me.fail() + "number types do not match \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
-		panic(err)
+		e := me.fail() + "number types do not match \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
+		return nil, err(me, ECodeNumberTypeMismatch, e)
 	}
 	node.push(left)
 	node.push(right)
@@ -64,9 +64,9 @@ func infixBinaryInt(me *parser, left *node, op string) (*node, *parseError) {
 		return nil, er
 	}
 	if !left.data().isAnyIntegerType() || !right.data().isAnyIntegerType() || left.data().notEquals(right.data()) {
-		err := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
-		err += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
-		panic(err)
+		e := me.fail() + "operation requires discrete integers \"" + left.data().print() + "\" and \"" + right.data().print() + "\""
+		e += "\nleft: " + left.string(me.hmfile, 0) + "\nright: " + right.string(me.hmfile, 0)
+		return nil, err(me, ECodeOperationRequiresDiscreteNumber, e)
 	}
 	node.push(left)
 	node.push(right)

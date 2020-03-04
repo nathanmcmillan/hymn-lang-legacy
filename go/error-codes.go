@@ -100,4 +100,8 @@ const (
 	ECodeLiteralMismatch                 = 95
 	ECodeUnexpectedType                  = 96
 	ECodeTypeMismatch                    = 97
+	ECodeStringConcatenation             = 98
+	ECodeOperationExpectedNumber         = 99
+	ECodeNumberTypeMismatch              = 100
+	ECodeOperationRequiresDiscreteNumber = 101
 )

@@ -87,7 +87,7 @@ gather:
 	report := b.String()
 
 	e := &parseError{}
-	e.code = 1
+	e.code = code
 	e.description = parser.fail() + description
 	e.trace = stacktrace
 	e.lines = lines
@@ -108,5 +108,10 @@ func (me *parseError) print() string {
 	out += "\n--------------------------------------------------------------------------------\n"
 	out += me.trace
 
+	return out
+}
+
+func (me *parseError) simple() string {
+	out := fmt.Sprintf("Code: %04d\n", me.code)
 	return out
 }

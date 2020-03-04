@@ -12,13 +12,13 @@ enum either<a,b>
     first(value a)
     second(value b, additional string)
 
-function main   
-    v = vec(x:12, y:23.34, g:"hello world")
-    echo("x :=", v.x, "y :=", v.y, "z :=", v.z)
+def main()   
+    v = vec(12, 23.34, "hello world")
+    echo("x =", v.x, "y =", v.y, "z =", v.z)
     e = either<int,float>.first(66)
     match e
-        first(f) => echo("first :=", f.value)
-        second(s) => echo("second :=", s.value, s.additional)
+        first(f)  => echo("first =", f.value)
+        second(s) => echo("second =", s.value, s.additional)
 ```
 
 Learn more at https://hymn-lang.org

@@ -1,0 +1,25 @@
+import "parser"
+import "errors" (parse_error)
+import "codes"
+
+def file_expression(p parser) maybe<parse_error>
+    token = p.token
+    op = token.name
+    match op
+        "import" => pass
+        "const" => pass
+        "mutable" => pass
+        "def" | "id" => pass
+        "class" => pass
+        "interface" => pass
+        "enum" => pass
+        "macro" => pass
+        "ifdef" => pass
+        "elsedef" => pass
+        "enddef" => pass
+        "comment" => pass
+        "line" | "eof" => pass
+        _ =>
+            description = sprintf("Unknown top level expression `%s`", op)
+            return errors.new(p, codes.unexpected_token, description)
+    return none

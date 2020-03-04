@@ -1,4 +1,4 @@
-import "hashmap" (hashmap, new_str_map)
+import "${std}/hashmap" (hashmap, new_str_map)
 import "hmlib" (hm_lib, new_hm_lib)
 import "hmfile" (hm_file)
 import "flags" (flags)

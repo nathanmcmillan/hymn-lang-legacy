@@ -1,0 +1,11 @@
+import "parser"
+
+class parse_error
+    code uint
+    description string
+
+def new(p parser, code uint, description string) parse_error
+    return parse_error (
+        code: code
+        description: description
+    )

@@ -1,4 +1,4 @@
-import "hashset" (new_str_set)
+import "${std}/hashset" (new_str_set)
 
 const token_int_literal     = "int-v"
 const token_float_literal   = "float-v"

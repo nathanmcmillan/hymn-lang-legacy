@@ -1,4 +1,4 @@
-import "hashmap" (
+import "${std}/hashmap" (
     hashmap
     new_str_map
 )

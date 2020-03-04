@@ -62,7 +62,7 @@ func (me *parser) defineClass() *parseError {
 				if len(generics) != len(in.generics) {
 					e := me.fail()
 					e += "Class '" + name + "' implementing interface '" + in.name + "' does not have correct generics."
-					panic(e)
+					return err(me, ECodeClassAndInterfaceMissingGenerics, e)
 				}
 				intname := in.name + genericslist(generics)
 				if gotInterface, ok := interfaceModule.interfaces[intname]; ok {

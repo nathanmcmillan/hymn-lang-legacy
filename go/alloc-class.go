@@ -5,14 +5,14 @@ import (
 	"strconv"
 )
 
-func (me *parser) pushAllDefaultClassParams(n *node) {
+func (me *parser) pushAllDefaultClassParams(n *node) *parseError {
 	cl, ok := n.data().isClass()
 	if !ok {
-		panic(me.fail())
+		return erc(me, ECodeClassTypeExpected)
 	}
 	vars := cl.variables
 	params := make([]*node, len(vars))
-	me.pushClassParams(n, cl, params, cl.name)
+	return me.pushClassParams(n, cl, params, cl.name)
 }
 
 func (me *parser) pushClassParams(n *node, classDef *class, params []*node, typed string) *parseError {

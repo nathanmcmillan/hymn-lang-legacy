@@ -71,11 +71,7 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 		return me.compileUnionMemberVariable(n)
 	}
 	if op == "call" {
-		n, er := me.compileCall(n)
-		if er != nil {
-			panic(er.description)
-		}
-		return n
+		return me.compileCall(n)
 	}
 	if op == "array" {
 		return me.compileAllocArray(n)

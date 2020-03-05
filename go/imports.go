@@ -16,21 +16,6 @@ func (me *parser) importing() *parseError {
 	}
 
 	value = variableSubstitution(value, me.hmfile.program.shellvar)
-	absolute, er := filepath.Abs(value)
-	if er != nil {
-		return err(me, ECodeImportPath, "Failed to parse import \""+value+"\". "+er.Error())
-	}
-
-	alias := filepath.Base(absolute)
-	if me.token.is == "as" {
-		if er := me.eat("as"); er != nil {
-			return er
-		}
-		alias = me.token.value
-		if er := me.eat("id"); er != nil {
-			return er
-		}
-	}
 
 	statics := make([]string, 0)
 	if me.token.is == "(" {
@@ -65,14 +50,25 @@ func (me *parser) importing() *parseError {
 
 	module := me.hmfile
 
-	path, er := filepath.Abs(filepath.Join(module.program.directory, value+".hm"))
-	if er != nil {
-		return err(me, ECodeImportPath, "Failed to parse import \""+value+"\". "+er.Error())
+	path := value + ".hm"
+	if !filepath.IsAbs(path) {
+		var er error
+		path, er = filepath.Abs(filepath.Join(module.program.directory, path))
+		if er != nil {
+			return err(me, ECodeImportPath, er.Error())
+		}
 	}
 
-	fmt.Println("debug 1 ::", value)
-	fmt.Println("debug 2 ::", absolute) // this is wrong
-	fmt.Println("debug 3 ::", path)     // this is also wrong
+	alias := filepath.Base(value)
+	if me.token.is == "as" {
+		if er := me.eat("as"); er != nil {
+			return er
+		}
+		alias = me.token.value
+		if er := me.eat("id"); er != nil {
+			return er
+		}
+	}
 
 	var importing *hmfile
 	found, ok := module.program.hmfiles[path]
@@ -84,7 +80,7 @@ func (me *parser) importing() *parseError {
 	} else {
 		out, fer := filepath.Abs(filepath.Join(module.program.out, value))
 		if fer != nil {
-			return err(me, ECodeImportPath, "Failed to parse import \""+value+"\". "+er.Error())
+			return err(me, ECodeImportPath, fer.Error())
 		}
 
 		var er *parseError

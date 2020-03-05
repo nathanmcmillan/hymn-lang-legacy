@@ -5,6 +5,8 @@ import "codes"
 def file_expression(p parser) maybe<parse_error>
     token = p.token
     op = token.name
+    if x < b
+        echo foo
     match op
         "import" => pass
         "const" => pass

@@ -204,7 +204,7 @@
 			}
 		},
 		{
-			"match": "(\\w+) *(\\(|<)",
+			"match": "(\\w+)(?=<.*>\\()",
 			"captures": {
 				"1": {
 					"name": "support.function.hymn"
@@ -212,7 +212,7 @@
 			}
 		},
 		{
-			"match": "\\.(\\w+) *\\(",
+			"match": "\\.?(\\w+) *\\(",
 			"captures": {
 				"1": {
 					"name": "support.function.hymn"
@@ -228,7 +228,7 @@
 			}
 		},
 		{
-			"match": "\\b(>=|<=|!=|<|>|==)\\b",
+			"match": "(?<= )(>=|<=|!=|<|>|==)(?= +)",
 			"captures": {
 				"1": {
 					"name": "keyword.operator.comparison.hymn"

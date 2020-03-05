@@ -11,3 +11,8 @@ def new(p parser, code uint, description string) parse_error
         description: description
         line: p.line
     )
+
+def parse_error.out() string
+    mutable out = ""
+    out += sprintf("Code: %04d", self.code)
+    return out

@@ -21,9 +21,8 @@ def exec_compile(flag flags) either<string,parse_error>
     return either.left("")
 
 # todo
-# module name cannot share same name as anything inside of it?
-# otherwise how to know if something is reference the module itself
-# or a class/enum with a member variable?
+# if a module shares the same name as an enum inside it
+# then the enum member names must not conflict with anything else in the module 
 
 def help
     echo("Hymn command line interface.")
@@ -38,7 +37,7 @@ def help
     echo("    build    compile a program")
     echo("")
 
-def main(args []string) int
+def main(args []string)
 
     iterate i, a in args
         printf("args %d: %s\n", i, a)
@@ -49,12 +48,11 @@ def main(args []string) int
 
     if flag.help or flag.path == "" or flag.hmlib == ""
         help()
-        return 1
+        exit(1)
 
     result = exec_compile()
     
     # if result is parse_error(e)
-    #     echo(e.print())
-    #     return 1
-
-    return 0
+    if result is right(r)
+        echo(r.value.out())
+        exit(1)

@@ -1,10 +1,10 @@
-foo(x int) int
+def foo(x int) int
     return x + 2
 
-bar(x int, y int) int
+def bar(x int, y int) int
     return x + y
 
-main
+def main
     x = 3
     y = 4
     # 9 == 10 

@@ -1,4 +1,4 @@
-main
+def main
     mutable p = system("ls")
     size = len(p) 
     if p[size - 1] == '\n'

@@ -1,32 +1,32 @@
-less(a int, b int) bool
+def less(a int, b int) bool
     return a < b
 
-ls(a int, b int) bool
+def ls(a int, b int) bool
     if a < b
         return true
     return false
 
-gr(a int, b int) bool
+def gr(a int, b int) bool
     if a > b
         return true
     return false
 
-le(a int, b int) bool
+def le(a int, b int) bool
     if a <= b
         return true
     return false
 
-ge(a int, b int) bool
+def ge(a int, b int) bool
     if a >= b
         return true
     return false
 
-eq(a int, b int) bool
+def eq(a int, b int) bool
     if a == b
         return true
     return false
 
-main
+def main
     # this is a comment 
     x = 2
     y = 2

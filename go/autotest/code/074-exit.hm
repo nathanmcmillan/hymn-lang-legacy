@@ -1,4 +1,4 @@
-main
+def main
     x = true
     if x
         echo("exiting...")

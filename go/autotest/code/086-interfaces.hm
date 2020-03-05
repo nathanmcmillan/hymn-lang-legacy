@@ -15,25 +15,25 @@ class bar
     two   int
     three uint8
 
-foo get() int
+def foo.get() int
     return self.one
 
-foo set(value int)
+def foo.set(value int)
     self.one = value
 
-bar get() int
+def bar.get() int
     return self.two
 
-bar set(value int)
+def bar.set(value int)
     self.two = value
 
-bar read() uint8
+def bar.read() uint8
     return self.three + uint8 1
 
-bar write(value uint8)
+def bar.write(value uint8)
     self.three += value
 
-main
+def main
     f = foo(2)
     f.set(3)
     echo(f.get())

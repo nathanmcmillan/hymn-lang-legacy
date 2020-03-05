@@ -15,22 +15,22 @@ class bar<k,v>
     two   k
     three v
 
-foo get() int
+def foo.get() int
     return self.one
 
-foo set(value int)
+def foo.set(value int)
     self.one = value
 
-bar get() k
+def bar.get() k
     return self.two
 
-bar set(value k)
+def bar.set(value k)
     self.two = value
 
-bar read() k
+def bar.read() k
     return self.get()
 
-bar write(value v)
+def bar.write(value v)
     self.three = value
 
 def main

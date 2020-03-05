@@ -1,4 +1,4 @@
-main
+def main
     x = 0
     z = 10
 

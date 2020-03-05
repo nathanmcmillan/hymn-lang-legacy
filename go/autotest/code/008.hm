@@ -1,4 +1,4 @@
-main
+def main
     i = [3]int
     i[1] = 5
     echo(i[1])

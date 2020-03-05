@@ -7,14 +7,14 @@ import "./math" (
 
 const self_pi = "tasty"
 
-self_power() string
+def self_power() string
     return "pow"
 
-extra(fl float, mv vec) vec
+def extra(fl float, mv vec) vec
     mv.x += fl
     return mv
 
-main
+def main
     echo(self_pi)
     echo(pi)
     

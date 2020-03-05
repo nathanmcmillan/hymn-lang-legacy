@@ -1,7 +1,7 @@
-get() int
+def get() int
     return 3 + 4 * 5 + 6
 
-main
+def main
     x = get()
     echo(x)
     echo(get())

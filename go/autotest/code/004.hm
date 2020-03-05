@@ -6,7 +6,7 @@ class bar
     c foo
     d string
 
-main
+def main
     x = foo()
     z = bar()
     z.c = x

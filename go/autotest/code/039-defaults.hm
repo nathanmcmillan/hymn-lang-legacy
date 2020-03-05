@@ -2,14 +2,14 @@ class vec
     a int
     b int
 
-vec dot(x:5 int, z:7 int)
+def vec.dot(x:5 int, z:7 int)
     echo("dot")
     self.a = x
     self.b = z
     echo(self.a)
     echo(self.b)
 
-main
+def main
     v = vec()
     v.dot()
     v.dot(x:9)

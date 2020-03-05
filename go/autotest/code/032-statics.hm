@@ -5,17 +5,17 @@ const name = "foo"
 const foo_pool = [3]foo
 const foo_single = foo()
 
-new_array() [6]foo
+def new_array() [6]foo
     return [6]foo
 
 const foo_cool = new_array()
 
 mutable next_id = 0
 
-do_update(z int)
+def do_update(z int)
     next_id += z
 
-main
+def main
     next_id += 1
     echo(next_id)
     do_update(2)

@@ -6,13 +6,13 @@ class stream
     line int
     col  int
 
-new_stream(data string) stream
+def new_stream(data string) stream
     return stream (
         data: data
         line: 1
     )
 
-stream next() char
+def stream.next() char
     c = self.data[self.pos]
     self.pos += 1
     if c == '\n'
@@ -22,16 +22,16 @@ stream next() char
         self.col += 1
     return c
 
-stream peek() char
+def stream.peek() char
     return self.data[self.pos]
 
-stream double_peek() char
+def stream.double_peek() char
     return self.data[self.pos + 1]
 
-stream eof() bool
+def stream.eof() bool
     return self.pos == len(self.data)
 
-stream fail() string
+def stream.fail() string
     data = self.data
     c = data[self.pos]
     b = new_big_string()

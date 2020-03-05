@@ -1,13 +1,13 @@
-bar(x int)
+def bar(x int)
     if x > 10
         pass
     else
         echo("yo!")
 
-foo
+def foo
     pass
     
-main
+def main
     foo()
     bar(20)
     echo("done!")

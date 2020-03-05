@@ -1,7 +1,7 @@
-get() string
+def get() string
     return "hello world"
 
-main
+def main
     x = get()
     echo(x)
     echo(get())

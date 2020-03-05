@@ -7,7 +7,7 @@ class vec
     y int
     z int
 
-main
+def main
     z = attribute (
         on: true
         has: attribute (

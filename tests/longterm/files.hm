@@ -1,4 +1,4 @@
-main
+def main
     y = open("files.tree", "r")
     echo(y.read_all())
     y.close()

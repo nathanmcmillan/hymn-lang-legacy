@@ -1,4 +1,4 @@
-main
+def main
     if true
         echo("true")
     if false

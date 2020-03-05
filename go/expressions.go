@@ -15,7 +15,7 @@ func (me *parser) fileExpression() *parseError {
 		return me.immutable()
 	} else if op == "mutable" {
 		return me.mutable()
-	} else if op == "def" || op == "id" {
+	} else if op == "def" {
 		return me.defineNewFunction()
 	} else if op == "class" {
 		return me.defineClass()
@@ -258,10 +258,8 @@ func (me *parser) parseReturn() (*node, *parseError) {
 }
 
 func (me *parser) defineNewFunction() *parseError {
-	if me.token.is == "def" {
-		if er := me.eat("def"); er != nil {
-			return er
-		}
+	if er := me.eat("def"); er != nil {
+		return er
 	}
 	name := me.token.value
 	if _, ok := me.hmfile.classes[name]; ok {

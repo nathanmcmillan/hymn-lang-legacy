@@ -1,4 +1,4 @@
-main
+def main
     y = []int(2, 3, 5, 7, 11, 13)
     echo(len(y))
     echo(cap(y))

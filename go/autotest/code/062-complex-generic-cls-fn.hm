@@ -7,20 +7,20 @@ class foo<k,v>
     total    int
     weight   char
 
-transform(one string) string
+def transform(one string) string
     return "transform_" + one
 
-foo set(one k, two v)
+def foo.set(one k, two v)
     self.list[0] = one
     self.im_list[1] = two
 
-foo get_size() k
+def foo.get_size() k
     return self.size
 
-foo get_total() int
+def foo.get_total() int
     return self.total
 
-foo do_special(one v, in_two v) v
+def foo.do_special(one v, in_two v) v
     mutable x = none<v>
     x = one
     match x
@@ -30,7 +30,7 @@ foo do_special(one v, in_two v) v
         none => pass
     return in_two
 
-main
+def main
     g = foo(
         size:22.33
         name:"zoob"

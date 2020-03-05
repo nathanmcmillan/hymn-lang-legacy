@@ -22,7 +22,7 @@ class node<t,w>
     use   attribute<string>
     nest  attribute<t>
 
-main
+def main
     f = node<float,string>()
     f.use = attribute()
     f.nest = attribute()

@@ -21,10 +21,10 @@ def new_tokenizer(file_stream stream) tokenizer
         size: len(file_stream.data)
     )
 
-tokenizer new_simple_token(name string) token
+def tokenizer.new_simple_token(name string) token
     return new_token(self.depth, name)
 
-tokenizer get(pos int) token
+def tokenizer.get(pos int) token
     if pos < len(self.tokens)
         return self.tokens[pos]
     return self.eof

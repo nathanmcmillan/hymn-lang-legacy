@@ -1,7 +1,7 @@
 class foo
     x []int
 
-main
+def main
     f = foo()
     f.x = [3:]int
     f.x[0] = 88

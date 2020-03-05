@@ -1,4 +1,4 @@
-main
+def main
     mutable i = 0
     while
         echo("loop!")

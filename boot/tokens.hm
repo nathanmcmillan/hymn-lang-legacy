@@ -48,7 +48,7 @@ class token
     name  string
     value string
 
-token to_string() string
+def token.to_string() string
     mutable s = "{depth:" + str(self.depth) + ", type:" + self.name
     if self.value != ""
         s += ", value:" + self.value

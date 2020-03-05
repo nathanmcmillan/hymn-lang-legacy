@@ -5,7 +5,7 @@ class foo
 class goobie
   x []int
 
-test_a
+def test_a
     mutable x = []foo
     w = foo(1.0, 2.0)
     t = foo(3.0, 4.0)
@@ -16,7 +16,7 @@ test_a
     echo(x[1].y)
     echo("---")
 
-test_b
+def test_b
     mutable x = []int
     w = 33
     t = 44
@@ -27,7 +27,7 @@ test_b
     echo(x[1])
     echo("---")
 
-test_c
+def test_c
     mutable x = []foo
     x = push(x, foo(1.0, 2.0))
     x = push(x, foo(3.0, 4.0))
@@ -36,21 +36,21 @@ test_c
     echo(x[1].y)
     echo("---")
 
-test_d
+def test_d
     plain = [3]foo
     w = foo(5.0, 6.0)
     plain[0] = w
     echo(plain[0].x)
     echo("---")
 
-test_e
+def test_e
     f = goobie()
     f.x = []int
     f.x = push(f.x, 88)
     echo(f.x[0])
     echo("---")
 
-main
+def main
     test_a()
     test_b()
     test_c()

@@ -36,10 +36,10 @@ def new() flags
         path: new_item("p", "path", "path to main hymn file", "")
     )
 
-item help() string
+def item.help() string
     return "-" + self.short + " -- " + self.long + "    " + self.description
 
-flags print_help()
+def flags.print_help()
     echo(self.cc.help())
     echo(self.path.help())
     echo(self.hmlib.help())

@@ -1,5 +1,5 @@
 
-main
+def main
     s = "This is a string declared \
     on multiple lines, although it \      
     will be printed on one line."

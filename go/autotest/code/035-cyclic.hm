@@ -2,7 +2,7 @@ class vec
     x    float
     nest maybe<vec>
 
-main
+def main
     a = vec()
     a.x = 3.1
     a.nest = vec()

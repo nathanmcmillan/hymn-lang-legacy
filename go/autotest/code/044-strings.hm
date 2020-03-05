@@ -1,4 +1,4 @@
-main
+def main
     one = "foo"
     two = "bar"
     three = one + " " + two

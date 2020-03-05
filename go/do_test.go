@@ -11,6 +11,7 @@ import (
 )
 
 func TestCompile(t *testing.T) {
+	printStacktrace = false
 	args := os.Args
 	min := 0
 	max := int(math.MaxUint32 >> 1)

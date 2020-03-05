@@ -12,37 +12,37 @@ enum liquid
     beer
     wine
 
-goob(b bug) string
+def goob(b bug) string
     match b
         ant => return "glob ant!"
         bee => return "glob bee!"
         moth => return "glob moth!"
     
-doob(d dog) string
+def doob(d dog) string
     match d
         bark => return "bark!"
         woof => echo("ha!")
     return "woof!"
 
-zoob(b bug.ant) string
+def zoob(b bug.ant) string
     return "zoob " + str(b.value) + "!"
 
-moob(b liquid.soda) string
+def moob(b liquid.soda) string
     return "moob " + b.z + "!"
 
-foob() bug.ant
+def foob() bug.ant
     return bug.ant(5)
 
-noob() liquid
+def noob() liquid
     return liquid.soda("1", "2", "3")
 
-numby() int
+def numby() int
     return 2
 
-big_ant() bug
+def big_ant() bug
     return bug.ant(3)
 
-main
+def main
     b = big_ant()
     echo(zoob(b))
     echo(goob(b))

@@ -1,4 +1,4 @@
-main
+def main
     c = 'w'
     i = 987
     f = 3.45

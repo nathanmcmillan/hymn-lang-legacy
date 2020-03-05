@@ -1,5 +1,5 @@
 
-main
+def main
     mutable x = [3:5]int
     echo(len(x))
     echo(cap(x))

@@ -11,7 +11,7 @@ class hm_lib
     types         hashmap<string, string>
     classes       hashmap<string, hm_class>
 
-new_hm_lib() hm_lib
+def new_hm_lib() hm_lib
     return hm_lib (
         functions: new_str_map<hm_function>()
         function_list: _

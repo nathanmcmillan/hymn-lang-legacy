@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const (
+var (
 	printStacktrace = true
 )
 
@@ -105,6 +105,7 @@ func (me *parseError) print() string {
 		out += "\n\n--------------------------------------------------------------------------------\n"
 		out += me.trace
 	}
+	out += "\n\n"
 	return out
 }
 

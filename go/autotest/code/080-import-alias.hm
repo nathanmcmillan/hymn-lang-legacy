@@ -2,14 +2,14 @@ import "math" as mathematics
 
 const pi = "tasty"
 
-power() string
+def power() string
     return "pow"
 
-extra(fl float, mv mathematics.vec) mathematics.vec
+def extra(fl float, mv mathematics.vec) mathematics.vec
     mv.x += fl
     return mv
 
-main
+def main
     echo(pi)
     echo(mathematics.pi)
     

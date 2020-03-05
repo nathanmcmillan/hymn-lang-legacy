@@ -1,11 +1,11 @@
 class foo
     x int
 
-foo get(z int) string
+def foo.get(z int) string
     self.x += z
     return "stuff did"
 
-main
+def main
     f = foo()
     f.x = 3
     s = f.get(2)

@@ -10,13 +10,13 @@ enum kitten
     meow(kitty int)
     hiss(cat float)
 
-doggo() dog
+def doggo() dog
     return dog.bark
 
-kitty() kitten
+def kitty() kitten
     return kitten.meow(288)
 
-main
+def main
     a = vec()
     a.x = 3.1
     a.nest = vec()

@@ -1,6 +1,6 @@
 const uint64_max = uint64 2000000
 
-string_hashcode(key string) int
+def string_hashcode(key string) int
     mutable pos = 0
     mutable value = uint64 0
     length = len(key)
@@ -20,10 +20,10 @@ class hashset<i>
     get_code (i) int
     table    []maybe<hashset_item<i>>
 
-hashset get_bin(code int) int
+def hashset.get_bin(code int) int
     return code % self.capacity
 
-hashset add(key i)
+def hashset.add(key i)
     code = self.get_code(key)
     bin = self.get_bin(code)
     mutable element = self.table[bin]
@@ -40,7 +40,7 @@ hashset add(key i)
         none => self.table[bin] = item
     self.size += 1
 
-hashset has(key i) bool
+def hashset.has(key i) bool
     code = self.get_code(key)
     bin = self.get_bin(code)
     mutable element = self.table[bin]
@@ -50,7 +50,7 @@ hashset has(key i) bool
         element = s.next
     return false
 
-hashset delete(key i) bool
+def hashset.delete(key i) bool
     code = self.get_code(key)
     bin = self.get_bin(code)
     mutable element = self.table[bin]
@@ -66,12 +66,12 @@ hashset delete(key i) bool
         element = s.next
     return false
     
-hashset clear()
+def hashset.clear()
     iterate i, _ in self.table
         self.table[i] = none
     self.size = 0
 
-new_str_set() hashset<string>
+def new_str_set() hashset<string>
     return hashset (
         capacity: 12
         get_code: string_hashcode

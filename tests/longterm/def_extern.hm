@@ -1,6 +1,6 @@
 
-extern foobar(in int) int
+def extern.foobar(in int) int
 
-main
+def main
   mutable x = foobar(4)
   echo(x)

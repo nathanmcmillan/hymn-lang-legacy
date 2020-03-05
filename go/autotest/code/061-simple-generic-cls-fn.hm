@@ -4,14 +4,14 @@ class foo<k,v>
 
 const thingy = "foo!"
 
-foo set_name(name v)
+def foo.set_name(name v)
     echo(thingy)
     self.name = name
 
-foo get_size() k
+def foo.get_size() k
     return self.size
 
-main
+def main
     echo(thingy)
     f = foo (
         size: 22.33

@@ -1,4 +1,4 @@
-main
+def main
     mutable x = 2
     x += 2
     x -= 1

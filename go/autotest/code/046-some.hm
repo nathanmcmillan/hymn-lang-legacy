@@ -7,20 +7,20 @@ class bar
     ge maybe<vec>
     ne maybe<bar>
 
-foo(w maybe<vec>) maybe<vec>
+def foo(w maybe<vec>) maybe<vec>
     match w
         some(s) => echo("foo some " + str(s.x))
         none => echo("foo none")
     return w
 
-zoo(v vec) maybe<vec>
+def zoo(v vec) maybe<vec>
     v.x = 2
     return v
 
-moo(v none<vec>) maybe<vec>
+def moo(v none<vec>) maybe<vec>
     return v
 
-main
+def main
     a = none<vec>
     b = vec()
     c = foo(a)

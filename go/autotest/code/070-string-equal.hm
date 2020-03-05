@@ -1,4 +1,4 @@
-main
+def main
     a = "foo"
     b = "foo"
     c = "foo"

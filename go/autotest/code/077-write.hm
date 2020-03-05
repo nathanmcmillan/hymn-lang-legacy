@@ -1,4 +1,4 @@
-main
+def main
     mutable pwd = system("pwd")
     mutable size = len(pwd) 
     if pwd[size - 1] == '\n'

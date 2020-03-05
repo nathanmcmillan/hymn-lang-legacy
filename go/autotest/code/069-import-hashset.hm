@@ -1,6 +1,6 @@
 import "hashset"
 
-main
+def main
     echo("--- start hashset import ---")
 
     m = hashset.hashset(

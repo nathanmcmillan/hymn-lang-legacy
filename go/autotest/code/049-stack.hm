@@ -11,16 +11,16 @@ class poo
     z 'foo
     w 'zoo
 
-hello(f foo) int
+def hello(f foo) int
     return f.data + 1
 
-load() poo
+def load() poo
     p = poo()
     p.z.data = 24
     p.w.y = 25
     return p
 
-main
+def main
     f = $foo(22)
     echo(f.data)
     echo(hello(f))

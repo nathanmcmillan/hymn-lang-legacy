@@ -1,4 +1,3 @@
-
 enum either<x,y>
     one (
         value x
@@ -17,13 +16,13 @@ enum zoink<x,y,z>
         eee z
     )
 
-exec_parse() either<string, int>
+def exec_parse() either<string, int>
     return either.two(15)
 
-exec_compile() either<string, int>
+def exec_compile() either<string, int>
     return either.one("ooh wee!")
 
-exec_boink() zoink<string, int, float>
+def exec_boink() zoink<string, int, float>
     return zoink.foo("boink!", 3)
 
 def main()

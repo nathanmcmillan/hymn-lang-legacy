@@ -1,4 +1,4 @@
-int_hashcode(key int) int
+def int_hashcode(key int) int
     return key
 
 class hashtable_item<k,v>
@@ -13,14 +13,14 @@ class hashtable<k,v>
     get_code (k) int
     table    []maybe<hashtable_item<k,v>>
 
-new_hashtable<k,v>(hash (k) int) hashtable<k,v>
+def new_hashtable<k,v>(hash (k) int) hashtable<k,v>
     table = hashtable(
         capacity: 12
         get_code: hash
         table: [0:12]maybe<hashtable_item<k,v>>)
     return table
 
-main
+def main
     m = new_hashtable<int,float>(int_hashcode)
     echo(m.size)
     echo(m.capacity)

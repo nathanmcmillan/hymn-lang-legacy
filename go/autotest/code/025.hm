@@ -1,4 +1,4 @@
-main
+def main
     xtrue = true
     xfalse = false
     xstring = "hello"

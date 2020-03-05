@@ -2,7 +2,7 @@ class foo
     a int
     b string
 
-main
+def main
     x = foo()
     x.a = 2
     x.b = "hi"

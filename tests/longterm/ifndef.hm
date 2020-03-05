@@ -8,7 +8,7 @@ elsedef
 const beans = bar
 enddef
 
-main
+def main
   echo(beans)
   echo(4 + num)
 

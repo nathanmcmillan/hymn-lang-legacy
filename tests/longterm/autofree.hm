@@ -7,5 +7,5 @@ glob
   echo(v.x)
   # free(v) 
 
-main
+def main
   glob()

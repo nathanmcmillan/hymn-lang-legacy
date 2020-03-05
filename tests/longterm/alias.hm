@@ -5,10 +5,10 @@ alias echo = foo
 alias zoo  = boo
 alias int  = size
 
-fun(i size)
+def fun(i size)
     echo("size = " + str(i))
 
-main
+def main
     foo("alias of echo")
     b = boo(s:"alias of zoo")
     foo(b.s)

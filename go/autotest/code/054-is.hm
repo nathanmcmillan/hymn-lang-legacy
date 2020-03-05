@@ -2,15 +2,15 @@ enum foo
     hello(value int)
     world(value string)
 
-fun(r int) maybe<foo>
+def fun(r int) maybe<foo>
     if r == 2
         return foo.hello(8)
     return none
 
-the_world() foo
+def the_world() foo
     return foo.world("wow")
 
-do_things(f foo)
+def do_things(f foo)
     match f
         hello =>
             echo("hello!")
@@ -18,10 +18,10 @@ do_things(f foo)
             echo("world!")
             echo(w.value)
 
-get_me() foo
+def get_me() foo
     return foo.hello(8)
 
-main
+def main
     mutable e = foo.hello(2)
     if e is hello : if 0 == 0 : echo("#1 hello!")
 

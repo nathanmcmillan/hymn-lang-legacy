@@ -1,4 +1,4 @@
-foo(z []int) []int
+def foo(z []int) []int
     echo("size: " + str(len(z)))
     for i = 0; i < len(z); i += 1
         echo("z[" + str(i) + "]: " + str(z[i]))
@@ -6,7 +6,7 @@ foo(z []int) []int
     echo("z[2]: " + str(z[2]))
     return z
 
-main
+def main
     a = [3]int
     echo("size: " + str(len(a)))
     for i = 0; i < len(a); i += 1

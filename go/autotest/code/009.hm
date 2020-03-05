@@ -1,4 +1,4 @@
-main
+def main
     x = 3
     i = [x]int
     y = 2

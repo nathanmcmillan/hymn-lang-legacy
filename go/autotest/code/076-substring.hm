@@ -1,4 +1,4 @@
-main
+def main
     f = "hello world"
     c = substring(f, 0, len(f))
     h = substring(f, 0, 5)

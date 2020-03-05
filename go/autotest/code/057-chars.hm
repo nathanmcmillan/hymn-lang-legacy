@@ -1,4 +1,4 @@
-main
+def main
     x = 'a'
     echo(x)
     s = "hello worl" + str('d')

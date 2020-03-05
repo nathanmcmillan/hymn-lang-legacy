@@ -14,7 +14,7 @@ class node<t,w>
     e tuple<tuple<t, t>, tuple<w, w>>
     f []t
 
-main
+def main
     f = node<string, int>()
     
     f.a = [3:]attribute

@@ -1,20 +1,20 @@
-fmt(x:5 int)
+def fmt(x:5 int)
     echo("fmt")
     echo(x)
 
-many(x:3 int, z:"def" string)
+def many(x:3 int, z:"def" string)
     echo("many")
     echo(x)
     echo(z)
 
-partial(a int, b string, c:10 int, d:"fed" string)
+def partial(a int, b string, c:10 int, d:"fed" string)
     echo("partial")
     echo(a)
     echo(b)
     echo(c)
     echo(d)
 
-main
+def main
     fmt()
     fmt(_)
     fmt(6)

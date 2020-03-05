@@ -165,6 +165,9 @@ func (me *parser) defineClassFunction() *parseError {
 	if er := me.eat("id"); er != nil {
 		return er
 	}
+	if er := me.eat("."); er != nil {
+		return er
+	}
 	funcName := me.token.value
 	globalFuncName := nameOfClassFunc(class.name, funcName)
 	if er := me.eat("id"); er != nil {

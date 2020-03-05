@@ -11,13 +11,13 @@ enum operation
 
 const pi = 3.1415
 
-power(x int) int
+def power(x int) int
     return x * x
 
-vec dot() float
+def vec.dot() float
     return self.x * self.y * self.z
 
-vec init(x float, y float, z float) vec
+def vec.init(x float, y float, z float) vec
     self.x = x
     self.y = y
     self.z = z

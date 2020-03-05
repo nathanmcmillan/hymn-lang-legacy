@@ -1,4 +1,4 @@
-main
+def main
     x = "foobar"
     echo(x)
     s = len(x)

@@ -1,4 +1,4 @@
-main
+def main
     mutable i = 0
     label start
     echo("i=" + str(i))

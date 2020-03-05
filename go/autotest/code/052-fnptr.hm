@@ -1,22 +1,22 @@
 class typ
     ptr(int) int
 
-fun(ptr() int)
+def fun(ptr() int)
     echo(ptr())
     
-get(x int) int
+def get(x int) int
     return x
 
-get2(x int) int
+def get2(x int) int
     return x * x
 
-get3() int
+def get3() int
     return 4
 
-foo()
+def foo()
     echo("foo")
 
-main
+def main
     a = get
     echo(a(3))
 

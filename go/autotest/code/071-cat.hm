@@ -1,4 +1,4 @@
-main
+def main
     content = cat("071-cat.c")
     iterate i, c in content
         echo(str(i) + ": " + str(c))

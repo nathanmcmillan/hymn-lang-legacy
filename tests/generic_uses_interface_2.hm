@@ -11,29 +11,29 @@ class bar implements get_and_set and read_and_write
     two   int
     three uint8
 
-foo get() int
+def foo.get() int
     return self.one
 
-foo set(value int)
+def foo.set(value int)
     self.one = value
 
-bar get() int
+def bar.get() int
     return self.two
 
-bar set(value int)
+def bar.set(value int)
     self.two = value
 
-bar read() uint8
+def bar.read() uint8
     return self.three + uint8 1
 
-bar write(value uint8)
+def bar.write(value uint8)
     self.three += value
 
 class baz with x:get_and_set and y:get_and_set, read_and_write
     four x
     five y
 
-baz work()
+def baz.work()
     echo(self.four.get())
 
 enum doggo with x:get_and_set and y:read_and_write

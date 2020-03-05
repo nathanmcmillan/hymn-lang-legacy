@@ -17,23 +17,23 @@ class foo implements dynamic get_and_set
 class bar implements dynamic get_and_set
     two int
 
-foo get() int
+def foo.get() int
     return self.one
 
-foo set(value int)
+def foo.set(value int)
     self.one = value
 
-bar get() int
+def bar.get() int
     return self.two
 
-bar set(value int)
+def bar.set(value int)
     self.two = value
 
 class special
     first  get_and_set
     second get_and_set
 
-main
+def main
     f = foo(2)
     echo(f.one)
 

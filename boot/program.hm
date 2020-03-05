@@ -23,8 +23,7 @@ def new() program
         sources: new_str_map<string>()
     )
 
-# def program.parse(flag flags)
-program parse(flag flags)
+def program.parse(flag flags)
     uid = str(self.module_uid)
     self.module_uid += 1
     echo(uid)

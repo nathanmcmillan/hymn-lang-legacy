@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -36,7 +37,8 @@ func (me *parser) fileExpression() *parseError {
 	} else if op == "line" || op == "eof" {
 		return nil
 	} else {
-		return err(me, ECodeUnexpectedToken, "unknown top level expression \""+op+"\"")
+		e := fmt.Sprintf("I did not expect the token `%s` here", op)
+		return err(me, ECodeUnexpectedToken, e)
 	}
 }
 
@@ -328,7 +330,8 @@ func (me *parser) extern() (*node, *parseError) {
 	} else if module.getStatic(idname) != nil {
 		return me.eatvar(module)
 	} else {
-		return nil, err(me, ECodeUnknownType, "external type \""+extname+"."+idname+"\" does not exist")
+		e := fmt.Sprintf("I could not find the external type `%s.%s`", extname, idname)
+		return nil, err(me, ECodeUnknownType, e)
 	}
 }
 

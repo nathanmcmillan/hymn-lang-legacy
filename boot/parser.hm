@@ -4,6 +4,8 @@ import "tokenizer"
 class parser
     out  string
     path string
+    pos  uint
+    line uint
 
 def parse(out string, path string)
     echo(out)

@@ -15,7 +15,7 @@ class program
     sources      hashmap<string, string>
     module_uid   int
 
-def new_program() program
+def new() program
     return program (
         hm_lib_map: new_str_map<string>()
         hm_library: new_hm_lib()
@@ -23,6 +23,7 @@ def new_program() program
         sources: new_str_map<string>()
     )
 
+# def program.parse(flag flags)
 program parse(flag flags)
     uid = str(self.module_uid)
     self.module_uid += 1

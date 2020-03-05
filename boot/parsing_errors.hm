@@ -1,11 +1,13 @@
-import "parser"
+import "parser" (parser)
 
 class parse_error
-    code uint
+    code        uint
     description string
+    line        uint
 
 def new(p parser, code uint, description string) parse_error
     return parse_error (
         code: code
         description: description
+        line: p.line
     )

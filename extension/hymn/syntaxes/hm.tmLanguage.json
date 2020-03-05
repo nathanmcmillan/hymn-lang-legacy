@@ -174,7 +174,7 @@
 			}
 		},
 		{
-			"match": "^(class|enum|def|interface) +(\\w+)",
+			"match": "^(class|enum|def|interface) +(\\w+(?:\\.\\w+)?)",
 			"captures": {
 				"1": {
 					"name": "keyword.struct.hymn"

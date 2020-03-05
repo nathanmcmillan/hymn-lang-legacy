@@ -3,6 +3,7 @@ class flags
     path             string
     hmlib            string
     write_to         string
+    variables        string
     help             bool
     format           bool
     library          bool
@@ -12,4 +13,11 @@ class flags
     info             bool
     optimize         bool
     makefile         bool
+    script           bool
     do_not_compile   bool
+
+def new() flags
+    return flags (
+        cc: "gcc"
+        write_to: "out"
+    )

@@ -106,4 +106,5 @@ const (
 	ECodeOperationRequiresDiscreteNumber  = 101
 	ECodeClassTypeExpected                = 102
 	ECodeClassAndInterfaceMissingGenerics = 103
+	ECodeUnusedVariable                   = 104
 )

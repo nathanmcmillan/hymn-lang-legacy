@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"runtime"
-	"strconv"
 	"strings"
+)
+
+const (
+	printStacktrace = true
 )
 
 type parseLine struct {
@@ -14,12 +17,13 @@ type parseLine struct {
 
 type parseError struct {
 	code        int
+	tokens      string
 	description string
-	module      *hmfile
+	hint        string
 	lines       []*parseLine
-	line        int
 	begin       int
 	end         int
+	module      string
 	report      string
 	trace       string
 }
@@ -29,44 +33,23 @@ func erc(parser *parser, code int) *parseError {
 }
 
 func err(parser *parser, code int, description string) *parseError {
+	return errh(parser, code, description, "")
+}
+
+func errh(parser *parser, code int, description, hint string) *parseError {
 	bytes := make([]byte, 1<<16)
 	runtime.Stack(bytes, true)
 	stacktrace := fmt.Sprintf("%s", bytes)
 
-	lines := make([]*parseLine, 0)
-
+	report := ""
 	stream := parser.tokens.stream
 	content := stream.data
-	pos := stream.pos
 	number := stream.line
 	size := len(content)
-	for pos >= size {
-		pos--
-	}
 
-gather:
-	for i := 0; i < 5; i++ {
-		line := &strings.Builder{}
-		for true {
-			if pos == -1 {
-				break gather
-			}
-			b := content[pos]
-			if b == '\n' {
-				number--
-				break
-			}
-			line.WriteByte(b)
-			pos--
-		}
-		lines = append(lines, &parseLine{number, line.String()})
-		line.Reset()
-	}
-
-	pos = stream.pos
-	b := &strings.Builder{}
 	i := 0
 	line := 0
+find:
 	for {
 		str := &strings.Builder{}
 		for i < size {
@@ -74,6 +57,10 @@ gather:
 			i++
 			str.WriteByte(c)
 			if c == '\n' {
+				if line == number {
+					report = fmt.Sprintf("%d: %s", line, str.String())
+					break find
+				}
 				line++
 				break
 			}
@@ -81,16 +68,17 @@ gather:
 		if str.Len() == 0 {
 			break
 		}
-		b.WriteString(fmt.Sprintf("%d: %s", line, str.String()))
-		b.WriteString("")
 	}
-	report := b.String()
 
 	e := &parseError{}
 	e.code = code
-	e.description = parser.fail() + description
+	e.tokens = parser.fail()
+	e.module = parser.hmfile.name
+	e.description = description
+	if hint != "" {
+		e.hint = "Hint: " + hint
+	}
 	e.trace = stacktrace
-	e.lines = lines
 	e.report = report
 
 	return e
@@ -98,16 +86,25 @@ gather:
 
 func (me *parseError) print() string {
 	out := ""
-	for _, line := range me.lines {
-		out += strconv.Itoa(line.number) + " |     " + line.content + "\n"
+	out += "\n"
+	out += "-- "
+	out += fmt.Sprintf("Code: %04d", me.code)
+	out += " ------------------------------------------------------------------------------ "
+	out += me.module + ".hm"
+	out += "\n\n"
+	out += me.description
+	if me.code == ECodeUnexpectedToken {
+		out += "\n" + me.tokens
 	}
-	out += "--------------------------------------------------------------------------------\n"
+	out += "\n\n"
 	out += me.report
-	out += "--------------------------------------------------------------------------------\n"
-	out += fmt.Sprintf("Code: %04d%s", me.code, me.description)
-	out += "\n--------------------------------------------------------------------------------\n"
-	out += me.trace
-
+	if me.hint != "" {
+		out += "\n\n" + me.hint
+	}
+	if printStacktrace {
+		out += "\n\n--------------------------------------------------------------------------------\n"
+		out += me.trace
+	}
 	return out
 }
 

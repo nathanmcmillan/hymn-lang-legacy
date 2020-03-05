@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type function struct {
 	_name         string
 	_clsname      string
@@ -407,12 +409,12 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 fnEnd:
 	for _, arg := range fn.args {
 		if !arg.used {
-			er := me.fail() + "Variable \"" + arg.name + "\" for function \"" + fname + "\" was unused."
+			e := fmt.Sprintf("I found the variable `%s` for function `%s` is unused.", arg.name, fname)
+			h := ""
 			if arg.name == "self" {
-				er += " Can this be a static function?"
+				h += " This is a class function. Can it be a static?"
 			}
-			panic(er)
-
+			return nil, errh(me, ECodeUnusedVariable, e, h)
 		}
 	}
 	module.popScope()

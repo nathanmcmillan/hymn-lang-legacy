@@ -27,6 +27,7 @@ type flags struct {
 	path            string
 	hmlib           string
 	writeTo         string
+	variables       string
 	help            bool
 	format          bool
 	library         bool
@@ -38,7 +39,6 @@ type flags struct {
 	makefile        bool
 	script          bool
 	doNotCompile    bool
-	variables       string
 }
 
 func fmc(depth int) string {

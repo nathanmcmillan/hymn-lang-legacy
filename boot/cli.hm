@@ -1,0 +1,45 @@
+class item<x>
+    short       string
+    long        string
+    description string
+    value       x
+
+class flags
+    cc               item<string>
+    path             item<string>
+    hmlib            item<string>
+    write_to         item<string>
+    variables        item<string>
+    help             item<bool>
+    format           item<bool>
+    library          item<bool>
+    analysis         item<bool>
+    memory_check     item<bool>
+    sanitize_address item<bool>
+    info             item<bool>
+    optimize         item<bool>
+    makefile         item<bool>
+    script           item<bool>
+    do_not_compile   item<bool>
+
+def new_item<x>(short string, long string, description string, default x) item<x>
+    return item (
+        short: short
+        long: long
+        description: description
+        value: default
+    )
+
+def new() flags
+    return flags (
+        cc: new_item("c", "cc", "specify what compiler to use", "gcc")
+        path: new_item("p", "path", "path to main hymn file", "")
+    )
+
+item help() string
+    return "-" + self.short + " -- " + self.long + "    " + self.description
+
+flags print_help()
+    echo(self.cc.help())
+    echo(self.path.help())
+    echo(self.hmlib.help())

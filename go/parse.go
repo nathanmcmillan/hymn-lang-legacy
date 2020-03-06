@@ -143,6 +143,10 @@ func (me *parser) peek() *token {
 	return me.tokens.get(me.pos + 1)
 }
 
+func (me *parser) doublePeek() *token {
+	return me.tokens.get(me.pos + 2)
+}
+
 func (me *parser) verify(want string) *parseError {
 	token := me.token
 	if token.is != want {

@@ -3,7 +3,7 @@
 # Copyright 2019 Nathan Michael McMillan
 #
 
-import "${std}/enum_either" (either)
+import "${std}/either" (either)
 import "${std}/paths"
 import "program"
 import "flags" (new, flags)

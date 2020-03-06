@@ -301,34 +301,58 @@ func (me *parser) free() (*node, *parseError) {
 }
 
 func (me *parser) extern() (*node, *parseError) {
-	ext := me.token
-	if er := me.eat("id"); er != nil {
+	token1 := me.token
+	if er := me.verify("id"); er != nil {
 		return nil, er
 	}
-	if me.token.is != "." {
-		return nil, err(me, ECodeUnexpectedToken, "expecting \".\" after module name")
-	}
-	if er := me.eat("."); er != nil {
-		return nil, er
-	}
-	extname := ext.value
-	id := me.token
-	if id.is != "id" {
-		return nil, err(me, ECodeUnexpectedToken, "expecting id token after extern "+extname)
-	}
-	idname := id.value
-	module := me.hmfile.imports[extname]
+	token2 := me.peek()
+	token3 := me.doublePeek()
 
-	if _, ok := module.functions[idname]; ok {
+	name := token1.value
+	en, possiblyAnEnum := me.hmfile.enums[name]
+
+	if token2.is != "." {
+		var e string
+		if possiblyAnEnum {
+			e = fmt.Sprintf("I expected `.` to follow after the module or enum `%s`", name)
+		} else {
+			e = fmt.Sprintf("I expected `.` to follow after the module `%s`", name)
+		}
+		return nil, err(me, ECodeUnexpectedToken, e)
+	}
+
+	if token3.is != "id" {
+		var e string
+		if possiblyAnEnum {
+			e = fmt.Sprintf("I expected an identifier to follow after the module or enum `%s`", name)
+		} else {
+			e = fmt.Sprintf("I expected an identifier to follow after the module `%s`", name)
+		}
+		return nil, err(me, ECodeUnexpectedToken, e)
+	}
+
+	id := token3.value
+
+	if possiblyAnEnum {
+		if un := en.getType(id); un != nil {
+			return me.allocEnum(me.hmfile, nil)
+		}
+	}
+
+	me.next()
+	me.next()
+	module := me.hmfile.imports[name]
+
+	if _, ok := module.functions[id]; ok {
 		return me.parseFn(module)
-	} else if _, ok := module.classes[idname]; ok {
+	} else if _, ok := module.classes[id]; ok {
 		return me.allocClass(module, nil)
-	} else if _, ok := module.enums[idname]; ok {
+	} else if _, ok := module.enums[id]; ok {
 		return me.allocEnum(module, nil)
-	} else if module.getStatic(idname) != nil {
+	} else if module.getStatic(id) != nil {
 		return me.eatvar(module)
 	} else {
-		e := fmt.Sprintf("I could not find the external type `%s.%s`", extname, idname)
+		e := fmt.Sprintf("I could not find the external type `%s.%s`", name, id)
 		return nil, err(me, ECodeUnknownType, e)
 	}
 }

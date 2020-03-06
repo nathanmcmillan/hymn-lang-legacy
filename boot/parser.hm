@@ -1,5 +1,6 @@
 import "stream"
 import "tokenizer"
+import "parsing_errors" (parse_error)
 
 class parser
     out  string
@@ -16,3 +17,7 @@ def parse(out string, path string)
     token = tokens.get(0)
     echo(data)
     echo(token.to_string())
+
+def parser.eat(value string) maybe<parse_error>
+    self.verify(value)
+    self.next()

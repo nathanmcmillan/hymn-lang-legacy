@@ -3,7 +3,8 @@
 # Copyright 2019 Nathan Michael McMillan
 #
 
-import "${std}/either" (either)
+# import "${std}/either" (either)
+import "/home/Documents/programming/hymn-lang/std/either"
 import "${std}/paths"
 import "program"
 import "flags" (new, flags)

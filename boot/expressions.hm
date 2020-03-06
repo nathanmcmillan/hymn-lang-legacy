@@ -1,6 +1,7 @@
 import "parser"
-import "errors" (parse_error)
+import "parsing_errors" (parse_error)
 import "codes"
+import "${std}/result" (result)
 
 def file_expression(p parser) maybe<parse_error>
     token = p.token
@@ -23,5 +24,16 @@ def file_expression(p parser) maybe<parse_error>
         "line" | "eof" => pass
         _ =>
             description = sprintf("Unknown top level expression `%s`", op)
-            return errors.new(p, codes.unexpected_token, description)
+            return parsing_errors.new(p, codes.unexpected_token, description)
     return none
+
+def mutable(p parser) result<node,parse_error>
+    if p.eat("mutable") is some(e)
+        return result.error(e)
+
+def goodness(p parser) result<node,parse_error>
+    if p.token.name != "mutable"
+        e = sprintf("")
+        er = parsing_errors.new(p, codes.unexpected_token, e)
+        return result.error(er)
+    p.next()

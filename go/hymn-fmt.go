@@ -7,7 +7,10 @@ import (
 )
 
 func execFormat(path string) {
-	in := read(path)
+	in, er := read(path)
+	if er != nil {
+		panic(er)
+	}
 
 	stream := newStream(in)
 	tokens := tokenize(stream, nil)

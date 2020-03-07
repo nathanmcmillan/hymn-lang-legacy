@@ -61,7 +61,10 @@ func (me *parser) skipLines() {
 
 func (me *hmfile) parse(out, path string) *parseError {
 	name := fileName(path)
-	data := read(path)
+	data, er := read(path)
+	if er != nil {
+		return err(nil, ECodeSystemError, er.Error())
+	}
 
 	var tokenFile *os.File
 	var treeFile *os.File

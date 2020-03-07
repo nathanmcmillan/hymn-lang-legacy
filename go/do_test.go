@@ -67,7 +67,11 @@ func TestCompile(t *testing.T) {
 			if errf != nil {
 				t.Errorf("Compile error for " + info.Name() + ". " + errf.Error())
 			}
-			expected := string(read(tests + "/assert/" + nameNum + ".out"))
+			reading, er := read(tests + "/assert/" + nameNum + ".out")
+			if er != nil {
+				panic(er)
+			}
+			expected := string(reading)
 			if stdout != expected {
 				outln := strings.Split(stdout, "\n")
 				expectln := strings.Split(expected, "\n")
@@ -115,7 +119,11 @@ func TestCompile(t *testing.T) {
 			stdout, errp, errf := execCompile(flags)
 			if errp != nil {
 				errprint := errp.simple()
-				expected := string(read(tests + "/assert/" + nameNum + ".out"))
+				reading, er := read(tests + "/assert/" + nameNum + ".out")
+				if er != nil {
+					panic(er)
+				}
+				expected := string(reading)
 				if errprint != expected {
 					outln := strings.Split(errprint, "\n")
 					expectln := strings.Split(expected, "\n")

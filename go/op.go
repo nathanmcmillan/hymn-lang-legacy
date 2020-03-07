@@ -46,17 +46,17 @@ func scan(path string) []os.FileInfo {
 	return dir
 }
 
-func read(path string) []byte {
+func read(path string) ([]byte, error) {
 	f, err := os.Open(path)
 	defer f.Close()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	contents, err := ioutil.ReadAll(f)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return contents
+	return contents, nil
 }
 
 func exists(path string) bool {
@@ -68,7 +68,19 @@ func exists(path string) bool {
 }
 
 func fileName(path string) string {
-	return path[strings.LastIndex(path, "/")+1 : strings.LastIndex(path, ".")]
+	slash := strings.LastIndex(path, "/")
+	dot := strings.LastIndex(path, ".")
+	if slash == -1 {
+		if dot == -1 {
+			return path
+		}
+		return path[0:dot]
+	} else {
+		if dot == -1 {
+			return path[slash+1:]
+		}
+		return path[slash+1 : dot]
+	}
 }
 
 func fileDir(path string) string {

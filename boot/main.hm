@@ -3,8 +3,7 @@
 # Copyright 2019 Nathan Michael McMillan
 #
 
-# import "${std}/either" (either)
-import "/home/Documents/programming/hymn-lang/std/either"
+import "${std}/result" (result)
 import "${std}/paths"
 import "program"
 import "flags" (new, flags)
@@ -15,15 +14,11 @@ const debug_tokens = true
 const debug_ast = true
 const debug_command = true
 
-def exec_compile(flag flags) either<string,parse_error>
+def exec_compile(flag flags) result<string,parse_error>
     out = paths.abs(flag.write_to)
     p = program.new()
     p.parse(flag)
-    return either.left("")
-
-# todo
-# if a module shares the same name as an enum inside it
-# then the enum member names must not conflict with anything else in the module 
+    return result.ok("")
 
 def help
     echo("Hymn command line interface.")
@@ -54,6 +49,6 @@ def main(args []string)
     result = exec_compile()
     
     # if result is parse_error(e)
-    if result is right(r)
-        echo(r.value.out())
+    if result is error(e)
+        echo(e.value.to_string())
         exit(1)

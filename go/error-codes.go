@@ -107,4 +107,5 @@ const (
 	ECodeClassTypeExpected                = 102
 	ECodeClassAndInterfaceMissingGenerics = 103
 	ECodeUnusedVariable                   = 104
+	ECodeSystemError                      = 105
 )

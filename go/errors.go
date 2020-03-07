@@ -41,44 +41,47 @@ func errh(parser *parser, code int, description, hint string) *parseError {
 	runtime.Stack(bytes, true)
 	stacktrace := fmt.Sprintf("%s", bytes)
 
-	report := ""
-	stream := parser.tokens.stream
-	content := stream.data
-	number := stream.line
-	size := len(content)
-
-	i := 0
-	line := 0
-find:
-	for {
-		str := &strings.Builder{}
-		for i < size {
-			c := content[i]
-			i++
-			str.WriteByte(c)
-			if c == '\n' {
-				if line == number {
-					report = fmt.Sprintf("%d: %s", line, str.String())
-					break find
-				}
-				line++
-				break
-			}
-		}
-		if str.Len() == 0 {
-			break
-		}
-	}
-
 	e := &parseError{}
 	e.code = code
-	e.tokens = parser.fail()
-	e.module = parser.hmfile.name
 	e.description = description
 	if hint != "" {
 		e.hint = "Hint: " + hint
 	}
 	e.trace = stacktrace
+
+	report := ""
+	if parser != nil {
+		e.tokens = parser.fail()
+		e.module = parser.hmfile.name
+
+		stream := parser.tokens.stream
+		content := stream.data
+		number := stream.line
+		size := len(content)
+
+		i := 0
+		line := 0
+	find:
+		for {
+			str := &strings.Builder{}
+			for i < size {
+				c := content[i]
+				i++
+				str.WriteByte(c)
+				if c == '\n' {
+					if line == number {
+						report = fmt.Sprintf("%d: %s", line, str.String())
+						break find
+					}
+					line++
+					break
+				}
+			}
+			if str.Len() == 0 {
+				break
+			}
+		}
+	}
 	e.report = report
 
 	return e

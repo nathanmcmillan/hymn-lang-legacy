@@ -75,12 +75,11 @@ func fileName(path string) string {
 			return path
 		}
 		return path[0:dot]
-	} else {
-		if dot == -1 {
-			return path[slash+1:]
-		}
-		return path[slash+1 : dot]
 	}
+	if dot == -1 {
+		return path[slash+1:]
+	}
+	return path[slash+1 : dot]
 }
 
 func fileDir(path string) string {

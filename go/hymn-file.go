@@ -39,6 +39,7 @@ type hmfile struct {
 	needStatic      bool
 	assignmentStack []*datatype
 	enumIsStack     []*variableNode
+	top             []*node
 	comments        []string
 }
 
@@ -71,6 +72,7 @@ func (program *program) hymnFileInit(uid string, name, out, path, libs string) *
 	hm.functionOrder = make([]string, 0)
 	hm.assignmentStack = make([]*datatype, 0)
 	hm.enumIsStack = make([]*variableNode, 0)
+	hm.top = make([]*node, 0)
 	hm.prefixes(name)
 	return hm
 }

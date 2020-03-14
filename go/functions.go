@@ -249,6 +249,10 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		fn.aliasing = alias
 		fn.interfaces = self.genericsInterfaces
 		fname = self.name + "." + name
+	} else {
+		if name == "static" || name == "init" {
+			return nil, err(me, ECodeNameConflict, fmt.Sprintf("Function %s is reserved.", name))
+		}
 	}
 	if me.token.is == "<" {
 		if self != nil {

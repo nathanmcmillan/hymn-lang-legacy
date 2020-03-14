@@ -106,7 +106,7 @@ func (me *hmfile) parse(out, path string) *parseError {
 
 	parsing.skipLines()
 	for parsing.token.is != "eof" {
-		if er := parsing.fileExpression(); er != nil {
+		if er := parsing.statement(); er != nil {
 			return er
 		}
 		if parsing.token.is == "line" {

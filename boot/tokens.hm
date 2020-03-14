@@ -29,8 +29,8 @@ const words = new_str_set()
 const primitives = new_str_set()
 
 # def init
-
 # TODO top level expressions
+
 words.add("import")
 words.add("macro")
 

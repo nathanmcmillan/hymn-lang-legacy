@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (me *parser) fileExpression() *parseError {
+func (me *parser) statement() *parseError {
 	token := me.token
 	op := token.is
 	if op == "import" {
@@ -36,10 +36,13 @@ func (me *parser) fileExpression() *parseError {
 		return nil
 	} else if op == "line" || op == "eof" {
 		return nil
-	} else {
-		e := fmt.Sprintf("I did not expect the token `%s` here", op)
-		return err(me, ECodeUnexpectedToken, e)
 	}
+	expr, er := me.expression()
+	if er != nil {
+		return er
+	}
+	me.hmfile.top = append(me.hmfile.top, expr)
+	return nil
 }
 
 func (me *parser) expression() (*node, *parseError) {

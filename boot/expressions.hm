@@ -1,7 +1,8 @@
-import "parser"
-import "parsing_errors" (parse_error)
-import "codes"
-import "${std}/result" (result)
+import parser
+import parsing_errors (parse_error)
+import codes
+
+import std:result (result)
 
 def file_expression(p parser) maybe<parse_error>
     token = p.token

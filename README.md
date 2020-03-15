@@ -35,7 +35,7 @@ Learn more at https://hymn-lang.org
 * Slices and arrays
 * Class functions with generics
 * Automatic or manual default parameters using '_'
-* Configurable environment variables using $HYMN_MODULES
+* Package management using $HYMN_PACKAGES environment variable
 * Multiline string declaration using '\'
 * Interfaces
 

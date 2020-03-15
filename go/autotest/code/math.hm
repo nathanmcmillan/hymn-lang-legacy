@@ -9,7 +9,7 @@ enum operation
     multiply
     divide
 
-const pi = 3.1415
+static pi = 3.1415
 
 def power(x int) int
     return x * x

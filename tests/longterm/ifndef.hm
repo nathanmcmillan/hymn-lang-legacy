@@ -3,9 +3,9 @@ def num 84
 def foo
 
 ifdef foo
-const beans = "cool beans!"
+static beans = "cool beans!"
 elsedef
-const beans = bar
+static beans = bar
 enddef
 
 def main

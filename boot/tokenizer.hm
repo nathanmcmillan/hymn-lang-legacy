@@ -1,5 +1,5 @@
-import "tokens" (token)
-import "stream" (stream)
+import tokens (token)
+import stream (stream)
 
 class tokenizer
     file_stream  stream

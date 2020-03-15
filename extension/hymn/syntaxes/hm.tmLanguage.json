@@ -88,20 +88,6 @@
 			}
 		},
 		{
-			"match": "REMOVE_ME\".*?\"",
-			"name": "string.quoted.double.hymn",
-			"captures": {
-				"0": {
-					"patterns": [
-						{
-							"match": "\\\\.",
-							"name": "constant.character.escape.hymn"
-						}
-					]
-				}
-			}
-		},
-		{
 			"match": "\\b(self)\\b",
 			"captures": {
 				"1": {
@@ -110,7 +96,7 @@
 			}
 		},
 		{
-			"match": "\\b(mutable|immutable|const|static|global)\\b",
+			"match": "\\b(static|mutable)\\b",
 			"captures": {
 				"1": {
 					"name": "storage.modifier.hymn"
@@ -118,7 +104,15 @@
 			}
 		},
 		{
-			"match": "\\b(import|as)\\b",
+			"match": "^(import) +(?:\\w:?)*",
+			"captures": {
+				"1": {
+					"name": "keyword.import.hymn"
+				}
+			}
+		},
+		{
+			"match": "\\b(as)\\b",
 			"captures": {
 				"1": {
 					"name": "keyword.import.hymn"
@@ -212,7 +206,7 @@
 			}
 		},
 		{
-			"match": "\\.?(\\w+) *\\(",
+			"match": "(?<=^| |\\+|\\(|\\.)(\\w+) *(?=\\()",
 			"captures": {
 				"1": {
 					"name": "support.function.hymn"
@@ -236,7 +230,7 @@
 			}
 		},
 		{
-			"match": "(\\w+(?:\\.\\w+)*) *(?:=|\\+=|-=|\/=|\\*=|\\^=|\\|=|&=|<<=|>>=) ",
+			"match": "(\\w+(?:\\.\\w+)*)(?= *(?:=|\\+=|-=|\/=|\\*=|\\^=|\\|=|&=|<<=|>>=))",
 			"captures": {
 				"1": {
 					"name": "variable.other.assignment.hymn"

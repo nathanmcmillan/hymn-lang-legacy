@@ -175,7 +175,7 @@ func (me *parser) declareType() (*datatype, *parseError) {
 	}
 
 	if strings.HasPrefix(value, "%") {
-		if m, ok := me.hmfile.program.modules[value]; ok && me.token.is == "." {
+		if m, ok := me.program.modules[value]; ok && me.token.is == "." {
 			if er := me.eat("."); er != nil {
 				return nil, er
 			}

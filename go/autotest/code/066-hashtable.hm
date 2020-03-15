@@ -1,4 +1,4 @@
-const uint64_max = uint64 2000000
+static uint64_max = uint64 2000000
 
 def int_hashcode(key int) int
     return key

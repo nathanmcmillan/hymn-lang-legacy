@@ -1,6 +1,6 @@
 import "math"
 
-const pi = "tasty"
+static pi = "tasty"
 
 def power() string
     return "pow"

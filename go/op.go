@@ -81,7 +81,3 @@ func fileName(path string) string {
 	}
 	return path[slash+1 : dot]
 }
-
-func fileDir(path string) string {
-	return path[0:strings.LastIndex(path, "/")]
-}

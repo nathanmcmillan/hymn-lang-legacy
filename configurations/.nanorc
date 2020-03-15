@@ -1,2 +1,0 @@
-syntax "hymn" ".hm"
-color red "\<(function|object)\>"

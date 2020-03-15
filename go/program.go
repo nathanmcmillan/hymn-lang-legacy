@@ -94,7 +94,7 @@ type program struct {
 	modules         map[string]*hmfile
 	hmorder         []*hmfile
 	sources         map[string]string
-	shellvar        map[string]string
+	packages        map[string]string
 	moduleUID       int
 	remapStack      []string
 }
@@ -106,7 +106,7 @@ func programInit() *program {
 	prog.modules = make(map[string]*hmfile)
 	prog.hmorder = make([]*hmfile, 0)
 	prog.sources = make(map[string]string)
-	prog.shellvar = make(map[string]string)
+	prog.packages = make(map[string]string)
 	prog.remapStack = make([]string, 0)
 	return prog
 }

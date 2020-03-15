@@ -1,8 +1,12 @@
-import "${std}/hashmap" (hashmap, new_str_map)
-import "hmlib" (hm_lib, new_hm_lib)
-import "hmfile" (hm_file)
-import "flags" (flags)
-import "parser"
+import hmlib (
+    hm_lib
+    new_hm_lib
+)
+import hmfile (hm_file)
+import flags (flags)
+import parser
+
+import std:hashmap (hashmap, new_str_map)
 
 class program
     out          string

@@ -3,7 +3,10 @@ cd "$(dirname "$0")"
 
 ./make.sh
 
-export HYMN_MODULES="root=$(pwd):std=$(pwd)/std"
+HYMN_PACKAGES=""
+HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/std"
+HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/books"
+export HYMN_PACKAGES
 
 if [ -f bin/hymn ]; then
   lib="$PWD/lib"

@@ -12,7 +12,7 @@ func (me *parser) statement() *parseError {
 	if op == "import" {
 		return me.importing()
 	} else if op == "static" {
-		return me.defineStaticVariable()
+		return me.staticVariable()
 	} else if op == "def" {
 		return me.defineNewFunction()
 	} else if op == "class" {
@@ -415,7 +415,7 @@ func (me *parser) global(mutable bool) *parseError {
 	return nil
 }
 
-func (me *parser) defineStaticVariable() *parseError {
+func (me *parser) staticVariable() *parseError {
 	if er := me.eat("static"); er != nil {
 		return er
 	}

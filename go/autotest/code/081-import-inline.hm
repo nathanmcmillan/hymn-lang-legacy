@@ -5,7 +5,7 @@ import "./math" (
     power
 )
 
-const self_pi = "tasty"
+static self_pi = "tasty"
 
 def self_power() string
     return "pow"

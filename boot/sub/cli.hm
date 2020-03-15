@@ -1,3 +1,5 @@
+import boot:flags
+
 class item<x>
     short       string
     long        string

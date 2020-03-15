@@ -1,6 +1,6 @@
-import "stream"
-import "tokenizer"
-import "parsing_errors" (parse_error)
+import stream
+import tokenizer
+import parsing_errors (parse_error)
 
 class parser
     out  string

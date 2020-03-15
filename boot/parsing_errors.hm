@@ -1,4 +1,4 @@
-import "parser" (parser)
+import parser (parser)
 
 class parse_error
     code        uint

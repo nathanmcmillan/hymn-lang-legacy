@@ -3,16 +3,17 @@
 # Copyright 2019 Nathan Michael McMillan
 #
 
-import "${std}/result" (result)
-import "${std}/paths"
-import "program"
-import "flags" (new, flags)
-import "parsing_errors" (parse_error)
+import program
+import flags (new, flags)
+import parsing_errors (parse_error)
 
-const debug = true
-const debug_tokens = true
-const debug_ast = true
-const debug_command = true
+import std:result (result)
+import std:paths
+
+static debug = true
+static debug_tokens = true
+static debug_ast = true
+static debug_command = true
 
 def exec_compile(flag flags) result<string,parse_error>
     out = paths.abs(flag.write_to)

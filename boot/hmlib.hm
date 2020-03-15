@@ -1,9 +1,10 @@
-import "${std}/hashmap" (
+import function (hm_function)
+import class (hm_class)
+
+import std:hashmap (
     hashmap
     new_str_map
 )
-import "function" (hm_function)
-import "class" (hm_class)
 
 class hm_lib
     functions     hashmap<string, hm_function>

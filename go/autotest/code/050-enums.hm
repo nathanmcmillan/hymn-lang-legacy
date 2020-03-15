@@ -35,9 +35,9 @@ enum either<u,v>
     one(first u)
     two(second v)
 
-const example = vec()
-const snap = snake.viper
-const woof = mammal.dog(type:7.2)
+static example = vec()
+static snap = snake.viper
+static woof = mammal.dog(type:7.2)
 
 def calc_me(x int) either<int,float>
     if x < 10

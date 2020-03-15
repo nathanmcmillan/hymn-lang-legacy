@@ -29,9 +29,6 @@ func (me *hmfile) generateC() string {
 		}
 	}
 
-	// TODO:
-	// Should just the file name be used as the folder?
-	// How to handle conflicts
 	fmt.Println("debug ::", folder)
 
 	root, _ := filepath.Abs(folder)

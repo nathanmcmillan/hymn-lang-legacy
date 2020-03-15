@@ -11,12 +11,33 @@ func (me *parser) importing() *parseError {
 		return er
 	}
 
-	literal := me.token.value
-	if er := me.eat(TokenStringLiteral); er != nil {
-		return er
+	path := make([]string, 0)
+	for {
+		value := me.token.value
+		if er := me.eat("id"); er != nil {
+			return er
+		}
+		path = append(path, value)
+		if me.token.is == "line" || me.token.is == "(" || me.token.is == "as" {
+			break
+		}
+		if er := me.eat(":"); er != nil {
+			return er
+		}
 	}
 
-	value := variableSubstitution(literal, me.hmfile.program.shellvar)
+	// TODO: if len(path) == 1 then it is a local file
+
+	pack := path[0]
+	var ok bool
+	var location string
+
+	if location, ok = me.program.packages[pack]; !ok {
+		return err(me, ECodeImportPath, fmt.Sprintf("Package `%s` not found. Try including it in $HYMN_PACKAGES or through the -v flag.", pack))
+	}
+
+	fmt.Println("debug import package ::", strings.Join(path, ", "))
+	fmt.Println("debug import location ::", location)
 
 	statics := make([]string, 0)
 	if me.token.is == "(" {
@@ -51,7 +72,12 @@ func (me *parser) importing() *parseError {
 
 	module := me.hmfile
 
-	hymnFilePath := value + ".hm"
+	hymnFilePath := filepath.Join(path[1:]...) + ".hm"
+	hymnFilePath = filepath.Join(location, hymnFilePath)
+
+	fmt.Println("debug import hymn file path ::", hymnFilePath)
+	fmt.Println("debug program packages ::", me.program.packages)
+
 	if !filepath.IsAbs(hymnFilePath) {
 		var er error
 		hymnFilePath, er = filepath.Abs(filepath.Join(module.program.directory, hymnFilePath))
@@ -60,7 +86,7 @@ func (me *parser) importing() *parseError {
 		}
 	}
 
-	alias := filepath.Base(value)
+	alias := pack
 	if me.token.is == "as" {
 		if er := me.eat("as"); er != nil {
 			return er
@@ -75,13 +101,11 @@ func (me *parser) importing() *parseError {
 	found, ok := module.program.hmfiles[hymnFilePath]
 	if ok {
 		if _, ok := module.importPaths[hymnFilePath]; ok {
-			return err(me, ECodeDoubleModuleImport, "Module \""+hymnFilePath+"\" was already imported.")
+			return err(me, ECodeDoubleModuleImport, fmt.Sprintf("Module `%s` was already imported.", hymnFilePath))
 		}
 		importing = found
 	} else {
-		outputDirectory := literal
-		outputDirectory = strings.ReplaceAll(outputDirectory, "{", "")
-		outputDirectory = strings.ReplaceAll(outputDirectory, "}", "")
+		outputDirectory := alias
 		var fer error
 		outputDirectory, fer = filepath.Abs(filepath.Join(module.program.outputDirectory, outputDirectory))
 		if fer != nil {
@@ -89,7 +113,7 @@ func (me *parser) importing() *parseError {
 		}
 
 		var er *parseError
-		fmt.Println("Import ::", outputDirectory, "::", hymnFilePath, "::", literal)
+		fmt.Println("debug ::", outputDirectory, "::", hymnFilePath, "::", alias)
 		importing, er = module.program.parse(outputDirectory, hymnFilePath, module.program.libs)
 		if er != nil {
 			return er

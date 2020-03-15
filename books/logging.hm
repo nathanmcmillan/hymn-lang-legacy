@@ -1,0 +1,3 @@
+class logger
+    format   string
+    write_to string

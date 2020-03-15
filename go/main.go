@@ -27,7 +27,7 @@ type flags struct {
 	path            string
 	hmlib           string
 	writeTo         string
-	variables       string
+	packages        string
 	help            bool
 	format          bool
 	library         bool
@@ -65,10 +65,10 @@ func main() {
 	flags := &flags{}
 
 	flag.StringVar(&flags.cc, "c", "gcc", "specify what compiler to use")
-	flag.StringVar(&flags.path, "p", "", "path to main hymn file")
+	flag.StringVar(&flags.path, "p", "", "path to main hymn file or directory")
 	flag.StringVar(&flags.hmlib, "d", "", "directory path of hmlib files")
 	flag.StringVar(&flags.writeTo, "w", "out", "write generated files to this directory")
-	flag.StringVar(&flags.variables, "v", "", "set of import expansion variables")
+	flag.StringVar(&flags.packages, "v", "", "Set of additional package directories")
 	flag.BoolVar(&flags.help, "h", false, "show usage")
 	flag.BoolVar(&flags.format, "f", false, "format the given code")
 	flag.BoolVar(&flags.analysis, "a", false, "run static analysis on the generated binary")
@@ -102,18 +102,36 @@ func main() {
 }
 
 func execCompile(flags *flags) (string, *parseError, error) {
-	outputDirectory, fer := filepath.Abs(flags.writeTo)
+	var fer error
+	var outputDirectory string
+
+	outputDirectory, fer = filepath.Abs(flags.writeTo)
+	if fer != nil {
+		panic(fer.Error())
+	}
+
+	if stat, er := os.Stat(flags.path); er != nil {
+		if stat.IsDir() {
+			flags.path = filepath.Join(flags.path, "main.hm")
+		}
+	}
+
+	var directory string
+
+	directory, fer = filepath.Abs(filepath.Dir(flags.path))
 	if fer != nil {
 		panic(fer.Error())
 	}
 
 	program := programInit()
-	program.outputDirectory = outputDirectory
+	program.outputDirectory = filepath.Join(outputDirectory, "src")
 	program.libs = flags.hmlib
-	program.directory = fileDir(flags.path)
+	program.directory = directory
 
-	variableFlags(program.shellvar, os.Getenv("HYMN_MODULES"))
-	variableFlags(program.shellvar, flags.variables)
+	parsePackages(program.packages, os.Getenv("HYMN_PACKAGES"))
+	parsePackages(program.packages, flags.packages)
+
+	program.packages[filepath.Base(program.directory)] = program.directory
 
 	program.loadlibs(flags.hmlib)
 
@@ -201,7 +219,7 @@ func gcc(flags *flags, sources map[string]string, fileOut string) {
 	paramGcc = append(paramGcc, "-pedantic")
 	paramGcc = append(paramGcc, "-std=c11")
 	hmlibabs, _ := filepath.Abs(flags.hmlib)
-	hmpathabs, _ := filepath.Abs(flags.writeTo)
+	hmpathabs, _ := filepath.Abs(filepath.Join(flags.writeTo, "src"))
 	paramGcc = append(paramGcc, "-I"+hmlibabs)
 	paramGcc = append(paramGcc, "-I"+hmpathabs)
 	for _, src := range sources {
@@ -284,18 +302,14 @@ func execBin(flags *flags, name string) (string, error) {
 	return "", nil
 }
 
-func variableFlags(dict map[string]string, value string) {
+func parsePackages(dict map[string]string, value string) {
 	list := strings.Split(value, ":")
 	for _, item := range list {
-		eq := strings.Index(item, "=")
-		if eq <= 0 {
+		if item == "" {
 			continue
 		}
-		key := item[0:eq]
-		is := item[eq+1:]
-		if key == "" || is == "" {
-			continue
-		}
-		dict[key] = is
+		name := filepath.Base(item)
+		path, _ := filepath.Abs(item)
+		dict[name] = path
 	}
 }

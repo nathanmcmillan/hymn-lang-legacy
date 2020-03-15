@@ -1,1 +1,1 @@
-const unexpected_token = 0
+static unexpected_token = 0

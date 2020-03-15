@@ -8,12 +8,13 @@ import (
 )
 
 type parser struct {
-	hmfile *hmfile
-	tokens *tokenizer
-	token  *token
-	pos    int
-	line   int
-	file   *os.File
+	program *program
+	hmfile  *hmfile
+	tokens  *tokenizer
+	token   *token
+	pos     int
+	line    int
+	file    *os.File
 }
 
 type parsepoint struct {
@@ -36,9 +37,9 @@ func (me *parser) fail() string {
 		str.WriteString(fn.module.reference(fn.getname()))
 	}
 
-	if me.hmfile.program.peekRemapStack() != "" {
+	if me.program.peekRemapStack() != "" {
 		str.WriteString("\nFunction Implementation Stack: [")
-		for _, r := range me.hmfile.program.remapStack {
+		for _, r := range me.program.remapStack {
 			str.WriteString("\n    ")
 			str.WriteString(r)
 		}
@@ -98,6 +99,7 @@ func (me *hmfile) parse(out, path string) *parseError {
 	parsing := &parser{}
 	me.parser = parsing
 
+	parsing.program = me.program
 	parsing.hmfile = me
 	parsing.line = 1
 	parsing.tokens = tokenize(stream, tokenFile)

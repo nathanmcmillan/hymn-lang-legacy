@@ -2,7 +2,7 @@ class foo<k,v>
     size k
     name v
 
-const thingy = "foo!"
+static thingy = "foo!"
 
 def foo.set_name(name v)
     echo(thingy)

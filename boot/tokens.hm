@@ -1,35 +1,34 @@
 import "${std}/hashset" (new_str_set)
 
-const token_int_literal     = "int-v"
-const token_float_literal   = "float-v"
-const token_string_literal  = "string-v"
-const token_char_literal    = "char-v"
-const token_byte_literal    = "byte-v"
-const token_boolean_literal = "bool-v"
-const token_int             = "int"
-const token_int8            = "int8"
-const token_int16           = "int16"
-const token_int32           = "int32"
-const token_int64           = "int64"
-const token_uint            = "uint"
-const token_uint8           = "uint8"
-const token_uint16          = "uint16"
-const token_uint32          = "uint32"
-const token_uint64          = "uint64"
-const token_float           = "float"
-const token_float32         = "float32"
-const token_float64         = "float64"
-const token_string          = "string"
-const token_raw_string      = "string-raw"
-const token_char            = "char"
-const token_byte            = "byte"
-const token_boolean         = "bool"
+import std::hashset (new_str_set)
 
-const words = new_str_set()
-const primitives = new_str_set()
+static token_int_literal     = "int-v"
+static token_float_literal   = "float-v"
+static token_string_literal  = "string-v"
+static token_char_literal    = "char-v"
+static token_byte_literal    = "byte-v"
+static token_boolean_literal = "bool-v"
+static token_int             = "int"
+static token_int8            = "int8"
+static token_int16           = "int16"
+static token_int32           = "int32"
+static token_int64           = "int64"
+static token_uint            = "uint"
+static token_uint8           = "uint8"
+static token_uint16          = "uint16"
+static token_uint32          = "uint32"
+static token_uint64          = "uint64"
+static token_float           = "float"
+static token_float32         = "float32"
+static token_float64         = "float64"
+static token_string          = "string"
+static token_raw_string      = "string-raw"
+static token_char            = "char"
+static token_byte            = "byte"
+static token_boolean         = "bool"
 
-# def init
-# TODO top level expressions
+static words = new_str_set()
+static primitives = new_str_set()
 
 words.add("import")
 words.add("macro")

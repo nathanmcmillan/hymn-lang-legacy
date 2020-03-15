@@ -8,7 +8,7 @@ import (
 
 func (me *hmfile) generateC() string {
 
-	folder := me.out
+	folder := me.outputDirectory
 	filename := fileName(me.path)
 	hmlibs := me.libs
 
@@ -105,6 +105,13 @@ func (me *hmfile) generateC() string {
 		}
 		cfile.depth--
 		code.WriteString("}\n")
+	}
+
+	if len(me.top) > 0 {
+		fn := funcInit(me, "init", nil)
+		fn.returns = newdatavoid()
+		fn.expressions = me.top
+		me.pushFunction("init", fn)
 	}
 
 	for _, f := range me.functionOrder {

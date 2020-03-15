@@ -85,10 +85,14 @@ func nameOfClassFunc(cl, fn string) string {
 	return cl + "_" + fn
 }
 
+func (me *hmfile) pushFunction(name string, fn *function) {
+	me.functionOrder = append(me.functionOrder, name)
+	me.functions[name] = fn
+	me.types[name] = "function"
+}
+
 func (me *parser) pushFunction(name string, module *hmfile, fn *function) {
-	module.functionOrder = append(module.functionOrder, name)
-	module.functions[name] = fn
-	module.types[name] = "function"
+	module.pushFunction(name, fn)
 	if me.file != nil {
 		me.file.WriteString(fn.string(me.hmfile, 0))
 	}

@@ -102,13 +102,13 @@ func main() {
 }
 
 func execCompile(flags *flags) (string, *parseError, error) {
-	out, fer := filepath.Abs(flags.writeTo)
+	outputDirectory, fer := filepath.Abs(flags.writeTo)
 	if fer != nil {
 		panic(fer.Error())
 	}
 
 	program := programInit()
-	program.out = out
+	program.outputDirectory = outputDirectory
 	program.libs = flags.hmlib
 	program.directory = fileDir(flags.path)
 
@@ -163,7 +163,7 @@ func (me *program) compile(cc string) {
 	list := me.hmorder
 	for x := len(list) - 1; x >= 0; x-- {
 		module := list[x]
-		os.MkdirAll(module.out, os.ModePerm)
+		os.MkdirAll(module.outputDirectory, os.ModePerm)
 		file := module.generateC()
 		if file != "" {
 			me.sources[module.path] = file

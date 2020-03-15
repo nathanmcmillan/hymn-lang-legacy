@@ -11,10 +11,8 @@ func (me *parser) statement() *parseError {
 	op := token.is
 	if op == "import" {
 		return me.importing()
-	} else if op == "const" {
-		return me.immutable()
-	} else if op == "mutable" {
-		return me.mutable()
+	} else if op == "static" {
+		return me.defineStaticVariable()
 	} else if op == "def" {
 		return me.defineNewFunction()
 	} else if op == "class" {
@@ -417,18 +415,15 @@ func (me *parser) global(mutable bool) *parseError {
 	return nil
 }
 
-func (me *parser) immutable() *parseError {
-	if er := me.eat("const"); er != nil {
+func (me *parser) defineStaticVariable() *parseError {
+	if er := me.eat("static"); er != nil {
 		return er
+	}
+	if me.token.is == "mutable" {
+		me.next()
+		return me.global(true)
 	}
 	return me.global(false)
-}
-
-func (me *parser) mutable() *parseError {
-	if er := me.eat("mutable"); er != nil {
-		return er
-	}
-	return me.global(true)
 }
 
 func variableSubstitution(value string, variables map[string]string) string {

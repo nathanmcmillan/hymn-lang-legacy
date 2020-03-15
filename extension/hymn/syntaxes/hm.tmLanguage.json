@@ -110,7 +110,7 @@
 			}
 		},
 		{
-			"match": "\\b(mutable|immutable|const)\\b",
+			"match": "\\b(mutable|immutable|const|static|global)\\b",
 			"captures": {
 				"1": {
 					"name": "storage.modifier.hymn"

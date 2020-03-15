@@ -19,7 +19,7 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string
 	cfile := module.cFileInit(guard)
 
 	cfile.pathLocal = name
-	cfile.pathGlobal, _ = filepath.Rel(module.program.out, filepath.Join(folder, cfile.pathLocal))
+	cfile.pathGlobal, _ = filepath.Rel(module.program.outputDirectory, filepath.Join(folder, cfile.pathLocal))
 
 	for _, def := range module.defineOrder {
 		if def.class != nil {

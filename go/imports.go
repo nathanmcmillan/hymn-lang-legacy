@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 func (me *parser) importing() *parseError {
@@ -10,12 +11,12 @@ func (me *parser) importing() *parseError {
 		return er
 	}
 
-	value := me.token.value
+	literal := me.token.value
 	if er := me.eat(TokenStringLiteral); er != nil {
 		return er
 	}
 
-	value = variableSubstitution(value, me.hmfile.program.shellvar)
+	value := variableSubstitution(literal, me.hmfile.program.shellvar)
 
 	statics := make([]string, 0)
 	if me.token.is == "(" {
@@ -50,10 +51,10 @@ func (me *parser) importing() *parseError {
 
 	module := me.hmfile
 
-	path := value + ".hm"
-	if !filepath.IsAbs(path) {
+	hymnFilePath := value + ".hm"
+	if !filepath.IsAbs(hymnFilePath) {
 		var er error
-		path, er = filepath.Abs(filepath.Join(module.program.directory, path))
+		hymnFilePath, er = filepath.Abs(filepath.Join(module.program.directory, hymnFilePath))
 		if er != nil {
 			return err(me, ECodeImportPath, er.Error())
 		}
@@ -71,20 +72,25 @@ func (me *parser) importing() *parseError {
 	}
 
 	var importing *hmfile
-	found, ok := module.program.hmfiles[path]
+	found, ok := module.program.hmfiles[hymnFilePath]
 	if ok {
-		if _, ok := module.importPaths[path]; ok {
-			return err(me, ECodeDoubleModuleImport, "Module \""+path+"\" was already imported.")
+		if _, ok := module.importPaths[hymnFilePath]; ok {
+			return err(me, ECodeDoubleModuleImport, "Module \""+hymnFilePath+"\" was already imported.")
 		}
 		importing = found
 	} else {
-		out, fer := filepath.Abs(filepath.Join(module.program.out, value))
+		outputDirectory := literal
+		outputDirectory = strings.ReplaceAll(outputDirectory, "{", "")
+		outputDirectory = strings.ReplaceAll(outputDirectory, "}", "")
+		var fer error
+		outputDirectory, fer = filepath.Abs(filepath.Join(module.program.outputDirectory, outputDirectory))
 		if fer != nil {
 			return err(me, ECodeImportPath, fer.Error())
 		}
 
 		var er *parseError
-		importing, er = module.program.parse(out, path, module.program.libs)
+		fmt.Println("Import ::", outputDirectory, "::", hymnFilePath, "::", literal)
+		importing, er = module.program.parse(outputDirectory, hymnFilePath, module.program.libs)
 		if er != nil {
 			return er
 		}
@@ -95,7 +101,7 @@ func (me *parser) importing() *parseError {
 	}
 
 	module.imports[alias] = importing
-	module.importPaths[path] = importing
+	module.importPaths[hymnFilePath] = importing
 	module.importOrder = append(module.importOrder, alias)
 	importing.crossref[module] = alias
 

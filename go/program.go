@@ -85,18 +85,18 @@ var (
 )
 
 type program struct {
-	out        string
-	directory  string
-	libs       string
-	hmlibmap   map[string]string
-	hmlib      *hmlib
-	hmfiles    map[string]*hmfile
-	modules    map[string]*hmfile
-	hmorder    []*hmfile
-	sources    map[string]string
-	shellvar   map[string]string
-	moduleUID  int
-	remapStack []string
+	outputDirectory string
+	directory       string
+	libs            string
+	hmlibmap        map[string]string
+	hmlib           *hmlib
+	hmfiles         map[string]*hmfile
+	modules         map[string]*hmfile
+	hmorder         []*hmfile
+	sources         map[string]string
+	shellvar        map[string]string
+	moduleUID       int
+	remapStack      []string
 }
 
 func programInit() *program {

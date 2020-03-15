@@ -6,7 +6,7 @@ import (
 
 type hmfile struct {
 	uid             string
-	out             string
+	outputDirectory string
 	relativeOut     string
 	path            string
 	libs            string
@@ -43,12 +43,12 @@ type hmfile struct {
 	comments        []string
 }
 
-func (program *program) hymnFileInit(uid string, name, out, path, libs string) *hmfile {
+func (program *program) hymnFileInit(uid string, name, outputDirectory, path, libs string) *hmfile {
 	hm := &hmfile{}
 	hm.uid = "%" + uid
 	hm.name = name
-	hm.out = out
-	hm.relativeOut, _ = filepath.Rel(program.out, out)
+	hm.outputDirectory = outputDirectory
+	hm.relativeOut, _ = filepath.Rel(program.outputDirectory, outputDirectory)
 	hm.path = path
 	hm.libs = libs
 	hm.program = program

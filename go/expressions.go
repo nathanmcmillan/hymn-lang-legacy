@@ -111,13 +111,21 @@ func (me *parser) parseIdent() (*node, *parseError) {
 	name := me.token.value
 	module := me.hmfile
 
-	if _, ok := module.imports[name]; ok && me.peek().is == "." {
-		return me.extern()
+	if _, ok := module.imports[name]; ok {
+		if me.peek().is == "=" {
+			return nil, err(me, ECodeBadAssignment, fmt.Sprintf("I cannot use `%s` as a variable because it is an external module", name))
+		}
+		if me.peek().is == "." {
+			return me.extern()
+		}
 	}
 
-	if _, ok := module.getType(name); ok {
+	if typeOf, ok := module.getType(name); ok {
 		if _, ok := module.getFunction(name); ok {
 			return me.parseFn(module)
+		}
+		if me.peek().is == "=" {
+			return nil, err(me, ECodeBadAssignment, fmt.Sprintf("I cannot use `%s` as a variable because it is a `%s`", name, typeOf))
 		}
 		return nil, err(me, ECodeExpectingExpression, "Type '"+name+"' must be assigned.")
 	}

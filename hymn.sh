@@ -3,14 +3,18 @@ cd "$(dirname "$0")"
 
 ./make.sh
 
+if [ ! -f bin/hymn ]; then
+    exit 1
+fi
+
 HYMN_PACKAGES=""
 HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/std"
 HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/books"
 export HYMN_PACKAGES
 
-if [ -f bin/hymn ]; then
-  lib="$PWD/lib"
-  path="$1"
-  shift
-  bin/hymn -d="$lib" -p="$path" "$@"
-fi
+HYMN_LIBC="$(pwd)/libc"
+export HYMN_LIBC
+
+path="$1"
+shift
+bin/hymn -p="$path" "$@"

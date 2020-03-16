@@ -1,0 +1,21 @@
+import classes (hymn_class)
+import functions (hymn_function)
+
+import std:hashmap (
+    hashmap
+    new_str_map
+)
+
+class hymn_lib
+    functions     hashmap<string,hymn_function>
+    function_list []hymn_function
+    types         hashmap<string,string>
+    classes       hashmap<string,hymn_class>
+
+def new() hymn_lib
+    return hymn_lib (
+        functions: new_str_map<hymn_function>()
+        function_list: _
+        types: new_str_map<string>()
+        classes: new_str_map<hymn_class>()
+    )

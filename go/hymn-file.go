@@ -6,9 +6,10 @@ import (
 
 type hmfile struct {
 	uid             string
-	outputDirectory string
-	relativeOut     string
+	pack            []string
 	path            string
+	includes        string
+	destination     string
 	libs            string
 	parser          *parser
 	program         *program
@@ -43,14 +44,14 @@ type hmfile struct {
 	comments        []string
 }
 
-func (program *program) hymnFileInit(uid string, name, outputDirectory, path, libs string) *hmfile {
+func (program *program) hymnFileInit(uid string, name string, pack []string, path string) *hmfile {
 	hm := &hmfile{}
 	hm.uid = "%" + uid
 	hm.name = name
-	hm.outputDirectory = outputDirectory
-	hm.relativeOut, _ = filepath.Rel(program.outputDirectory, outputDirectory)
 	hm.path = path
-	hm.libs = libs
+	hm.pack = pack
+	hm.includes = filepath.Join(pack...)
+	hm.destination = filepath.Join(program.outsourcedir, filepath.Join(pack...))
 	hm.program = program
 	hm.hmlib = program.hmlib
 	hm.rootScope = scopeInit(nil)

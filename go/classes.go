@@ -28,7 +28,7 @@ func classInit(module *hmfile, name string, generics []string, genericsInterface
 	c.pathLocal = c.classFileName()
 	if module != nil {
 		c.cname = module.classNameSpace(name)
-		c.pathGlobal = filepath.Join(module.relativeOut, c.pathLocal)
+		c.pathGlobal = filepath.Join(module.includes, c.pathLocal)
 	}
 	c.functions = make([]*function, 0)
 	c.generics = generics

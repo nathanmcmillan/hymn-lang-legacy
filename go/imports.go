@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 )
 
 func (me *parser) importing() *parseError {
@@ -20,24 +19,25 @@ func (me *parser) importing() *parseError {
 		path = append(path, value)
 		if me.token.is == "line" || me.token.is == "(" || me.token.is == "as" {
 			break
-		}
-		if er := me.eat(":"); er != nil {
+		} else if er := me.eat(":"); er != nil {
 			return er
 		}
 	}
 
-	// TODO: if len(path) == 1 then it is a local file
+	if len(path) == 1 {
+		name := path[0]
+		pack := me.hmfile.pack
+		path = []string{}
+		path = append(path, pack[0:len(pack)-1]...)
+		path = append(path, name)
+	}
 
-	pack := path[0]
 	var ok bool
 	var location string
 
-	if location, ok = me.program.packages[pack]; !ok {
-		return err(me, ECodeImportPath, fmt.Sprintf("Package `%s` not found. Try including it in $HYMN_PACKAGES or through the -v flag.", pack))
+	if location, ok = me.program.packages[path[0]]; !ok {
+		return err(me, ECodeImportPath, fmt.Sprintf("Package `%s` not found. Try including it in $HYMN_PACKAGES or through the -v flag.", path[0]))
 	}
-
-	fmt.Println("debug import package ::", strings.Join(path, ", "))
-	fmt.Println("debug import location ::", location)
 
 	statics := make([]string, 0)
 	if me.token.is == "(" {
@@ -75,9 +75,6 @@ func (me *parser) importing() *parseError {
 	hymnFilePath := filepath.Join(path[1:]...) + ".hm"
 	hymnFilePath = filepath.Join(location, hymnFilePath)
 
-	fmt.Println("debug import hymn file path ::", hymnFilePath)
-	fmt.Println("debug program packages ::", me.program.packages)
-
 	if !filepath.IsAbs(hymnFilePath) {
 		var er error
 		hymnFilePath, er = filepath.Abs(filepath.Join(module.program.directory, hymnFilePath))
@@ -86,7 +83,7 @@ func (me *parser) importing() *parseError {
 		}
 	}
 
-	alias := pack
+	alias := path[len(path)-1]
 	if me.token.is == "as" {
 		if er := me.eat("as"); er != nil {
 			return er
@@ -97,30 +94,30 @@ func (me *parser) importing() *parseError {
 		}
 	}
 
+	module.imports[alias] = nil
+	module.importPaths[hymnFilePath] = nil
+
 	var importing *hmfile
 	found, ok := module.program.hmfiles[hymnFilePath]
 	if ok {
-		if _, ok := module.importPaths[hymnFilePath]; ok {
+		if m, _ := module.importPaths[hymnFilePath]; m != nil {
 			return err(me, ECodeDoubleModuleImport, fmt.Sprintf("Module `%s` was already imported.", hymnFilePath))
 		}
 		importing = found
-	} else {
-		outputDirectory := alias
-		var fer error
-		outputDirectory, fer = filepath.Abs(filepath.Join(module.program.outputDirectory, outputDirectory))
-		if fer != nil {
-			return err(me, ECodeImportPath, fer.Error())
+
+		if me.isCyclical(module, importing) {
+			return err(me, ECodeImportPath, fmt.Sprintf("Cyclical dependency between `%s` and `%s`", module.path, hymnFilePath))
 		}
 
+	} else {
 		var er *parseError
-		fmt.Println("debug ::", outputDirectory, "::", hymnFilePath, "::", alias)
-		importing, er = module.program.parse(outputDirectory, hymnFilePath, module.program.libs)
+		importing, er = module.program.read(path, hymnFilePath)
 		if er != nil {
 			return er
 		}
 
 		if debug {
-			fmt.Println("=== parse: " + module.name + " ===")
+			fmt.Println("continue>", module.name)
 		}
 	}
 
@@ -189,4 +186,13 @@ func (me *parser) importing() *parseError {
 	}
 
 	return nil
+}
+
+func (me *parser) isCyclical(module *hmfile, importing *hmfile) bool {
+	for path := range importing.importPaths {
+		if path == module.path {
+			return true
+		}
+	}
+	return false
 }

@@ -35,6 +35,7 @@ Learn more at https://hymn-lang.org
 * Slices and arrays
 * Class functions with generics
 * Automatic or manual default parameters using '_'
+* $HYMN_LIBC environment variable and -d flag locates the standard hymn c library
 * Package management using $HYMN_PACKAGES environment variable
 * Multiline string declaration using '\'
 * Interfaces

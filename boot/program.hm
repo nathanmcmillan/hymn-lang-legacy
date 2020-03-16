@@ -1,30 +1,27 @@
-import hmlib (
-    hm_lib
-    new_hm_lib
-)
-import hmfile (hm_file)
+import hymnlib (hymn_lib)
+import hymnfile (hymn_file)
 import flags (flags)
 import parser
 
 import std:hashmap (hashmap, new_str_map)
 
 class program
-    out          string
-    directory    string
-    libs         string
-    hm_lib_map   hashmap<string, string>
-    hm_library   hm_lib
-    hm_file_map  hashmap<string, hm_file>
-    hm_file_list []hm_file
-    sources      hashmap<string, string>
-    module_uid   int
+    out            string
+    directory      string
+    libs           string
+    hymn_lib_map   hashmap<string,string>
+    hymn_library   hymn_lib
+    hymn_file_map  hashmap<string,hymn_file>
+    hymn_file_list []hymn_file
+    sources        hashmap<string,string>
+    module_uid     int
 
 def new() program
     return program (
-        hm_lib_map: new_str_map<string>()
-        hm_library: new_hm_lib()
-        hm_file_map: new_str_map<hm_file>()
-        sources: new_str_map<string>()
+        hymn_lib_map : new_str_map<string>()
+        hymn_library : hymnlib.new()
+        hymn_file_map: new_str_map<hymn_file>()
+        sources      : new_str_map<string>()
     )
 
 def program.parse(flag flags)

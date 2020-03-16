@@ -1,4 +1,4 @@
-import "read_and_write_interface" (read_and_write)
+import read_and_write_interface (read_and_write)
 
 interface get_and_set
     get() int

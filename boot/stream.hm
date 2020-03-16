@@ -6,7 +6,7 @@ class stream
     line int
     col  int
 
-def new_stream(data string) stream
+def new(data string) stream
     return stream (
         data: data
         line: 1

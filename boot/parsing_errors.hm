@@ -1,18 +1,14 @@
-import parser (parser)
-
 class parse_error
-    code        uint
+    line        int
+    file        string
+    name        string
     description string
-    line        uint
-
-def new(p parser, code uint, description string) parse_error
-    return parse_error (
-        code: code
-        description: description
-        line: p.line
-    )
+    hint        string
 
 def parse_error.to_string() string
-    mutable out = ""
-    out += sprintf("Code: %04d", self.code)
+    mutable out = "\n"
+    out += "-- " + self.name + " -- " + self.file
+    out += "\n\n" + self.description
+    out += "\n\n" + self.hint
+    out += "\n\n"
     return out

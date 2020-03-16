@@ -10,19 +10,16 @@ class tokenizer
     depth        int
     update_depth bool
 
-def new_token(depth int, name string) token
-    return token(depth, name, "")
-
-def new_tokenizer(file_stream stream) tokenizer
+def new(file_stream stream) tokenizer
     return tokenizer (
         file_stream: file_stream
-        eof: new_token(0, "eof")
+        eof: tokens.new(0, "eof")
         update_depth: true
         size: len(file_stream.data)
     )
 
 def tokenizer.new_simple_token(name string) token
-    return new_token(self.depth, name)
+    return tokens.new(self.depth, name)
 
 def tokenizer.get(pos int) token
     if pos < len(self.tokens)

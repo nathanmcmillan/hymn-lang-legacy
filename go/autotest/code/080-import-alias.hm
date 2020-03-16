@@ -1,4 +1,4 @@
-import "math" as mathematics
+import math as mathematics
 
 static pi = "tasty"
 

@@ -1,4 +1,4 @@
-import boot:flags
+# import local:this:parent:flags
 
 class item<x>
     short       string

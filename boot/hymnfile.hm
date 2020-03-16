@@ -1,4 +1,4 @@
-class hm_file
+class hymn_file
     out  string
     path string
     libs string

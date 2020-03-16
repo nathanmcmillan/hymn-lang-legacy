@@ -18,6 +18,7 @@ type parseLine struct {
 type parseError struct {
 	code        int
 	tokens      string
+	name        string
 	description string
 	hint        string
 	lines       []*parseLine
@@ -88,12 +89,16 @@ func errh(parser *parser, code int, description, hint string) *parseError {
 }
 
 func (me *parseError) print() string {
-	out := ""
-	out += "\n"
-	out += "-- "
-	out += fmt.Sprintf("Code: %04d", me.code)
-	out += " ------------------------------------------------------------------------------ "
-	out += me.module + ".hm"
+	out := "\n"
+	printfile := ""
+	if me.module != "" {
+		printfile = me.module + ".hm"
+	}
+	top := fmt.Sprintf("-- Code: %04d ", me.code)
+	for len(top)+len(printfile) != 79 {
+		top += "-"
+	}
+	out += top + " " + printfile
 	out += "\n\n"
 	out += me.description
 	if me.code == ECodeUnexpectedToken {

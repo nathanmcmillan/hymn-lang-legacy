@@ -1,6 +1,13 @@
 package main
 
-import "strings"
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
 
 var (
 	primitives = map[string]bool{
@@ -85,18 +92,18 @@ var (
 )
 
 type program struct {
-	outputDirectory string
-	directory       string
-	libs            string
-	hmlibmap        map[string]string
-	hmlib           *hmlib
-	hmfiles         map[string]*hmfile
-	modules         map[string]*hmfile
-	hmorder         []*hmfile
-	sources         map[string]string
-	packages        map[string]string
-	moduleUID       int
-	remapStack      []string
+	outsourcedir string
+	directory    string
+	libc         string
+	hmlibmap     map[string]string
+	hmlib        *hmlib
+	hmfiles      map[string]*hmfile
+	modules      map[string]*hmfile
+	hmorder      []*hmfile
+	sources      map[string]string
+	packages     map[string]string
+	moduleUID    int
+	remapStack   []string
 }
 
 func programInit() *program {
@@ -135,4 +142,125 @@ func (me *program) peekRemapStack() string {
 		return ""
 	}
 	return me.remapStack[len(me.remapStack)-1]
+}
+
+func (me *program) read(hymnPackage []string, hymnFile string) (*hmfile, *parseError) {
+	uid := strconv.Itoa(me.moduleUID)
+	me.moduleUID++
+
+	hymnFile, _ = filepath.Abs(hymnFile)
+	name := fileName(hymnFile)
+
+	module := me.hymnFileInit(uid, name, hymnPackage, hymnFile)
+
+	me.modules[uid] = module
+	me.hmfiles[hymnFile] = module
+	me.hmorder = append(me.hmorder, module)
+
+	if er := module.parse(); er != nil {
+		return nil, er
+	}
+
+	return module, nil
+}
+
+func (me *program) compile(cc string) {
+	list := me.hmorder
+	for x := len(list) - 1; x >= 0; x-- {
+		module := list[x]
+		os.MkdirAll(module.destination, os.ModePerm)
+		file := module.generateC()
+		if file != "" {
+			me.sources[module.path] = file
+		}
+	}
+}
+
+func (me *program) gcc(flags *flags, sources map[string]string, fileOut string) {
+	command := flags.cc
+
+	if debug {
+		fmt.Println("=== " + command + " ===")
+	}
+
+	paramGcc := make([]string, 0)
+	if flags.analysis {
+		paramGcc = append(paramGcc, "-v")
+		paramGcc = append(paramGcc, "-o")
+		paramGcc = append(paramGcc, flags.writeTo)
+		paramGcc = append(paramGcc, command)
+		command = "scan-build"
+	}
+	if flags.info {
+		paramGcc = append(paramGcc, "-g")
+	}
+	if flags.sanitizeAddress {
+		paramGcc = append(paramGcc, "-fsanitize=address")
+	}
+	if flags.optimize {
+		paramGcc = append(paramGcc, "-O2")
+	}
+	paramGcc = append(paramGcc, "-Wall")
+	paramGcc = append(paramGcc, "-Wextra")
+	paramGcc = append(paramGcc, "-Werror")
+	paramGcc = append(paramGcc, "-pedantic")
+	paramGcc = append(paramGcc, "-std=c11")
+	hmpathabs, _ := filepath.Abs(filepath.Join(flags.writeTo, "src"))
+	paramGcc = append(paramGcc, "-I"+me.libc)
+	paramGcc = append(paramGcc, "-I"+hmpathabs)
+	for _, src := range sources {
+		paramGcc = append(paramGcc, src)
+	}
+	paramGcc = append(paramGcc, "-o")
+	if flags.library {
+		fileOut += ".o"
+		paramGcc = append(paramGcc, fileOut)
+		paramGcc = append(paramGcc, "-c")
+	} else {
+		paramGcc = append(paramGcc, fileOut)
+	}
+
+	if debugCommand {
+		fmt.Println(command, strings.Join(paramGcc, " "))
+	}
+
+	if flags.script {
+		name := fileName(flags.path)
+		var script strings.Builder
+		script.WriteString("#!/bin/sh -e\n\n")
+		script.WriteString(command)
+		for _, line := range paramGcc {
+			script.WriteString(" \\\n")
+			script.WriteString(line)
+		}
+		script.WriteString("\n\n")
+		script.WriteString("./" + fileOut)
+		script.WriteString("\n")
+		sh := filepath.Join(flags.writeTo, name+".sh")
+		write(sh, script.String())
+		cmd := exec.Command("chmod", "+x", sh)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
+	if flags.makefile {
+		var make strings.Builder
+		make.WriteString("CC= gcc\n")
+		make.WriteString("program:\n\t")
+		make.WriteString(command + " ")
+		make.WriteString(strings.Join(paramGcc, " "))
+		write(filepath.Join(flags.writeTo, "makefile"), make.String())
+	}
+
+	cmd := exec.Command(command, paramGcc...)
+	stdout, err := cmd.CombinedOutput()
+	std := string(stdout)
+	if std != "" {
+		fmt.Println(std)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
 }

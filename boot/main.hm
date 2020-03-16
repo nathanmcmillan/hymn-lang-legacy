@@ -4,7 +4,7 @@
 #
 
 import program
-import flags (new, flags)
+import flags (flags)
 import parsing_errors (parse_error)
 
 import std:result (result)
@@ -47,9 +47,8 @@ def main(args []string)
         help()
         exit(1)
 
-    result = exec_compile()
+    ok = exec_compile()
     
-    # if result is parse_error(e)
-    if result is error(e)
+    if ok is error(e)
         echo(e.value.to_string())
         exit(1)

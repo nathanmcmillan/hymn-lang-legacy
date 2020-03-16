@@ -41,8 +41,8 @@ func TestCompile(t *testing.T) {
 	flags.cc = "gcc"
 	pwd, _ := os.Getwd()
 	fmt.Println("$PWD", pwd)
-	flags.hmlib = path.Clean(path.Join(pwd, "..", "lib"))
-	fmt.Println("$LIB", flags.hmlib)
+	flags.libc = path.Clean(path.Join(pwd, "..", "lib"))
+	fmt.Println("$LIB", flags.libc)
 	folder := "autotest"
 	if positive {
 		tests := folder + "/code"

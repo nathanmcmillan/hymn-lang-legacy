@@ -1,10 +1,5 @@
 import std:hashset (new_str_set)
 
-# HYMN_PACKAGES includes a list of directories
-#               each of these directories is a globally unique package name
-# The C output directories will mirror the HYMN_PACKAGES priority
-# The directory of the main is automatically added to HYMN_PACKAGES
-
 static token_int_literal     = "int-v"
 static token_float_literal   = "float-v"
 static token_string_literal  = "string-v"
@@ -58,3 +53,6 @@ def token.to_string() string
         s += ", value:" + self.value
     s += "}"
     return s
+
+def new(depth int, name string) token
+    return token(depth, name, "")

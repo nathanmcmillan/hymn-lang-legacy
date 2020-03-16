@@ -49,7 +49,7 @@ func enumInit(module *hmfile, name string) *enum {
 	if module != nil {
 		e.cname = module.enumNameSpace(name)
 		e.ucname = module.unionNameSpace(name)
-		e.pathGlobal = filepath.Join(module.relativeOut, e.pathLocal)
+		e.pathGlobal = filepath.Join(module.includes, e.pathLocal)
 	}
 	return e
 }

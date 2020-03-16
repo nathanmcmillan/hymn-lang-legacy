@@ -8,15 +8,14 @@ import (
 
 func (me *hmfile) generateC() string {
 
-	folder := me.outputDirectory
 	filename := fileName(me.path)
 	hmlibs := me.libs
 
 	if debug {
-		fmt.Println("=== compile: " + filename + " ===")
+		fmt.Println("compile>", filename)
 	}
 
-	guard := me.headerFileGuard("", filename)
+	guard := me.headerFileGuard(me.pack, "")
 
 	cfile := me.cFileInit(guard)
 	cfile.master = true
@@ -24,14 +23,11 @@ func (me *hmfile) generateC() string {
 	if len(me.importOrder) > 0 {
 		for _, iname := range me.importOrder {
 			importing := me.imports[iname]
-			path := importing.name + "/" + importing.name
+			path := importing.includes + "/" + importing.name
 			cfile.headReqIncludeSection.WriteString("\n#include \"" + path + ".h\"")
 		}
 	}
 
-	fmt.Println("debug ::", folder)
-
-	root, _ := filepath.Abs(folder)
 	filterOrder := make([]string, 0)
 	filters := make(map[string]string)
 
@@ -127,17 +123,13 @@ func (me *hmfile) generateC() string {
 	}
 
 	for _, f := range filterOrder {
-		cfile.subC(root, folder, filename, hmlibs, f, filters[f])
-	}
-
-	if debug {
-		fmt.Println("=== end: " + filename + " ===")
+		cfile.subC(me.destination, filename, hmlibs, f, filters[f])
 	}
 
 	fileOut := ""
 
 	if len(cfile.codeFn) > 0 {
-		fileOut = filepath.Join(folder, filename+".c")
+		fileOut = filepath.Join(me.destination, filename+".c")
 
 		write(fileOut, code.String())
 
@@ -159,7 +151,7 @@ func (me *hmfile) generateC() string {
 	}
 
 	cfile.headSuffix.WriteString("\n#endif\n")
-	write(filepath.Join(folder, filename+".h"), cfile.head())
+	write(filepath.Join(me.destination, filename+".h"), cfile.head())
 
 	return fileOut
 }

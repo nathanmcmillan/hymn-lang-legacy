@@ -1,4 +1,4 @@
-import "math"
+import math
 
 class vec
     x int

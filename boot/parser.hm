@@ -1,23 +1,47 @@
 import stream
-import tokenizer
+import tokens (token)
+import tokenizer (tokenizer)
 import parsing_errors (parse_error)
 
 class parser
-    out  string
-    path string
-    pos  uint
-    line uint
+    file     hymnfile
+    tokenize tokenizer
+    tok      token
+    out      string
+    path     string
+    pos      int
+    line     int
 
-def parse(out string, path string)
+def parse(out string, path string) maybe<parse_error>
     echo(out)
     echo(path)
     data = cat(path)
-    file_stream = stream.new_stream(data)
-    tokens = tokenizer.new_tokenizer(file_stream)
-    token = tokens.get(0)
+    file_stream = stream.new(data)
+    tokenize = tokenizer.new(file_stream)
+    tok = tokenize.get(0)
     echo(data)
-    echo(token.to_string())
+    echo(tok.to_string())
 
-def parser.eat(value string) maybe<parse_error>
-    self.verify(value)
+def parser.next()
+    self.pos += 1
+    tok = self.tokenize.get(self.pos)
+    if tok == "line" or tok == "comment"
+        self.line += 1
+    self.tok = tok
+
+def parser.verify(expected string) bool
+    if self.tok != expected
+        return false
+    return true
+
+def parser.eat(expected string) bool
+    if not self.verify(expected)
+        return false
     self.next()
+    return true
+
+def parser.error(description string) parse_error
+    return parse_error (
+        description: description
+        line: self.line
+    )

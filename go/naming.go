@@ -56,16 +56,15 @@ func (me *hmfile) nameSpaceModuleUID(name string) string {
 	return name
 }
 
-func (me *hmfile) headerFileGuard(root, name string) string {
-	if root != "" {
-		root = strings.ToUpper(root)
-		root = strings.ReplaceAll(root, "-", "_")
-		root += "_"
+func (me *hmfile) headerFileGuard(pack []string, name string) string {
+	head := strings.Join(pack, "_")
+	if name != "" {
+		head += "_" + name
 	}
-	name = me.nameSpaceModuleUID(name)
-	name = strings.ToUpper(name)
-	name = strings.ReplaceAll(name, "-", "_")
-	return definePrefix + root + name + "_H"
+	head = me.nameSpaceModuleUID(head)
+	head = strings.ToUpper(head)
+	head = strings.ReplaceAll(head, "-", "_")
+	return definePrefix + head + "_H"
 }
 
 func enumTypeName(base, name string) string {
@@ -120,8 +119,8 @@ func (me *hmfile) unionNameSpace(name string) string {
 func (me *hmfile) compileWithFileName(name string) string {
 	name = me.nameSpaceModuleUID(name)
 	name = flatten(name)
-	name = strings.ReplaceAll(name, "_", "-")
-	name = strings.ReplaceAll(name, ".", "-")
+	// name = strings.ReplaceAll(name, "_", "-")
+	name = strings.ReplaceAll(name, ".", "_")
 	return name
 }
 

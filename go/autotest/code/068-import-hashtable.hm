@@ -1,4 +1,4 @@
-import "hashtable"
+import hashtable
 
 # testing hashtables
 def main

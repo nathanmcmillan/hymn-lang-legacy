@@ -6,20 +6,20 @@ import (
 	"strings"
 )
 
-func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string) {
+func (me *cfile) subC(destination, rootname, hmlibs, filter string, name string) {
 
 	if debug {
-		fmt.Println("=== compile: " + name + " ===")
+		fmt.Println("subcompile>", name)
 	}
 
 	module := me.hmfile
 
-	guard := module.headerFileGuard(rootname, name)
+	guard := module.headerFileGuard(me.hmfile.pack, name)
 
 	cfile := module.cFileInit(guard)
 
 	cfile.pathLocal = name
-	cfile.pathGlobal, _ = filepath.Rel(module.program.outputDirectory, filepath.Join(folder, cfile.pathLocal))
+	cfile.pathGlobal, _ = filepath.Rel(module.program.outsourcedir, filepath.Join(destination, cfile.pathLocal))
 
 	for _, def := range module.defineOrder {
 		if def.class != nil {
@@ -43,12 +43,8 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string
 		cfile.compileFunction(f, fun, true)
 	}
 
-	if debug {
-		fmt.Println("=== end: " + name + " ===")
-	}
-
 	if len(cfile.codeFn) > 0 {
-		fileOut := filepath.Join(folder, name+".c")
+		fileOut := filepath.Join(destination, name+".c")
 
 		module.program.sources[name] = fileOut
 
@@ -64,5 +60,5 @@ func (me *cfile) subC(root, folder, rootname, hmlibs, filter string, name string
 	}
 
 	cfile.headSuffix.WriteString("\n#endif\n")
-	write(filepath.Join(folder, name+".h"), cfile.head())
+	write(filepath.Join(destination, name+".h"), cfile.head())
 }

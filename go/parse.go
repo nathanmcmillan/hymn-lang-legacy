@@ -60,22 +60,26 @@ func (me *parser) skipLines() {
 	}
 }
 
-func (me *hmfile) parse(out, path string) *parseError {
-	name := fileName(path)
-	data, er := read(path)
+func (me *hmfile) parse() *parseError {
+
+	source := me.path
+	destination := me.destination
+
+	name := fileName(source)
+	data, er := read(source)
 	if er != nil {
-		return err(nil, ECodeSystemError, er.Error())
+		return err(me.parser, ECodeSystemError, er.Error())
 	}
 
 	var tokenFile *os.File
 	var treeFile *os.File
 
 	if debug {
-		os.MkdirAll(out, os.ModePerm)
-		fmt.Println("=== parse: " + name + " ===")
+		os.MkdirAll(destination, os.ModePerm)
+		fmt.Println("parse>", name)
 
 		if debugTokens {
-			fileTokens := out + "/" + name + "-tokens.json"
+			fileTokens := destination + "/" + name + "-tokens.json"
 			if exists(fileTokens) {
 				os.Remove(fileTokens)
 			}
@@ -85,7 +89,7 @@ func (me *hmfile) parse(out, path string) *parseError {
 		}
 
 		if debugTree {
-			fileTree := out + "/" + name + "-tree.json"
+			fileTree := destination + "/" + name + "-tree.json"
 			if exists(fileTree) {
 				os.Remove(fileTree)
 			}

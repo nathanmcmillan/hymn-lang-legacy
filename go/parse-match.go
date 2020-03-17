@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 	n.copyData(newdataprimitive("bool"))
 	if er := me.eat(op); er != nil {
@@ -113,7 +111,6 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 					if er := me.eat(")"); er != nil {
 						return nil, er
 					}
-					fmt.Println("IS ::", temp)
 					tempd := right.data().getnamedvariable(temp, false)
 					tempv := nodeInit("variable")
 					tempv.idata = newidvariable(me.hmfile, tempd.name)

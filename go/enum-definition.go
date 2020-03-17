@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) defineEnum() *parseError {
 	if er := me.eat("enum"); er != nil {
 		return er
@@ -19,6 +21,7 @@ func (me *parser) defineEnum() *parseError {
 	if er := me.eat("line"); er != nil {
 		return er
 	}
+	generics := datatypels(genericsOrder)
 
 	uid := me.hmfile.reference(name)
 
@@ -83,6 +86,9 @@ func (me *parser) defineEnum() *parseError {
 					if er != nil {
 						return er
 					}
+					if unionArgType.isUnknown() && inList(generics, unionArgType.print()) < 0 {
+						return err(me, ECodeClassTypeExpected, fmt.Sprintf("I could not find the declared type `%s`", unionArgType.print()))
+					}
 					unionOrderedData.push(key, unionArgType)
 
 					if me.token.is == "," {
@@ -112,7 +118,7 @@ func (me *parser) defineEnum() *parseError {
 		return err(me, ECodeUnexpectedToken, "bad token \""+token.is+"\" in enum")
 	}
 
-	enumDef.finishInit(isSimple, types, datatypels(genericsOrder), interfaces)
+	enumDef.finishInit(isSimple, types, generics, interfaces)
 
 	for _, implementation := range enumDef.implementations {
 		me.finishEnumGenericDefinition(implementation)

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) defineClass() *parseError {
 	if er := me.eat("class"); er != nil {
 		return er
@@ -126,7 +128,7 @@ func (me *parser) defineClass() *parseError {
 			if getVariable(members, mname) != nil {
 				return err(me, ECodeMemberNameConflict, "Member name '"+mname+"' already used")
 			}
-			if i := inList(generics, mname); i >= 0 {
+			if inList(generics, mname) >= 0 {
 				return err(me, ECodeMemberNameConflict, "Cannot use '"+mname+"' as member name")
 			}
 
@@ -150,6 +152,9 @@ func (me *parser) defineClass() *parseError {
 			}
 			if er := me.eat("line"); er != nil {
 				return er
+			}
+			if mtype.isUnknown() && inList(generics, mtype.print()) < 0 {
+				return err(me, ECodeClassTypeExpected, fmt.Sprintf("I could not find the declared type `%s`", mtype.print()))
 			}
 			members = append(members, mtype.getnamedvariable(mname, true))
 			continue

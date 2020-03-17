@@ -178,6 +178,8 @@ func (me *parser) importing() *parseError {
 			}
 			module.staticScope[st.v.name] = st
 			module.scope.variables[st.v.name] = st.v
+		} else {
+			return err(me, ECodeImportPath, fmt.Sprintf("I could not find the static type `%s` importing from `%s`", s, alias))
 		}
 	}
 

@@ -2,9 +2,10 @@ import stream
 import tokens (token)
 import tokenizer (tokenizer)
 import parsing_errors (parse_error)
+import hymnfile (hymn_file)
 
 class parser
-    file     hymnfile
+    file     hymn_file
     tokenize tokenizer
     tok      token
     out      string
@@ -25,12 +26,12 @@ def parse(out string, path string) maybe<parse_error>
 def parser.next()
     self.pos += 1
     tok = self.tokenize.get(self.pos)
-    if tok == "line" or tok == "comment"
+    if tok.type == "line" or tok.type == "comment"
         self.line += 1
     self.tok = tok
 
 def parser.verify(expected string) bool
-    if self.tok != expected
+    if self.tok.type != expected
         return false
     return true
 

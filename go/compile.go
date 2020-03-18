@@ -51,7 +51,7 @@ func (me *hmfile) generateC() string {
 		}
 		filterOrder = append(filterOrder, name)
 		filters[name] = fname
-		cfile.headReqIncludeSection.WriteString("\n#include \"" + fname + ".h\"")
+		cfile.headSubIncludeSection.WriteString("\n#include \"" + fname + ".h\"")
 	}
 
 	var code strings.Builder

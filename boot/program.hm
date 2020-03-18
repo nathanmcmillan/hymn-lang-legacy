@@ -18,10 +18,10 @@ class program
 
 def new() program
     return program (
-        hymn_lib_map : new_str_map<string>()
-        hymn_library : hymnlib.new()
+        hymn_lib_map: new_str_map<string>()
+        hymn_library: hymnlib.new()
         hymn_file_map: new_str_map<hymn_file>()
-        sources      : new_str_map<string>()
+        sources: new_str_map<string>()
     )
 
 def program.parse(flag flags)

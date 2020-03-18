@@ -44,11 +44,11 @@ def digit(c char) bool
 
 class token
     depth int
-    name  string
+    type  string
     value string
 
 def token.to_string() string
-    mutable s = "{depth:" + str(self.depth) + ", type:" + self.name
+    mutable s = "{depth:" + str(self.depth) + ", type:" + self.type
     if self.value != ""
         s += ", value:" + self.value
     s += "}"

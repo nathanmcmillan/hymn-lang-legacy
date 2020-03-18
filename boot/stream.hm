@@ -54,7 +54,7 @@ def stream.fail() string
             if d == '\n'
                 line += 1
                 break
-        if content.len() == 0
+        if content.len() == uint 0
             break
         b.write(str(line))
         b.write(": ")

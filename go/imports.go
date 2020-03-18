@@ -105,7 +105,7 @@ func (me *parser) importing() *parseError {
 		}
 		importing = found
 
-		if me.isCyclical(module, importing) {
+		if isCyclical(module, importing) {
 			return err(me, ECodeImportPath, fmt.Sprintf("Cyclical dependency between `%s` and `%s`", module.path, hymnFilePath))
 		}
 
@@ -190,11 +190,22 @@ func (me *parser) importing() *parseError {
 	return nil
 }
 
-func (me *parser) isCyclical(module *hmfile, importing *hmfile) bool {
-	for path := range importing.importPaths {
-		if path == module.path {
-			return true
+func isCyclical(question *hmfile, importing *hmfile) bool {
+	queue := []*hmfile{importing}
+	visited := make(map[*hmfile]bool)
+	for len(queue) > 0 {
+		current := queue[len(queue)-1]
+		for path, module := range current.importPaths {
+			if _, ok := visited[module]; ok {
+				continue
+			}
+			if path == question.path {
+				return true
+			}
+			queue = append(queue, module)
+			visited[module] = true
 		}
+		queue = queue[0 : len(queue)-1]
 	}
 	return false
 }

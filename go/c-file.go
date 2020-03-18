@@ -22,6 +22,7 @@ type cfile struct {
 	headStructTypeDefSection strings.Builder
 	headStructSection        strings.Builder
 	headExternSection        strings.Builder
+	headSubIncludeSection    strings.Builder
 	headFuncSection          strings.Builder
 	headSuffix               strings.Builder
 	codeFn                   []strings.Builder
@@ -122,6 +123,10 @@ func (me *cfile) head() string {
 	head.WriteString(me.headStructSection.String())
 	if me.headExternSection.Len() != 0 {
 		head.WriteString(me.headExternSection.String())
+		head.WriteString("\n")
+	}
+	if me.headSubIncludeSection.Len() != 0 {
+		head.WriteString(me.headSubIncludeSection.String())
 		head.WriteString("\n")
 	}
 	head.WriteString(me.headFuncSection.String())

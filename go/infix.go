@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) infixConcat(left *node) (*node, *parseError) {
 	node := nodeInit("concat")
 	node.copyDataOfNode(left)
@@ -84,13 +86,12 @@ func infixCompare(me *parser, left *node, op string) (*node, *parseError) {
 	if er != nil {
 		return nil, er
 	}
+	if left.data().notEquals(right.data()) {
+		return nil, err(me, ECodeBadAssignment, fmt.Sprintf("Left `%s` and right `%s` types do not match.", left.data().print(), right.data().print()))
+	}
 	node.push(left)
 	node.push(right)
-	d, er := getdatatype(me.hmfile, "bool")
-	if er != nil {
-		return nil, er
-	}
-	node.copyData(d)
+	node._vdata = newdataprimitive("bool")
 	return node, nil
 }
 

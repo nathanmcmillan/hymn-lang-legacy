@@ -239,8 +239,8 @@ func (me *parser) parseReturn() (*node, *parseError) {
 		return nil, er
 	}
 	n := nodeInit("return")
+	fn := me.hmfile.scope.fn
 	if me.token.is != "line" {
-		fn := me.hmfile.scope.fn
 		calc, er := me.calc(0, fn.returns)
 		if er != nil {
 			return nil, er
@@ -263,6 +263,10 @@ func (me *parser) parseReturn() (*node, *parseError) {
 	if er := me.verify("line"); er != nil {
 		return nil, er
 	}
+	if fn.terminators == nil {
+		fn.terminators = make([]*node, 0)
+	}
+	fn.terminators = append(fn.terminators, n)
 	return n, nil
 }
 

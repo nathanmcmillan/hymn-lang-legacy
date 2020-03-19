@@ -94,14 +94,10 @@ func (me *parser) iterloop() (*node, *parseError) {
 		return nil, er
 	}
 	if me.token.is == "," {
-		if er := me.eat(","); er != nil {
-			return nil, er
-		}
+		me.next()
 		if me.token.is == "_" {
-			var2 = me.token.is
-			if er := me.eat("_"); er != nil {
-				return nil, er
-			}
+			var2 = "_"
+			me.next()
 		} else {
 			var2 = me.token.value
 			if er := me.eat("id"); er != nil {
@@ -143,7 +139,9 @@ func (me *parser) iterloop() (*node, *parseError) {
 	}
 
 	itermint := using.data().getmember().getnamedvariable(d.idata.name, false)
-	me.hmfile.scope.variables[itermint.name] = itermint
+	if var2 != "_" {
+		me.hmfile.scope.variables[itermint.name] = itermint
+	}
 	d.copyData(itermint.data())
 
 	block, er := me.block()

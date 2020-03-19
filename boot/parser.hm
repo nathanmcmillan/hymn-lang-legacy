@@ -16,12 +16,14 @@ class parser
 def parse(out string, path string) maybe<parse_error>
     echo(out)
     echo(path)
+    echo(system("pwd"))
     data = cat(path)
     file_stream = stream.new(data)
     tokenize = tokenizer.new(file_stream)
     tok = tokenize.get(0)
     echo(data)
     echo(tok.to_string())
+    return none
 
 def parser.next()
     self.pos += 1

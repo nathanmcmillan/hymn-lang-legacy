@@ -98,12 +98,13 @@ func (me *hmfile) getvar(name string) *variable {
 	scope := me.scope
 	for {
 		if v, ok := scope.variables[name]; ok {
-			fn := me.scope.fn
-			if fn != nil {
-				if id := fn.getParameter(name); id != nil {
-					id.used = true
-				}
-			}
+			// fn := me.scope.fn
+			// if fn != nil {
+			// 	if id := fn.getParameter(name); id != nil {
+			// 		id.used = true
+			// 	}
+			// }
+			v.used = true
 			return v
 		}
 		if scope.root == nil {

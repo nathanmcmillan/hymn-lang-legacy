@@ -14,6 +14,7 @@ type function struct {
 	aliasing      map[string]string
 	expressions   []*node
 	returns       *datatype
+	terminators   []*node
 	generics      []string
 	mapping       map[string]*datatype
 	interfaces    map[string][]*classInterface
@@ -255,7 +256,7 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		fname = self.name + "." + name
 	} else {
 		if name == "static" || name == "init" {
-			return nil, err(me, ECodeNameConflict, fmt.Sprintf("Function %s is reserved.", name))
+			return nil, err(me, ECodeNameConflict, fmt.Sprintf("Function `%s` is reserved.", name))
 		}
 	}
 	if me.token.is == "<" {
@@ -418,15 +419,18 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		fn.expressions = append(fn.expressions, expr)
 	}
 fnEnd:
-	for _, arg := range fn.args {
-		if !arg.used {
-			e := fmt.Sprintf("I found the variable `%s` for function `%s` is unused.", arg.name, fname)
+	for _, v := range module.scope.variables {
+		if !v.used {
+			e := fmt.Sprintf("I found the variable `%s` for function `%s` is unused.", v.name, fname)
 			h := ""
-			if arg.name == "self" {
+			if v.name == "self" {
 				h += " This is a class function. Can it be a static?"
 			}
 			return nil, errh(me, ECodeUnusedVariable, e, h)
 		}
+	}
+	if !fn.returns.isVoid() && len(fn.terminators) == 0 {
+		return nil, err(me, ECodeUnusedVariable, "I reached the end of a non-void function.")
 	}
 	module.popScope()
 	return fn, nil

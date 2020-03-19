@@ -17,6 +17,7 @@ static debug_command = true
 
 def exec_compile(flag flags) result<string,parse_error>
     out = paths.abs(flag.write_to)
+    echo(out)
     p = program.new()
     p.parse(flag)
     return result.ok("")
@@ -40,15 +41,19 @@ def main(args []string)
         printf("args %d: %s\n", i, a)
     
     flag = flags.new()
-    flag.path = "./main.c"
+    flag.path = "src/boot/main/main.c"
     flag.write_to = "write_to..."
 
-    if flag.help or flag.path == "" or flag.hmlib == ""
+    if flag.help or flag.path == ""
         help()
         exit(1)
 
     ok = exec_compile()
     
+
     if ok is error(e)
-        echo(e.value.to_string())
+        echo("error: " + e.value.to_string())
         exit(1)
+
+    if ok is ok(r)
+        echo(r.value)

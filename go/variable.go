@@ -4,6 +4,7 @@ type variable struct {
 	name    string
 	cname   string
 	mutable bool
+	used    bool
 	_vdata  *datatype
 }
 

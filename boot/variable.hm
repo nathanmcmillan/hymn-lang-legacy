@@ -1,0 +1,38 @@
+class variable
+    name       string
+    c_name     string
+    is_mutable bool
+    is_used    bool
+    data       data_type
+
+def variable.get_data() data_type
+    return self.data
+
+def variable.copy_data(data data_type)
+    self.data = data.copy()
+
+def variable.copy() variable
+    copy = variable (
+        name: self.name
+        c_name: self.name
+        is_mutable: self.is_mutable
+        data: self.data.copy()
+    )
+    return copy
+
+def new(type string, name string, is_mutable bool) result<variable,parse_error>
+    ok = data_type.new(module, type)
+    match ok
+        ok(d) =>
+            data = d.value
+            var = variable (
+                name: name
+                c_name: name
+                is_mutable: is_mutable
+                data: data
+            )
+            return var
+        error(e) =>
+            return e
+    panic()
+    

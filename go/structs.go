@@ -2,7 +2,7 @@ package main
 
 type scope struct {
 	root      *scope
-	temp      int
+	tempID    int
 	fn        *function
 	variables map[string]*variable
 	renaming  map[string]string

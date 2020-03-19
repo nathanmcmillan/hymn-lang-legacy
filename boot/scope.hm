@@ -1,0 +1,6 @@
+class scope
+    parent    maybe<scope>
+    temp_id   uint
+    fn        function
+    variables hashmap<string,variable>
+    rename    hashmap<string,string>

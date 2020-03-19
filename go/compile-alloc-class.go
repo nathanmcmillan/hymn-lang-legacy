@@ -5,8 +5,8 @@ import (
 )
 
 func (me *cfile) temp() string {
-	temp := "temp" + strconv.Itoa(me.scope.temp)
-	me.scope.temp++
+	temp := "temp" + strconv.Itoa(me.scope.tempID)
+	me.scope.tempID++
 	return temp
 }
 

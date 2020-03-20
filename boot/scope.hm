@@ -1,6 +1,15 @@
+import hashmap as dict
+
 class scope
     parent    maybe<scope>
     temp_id   uint
     fn        function
     variables hashmap<string,variable>
-    rename    hashmap<string,string>
+    renames   hashmap<string,string>
+
+def new(parent maybe<scope>) scope
+    return scope (
+        parent: parent
+        variables: hashmap.new_str_map<variable>()
+        renames: hashmap.new_str_map<string>()
+    )

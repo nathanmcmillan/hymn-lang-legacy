@@ -1,0 +1,5 @@
+def walrus(p parser, left node, op string) result<node,parse_error>
+    r = p.assign(left, true, false)
+    match r
+        ok(n) return n
+        error(e) return e

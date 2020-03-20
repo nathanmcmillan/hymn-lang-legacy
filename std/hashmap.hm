@@ -78,7 +78,7 @@ def hashmap.clear()
         self.table[i] = none
     self.size = 0
 
-def new_map<k,v>(hash (k) int) hashmap<k,v>
+def new<k,v>(hash (k) int) hashmap<k,v>
     return hashmap (
         capacity: 12
         get_code: hash

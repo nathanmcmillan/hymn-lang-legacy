@@ -1,0 +1,41 @@
+class node
+    parent     maybe<node>
+    type       string
+    value      string
+    id         maybe<id_data>
+    func       maybe<function>
+    data       data_type
+    attributes hashmap<string,string>
+    has        []node
+
+def new(type string) node
+    return node (
+        type: type
+        attributes: hashmap.new_str_map<string>()
+    )
+
+def node.copy() node
+    mutable id = none<id_data>
+    if self.id is some(s)
+        id = s.copy()
+    has = []node
+    iterate x in self.has
+        has = push(has, x)
+    attributes = hashmap.new_str_map<string>()
+    iterate e in self.attributes
+        attributes.set(e.key, e.value)
+    return node (
+        type: self.type
+        value: self.value
+        func: self.func
+        parent: self.parent
+        has: has
+        attributes: attributes
+    )
+
+def node.prepend(leaf node)
+    self.has = push(self.has, leaf)
+
+def node.push(leaf node)
+    leaf.parent = self
+    self.has = push(self.has, leaf)

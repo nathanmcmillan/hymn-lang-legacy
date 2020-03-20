@@ -1,0 +1,22 @@
+import infix
+
+class prefix_rule
+    precedence int
+    name       string
+    fn         (parser, string) result<node,parse_error>
+    
+class infix_rule
+    precedence int
+    name       string
+    fn         (parser, node, string) result<node,parse_error>
+
+static infixes = hashmap.new_str_map<infix_rule>()
+static prefixes = hashmap.new_str_map<prefix_rule>()
+
+infixes.put(":=", infix_rule(1, "", infix.walrus))
+
+def get_prefix_name(op string) string
+    return ""
+
+def get_prefix_precedence(op string) int
+    return 0

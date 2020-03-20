@@ -1,0 +1,23 @@
+import node (node)
+import parsing_errors (parse_error)
+
+enum result
+    ok(value node)
+    error(value parse_error)
+
+# TODO
+# enums can only have a SINGLE value attached to them
+# multiple values can be used through a class
+# that way the SINGLE value can be referenced directly
+
+# enum result
+#     ok    node
+#     error parse_error
+
+# enum result<x,y>
+#     ok    x
+#     error y
+
+# enum either<x,y>
+#     left  x
+#     right y

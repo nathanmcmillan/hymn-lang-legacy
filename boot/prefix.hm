@@ -1,0 +1,19 @@
+import node
+import parsing_errors (unexpected_token)
+import parselet (get_prefix_name, get_prefix_precedence)
+
+import std:result
+
+def get_prefix_name(op string) string
+    return ""
+
+def prefix_sign(p parser, op string) result<node,parse_error>
+    n = node.new(get_prefix_name(op))
+    if not p.eat(op)
+        return error(unexpected_token(p))
+    right = p.calc(get_prefix_precedence(op), none)
+    if right is error(e)
+        return e
+    n.push(right)
+    n.copy_data(right)
+    return ok(n)

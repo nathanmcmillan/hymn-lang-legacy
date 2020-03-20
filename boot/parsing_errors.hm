@@ -2,6 +2,7 @@ class parse_error
     line        int
     file        string
     name        string
+    code        int
     description string
     hint        string
 
@@ -12,3 +13,12 @@ def parse_error.to_string() string
     out += "\n\n" + self.hint
     out += "\n\n"
     return out
+
+def new(p parser, code int, reason string) parse_error
+    return parse_error(
+        code: code
+        description: reason
+    )
+
+def unexpected_token(p parser) parse_error
+    return parse_error(p, codes.unexpected_token, "")

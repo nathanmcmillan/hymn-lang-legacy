@@ -87,7 +87,9 @@ func infixCompare(me *parser, left *node, op string) (*node, *parseError) {
 		return nil, er
 	}
 	if left.data().notEquals(right.data()) {
-		return nil, err(me, ECodeBadAssignment, fmt.Sprintf("Left `%s` and right `%s` types do not match.", left.data().print(), right.data().print()))
+		if !autoCast(left.data(), right.data()) {
+			return nil, err(me, ECodeBadAssignment, fmt.Sprintf("Left %s and right `%s` types do not match.", left.data().print(), right.data().print()))
+		}
 	}
 	node.push(left)
 	node.push(right)
@@ -136,4 +138,11 @@ func infixWalrus(me *parser, left *node, op string) (*node, *parseError) {
 		return nil, er
 	}
 	return node, nil
+}
+
+func autoCast(left, right *datatype) bool {
+	if left.isAnyIntegerType() && right.isAnyIntegerType() {
+		return true
+	}
+	return false
 }

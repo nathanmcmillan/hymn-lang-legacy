@@ -1,0 +1,12 @@
+import math
+
+enum snake
+    python
+    viper
+    cobra
+
+def main
+    a = snake.cobra
+    b = snake.viper
+    if a == b: echo("bad")
+    else: echo("good")

@@ -38,9 +38,9 @@ def main
     if h == 0 : echo("no!")
     if i == 0 : echo("no!")
     if j == 0 : echo("no!")
-    if k == 0 : echo("no!")
-    if l == 0 : echo("no!")
-    if m == 0 : echo("no!")
+    if k == float 0 : echo("no!")
+    if l == float32 0 : echo("no!")
+    if m == float64 0 : echo("no!")
 
     echo(str(int 2))
     echo(str(int8 2))

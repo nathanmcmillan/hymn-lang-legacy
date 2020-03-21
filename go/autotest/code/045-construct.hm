@@ -17,6 +17,7 @@ def main
     )
 
     x = attribute(true, attribute(true, vec(2*5, 2*6, 2*7)))
+    echo(x.on)
 
     echo(str(z.on) + " | " + str(z.has.on))
     echo(z.has.has.x)
@@ -24,9 +25,9 @@ def main
     echo(z.has.has.z)
 
     w = attribute<attribute<vec>>()
+    echo(w.on)
 
     a = vec()
-    g = vec()
     b = vec(1)
     c = vec(1, 2, 3)
     d = vec(y:5)

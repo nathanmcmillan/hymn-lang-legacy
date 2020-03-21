@@ -24,4 +24,4 @@ def tokenizer.new_simple_token(name string) token
 def tokenizer.get(pos int) token
     if pos < len(self.tokens)
         return self.tokens[pos]
-    return self.eof
+    return eof

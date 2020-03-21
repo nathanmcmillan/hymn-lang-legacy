@@ -1,4 +1,3 @@
-
 def main
     echo(int 2.3)
     echo(int8 2.3)
@@ -29,15 +28,15 @@ def main
     m = float64 2
 
     if a == 0 : echo("no!")
-    if b == 0 : echo("no!")
-    if c == 0 : echo("no!")
-    if d == 0 : echo("no!")
-    if e == 0 : echo("no!")
-    if f == 0 : echo("no!")
-    if g == 0 : echo("no!")
-    if h == 0 : echo("no!")
-    if i == 0 : echo("no!")
-    if j == 0 : echo("no!")
+    if b == int8 0 : echo("no!")
+    if c == int16 0 : echo("no!")
+    if d == int32 0 : echo("no!")
+    if e == int64 0 : echo("no!")
+    if f == uint 0 : echo("no!")
+    if g == uint8 0 : echo("no!")
+    if h == uint16 0 : echo("no!")
+    if i == uint32 0: echo("no!")
+    if j == uint64 0: echo("no!")
     if k == float 0 : echo("no!")
     if l == float32 0 : echo("no!")
     if m == float64 0 : echo("no!")

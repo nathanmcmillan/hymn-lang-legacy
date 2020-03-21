@@ -1,4 +1,4 @@
-import hashset
+import hymn:hashset
 
 def main
     echo("--- start hashset import ---")

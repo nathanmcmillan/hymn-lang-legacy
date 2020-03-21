@@ -54,7 +54,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 						return nil, er
 					}
 				} else {
-					return nil, err(me, ECodeClassMemberNotFound, "Class: "+rootClass.name+" does not have a variable or function named: "+dotName)
+					return nil, err(me, ECodeClassMemberNotFound, "`"+rootClass.name+"` class does not own anything called `"+dotName+"`")
 				}
 				head = member
 

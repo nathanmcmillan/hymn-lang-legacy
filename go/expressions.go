@@ -135,8 +135,11 @@ func (me *parser) parseIdent() (*node, *parseError) {
 		return nil, er
 	}
 
+	fmt.Println("PARSE IDENT>", n.string(me.hmfile, 0))
+
 	if me.assignable(n) {
 		n, er = me.assign(n, true, false)
+		fmt.Println("ASSIGN IDENT>", n.string(me.hmfile, 0))
 		if er != nil {
 			return nil, er
 		}

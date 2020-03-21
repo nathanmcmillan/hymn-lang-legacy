@@ -1,0 +1,15 @@
+import hymn:error (error)
+
+class io_error implements error
+    code        int
+    description string
+    hint        string
+
+def io_error.get_code() int
+    return self.code
+
+def io_error.get_description() string
+    return self.description
+
+def io_error.get_hint() string
+    return self.hint

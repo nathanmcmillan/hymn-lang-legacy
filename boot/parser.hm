@@ -23,7 +23,7 @@ def parse(out string, path string) maybe<parse_error>
     tokenize = tokenizer.new(file_stream)
     tok = tokenize.get(0)
     echo(data)
-    echo(tok.to_string())
+    echo(tok.str())
     return none
 
 def parser.next()

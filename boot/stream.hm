@@ -58,5 +58,5 @@ def stream.fail() string
             break
         b.write(str(line))
         b.write(": ")
-        b.write(content.to_string())
-    return b.to_string()
+        b.write(content.str())
+    return b.str()

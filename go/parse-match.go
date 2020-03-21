@@ -201,9 +201,6 @@ func (me *parser) parseMatch() (*node, *parseError) {
 					return nil, er
 				}
 			}
-			if er := me.eat("=>"); er != nil {
-				return nil, er
-			}
 			n.push(caseNode)
 			if temp != "" {
 				en, _, ok := matchType.isEnum()
@@ -266,9 +263,6 @@ func (me *parser) parseMatch() (*node, *parseError) {
 					return nil, er
 				}
 			}
-			if er := me.eat("=>"); er != nil {
-				return nil, er
-			}
 			some := nodeInit("some")
 			n.push(some)
 			if temp != "" {
@@ -307,9 +301,6 @@ func (me *parser) parseMatch() (*node, *parseError) {
 			if er := me.eat("none"); er != nil {
 				return nil, er
 			}
-			if er := me.eat("=>"); er != nil {
-				return nil, er
-			}
 			n.push(nodeInit("none"))
 			if me.token.is == "line" {
 				if er := me.eat("line"); er != nil {
@@ -334,9 +325,6 @@ func (me *parser) parseMatch() (*node, *parseError) {
 			}
 		} else if me.token.is == "_" {
 			if er := me.eat("_"); er != nil {
-				return nil, er
-			}
-			if er := me.eat("=>"); er != nil {
 				return nil, er
 			}
 			n.push(nodeInit("_"))
@@ -394,9 +382,6 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				caseNodes.push(nodeInit(value))
 			}
 			n.push(caseNodes)
-			if er := me.eat("=>"); er != nil {
-				return nil, er
-			}
 			if me.token.is == "line" {
 				if er := me.eat("line"); er != nil {
 					return nil, er

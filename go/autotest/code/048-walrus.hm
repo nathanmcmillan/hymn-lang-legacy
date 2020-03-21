@@ -36,5 +36,5 @@ def main
     echo(c)
 
     match t := boo()
-        boo => echo("boo!")
-        zoo => echo("zoo!")
+        boo echo("boo!")
+        zoo echo("zoo!")

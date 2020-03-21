@@ -23,10 +23,10 @@ def main
     echo(a.x)
     
     match a.nest
-        some(v) =>
+        some(v) 
             v.x = 5.1
             echo(v.x)
-        none => pass
+        none pass
 
     if a.nest is some(t)
         echo("foo " + str(t.x))

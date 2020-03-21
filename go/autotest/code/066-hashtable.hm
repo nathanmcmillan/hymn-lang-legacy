@@ -40,8 +40,8 @@ def hashtable.set(key k, value v)
         element = s.next
     item = hashtable_item(code, key, value, none)
     match previous
-        some(s) => s.next = item
-        none => self.table[bin] = item
+        some(s) s.next = item
+        none self.table[bin] = item
     self.size += 1
 
 def hashtable.get(key k) maybe<v>
@@ -65,8 +65,8 @@ def hashtable.delete(key k) maybe<v>
     while element is some(s)
         if code == s.code
             match previous
-                some(p) => p.next = s.next
-                none => self.table[bin] = s.next
+                some(p) p.next = s.next
+                none self.table[bin] = s.next
             self.size -= 1
             return s.value
         previous = element
@@ -86,22 +86,22 @@ def main
 
     m.set(0, "kiwi")
     match m.get(0)
-        some(out) => echo(out)
-        none => echo("bad")
+        some(out) echo(out)
+        none echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 
     m.set(0, "lemon")
     match m.get(0)
-        some(out) => echo(out)
-        none => echo("bad")
+        some(out) echo(out)
+        none echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 
     m.set(4, "coconut")
     match m.get(4)
-        some(out) => echo(out)
-        none => echo("bad")
+        some(out) echo(out)
+        none echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 

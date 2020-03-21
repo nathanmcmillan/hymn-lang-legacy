@@ -101,8 +101,8 @@ def digit(c char) bool
     match c
         '0' | '1' | '2' | '3' |
         '4' | '5' | '6' | '7' |
-        '8' | '9' => return true
-        _ => pass
+        '8' | '9' return true
+        _ pass
     return false
 
 class token
@@ -110,7 +110,7 @@ class token
     type  string
     value string
 
-def token.to_string() string
+def token.str() string
     mutable s = "{depth:" + str(self.depth) + ", type:" + self.type
     if self.value != ""
         s += ", value:" + self.value

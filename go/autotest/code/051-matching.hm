@@ -14,14 +14,14 @@ enum liquid
 
 def goob(b bug) string
     match b
-        ant => return "glob ant!"
-        bee => return "glob bee!"
-        moth => return "glob moth!"
+        ant  return "glob ant!"
+        bee  return "glob bee!"
+        moth return "glob moth!"
     
 def doob(d dog) string
     match d
-        bark => return "bark!"
-        woof => echo("ha!")
+        bark return "bark!"
+        woof echo("ha!")
     return "woof!"
 
 def zoob(b bug.ant) string
@@ -53,26 +53,28 @@ def main
     echo(doob(d))
 
     match b
-        ant => echo("ant!")
-        bee => echo("bee!")
-        moth => echo("moth!")
+        ant echo("ant!")
+        bee echo("bee!")
+        moth echo("moth!")
 
     match b
-        ant => echo("ant!")
-        _ => pass
+        ant echo("ant!")
+        _   pass
 
     match b
-        bee =>
+        bee
             echo("bee!")
-        _ =>
+        _
             pass
 
     match b
-        ant => echo("ant!")
-        bee =>
+        ant
+            echo("ant!")
+        bee
             echo("bee!")
             echo("bee 2!")
-        moth => echo("moth!")
+        moth
+            echo("moth!")
 
     f = foob()
     echo(f.value)

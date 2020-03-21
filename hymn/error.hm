@@ -1,0 +1,4 @@
+interface error
+    get_code() int
+    get_description() string
+    get_hint() string

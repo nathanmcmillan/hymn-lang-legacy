@@ -8,22 +8,22 @@ def statement(p parser) maybe<parse_error>
     token = p.token
     op = token.name
     if x < b
-        echo foo
+        echo("foo")
     match op
-        "import" => pass
-        "const" => pass
-        "mutable" => pass
-        "def" | "id" => pass
-        "class" => pass
-        "interface" => pass
-        "enum" => pass
-        "macro" => pass
-        "ifdef" => pass
-        "elsedef" => pass
-        "enddef" => pass
-        "comment" => pass
-        "line" | "eof" => pass
-        _ =>
+        "import"       pass
+        "const"        pass
+        "mutable"      pass
+        "def" | "id"   pass
+        "class"        pass
+        "interface"    pass
+        "enum"         pass
+        "macro"        pass
+        "ifdef"        pass
+        "elsedef"      pass
+        "enddef"       pass
+        "comment"      pass
+        "line" | "eof" pass
+        _
             description = sprintf("Unknown top level expression `%s`", op)
             return parse_error.new(p, codes.unexpected_token, description)
     return none

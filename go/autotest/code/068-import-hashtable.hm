@@ -1,31 +1,31 @@
-import hashtable
+import hymn:hashmap
 
 # testing hashtables
 def main
-    t = [12:]maybe<hashtable.hashtable_item<int,string>>
-    m = hashtable.hashtable(
+    t = [12:]maybe<hashmap.hashmap_item<int,string>>
+    m = hashmap.hashmap(
         capacity: 12
-        get_code: hashtable.int_hashcode
+        get_code: hashmap.int_hashcode
         table: t)
 
-    m.set(0, "kiwi")
+    m.put(0, "kiwi")
     match m.get(0)
-        some(out) => echo(out)
-        none => echo("bad")
+        some(out) echo(out)
+        none echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 
-    m.set(0, "lemon")
+    m.put(0, "lemon")
     match m.get(0)
-        some(out) => echo(out)
-        none => echo("bad")
+        some(out) echo(out)
+        none echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 
-    m.set(4, "coconut")
+    m.put(4, "coconut")
     match m.get(4)
-        some(out) => echo(out)
-        none => echo("bad")
+        some(out) echo(out)
+        none echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 
@@ -34,10 +34,10 @@ def main
     echo("size: " + str(m.size))
     echo("---")
 
-    m.set(5, "banana")
-    m.set(8, "eggplant")
-    m.set(13, "pickle")
-    m.set(20, "cucumber")
+    m.put(5, "banana")
+    m.put(8, "eggplant")
+    m.put(13, "pickle")
+    m.put(20, "cucumber")
     if m.get(4) is none : echo("bad")
     if m.get(5) is none : echo("bad")
     if m.get(8) is none : echo("bad")

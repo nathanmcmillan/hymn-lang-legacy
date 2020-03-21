@@ -64,11 +64,11 @@ def main
     e.next = link()
     echo(e.node.z)
     match e.next
-        none => pass
-        some(s) =>
+        none pass
+        some(s)
             s.node = vec()
             s.node.y = 144.3
     match e.next
-        none => pass
-        some(s) =>
+        none pass
+        some(s)
             echo(s.node.y)

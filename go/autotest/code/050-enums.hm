@@ -1,4 +1,4 @@
-import math
+import hymn:math
 
 class vec
     x int
@@ -80,8 +80,8 @@ def main
 
     omega = omega_add()
     match omega
-        add => echo("omega: good")
-        _ => echo("omega: not good")
+        add echo("omega: good")
+        _   echo("omega: not good")
     if omega is add : echo("omega: extra good")
 
     fin = mammal.dolphin("x1", "y1")

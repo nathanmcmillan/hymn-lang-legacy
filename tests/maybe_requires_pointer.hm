@@ -5,5 +5,5 @@ def call() maybe<int>
 def main()
     x = call()
     match x
-        some => echo("oh no!")
-        _ => pass
+        some echo("oh no!")
+        _ pass

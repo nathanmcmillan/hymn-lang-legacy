@@ -16,7 +16,7 @@ def big_string.write_char(new char)
 def big_string.len() uint
     return self.length
 
-def big_string.to_string() string
+def big_string.str() string
     mutable out = ""
     iterate s in self.list
         out += s

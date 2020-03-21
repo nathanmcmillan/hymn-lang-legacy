@@ -1,12 +1,23 @@
-class parse_error
-    line        int
-    file        string
-    name        string
+import hymn:error (error)
+
+class parse_error implements error
     code        int
     description string
     hint        string
+    line        int
+    file        string
+    name        string
 
-def parse_error.to_string() string
+def parse_error.get_code() int
+    return self.code
+
+def parse_error.get_description() string
+    return self.description
+
+def parse_error.get_hint() string
+    return self.hint
+
+def parse_error.str() string
     mutable out = "\n"
     out += "-- " + str(self.code) + " // " + self.name + " -- " + self.file
     out += "\n\n" + self.description

@@ -12,9 +12,9 @@ def the_world() foo
 
 def do_things(f foo)
     match f
-        hello =>
+        hello
             echo("hello!")
-        world(w) =>
+        world(w)
             echo("world!")
             echo(w.value)
 
@@ -39,20 +39,20 @@ def main
         echo("some")
     
     match b := fun(2)
-        none => echo("no")
-        some(s) =>
+        none echo("no")
+        some(s) 
             echo("yes")
             do_things(s)
             match s
-                hello(h) =>
+                hello(h) 
                     echo("#2 hello " + str(h.value))
-                world(w) =>
+                world(w) 
                     echo("#2 world " + w.value)
 
     match c := get_me()
-        hello(h) =>
+        hello(h) 
             echo("#3 hello " + str(h.value))
-        world(w) =>
+        world(w) 
             echo("#3 world " + w.value)
     
     if fun(0) is none

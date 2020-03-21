@@ -1,0 +1,16 @@
+import result (result)
+import io (io_error)
+
+class file_info
+    name string
+    dir  bool
+
+def file_info.is_dir() bool
+    return self.dir
+
+def stat(path string) result<file_info,io_error>
+    echo("fs path: " + path)
+    return result.ok(file_info())
+    
+def remove(path string)
+    echo("fs remove: " + path)

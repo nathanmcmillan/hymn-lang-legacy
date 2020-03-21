@@ -8,6 +8,7 @@ import flags (flags)
 import parse_error (parse_error)
 
 import hymn:os
+import hymn:fs
 import hymn:result (result)
 import hymn:path
 
@@ -33,13 +34,22 @@ def compile(f flags) result<string,parse_error>
     mutable source_out = path.abs(f.write_to)
     source_out = path.join(source_out, "src")
 
-    stat = os.stat(f.path)
-    # assert stat is ok
+    # todo: a identifier on a line with nothing else, means it must be declared later?
+    # this is NOT the same as none<T> because it will NOT be a maybe type
+
+    # todo: special `try` keyword will automatically insert match for result
+    
+    # stat = try fs.stat(f.path)
+
+    stat_result = fs.stat(f.path)
+    stat
+    match stat_result
+        ok(r) stat = r
+        error(e) return e
     if stat.is_dir()
         f.path = path.join(f.path, "main.hm")
 
     directory = path.abs(path.dir(f.path))
-    # assert directory is ok
 
     mutable libc = os.get_env("HYMN_LIBC")
     if f.libc != ""
@@ -50,7 +60,7 @@ def compile(f flags) result<string,parse_error>
 
     p = program.new()
     p.parse(f)
-    return result.ok("")
+    return ok("")
 
 def main(args []string)
 
@@ -67,8 +77,8 @@ def main(args []string)
 
     ok = compile()
     
-    if ok is error(e)
-        echo("error: " + e.value.to_string())
+    if ok is error(e) # match ok is error(e) {{less confusing}}
+        echo("error: " + e.value.str())
         exit(1)
 
     if ok is ok(r)

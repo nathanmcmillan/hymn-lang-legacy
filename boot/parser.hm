@@ -5,6 +5,16 @@ import parse_error (parse_error)
 import parse_code
 import hymn_file (hymn_file)
 
+import hymn:io
+
+def io_error(e io.io_error) parse_error
+    return parse_error (
+        id: e.get_id()
+        code: e.get_code()
+        description: e.get_description()
+        hint: e.get_hint()
+    )
+
 class parser
     file     hymn_file
     tokenize tokenizer

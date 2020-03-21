@@ -5,6 +5,7 @@
 
 import program
 import flags (flags)
+import parser
 import parse_error (parse_error)
 
 import hymn:os
@@ -35,32 +36,46 @@ def compile(f flags) result<string,parse_error>
     source_out = path.join(source_out, "src")
 
     # todo: a identifier on a line with nothing else, means it must be declared later?
-    # this is NOT the same as none<T> because it will NOT be a maybe type
 
     # todo: special `try` keyword will automatically insert match for result
-    
+    # todo: replace if X is Y with match X: Y
+
     # stat = try fs.stat(f.path)
+
+    # stat = try fs.stat(f.path) catch(e)
+    #     return result.error(parser.io_error(e.value))
 
     stat_result = fs.stat(f.path)
     stat
     match stat_result
         ok(r) stat = r
-        error(e) return e
+        error(e)
+            # main does not know 
+            # result<%19.file_info,%17.io_error>.error
+
+            # it should be passed along as
+            # %20.result<%19.file_info,%17.io_error>.error
+
+            # main should not care or parse it
+            # need a global registry independent of module for looking up %uid types
+
+            x = parser.io_error(e.value)
+            z = result.error(x)
+            return z
+
     if stat.is_dir()
         f.path = path.join(f.path, "main.hm")
 
     directory = path.abs(path.dir(f.path))
 
     mutable libc = os.get_env("HYMN_LIBC")
-    if f.libc != ""
-        libc = f.libc
-    if libc == ""
-        libc = "libc"
+    if f.libc != "": libc = f.libc
+    if libc == "": libc = "libc"
     libc = path.abs(libc)
 
     p = program.new()
     p.parse(f)
-    return ok("")
+    return result.ok("")
 
 def main(args []string)
 
@@ -77,7 +92,8 @@ def main(args []string)
 
     ok = compile()
     
-    if ok is error(e) # match ok is error(e) {{less confusing}}
+    # match ok: error(e)
+    if ok is error(e)
         echo("error: " + e.value.str())
         exit(1)
 

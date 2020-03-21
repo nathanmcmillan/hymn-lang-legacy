@@ -1,28 +1,31 @@
-class unit_test
-    file_name     string
-    function_name string
-    result        string
-    failed        bool
+enum test_status
+    passed
+    failed
+    ignored
 
 class test
-    # test_list []unit_test
-    test_list []string
-    messages  []string
-    failed    bool
+    package       string
+    file_name     string
+    function_name string
+    messages      []string
+    status        test_status
 
-def test.assert(expected string, actual string) bool
-    if expected == actual
-        return true
-    self.error("Expected `" + expected + "` but found `" + actual + "`")
-    return false
-
-def test.assert_true(actual bool) bool
-    if actual
-        return true
-    self.error("Expected `true` but found `false`")
-    return false
+def new() test
+    t = test (
+        status: test_status.passed
+    )
+    return t
 
 def test.error(message string)
     self.messages = push(self.messages, message)
-    self.failed = true
+    self.status = test_status.failed
 
+def test.assert(expected string, actual string) bool
+    if expected == actual: return true
+    self.error("Expected `" + expected + "` but found `" + actual + "`")
+    return false
+
+def test.assert_true(b bool) bool
+    if b: return true
+    self.error("Expected `true` but found `false`")
+    return false

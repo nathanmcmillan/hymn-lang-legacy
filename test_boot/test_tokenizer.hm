@@ -1,6 +1,9 @@
-import tokenizer
+import boot:tokenizer
 
 import hymn:test (test)
+
+def main
+    echo("ignore me!")
 
 def test_tokenizer(t test)
     tz = tokenizer.new()

@@ -1,12 +1,18 @@
 import hymn:error (error)
 
 class parse_error implements error
+    id          string
     code        int
     description string
     hint        string
     line        int
     file        string
     name        string
+
+def parse_error.get_id() string
+    if self.id != ""
+        return self.id
+    return "E" + str(self.code)
 
 def parse_error.get_code() int
     return self.code

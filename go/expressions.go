@@ -58,6 +58,8 @@ func (me *parser) expression() (*node, *parseError) {
 		return me.breaking()
 	} else if op == "continue" {
 		return me.continuing()
+	} else if op == "try" {
+		return me.trying()
 	} else if op == "for" {
 		return me.forloop()
 	} else if op == "while" {
@@ -135,11 +137,16 @@ func (me *parser) parseIdent() (*node, *parseError) {
 		return nil, er
 	}
 
-	fmt.Println("PARSE IDENT>", n.string(me.hmfile, 0))
-
 	if me.assignable(n) {
+		if me.token.is == "line" {
+			decl := nodeInit("declare")
+			decl.push(n)
+			v := module.declareVar(n.idata.name, true)
+			v._vdata = newdataany()
+			module.scope.variables[n.idata.name] = v
+			return decl, nil
+		}
 		n, er = me.assign(n, true, false)
-		fmt.Println("ASSIGN IDENT>", n.string(me.hmfile, 0))
 		if er != nil {
 			return nil, er
 		}
@@ -212,6 +219,20 @@ func (me *parser) pass() (*node, *parseError) {
 	if er := me.verify("line"); er != nil {
 		return nil, er
 	}
+	return n, nil
+}
+
+func (me *parser) trying() (*node, *parseError) {
+	if er := me.eat("try"); er != nil {
+		return nil, er
+	}
+	n := nodeInit("try")
+	calc, er := me.calc(0, me.hmfile.scope.fn.returns)
+	if er != nil {
+		return nil, er
+	}
+	n.copyDataOfNode(calc)
+	n.push(calc)
 	return n, nil
 }
 

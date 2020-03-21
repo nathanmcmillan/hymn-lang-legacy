@@ -5,6 +5,9 @@ class io_error implements error
     description string
     hint        string
 
+def io_error.get_id() string
+    return "E" + str(self.code)
+
 def io_error.get_code() int
     return self.code
 

@@ -184,8 +184,7 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 					gtypes = newtypes
 
 				} else if param.data().notEquals(arg.data()) && !arg.data().isAnyType() {
-					er := "Parameter: " + param.data().print()
-					er += " does not match expected: " + arg.data().print() + " for function: " + name
+					er := fmt.Sprintf("Function `%s` expects `%s` but found `%s`", fn.canonical(me.hmfile), arg.data().print(), param.data().print())
 					return nil, nil, err(me, ECodeFunctionParameter, er)
 				}
 				params[pix] = param

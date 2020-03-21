@@ -47,6 +47,7 @@ var keywords = map[string]bool{
 	"while":      true,
 	"continue":   true,
 	"break":      true,
+	"try":        true,
 	"mutable":    true,
 	"static":     true,
 	"and":        true,

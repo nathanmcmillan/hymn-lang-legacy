@@ -22,16 +22,21 @@ func (me *variable) copyData(data *datatype) {
 }
 
 func (me *hmfile) varInit(typed, name string, mutable bool) (*variable, *parseError) {
-	v := &variable{}
-	v.name = name
-	v.cname = name
-	v.mutable = mutable
+	v := me.declareVar(name, mutable)
 	var er *parseError
 	v._vdata, er = getdatatype(me, typed)
 	if er != nil {
 		return nil, er
 	}
 	return v, nil
+}
+
+func (me *hmfile) declareVar(name string, mutable bool) *variable {
+	v := &variable{}
+	v.name = name
+	v.cname = name
+	v.mutable = mutable
+	return v
 }
 
 func (me *variable) copy() *variable {

@@ -176,8 +176,9 @@ func (me *program) compile(cc string) {
 	}
 }
 
-func (me *program) gcc(flags *flags, sources map[string]string, fileOut string) {
+func (me *program) gcc(flags *flags, fileOut string) {
 	command := flags.cc
+	sources := me.sources
 
 	if debug {
 		fmt.Println("=== " + command + " ===")

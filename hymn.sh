@@ -8,7 +8,7 @@ if [ ! -f bin/hymn ]; then
 fi
 
 HYMN_PACKAGES=""
-HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/std"
+HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/hymn"
 HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/books"
 export HYMN_PACKAGES
 

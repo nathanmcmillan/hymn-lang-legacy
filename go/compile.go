@@ -128,7 +128,7 @@ func (me *hmfile) generateC() string {
 
 	fileOut := ""
 
-	if len(cfile.codeFn) > 0 {
+	if len(cfile.codeFn) > 0 || me.needStatic {
 		fileOut = filepath.Join(me.destination, filename+".c")
 
 		write(fileOut, code.String())

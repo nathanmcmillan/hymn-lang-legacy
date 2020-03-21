@@ -27,7 +27,7 @@ class hashmap<k,v>
 def hashmap.get_bin(code int) int
     return code % self.capacity
 
-def hashmap.set(key k, value v)
+def hashmap.put(key k, value v)
     code = self.get_code(key)
     bin = self.get_bin(code)
     mutable element = self.table[bin]

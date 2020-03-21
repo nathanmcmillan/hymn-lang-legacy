@@ -1,0 +1,11 @@
+import tokenizer
+
+import hymn:test (test)
+
+def test_tokenizer(t test)
+    tz = tokenizer.new()
+    t.assert_true(tz.update_depth)
+
+# TODO // auto generate a main.c and fill it with all file tests
+# TODO // flag to specify compile for unit testing purposes
+#         (ignore any def main and search for def test_XXX(XXX test) 

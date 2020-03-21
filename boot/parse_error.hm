@@ -8,17 +8,8 @@ class parse_error
 
 def parse_error.to_string() string
     mutable out = "\n"
-    out += "-- " + self.name + " -- " + self.file
+    out += "-- " + str(self.code) + " // " + self.name + " -- " + self.file
     out += "\n\n" + self.description
     out += "\n\n" + self.hint
     out += "\n\n"
     return out
-
-def new(p parser, code int, reason string) parse_error
-    return parse_error(
-        code: code
-        description: reason
-    )
-
-def unexpected_token(p parser) parse_error
-    return parse_error(p, codes.unexpected_token, "")

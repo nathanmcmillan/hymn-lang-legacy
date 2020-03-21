@@ -1,9 +1,9 @@
-import hymnlib (hymn_lib)
-import hymnfile (hymn_file)
+import hymn_lib (hymn_lib)
+import hymn_file (hymn_file)
 import flags (flags)
 import parser
 
-import std:hashmap (hashmap, new_str_map)
+import hymn:hashmap (hashmap, new_str_map)
 
 class program
     out            string
@@ -19,7 +19,7 @@ class program
 def new() program
     return program (
         hymn_lib_map: new_str_map<string>()
-        hymn_library: hymnlib.new()
+        hymn_library: hymn_lib.new()
         hymn_file_map: new_str_map<hymn_file>()
         sources: new_str_map<string>()
     )

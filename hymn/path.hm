@@ -1,0 +1,14 @@
+def abs(path string) string
+    return path
+
+def is_abs(path string) bool
+    return false
+
+def dir(path string) string
+    return path
+
+def base(path string) string
+    return path
+
+def join(parent string, child string) string
+    return path + "/" + child

@@ -1,0 +1,20 @@
+class test
+    messages []string
+    failed   bool
+
+def test.assert(expected string, actual string) bool
+    if expected == actual
+        return true
+    self.error("Expected `" + expected + "` but found `" + actual + "`")
+    return false
+
+def test.assert_true(actual bool) bool
+    if actual
+        return true
+    self.error("Expected `true` but found `false`")
+    return false
+
+def test.error(message string)
+    self.messages = push(self.messages, message)
+    self.failed = true
+

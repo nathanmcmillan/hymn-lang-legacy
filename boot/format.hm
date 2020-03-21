@@ -1,4 +1,4 @@
-def fmc(depth int) string
+def spaces(depth int) string
     mutable space = ""
     for i = 0; i < depth; i += 1
         space += "    "

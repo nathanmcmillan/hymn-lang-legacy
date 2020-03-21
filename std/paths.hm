@@ -1,2 +1,0 @@
-def abs(path string) string
-    return path

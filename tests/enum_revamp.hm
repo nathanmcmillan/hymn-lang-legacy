@@ -13,38 +13,43 @@ enum snake
     viper
     cobra
 
+class mouse
+    a int
+    b string
+    c vec
+
+class dolphin
+    a string
+    b string
+
 enum mammal
-    mouse (
-        a int
-        b string
-        c vec
-    )
-    cat(cat string)
-    dog(type float)
-    dolphin(a string, b string)
+    mouse   mouse
+    cat     string
+    dog     float
+    dolphin dolphin
 
 enum bug<x>
-    ant(data x)
-    bee()
-  
+    ant x
+    bee
+
 enum result<r>
-    value(result r)
-    error(err exception)
-  
+    value r
+    error exception
+
 enum either<u,v>
-    one(first u)
-    two(second v)
+    one u
+    two v
 
 static example = vec()
 static snap = snake.viper
-static woof = mammal.dog(type:7.2)
+static woof = mammal.dog(7.2)
 
 def calc_me(x int) either<int,float>
     if x < 10
-        i = either<int,float>.one(first:6432)
+        i = either<int,float>.one(6432)
         return i
     return either.two(
-        second: 5329.5
+        5329.5
     )
 
 def omega_add() math.operation
@@ -57,8 +62,8 @@ def main
     z[1] = snake.viper
     z[2] = snake.cobra
 
-    d = mammal.cat(cat:"woof")
-    echo(d.cat)
+    d = mammal.cat("woof")
+    echo(d ???)
 
     doggo = mammal.dog(1.4)
     echo("doggo " + str(doggo.type))

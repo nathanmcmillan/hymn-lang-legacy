@@ -1,0 +1,14 @@
+class file_info
+    name string
+
+def file_info.is_dir() bool
+    return false
+
+def stat(path string) file_info
+    return file_info()
+
+def get_env(name string) string
+    return name
+
+def remove(path string)
+    pass

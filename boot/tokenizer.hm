@@ -1,11 +1,12 @@
 import tokens (token)
 import stream (stream)
 
+static eof = tokens.new(0, "eof")
+
 class tokenizer
     file_stream  stream
     current      string
     tokens       []token
-    eof          token
     size         int
     depth        int
     update_depth bool
@@ -13,7 +14,6 @@ class tokenizer
 def new(file_stream stream) tokenizer
     return tokenizer (
         file_stream: file_stream
-        eof: tokens.new(0, "eof")
         update_depth: true
         size: len(file_stream.data)
     )

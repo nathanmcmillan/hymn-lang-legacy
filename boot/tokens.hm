@@ -1,4 +1,5 @@
-import std:hashset (new_str_set)
+import hymn:hashset (new_str_set)
+import hymn:hashmap (new_str_map)
 
 static token_int_literal     = "int-v"
 static token_float_literal   = "float-v"
@@ -6,33 +7,95 @@ static token_string_literal  = "string-v"
 static token_char_literal    = "char-v"
 static token_byte_literal    = "byte-v"
 static token_boolean_literal = "bool-v"
-static token_int             = "int"
-static token_int8            = "int8"
-static token_int16           = "int16"
-static token_int32           = "int32"
-static token_int64           = "int64"
-static token_uint            = "uint"
-static token_uint8           = "uint8"
-static token_uint16          = "uint16"
-static token_uint32          = "uint32"
-static token_uint64          = "uint64"
-static token_float           = "float"
-static token_float32         = "float32"
-static token_float64         = "float64"
-static token_string          = "string"
-static token_raw_string      = "string-raw"
-static token_char            = "char"
-static token_byte            = "byte"
-static token_boolean         = "bool"
 
-static words = new_str_set()
-static primitives = new_str_set()
+static token_int        = "int"
+static token_int8       = "int8"
+static token_int16      = "int16"
+static token_int32      = "int32"
+static token_int64      = "int64"
+static token_uint       = "uint"
+static token_uint8      = "uint8"
+static token_uint16     = "uint16"
+static token_uint32     = "uint32"
+static token_uint64     = "uint64"
+static token_float      = "float"
+static token_float32    = "float32"
+static token_float64    = "float64"
+static token_string     = "string"
+static token_raw_string = "string-raw"
+static token_char       = "char"
+static token_byte       = "byte"
+static token_boolean    = "bool"
 
-words.add("import")
-words.add("macro")
+static keywords = new_str_set()
+keywords.add("import")
+keywords.add("macro")
+keywords.add("return")
+keywords.add("true")
+keywords.add("false")
+keywords.add("free")
+keywords.add("not")
+keywords.add("if")
+keywords.add("elif")
+keywords.add("else")
+keywords.add("for")
+keywords.add("while")
+keywords.add("continue")
+keywords.add("break")
+keywords.add("mutable")
+keywords.add("static")
+keywords.add("and")
+keywords.add("or")
+keywords.add("as")
+keywords.add("enum")
+keywords.add("match")
+keywords.add("panic")
+keywords.add("pass")
+keywords.add("none")
+keywords.add("some")
+keywords.add("maybe")
+keywords.add("goto")
+keywords.add("label")
+keywords.add("async")
+keywords.add("yield")
+keywords.add("await")
+keywords.add("ifdef")
+keywords.add("ifndef")
+keywords.add("elsedef")
+keywords.add("enddef")
+keywords.add("defc")
+keywords.add("endc")
+keywords.add("alias")
+keywords.add("is")
+keywords.add("iterate")
+keywords.add("in")
+keywords.add("def")
+keywords.add("class")
+keywords.add("interface")
+keywords.add("implements")
+keywords.add("with")
+keywords.add("where")
+keywords.add(token_int)
+keywords.add(token_int8)
+keywords.add(token_int16)
+keywords.add(token_int32)
+keywords.add(token_int64)
+keywords.add(token_uint)
+keywords.add(token_uint8)
+keywords.add(token_uint16)
+keywords.add(token_uint32)
+keywords.add(token_uint64)
+keywords.add(token_float)
+keywords.add(token_float32)
+keywords.add(token_float64)
+keywords.add(token_char)
 
-primitives.add("int")
-primitives.add("float")
+static literals = new_str_map<string>()
+literals.put(token_int_literal, token_int)
+literals.put(token_float_literal, token_float)
+literals.put(token_string_literal, token_string)
+literals.put(token_boolean_literal, token_boolean)
+literals.put(token_char_literal, token_char)
 
 def digit(c char) bool
     match c

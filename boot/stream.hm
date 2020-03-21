@@ -1,4 +1,4 @@
-import std:big_string (new_big_string)
+import hymn:big_string (new_big_string)
 
 class stream
     data string

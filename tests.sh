@@ -2,7 +2,7 @@
 cd "$(dirname "$0")"
 
 HYMN_PACKAGES=""
-HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/std"
+HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/hymn"
 HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/books"
 export HYMN_PACKAGES
 

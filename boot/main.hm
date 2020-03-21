@@ -5,22 +5,16 @@
 
 import program
 import flags (flags)
-import parsing_errors (parse_error)
+import parse_error (parse_error)
 
-import std:result (result)
-import std:paths
+import hymn:os
+import hymn:result (result)
+import hymn:path
 
 static debug = true
 static debug_tokens = true
 static debug_ast = true
 static debug_command = true
-
-def exec_compile(flag flags) result<string,parse_error>
-    out = paths.abs(flag.write_to)
-    echo(out)
-    p = program.new()
-    p.parse(flag)
-    return result.ok("")
 
 def help
     echo("Hymn command line interface.")
@@ -35,22 +29,44 @@ def help
     echo("    build    compile a program")
     echo("")
 
+def compile(f flags) result<string,parse_error>
+    mutable source_out = path.abs(f.write_to)
+    source_out = path.join(source_out, "src")
+
+    stat = os.stat(f.path)
+    # assert stat is ok
+    if stat.is_dir()
+        f.path = path.join(f.path, "main.hm")
+
+    directory = path.abs(path.dir(f.path))
+    # assert directory is ok
+
+    mutable libc = os.get_env("HYMN_LIBC")
+    if f.libc != ""
+        libc = f.libc
+    if libc == ""
+        libc = "libc"
+    libc = path.abs(libc)
+
+    p = program.new()
+    p.parse(f)
+    return result.ok("")
+
 def main(args []string)
 
     iterate i, a in args
         printf("args %d: %s\n", i, a)
     
     flag = flags.new()
-    flag.path = "src/boot/main/main.c"
-    flag.write_to = "write_to..."
+    flag.path = "tests/math.hm"
+    flag.write_to = "out/math"
 
     if flag.help or flag.path == ""
         help()
         exit(1)
 
-    ok = exec_compile()
+    ok = compile()
     
-
     if ok is error(e)
         echo("error: " + e.value.to_string())
         exit(1)

@@ -1,8 +1,9 @@
 import stream
 import tokens (token)
 import tokenizer (tokenizer)
-import parsing_errors (parse_error)
-import hymnfile (hymn_file)
+import parse_error (parse_error)
+import parse_code
+import hymn_file (hymn_file)
 
 class parser
     file     hymn_file
@@ -43,8 +44,12 @@ def parser.eat(expected string) bool
     self.next()
     return true
 
-def parser.error(description string) parse_error
+def parser.error(code int, reason string) parse_error
     return parse_error (
-        description: description
         line: self.line
+        code: code
+        description: reason
     )
+
+def parser.unexpected_token() parse_error
+    return self.error(parse_code.unexpected_token, "")

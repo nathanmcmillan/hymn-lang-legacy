@@ -1,7 +1,7 @@
-import classes (hymn_class)
-import functions (hymn_function)
+import hymn_class (hymn_class)
+import hymn_function (hymn_function)
 
-import std:hashmap (
+import hymn:hashmap (
     hashmap
     new_str_map
 )

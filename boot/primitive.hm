@@ -1,0 +1,66 @@
+import tokens (
+    token_int
+    token_int8
+    token_int16
+    token_int32
+    token_int64
+    token_uint
+    token_uint8
+    token_uint16
+    token_uint32
+    token_uint64
+    token_float
+    token_float32
+    token_float64
+    token_char
+    token_boolean
+    token_string
+)
+
+import hymn:hashset (new_str_set)
+import hymn:hashmap (new_str_map)
+
+static primitives = new_str_set()
+primitives.add(token_int)
+primitives.add(token_int8)
+primitives.add(token_int16)
+primitives.add(token_int32)
+primitives.add(token_int64)
+primitives.add(token_uint)
+primitives.add(token_uint8)
+primitives.add(token_uint16)
+primitives.add(token_uint32)
+primitives.add(token_uint64)
+primitives.add(token_float)
+primitives.add(token_float32)
+primitives.add(token_float64)
+primitives.add(token_char)
+primitives.add(token_boolean)
+primitives.add(token_string)
+
+static numbers = new_str_set()
+numbers.add(token_int)
+numbers.add(token_int8)
+numbers.add(token_int16)
+numbers.add(token_int32)
+numbers.add(token_int64)
+numbers.add(token_uint)
+numbers.add(token_uint8)
+numbers.add(token_uint16)
+numbers.add(token_uint32)
+numbers.add(token_uint64)
+numbers.add(token_float)
+numbers.add(token_float32)
+numbers.add(token_float64)
+
+static integers = new_str_set()
+integers.add(token_int)
+integers.add(token_int8)
+integers.add(token_int16)
+integers.add(token_int32)
+integers.add(token_int64)
+integers.add(token_uint)
+integers.add(token_uint8)
+integers.add(token_uint16)
+integers.add(token_uint32)
+integers.add(token_uint64)

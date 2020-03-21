@@ -121,9 +121,9 @@ func (me *parser) classParams(n *node, cl *class, depth int) (string, *parseErro
 					gtypes = newtypes
 
 				} else if param.data().notEquals(clsvar.data()) && !clsvar.data().isAnyType() {
-					er := "parameter \"" + vname + "\" with type \"" + param.data().print()
-					er += "\" does not match class variable \"" + cl.name + "."
-					er += clsvar.name + "\" with type \"" + clsvar.data().print() + "\""
+					er := "parameter `" + vname + "` with type `" + param.data().print()
+					er += "` does not match class variable `" + cl.name + "."
+					er += clsvar.name + "` with type `" + clsvar.data().print() + "`"
 					return "", err(me, ECodeClassParameter, er)
 				}
 			}

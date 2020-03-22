@@ -116,7 +116,9 @@ func (me *hmfile) generateC() string {
 			continue
 		}
 		if f == "main" {
-			cfile.compileMain(fun)
+			if !me.program.testing {
+				cfile.compileMain(fun)
+			}
 		} else {
 			cfile.compileFunction(f, fun, false)
 		}

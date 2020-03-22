@@ -180,6 +180,7 @@ func execCompile(flags *flags) (string, *parseError, error) {
 	program.outsourcedir = outsourcedir
 	program.libc = libc
 	program.directory = directory
+	program.testing = flags.testing
 
 	parsePackages(program.packages, os.Getenv("HYMN_PACKAGES"))
 	parsePackages(program.packages, flags.packages)

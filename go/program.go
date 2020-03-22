@@ -104,6 +104,7 @@ type program struct {
 	packages     map[string]string
 	moduleUID    int
 	remapStack   []string
+	testing      bool
 }
 
 func programInit() *program {
@@ -173,6 +174,9 @@ func (me *program) compile(cc string) {
 		if file != "" {
 			me.sources[module.path] = file
 		}
+	}
+	if me.testing {
+		me.sources["{{unit test}}"] = me.generateUnitTestsC()
 	}
 }
 

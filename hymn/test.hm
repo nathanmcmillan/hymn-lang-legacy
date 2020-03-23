@@ -3,29 +3,58 @@ enum test_status
     failed
     ignored
 
-class test
-    package       string
-    file_name     string
-    function_name string
-    messages      []string
-    status        test_status
+def status_name(status test_status) string
+    match status
+        passed  return "ok"
+        failed  return "failed"
+        ignored return "skipped"
 
-def new() test
-    t = test (
-        status: test_status.passed
-    )
-    return t
+class test
+    messages []string
+    status   test_status
 
 def test.error(message string)
     self.messages = push(self.messages, message)
     self.status = test_status.failed
 
-def test.assert(expected string, actual string) bool
+def test.assert_string(expected string, actual string) bool
     if expected == actual: return true
     self.error("Expected `" + expected + "` but found `" + actual + "`")
+    return false
+
+def test.assert_int(expected int, actual int) bool
+    if expected == actual: return true
+    self.error("Expected `" + str(expected) + "` but found `" + str(actual) + "`")
     return false
 
 def test.assert_true(b bool) bool
     if b: return true
     self.error("Expected `true` but found `false`")
     return false
+
+class test_stats
+    passed  int
+    failed  int
+    ignored int
+
+def run_test(package string, file string, function string, run (test), stats test_stats)
+    t = test(status:test_status.passed)
+    printf("%s %s (%s) ... ", package, file, function)
+    run(t)
+    printf("%s\n", status_name(t.status))
+    iterate x in t.messages
+        echo(x)
+    match t.status
+        passed  stats.passed  += 1
+        failed  stats.failed  += 1
+        ignored stats.ignored += 1
+
+def start() test_stats
+    return test_stats()
+
+def end(stats test_stats) int
+    result string
+    if stats.failed == 0: result = "ok"
+    else: result = "failed"
+    printf("\ntest result: %s. %d passed; %d failed; %d ignored\n", result, stats.passed, stats.failed, stats.ignored)
+    return stats.failed == 0 ? 0 : 1

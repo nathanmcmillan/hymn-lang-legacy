@@ -20,8 +20,8 @@ func (me *cfile) defineEnum(enum *enum) {
 			}
 		}
 		code += "\n};\n"
-		me.headEnumSection.WriteString(code)
-		me.headEnumTypeDefSection.WriteString("\ntypedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";")
+		me.addHeadEnum(code)
+		me.addHeadEnumTypeDef("\ntypedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";")
 	}
 
 	if enum.simple || len(enum.generics) > 0 {
@@ -32,7 +32,7 @@ func (me *cfile) defineEnum(enum *enum) {
 
 	code := ""
 	hmBaseUnionName := enum.ucname
-	me.headStructTypeDefSection.WriteString("\ntypedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";")
+	me.addHeadStructTypeDef("\ntypedef struct " + hmBaseUnionName + " " + hmBaseUnionName + ";")
 	code += "\nstruct " + hmBaseUnionName + " {\n"
 	code += fmc(1) + hmBaseEnumName + " type;\n"
 	code += fmc(1) + "union {\n"
@@ -54,18 +54,18 @@ func (me *cfile) defineEnum(enum *enum) {
 	}
 	code += fmc(1) + "};\n"
 	code += "};\n"
-	me.headStructSection.WriteString(code)
+	me.addHeadStruct(code)
 }
 
 func (me *cfile) typedefClass(c *class) string {
 	hmName := c.cname
-	me.headStructTypeDefSection.WriteString("\ntypedef struct " + hmName + " " + hmName + ";")
+	me.addHeadStructTypeDef("\ntypedef struct " + hmName + " " + hmName + ";")
 	return hmName
 }
 
 func (me *cfile) typedefEnum(e *enum) string {
 	hmBaseEnumName := e.baseEnum().cname
-	me.headEnumTypeDefSection.WriteString("\ntypedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";")
+	me.addHeadEnumTypeDef("\ntypedef enum " + hmBaseEnumName + " " + hmBaseEnumName + ";")
 	return hmBaseEnumName
 }
 
@@ -81,7 +81,7 @@ func (me *cfile) defineClass(c *class) {
 		code.WriteString(fmc(1) + field.data().typeSigOf(me, field.name, true) + ";\n")
 	}
 	code.WriteString("};\n")
-	me.headStructSection.WriteString(code.String())
+	me.addHeadStruct(code.String())
 }
 
 func (me *cfile) dependencyGraph(data *datatype) {

@@ -36,8 +36,8 @@ func (me *fnSig) print() string {
 	return sig
 }
 
-func (me *fnSig) newdatatype() (*datatype, *parseError) {
-	return getdatatype(nil, me.print())
+func (me *fnSig) newdatatype(module *hmfile) (*datatype, *parseError) {
+	return getdatatype(module, me.print())
 }
 
 func (me *fnSig) equals(b *fnSig) bool {

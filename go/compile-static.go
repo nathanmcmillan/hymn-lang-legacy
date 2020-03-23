@@ -13,7 +13,7 @@ func (me *cfile) declareStatic(n *node) string {
 		head += rightCode.code()
 	}
 	head += ";"
-	me.headExternSection.WriteString(head)
+	me.addHeadExtern(head)
 
 	declareCode = "\n" + declareCode
 	if setSign == "" {
@@ -27,7 +27,7 @@ func (me *cfile) defineStatic(v *variableNode) {
 	// declareCode := me.compileDeclare(left)
 	// head := "\nextern " + declareCode + ";"
 	head := "\nextern " + me.declareExtern(v) + ";"
-	me.headExternSection.WriteString(head)
+	me.addHeadExtern(head)
 }
 
 func (me *cfile) initStatic(n *node) *codeblock {

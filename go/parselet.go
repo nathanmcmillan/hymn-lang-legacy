@@ -15,6 +15,21 @@ type infixRule struct {
 var (
 	prefixes map[string]prefixRule
 	infixes  map[string]infixRule
+
+	operators = map[string]bool{
+		"=":   true,
+		":=":  true,
+		"+=":  true,
+		"-=":  true,
+		"*=":  true,
+		"/=":  true,
+		"%=":  true,
+		"&=":  true,
+		"|=":  true,
+		"^=":  true,
+		"<<=": true,
+		">>=": true,
+	}
 )
 
 func init() {

@@ -52,3 +52,10 @@ func (me *cfile) declareExtern(vnode *variableNode) string {
 	me.scope.variables[name] = newv
 	return newv.data().typeSigOf(me, newv.cname, true)
 }
+
+func (me *cfile) compileLocalDeclare(n *node) *codeblock {
+	h := n.has[0]
+	h.attributes["mutable"] = "true"
+	declare := me.compileDeclare(h)
+	return codeBlockOne(n, declare)
+}

@@ -138,17 +138,23 @@ func (me *parser) parseIdent() (*node, *parseError) {
 	}
 
 	if me.assignable(n) {
-		if me.token.is == "line" {
+		if _, ok := operators[me.token.is]; ok {
+			n, er = me.assign(n, true, false)
+			if er != nil {
+				return nil, er
+			}
+		} else {
+			typed, er := me.declareType()
+			if er != nil {
+				return nil, er
+			}
+			n.copyData(typed)
 			decl := nodeInit("declare")
 			decl.push(n)
 			v := module.declareVar(n.idata.name, true)
-			v._vdata = newdataany()
+			v._vdata = typed
 			module.scope.variables[n.idata.name] = v
 			return decl, nil
-		}
-		n, er = me.assign(n, true, false)
-		if er != nil {
-			return nil, er
 		}
 	} else if n.is != "call" {
 		return nil, err(me, ECodeExpectingExpression, "Expected assignment or call expression for '"+name+"'")
@@ -157,6 +163,7 @@ func (me *parser) parseIdent() (*node, *parseError) {
 	if er := me.verify("line"); er != nil {
 		return nil, er
 	}
+
 	return n, nil
 }
 

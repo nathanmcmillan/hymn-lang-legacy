@@ -159,6 +159,9 @@ func (me *parser) doublePeek() *token {
 func (me *parser) verify(want string) *parseError {
 	token := me.token
 	if token.is != want {
+		if want == "line" && token.is == "comment" {
+			return nil
+		}
 		return err(me, ECodeUnexpectedToken, "unexpected token was "+token.string()+" instead of {type:"+want+"}")
 	}
 	return nil

@@ -1,0 +1,11 @@
+import hymn_compiler:tokenizer
+
+import hymn:test (test)
+
+def test_update_depth(t test)
+    tz = tokenizer.new()
+    t.assert_true(tz.update_depth)
+
+def test_size(t test)
+    tz = tokenizer.new()
+    t.assert_int(10, tz.size)

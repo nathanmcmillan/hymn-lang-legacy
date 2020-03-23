@@ -32,7 +32,7 @@ func (me *cfile) happyOut(e *codeblock) string {
 }
 
 func (me *cfile) defineFunctionHead(fn *function) {
-	me.headFuncSection.WriteString("\n" + me.functionHead(fn) + ";")
+	me.addHeadFunc("\n" + me.functionHead(fn) + ";")
 }
 
 func (me *cfile) functionHead(fn *function) string {
@@ -94,7 +94,7 @@ func (me *cfile) compileFunction(name string, fn *function, use bool) {
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 
-	me.headFuncSection.WriteString("\n" + head + ";")
+	me.addHeadFunc("\n" + head + ";")
 	me.codeFn = append(me.codeFn, code)
 }
 
@@ -157,6 +157,6 @@ func (me *cfile) compileMain(fn *function) {
 	code.WriteString(block.String())
 	code.WriteString("}\n")
 
-	me.headFuncSection.WriteString("\n" + head + ";")
+	me.addHeadFunc("\n" + head + ";")
 	me.codeFn = append(me.codeFn, code)
 }

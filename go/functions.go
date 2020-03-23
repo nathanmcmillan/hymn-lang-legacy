@@ -79,7 +79,7 @@ func (me *function) asSig() *fnSig {
 }
 
 func (me *function) data() (*datatype, *parseError) {
-	return me.asSig().newdatatype()
+	return me.asSig().newdatatype(me.module)
 }
 
 func nameOfClassFunc(cl, fn string) string {

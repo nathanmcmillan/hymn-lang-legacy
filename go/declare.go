@@ -63,7 +63,7 @@ func (me *parser) declareFn() (*datatype, *parseError) {
 		fn.returns = newdatavoid()
 	}
 
-	return fn.newdatatype()
+	return fn.newdatatype(me.hmfile)
 }
 
 func (me *parser) declareFnPtr(fn *function) (*datatype, *parseError) {

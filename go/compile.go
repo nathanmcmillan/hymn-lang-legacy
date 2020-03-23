@@ -28,6 +28,9 @@ func (me *hmfile) generateC() string {
 		}
 	}
 
+	var code strings.Builder
+	code.WriteString("#include \"" + filename + ".h\"\n")
+
 	filterOrder := make([]string, 0)
 	filters := make(map[string]string)
 
@@ -39,45 +42,24 @@ func (me *hmfile) generateC() string {
 				continue
 			}
 			name = def.class.name
+			if name == filename {
+				cfile.defineClass(def.class)
+				continue
+			}
 			fname = def.class.pathLocal
 		} else if def.enum != nil {
 			name = def.enum.name
+			if name == filename {
+				cfile.defineEnum(def.enum)
+				continue
+			}
 			fname = def.enum.pathLocal
 		} else {
 			panic("Missing definition")
 		}
-		if name == filename {
-			continue
-		}
 		filterOrder = append(filterOrder, name)
 		filters[name] = fname
-		cfile.headSubIncludeSection.WriteString("\n#include \"" + fname + ".h\"")
-	}
-
-	var code strings.Builder
-	code.WriteString("#include \"" + filename + ".h\"\n")
-
-	for _, def := range me.defineOrder {
-		if def.class != nil {
-			if def.class.doNotDefine {
-				continue
-			}
-			name := def.class.name
-			if _, ok := filters[name]; ok {
-				continue
-			}
-			cfile.defineClass(def.class)
-
-		} else if def.enum != nil {
-			name := def.enum.name
-			if _, ok := filters[name]; ok {
-				continue
-			}
-			cfile.defineEnum(def.enum)
-
-		} else {
-			panic("Missing definition")
-		}
+		cfile.addHeadSubInclude("\n#include \"" + fname + ".h\"")
 	}
 
 	if len(me.statics) != 0 {
@@ -90,7 +72,7 @@ func (me *hmfile) generateC() string {
 		}
 		code.WriteString("\n\n")
 
-		cfile.headFuncSection.WriteString("\nvoid " + me.funcNameSpace("static") + "();")
+		cfile.addHeadFunc("\nvoid " + me.funcNameSpace("static") + "();")
 		code.WriteString("void " + me.funcNameSpace("static") + "() {\n")
 		cfile.depth++
 		for _, s := range me.statics {

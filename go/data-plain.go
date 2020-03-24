@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -189,7 +190,7 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 	d := strings.Index(typed, ".")
 	g := strings.Index(typed, "<")
 
-	// fmt.Println("DEBUG:: ", typed)
+	fmt.Println("DEBUG:: ", typed)
 
 	if d != -1 && (g == -1 || d < g) {
 		if strings.HasPrefix(typed, "%") {
@@ -215,7 +216,7 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 	var glist []*datatype
 	if g != -1 {
 		graw := getdatatypegenerics(typed)
-		// fmt.Println("GENERICS:: ", graw)
+		fmt.Println("GENERICS:: ", graw)
 		base = typed[0:g]
 		gt := strings.LastIndex(typed, ">") + 1
 		remainder := typed[gt:]
@@ -223,7 +224,7 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 		for i, r := range graw {
 			var er *parseError
 			glist[i], er = getdatatype(me, r)
-			// fmt.Println("TYPE:: ", glist[i].error())
+			fmt.Println("TYPE:: ", glist[i].error())
 			if er != nil {
 				return nil, er
 			}
@@ -232,10 +233,10 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 		d = strings.Index(remainder, ".")
 		if d != -1 {
 			base = typed[0:gt]
-			// fmt.Println("BASE:: ", base)
-			// for k := range module.enums {
-			// fmt.Println("ENUMS::", module.name, "::", k)
-			// }
+			fmt.Println("BASE:: ", base)
+			for k := range module.enums {
+				fmt.Println("ENUMS::", module.name, "::", k)
+			}
 			if en, ok := module.enums[base]; ok {
 				un := en.getType(remainder[d+1:])
 				return newdataenum(origin, en, un, glist), nil
@@ -890,7 +891,7 @@ func newdataanypointer() *datatype {
 }
 
 func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics []*datatype) *datatype {
-	// fmt.Println("UNKNOWN:: ", canonical)
+	fmt.Println("UNKNOWN:: ", canonical)
 	d := newdatatype(dataTypeUnknown)
 	d.origin = origin
 	d.module = module

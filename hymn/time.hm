@@ -1,0 +1,23 @@
+def epoch_seconds() uint64
+    mutable s = system("date +%s")
+    size = len(s)
+    if s[size - 1] == '\n'
+        s = substring(s, 0, size - 1)
+    return u64(s)
+
+def epoch_milliseconds() uint64
+    mutable s = system("date +%s000")
+    size = len(s)
+    if s[size - 1] == '\n'
+        s = substring(s, 0, size - 1)
+    return u64(s)
+
+def rfc() string
+    return system("date")
+
+def iso8601() string
+    return system("date")
+
+def c_code() string
+    echo("#include <time.h>")
+    return "time_t now = time(NULL);"

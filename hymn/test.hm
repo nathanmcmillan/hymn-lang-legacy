@@ -1,3 +1,5 @@
+import time
+
 enum test_status
     passed
     failed
@@ -39,9 +41,12 @@ class test_stats
 
 def run_test(package string, file string, function string, run (test), stats test_stats)
     t = test(status:test_status.passed)
-    printf("%s %s (%s) ... ", package, file, function)
+    printf("%s/%s.hm (%s) ... ", package, file, function)
+    s = time.epoch_milliseconds()
     run(t)
-    printf("%s\n", status_name(t.status))
+    e = time.epoch_milliseconds()
+    d = int(e - s)
+    printf("%s. took %ds\n", status_name(t.status), d)
     iterate x in t.messages
         echo(x)
     match t.status

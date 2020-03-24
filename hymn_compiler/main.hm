@@ -35,8 +35,6 @@ def compile(f flags) result<string,parse_error>
     mutable source_out = path.abs(f.write_to)
     source_out = path.join(source_out, "src")
 
-    # todo: a identifier on a line with nothing else, means it must be declared later?
-
     # todo: special `try` keyword will automatically insert match for result
     # todo: replace if X is Y with match X: Y
 
@@ -50,7 +48,7 @@ def compile(f flags) result<string,parse_error>
     match stat_result
         ok(r) stat = r
         error(e)
-            # main does not know 
+            # main does not know
             # result<%19.file_info,%17.io_error>.error
 
             # it should be passed along as

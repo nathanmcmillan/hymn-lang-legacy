@@ -11,19 +11,17 @@ func (me *program) generateUnitTestsC() string {
 	main := filepath.Join(me.outsourcedir, "main.c")
 
 	var code strings.Builder
+	var include strings.Builder
 
-	code.WriteString("#include <stdlib.h>\n\n")
-	code.WriteString("#include <time.h>\n\n")
+	include.WriteString("#include <stdlib.h>\n\n")
+	include.WriteString("#include <time.h>\n\n")
 
-	code.WriteString("#include \"hymn/test/test.h\"\n\n")
-	code.WriteString("#include \"test_boot/test_tokenizer/test_tokenizer.h\"\n\n")
+	include.WriteString("#include \"hymn/test/test.h\"\n\n")
 
 	code.WriteString("int main() {\n")
 
-	code.WriteString("    time_t rawtime;\n")
-	code.WriteString("    struct tm *timeinfo;\n")
-	code.WriteString("    time(&rawtime);\n")
-	code.WriteString("    timeinfo = localtime(&rawtime);\n")
+	code.WriteString("    time_t now = time(NULL);\n")
+	code.WriteString("    struct tm *timeinfo = localtime(&now);\n")
 	code.WriteString("    printf(\"%s\\n\", asctime(timeinfo));\n")
 
 	code.WriteString("    HmTestStats *stats = hm_test_start();\n")
@@ -32,6 +30,8 @@ func (me *program) generateUnitTestsC() string {
 		if !strings.HasPrefix(m.name, "test_") {
 			continue
 		}
+		requires := fmt.Sprintf("#include \"%s/%s/%s.h\"\n\n", m.pack[0], m.name, m.name)
+		include.WriteString(requires)
 		for _, fn := range m.functionOrder {
 			f := m.functions[fn]
 			if strings.HasPrefix(f.getname(), "test_") {
@@ -41,14 +41,12 @@ func (me *program) generateUnitTestsC() string {
 		}
 	}
 
-	code.WriteString("    time(&rawtime);\n")
-	code.WriteString("    timeinfo = localtime(&rawtime);\n")
-	code.WriteString("    printf(\"\\n%s\", asctime(timeinfo));\n")
-
 	code.WriteString("    return hm_test_end(stats);\n")
 	code.WriteString("}\n")
 
-	write(main, code.String())
+	out := include.String() + code.String()
+
+	write(main, out)
 
 	return main
 }

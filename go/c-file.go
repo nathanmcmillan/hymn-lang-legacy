@@ -112,6 +112,7 @@ func (me *cfile) head() string {
 		head.WriteString(me.headReqIncludeSection.String())
 		head.WriteString("\n")
 	}
+	// TODO: delete me
 	// head.WriteString(me.headEnumSection.String())
 	// if me.headEnumTypeDefSection.Len() != 0 {
 	// 	head.WriteString(me.headEnumTypeDefSection.String())

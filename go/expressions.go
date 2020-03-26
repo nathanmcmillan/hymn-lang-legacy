@@ -90,6 +90,20 @@ func (me *parser) expression() (*node, *parseError) {
 	return nil, err(me, ECodeUnexpectedToken, "Unknown token '"+op+"'")
 }
 
+func (me *parser) declareOnly(module *hmfile, n *node) (*node, *parseError) {
+	typed, er := me.declareType()
+	if er != nil {
+		return nil, er
+	}
+	n.copyData(typed)
+	decl := nodeInit("declare")
+	decl.push(n)
+	v := module.declareVar(n.idata.name, true)
+	v._vdata = typed
+	module.scope.variables[n.idata.name] = v
+	return decl, nil
+}
+
 func (me *parser) parseMutable() (*node, *parseError) {
 	if er := me.eat("mutable"); er != nil {
 		return nil, er
@@ -98,14 +112,20 @@ func (me *parser) parseMutable() (*node, *parseError) {
 	if er != nil {
 		return nil, er
 	}
-	n, er := me.forceassign(ev, true, true)
-	if er != nil {
-		return nil, er
+	if !me.assignable(ev) {
+		return nil, err(me, ECodeExpectedToAssignVariable, "Expected variable for assignment but was \""+ev.data().print()+"\".")
 	}
-	if er := me.verify("line"); er != nil {
-		return nil, er
+	if _, ok := operators[me.token.is]; ok {
+		n, er := me.assign(ev, true, true)
+		if er != nil {
+			return nil, er
+		}
+		if er := me.verify("line"); er != nil {
+			return nil, er
+		}
+		return n, nil
 	}
-	return n, nil
+	return me.declareOnly(me.hmfile, ev)
 }
 
 func (me *parser) parseIdent() (*node, *parseError) {
@@ -144,17 +164,7 @@ func (me *parser) parseIdent() (*node, *parseError) {
 				return nil, er
 			}
 		} else {
-			typed, er := me.declareType()
-			if er != nil {
-				return nil, er
-			}
-			n.copyData(typed)
-			decl := nodeInit("declare")
-			decl.push(n)
-			v := module.declareVar(n.idata.name, true)
-			v._vdata = typed
-			module.scope.variables[n.idata.name] = v
-			return decl, nil
+			return me.declareOnly(module, n)
 		}
 	} else if n.is != "call" {
 		return nil, err(me, ECodeExpectingExpression, "Expected assignment or call expression for '"+name+"'")

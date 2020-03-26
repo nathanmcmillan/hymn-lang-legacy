@@ -48,7 +48,7 @@ func (me *parser) assign(left *node, malloc, mutable bool) (*node, *parseError) 
 				} else if strings.HasPrefix(left.data().getRaw(), right.data().getRaw()) && strings.Index(left.data().getRaw(), "<") != -1 {
 					right.copyDataOfNode(left)
 				} else {
-					return nil, err(me, ECodeVariableTypeMismatch, "Variable: "+sv.name+" of type: "+left.data().print()+" does not match expression: "+right.data().print())
+					return nil, err(me, ECodeVariableTypeMismatch, "Variable `"+sv.name+"` of type `"+left.data().print()+"` does not match expression `"+right.data().print()+"`")
 				}
 			}
 		} else if mustBeInt || mustBeNumber || op == "+=" {

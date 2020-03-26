@@ -18,7 +18,9 @@ func (me *parser) withGenericsHeader() ([]*datatype, map[string][]*classInterfac
 	var requirements map[string][]*classInterface
 	for {
 		gname := me.token.value
-		me.wordOrPrimitive()
+		if er := me.wordOrPrimitive(); er != nil {
+			return nil, nil, er
+		}
 		data, er := getdatatype(module, gname)
 		if er != nil {
 			return nil, nil, er
@@ -106,7 +108,9 @@ func (me *parser) genericHeader() ([]*datatype, map[string][]*classInterface, *p
 		}
 		for {
 			gname := me.token.value
-			me.wordOrPrimitive()
+			if er := me.wordOrPrimitive(); er != nil {
+				return nil, nil, er
+			}
 			data, er := getdatatype(module, gname)
 			if er != nil {
 				return nil, nil, er

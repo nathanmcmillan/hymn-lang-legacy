@@ -111,6 +111,8 @@ func (me *parser) defineClass() *parseError {
 	module.classes[uid] = classDef
 	module.classes[name] = classDef
 
+	me.program.classes[uid] = classDef
+
 	members := make([]*variable, 0)
 
 	for {

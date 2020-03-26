@@ -207,7 +207,7 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				if !ok {
 					return nil, err(me, ECodeEnumMatchRequired, "Enum required for matching but found: "+name)
 				}
-				tempd, er := me.hmfile.varInit(en.name+"."+name, temp, false)
+				tempd, er := me.hmfile.varInit(en.module.reference(en.name)+"."+name, temp, false)
 				if er != nil {
 					return nil, er
 				}

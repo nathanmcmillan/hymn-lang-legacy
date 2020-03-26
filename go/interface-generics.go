@@ -38,6 +38,8 @@ func (me *parser) defineInterfaceImplementation(in *classInterface, generics []*
 	module.interfaces[uid] = interfaceDef
 	module.interfaces[implementation] = interfaceDef
 
+	me.program.interfaces[uid] = interfaceDef
+
 	super.implementations = append(super.implementations, interfaceDef)
 
 	return interfaceDef, nil

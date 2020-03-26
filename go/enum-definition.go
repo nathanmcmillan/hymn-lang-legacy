@@ -38,6 +38,8 @@ func (me *parser) defineEnum() *parseError {
 	me.hmfile.enums[uid] = enumDef
 	me.hmfile.enums[name] = enumDef
 
+	me.program.enums[uid] = enumDef
+
 	types := make([]*union, 0)
 	isSimple := true
 

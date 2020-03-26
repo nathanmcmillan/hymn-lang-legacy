@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -149,10 +150,15 @@ func (me *parser) declareType() (*datatype, *parseError) {
 			return newdatamaybe(option), nil
 		}
 		return newdatanone(), nil
+
 	} else {
 		value += me.token.value
-		me.wordOrPrimitive()
+		if er := me.wordOrPrimitive(); er != nil {
+			return nil, er
+		}
 	}
+
+	fmt.Println("declare 1 ::", value)
 
 	if value == "void" {
 		return newdatavoid(), nil

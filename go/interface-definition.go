@@ -70,5 +70,7 @@ func (me *parser) defineInterface() *parseError {
 	module.interfaces[uid] = interfaceDef
 	module.interfaces[name] = interfaceDef
 
+	me.program.interfaces[uid] = interfaceDef
+
 	return nil
 }

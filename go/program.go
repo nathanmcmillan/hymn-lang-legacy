@@ -105,6 +105,9 @@ type program struct {
 	moduleUID    int
 	remapStack   []string
 	testing      bool
+	classes      map[string]*class
+	interfaces   map[string]*classInterface
+	enums        map[string]*enum
 }
 
 func programInit() *program {
@@ -116,6 +119,9 @@ func programInit() *program {
 	prog.sources = make(map[string]string)
 	prog.packages = make(map[string]string)
 	prog.remapStack = make([]string, 0)
+	prog.classes = make(map[string]*class)
+	prog.interfaces = make(map[string]*classInterface)
+	prog.enums = make(map[string]*enum)
 	return prog
 }
 

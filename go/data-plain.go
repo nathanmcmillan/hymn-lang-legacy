@@ -86,6 +86,10 @@ func (me *datatype) copy() *datatype {
 
 func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 
+	if typed == "" {
+		panic("Empty type")
+	}
+
 	if me != nil {
 		typed = me.alias(typed)
 	}
@@ -184,13 +188,33 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 		return newdataunknown(nil, nil, typed, nil), nil
 	}
 
+	fmt.Println("DEBUG:: ", typed)
+
+	for k := range me.program.classes {
+		fmt.Println("GLOBAL CLASSES::", k)
+		if k == typed {
+			fmt.Println("MATCHING CLASSES!")
+		}
+	}
+
+	for k := range me.program.enums {
+		fmt.Println("GLOBAL ENUMS::", k)
+		if k == typed {
+			fmt.Println("MATCHING ENUM!")
+		}
+	}
+
+	fmt.Println("// was it found?")
+
 	origin := me
 	module := me
 
 	d := strings.Index(typed, ".")
 	g := strings.Index(typed, "<")
 
-	fmt.Println("DEBUG:: ", typed)
+	if strings.HasPrefix(typed, "result<") {
+		panic("r")
+	}
 
 	if d != -1 && (g == -1 || d < g) {
 		if strings.HasPrefix(typed, "%") {
@@ -237,6 +261,12 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 			for k := range module.enums {
 				fmt.Println("ENUMS::", module.name, "::", k)
 			}
+			// 1. need every class/enum to have module uid prefix
+			// that way there can be a program level access
+			// to every generic class/enum implementation
+			// e.g.
+			// me.program.enums["%20.result<%19.file_info,%17.io_error>"]
+			// 2. if it's not in the global enum repo THEN it doesn't exist for sure
 			if en, ok := module.enums[base]; ok {
 				un := en.getType(remainder[d+1:])
 				return newdataenum(origin, en, un, glist), nil

@@ -22,6 +22,8 @@ func (me *parser) defineClassImplGeneric(super *class, order []*datatype) (*clas
 	module.classes[uid] = classDef
 	module.classes[implementation] = classDef
 
+	me.program.classes[uid] = classDef
+
 	super.implementations = append(super.implementations, classDef)
 
 	mapping := make(map[string]*datatype)

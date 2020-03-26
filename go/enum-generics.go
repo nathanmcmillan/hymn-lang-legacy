@@ -22,6 +22,8 @@ func (me *parser) defineEnumImplGeneric(base *enum, order []*datatype) (*enum, *
 	module.enums[uid] = enumDef
 	module.enums[implementation] = enumDef
 
+	me.program.enums[uid] = enumDef
+
 	base.implementations = append(base.implementations, enumDef)
 
 	mapping := make(map[string]*datatype)

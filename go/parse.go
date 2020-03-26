@@ -191,6 +191,14 @@ func (me *parser) wordOrPrimitive() *parseError {
 	return nil
 }
 
+func (me *parser) lineOrComment() *parseError {
+	if er := me.verifyLineOrComment(); er != nil {
+		return er
+	}
+	me.next()
+	return nil
+}
+
 func (me *parser) verifyWordOrPrimitive() *parseError {
 	t := me.token.is
 	if t == "id" {
@@ -199,6 +207,14 @@ func (me *parser) verifyWordOrPrimitive() *parseError {
 		return me.verify(t)
 	}
 	return me.verify("id or primitive")
+}
+
+func (me *parser) verifyLineOrComment() *parseError {
+	t := me.token.is
+	if t == "line" || t == "comment" {
+		return me.verify(t)
+	}
+	return me.verify("line or comment")
 }
 
 func (me *parser) save() *parsepoint {

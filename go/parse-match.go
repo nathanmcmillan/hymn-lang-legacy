@@ -176,9 +176,10 @@ func (me *parser) parseMatch() (*node, *parseError) {
 
 	n.push(matching)
 
-	if er := me.eat("line"); er != nil {
+	if er := me.newLine(); er != nil {
 		return nil, er
 	}
+
 	for {
 		if me.token.depth <= depth {
 			break
@@ -217,10 +218,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				tempv.copyData(tempd.data())
 				caseNode.push(tempv)
 			}
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -233,10 +232,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				}
 				n.push(e)
 			}
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 			}
 			if temp != "" {
 				delete(me.hmfile.scope.variables, temp)
@@ -273,10 +270,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				tempv.copyData(tempd.data())
 				some.push(tempv)
 			}
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -289,10 +284,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				}
 				n.push(e)
 			}
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 			}
 			if temp != "" {
 				delete(me.hmfile.scope.variables, temp)
@@ -302,10 +295,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				return nil, er
 			}
 			n.push(nodeInit("none"))
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -318,20 +309,16 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				}
 				n.push(e)
 			}
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 			}
 		} else if me.token.is == "_" {
 			if er := me.eat("_"); er != nil {
 				return nil, er
 			}
 			n.push(nodeInit("_"))
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -344,10 +331,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				}
 				n.push(e)
 			}
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 			}
 		} else if literal, ok := literals[me.token.is]; ok {
 			if literal != matchType.print() {
@@ -363,10 +348,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				if er := me.eat("|"); er != nil {
 					return nil, er
 				}
-				if me.token.is == "line" {
-					if er := me.eat("line"); er != nil {
-						return nil, er
-					}
+				if me.isNewLine() {
+					me.newLine()
 				}
 				literal, ok := literals[me.token.is]
 				if !ok {
@@ -382,10 +365,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				caseNodes.push(nodeInit(value))
 			}
 			n.push(caseNodes)
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 				b, er := me.block()
 				if er != nil {
 					return nil, er
@@ -398,10 +379,8 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				}
 				n.push(e)
 			}
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 			}
 		} else {
 			return nil, err(me, ECodeUnexpectedToken, "Unknown match expression.")

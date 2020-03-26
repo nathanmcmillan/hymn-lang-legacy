@@ -17,7 +17,8 @@ func (me *parser) defineInterface() *parseError {
 	if er != nil {
 		return er
 	}
-	if er := me.eat("line"); er != nil {
+
+	if er := me.newLine(); er != nil {
 		return er
 	}
 
@@ -32,10 +33,7 @@ func (me *parser) defineInterface() *parseError {
 	functions := make(map[string]*fnSig)
 
 	for {
-		if me.token.is == "line" {
-			break
-		}
-		if me.token.is == "eof" || me.token.is == "comment" {
+		if me.isNewLine() || me.token.is == "eof" {
 			break
 		}
 		if me.token.is == "id" {
@@ -54,7 +52,7 @@ func (me *parser) defineInterface() *parseError {
 			if sig == nil {
 				return err(me, ECodeInterfaceDefinitionType, "Interface must define a function signature, but found: "+mtype.error())
 			}
-			if er := me.eat("line"); er != nil {
+			if er := me.newLine(); er != nil {
 				return er
 			}
 			self := fnArgInit(newdataanypointer().getvariable())

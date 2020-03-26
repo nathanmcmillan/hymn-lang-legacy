@@ -21,7 +21,7 @@ func (me *parser) macro() *parseError {
 	} else {
 		fmt.Println("NEW DEF IS", name)
 	}
-	if er := me.eat("line"); er != nil {
+	if er := me.newLine(); er != nil {
 		return er
 	}
 	me.hmfile.defs[name] = value

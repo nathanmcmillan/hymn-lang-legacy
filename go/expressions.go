@@ -179,10 +179,8 @@ func (me *parser) parseIdent() (*node, *parseError) {
 
 func (me *parser) maybeIgnore(depth int) *parseError {
 	for {
-		if me.token.is == "line" {
-			if er := me.eat("line"); er != nil {
-				return er
-			}
+		if me.isNewLine() {
+			me.newLine()
 			break
 		}
 	}
@@ -415,12 +413,10 @@ func (me *parser) block() (*node, *parseError) {
 	depth := me.token.depth
 	block := nodeInit("block")
 	for {
-		for me.token.is == "line" {
-			if er := me.eat("line"); er != nil {
-				return nil, er
-			}
+		for me.isNewLine() {
+			me.newLine()
 		}
-		if me.token.depth < depth || me.token.is == "eof" || me.token.is == "comment" {
+		if me.token.depth < depth || me.token.is == "eof" {
 			goto blockEnd
 		}
 		e, er := me.expression()
@@ -462,7 +458,7 @@ func (me *parser) global(mutable bool) *parseError {
 	}
 	module.statics = append(module.statics, n)
 	module.staticScope[name] = &variableNode{n, me.hmfile.scope.variables[name]}
-	if er := me.eat("line"); er != nil {
+	if er := me.newLine(); er != nil {
 		return er
 	}
 	return nil

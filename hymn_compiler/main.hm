@@ -58,13 +58,13 @@ def compile(f flags) result<string,parse_error>
             # need a global registry independent of module for looking up %uid types
 
             x = parser.io_error(e.value)
-            z = result.error(x)
-            return z
+            return result.error(x)
 
     if stat.is_dir()
         f.path = path.join(f.path, "main.hm")
 
     directory = path.abs(path.dir(f.path))
+    echo("directory:", directory)
 
     mutable libc = os.get_env("HYMN_LIBC")
     if f.libc != "": libc = f.libc

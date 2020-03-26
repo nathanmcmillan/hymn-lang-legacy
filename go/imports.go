@@ -44,10 +44,8 @@ func (me *parser) importing() *parseError {
 		if er := me.eat("("); er != nil {
 			return er
 		}
-		if me.token.is == "line" {
-			if er := me.eat("line"); er != nil {
-				return er
-			}
+		if me.isNewLine() {
+			me.newLine()
 		}
 		for me.token.is != ")" {
 			value := me.token.value
@@ -55,10 +53,8 @@ func (me *parser) importing() *parseError {
 				return er
 			}
 			statics = append(statics, value)
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return er
-				}
+			if me.isNewLine() {
+				me.newLine()
 			} else if me.token.is == "," {
 				if er := me.eat(","); er != nil {
 					return er
@@ -183,7 +179,7 @@ func (me *parser) importing() *parseError {
 		}
 	}
 
-	if er := me.eat("line"); er != nil {
+	if er := me.newLine(); er != nil {
 		return er
 	}
 

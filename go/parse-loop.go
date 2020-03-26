@@ -36,7 +36,7 @@ func (me *parser) forloop() (*node, *parseError) {
 		return nil, er
 	}
 	no.push(a)
-	if er := me.eat("line"); er != nil {
+	if er := me.newLine(); er != nil {
 		return nil, er
 	}
 	b, er = me.block()
@@ -56,10 +56,8 @@ func (me *parser) whileloop() (*node, *parseError) {
 	}
 	var no *node
 	var templs []*variableNode
-	if me.token.is == "line" {
-		if er := me.eat("line"); er != nil {
-			return nil, er
-		}
+	if me.isNewLine() {
+		me.newLine()
 		no = nodeInit("loop")
 	} else {
 		no = nodeInit("while")
@@ -69,7 +67,7 @@ func (me *parser) whileloop() (*node, *parseError) {
 		}
 		no.push(b)
 		templs = me.getenumstack(no)
-		if er := me.eat("line"); er != nil {
+		if er := me.newLine(); er != nil {
 			return nil, er
 		}
 	}
@@ -115,7 +113,8 @@ func (me *parser) iterloop() (*node, *parseError) {
 	if !using.data().isArrayOrSlice() && !using.data().isString() {
 		return nil, err(me, ECodeVariableNotIndexable, "expected array, slice, string but was \""+using.data().print()+"\"")
 	}
-	if er := me.eat("line"); er != nil {
+
+	if er := me.newLine(); er != nil {
 		return nil, er
 	}
 

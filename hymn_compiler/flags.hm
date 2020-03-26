@@ -1,7 +1,7 @@
 class flags
     cc               string
     path             string
-    hmlib            string
+    libc             string
     write_to         string
     variables        string
     help             bool

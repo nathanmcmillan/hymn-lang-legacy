@@ -92,7 +92,7 @@ func (me *parser) defineClass() *parseError {
 		}
 	}
 
-	if er := me.eat("line"); er != nil {
+	if er := me.newLine(); er != nil {
 		return er
 	}
 
@@ -116,10 +116,7 @@ func (me *parser) defineClass() *parseError {
 	members := make([]*variable, 0)
 
 	for {
-		if me.token.is == "line" {
-			break
-		}
-		if me.token.is == "eof" || me.token.is == "comment" {
+		if me.isNewLine() || me.token.is == "eof" {
 			break
 		}
 		if me.token.is == "id" {
@@ -152,7 +149,7 @@ func (me *parser) defineClass() *parseError {
 					return err(me, ECodeClassRecursiveDefinition, "recursive type definition for \""+classDef.name+"\"")
 				}
 			}
-			if er := me.eat("line"); er != nil {
+			if er := me.newLine(); er != nil {
 				return er
 			}
 			if mtype.isUnknown() && inList(generics, mtype.print()) < 0 {

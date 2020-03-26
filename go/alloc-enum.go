@@ -31,10 +31,8 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 	if er := me.eat("("); er != nil {
 		return "", er
 	}
-	if me.token.is == "line" {
-		if er := me.eat("line"); er != nil {
-			return "", er
-		}
+	if me.isNewLine() {
+		me.newLine()
 	}
 	vars := un.types.order
 	params := make([]*node, len(vars))
@@ -64,7 +62,7 @@ func (me *parser) enumParams(n *node, en *enum, un *union, depth int) (string, *
 				if ndepth != depth+1 {
 					return "", erc(me, ECodeLineIndentation)
 				}
-				if er := me.eat("line"); er != nil {
+				if er := me.newLine(); er != nil {
 					return "", er
 				}
 			} else {

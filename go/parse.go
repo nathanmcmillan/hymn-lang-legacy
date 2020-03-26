@@ -115,10 +115,8 @@ func (me *hmfile) parse() *parseError {
 		if er := parsing.statement(); er != nil {
 			return er
 		}
-		if parsing.token.is == "line" {
-			if er := parsing.eat("line"); er != nil {
-				return er
-			}
+		if parsing.isNewLine() {
+			parsing.newLine()
 		}
 	}
 
@@ -191,30 +189,37 @@ func (me *parser) wordOrPrimitive() *parseError {
 	return nil
 }
 
-func (me *parser) lineOrComment() *parseError {
-	if er := me.verifyLineOrComment(); er != nil {
-		return er
-	}
-	me.next()
-	return nil
-}
-
 func (me *parser) verifyWordOrPrimitive() *parseError {
 	t := me.token.is
-	if t == "id" {
-		return me.verify("id")
-	} else if checkIsPrimitive(t) {
-		return me.verify(t)
+	if t == "id" || checkIsPrimitive(t) {
+		return nil
 	}
 	return me.verify("id or primitive")
 }
 
-func (me *parser) verifyLineOrComment() *parseError {
+func (me *parser) newLine() *parseError {
 	t := me.token.is
-	if t == "line" || t == "comment" {
-		return me.verify(t)
+	if t == "line" {
+		me.next()
+		return nil
+	} else if t == "comment" && me.peek().is == "line" {
+		me.next()
+		me.next()
+		return nil
 	}
-	return me.verify("line or comment")
+	return me.verify("line")
+}
+
+func (me *parser) verifyNewLine() *parseError {
+	if me.isNewLine() {
+		return nil
+	}
+	return me.verify("line")
+}
+
+func (me *parser) isNewLine() bool {
+	t := me.token.is
+	return t == "line" || (t == "comment" && me.peek().is == "line")
 }
 
 func (me *parser) save() *parsepoint {

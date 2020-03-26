@@ -46,7 +46,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		block.push(e)
 		n.push(block)
 	} else {
-		if er := me.eat("line"); er != nil {
+		if er := me.newLine(); er != nil {
 			return nil, er
 		}
 		b, er = me.block()
@@ -84,7 +84,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			block.push(e)
 			n.push(block)
 		} else {
-			if er := me.eat("line"); er != nil {
+			if er := me.newLine(); er != nil {
 				return nil, er
 			}
 			b, er := me.block()
@@ -118,7 +118,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			block.push(exp)
 			el.push(block)
 		} else {
-			if er := me.eat("line"); er != nil {
+			if er := me.newLine(); er != nil {
 				return nil, er
 			}
 			b, er := me.block()
@@ -128,10 +128,8 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			el.push(b)
 		}
 		n.push(el)
-		if me.token.is == "line" {
-			if er := me.eat("line"); er != nil {
-				return nil, er
-			}
+		if me.isNewLine() {
+			me.newLine()
 		}
 	}
 	return n, nil

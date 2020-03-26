@@ -69,10 +69,8 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 	if er := me.eat("("); er != nil {
 		return nil, nil, er
 	}
-	if me.token.is == "line" {
-		if er := me.eat("line"); er != nil {
-			return nil, nil, er
-		}
+	if me.isNewLine() {
+		me.newLine()
 	}
 	min := pix
 	dict := false
@@ -82,10 +80,8 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 		if me.token.is == ")" {
 			break
 		} else if pix > min || dict {
-			if me.token.is == "line" {
-				if er := me.eat("line"); er != nil {
-					return nil, nil, er
-				}
+			if me.isNewLine() {
+				me.newLine()
 				if me.token.is == ")" {
 					break
 				}

@@ -18,7 +18,7 @@ func (me *parser) defineEnum() *parseError {
 	if er != nil {
 		return er
 	}
-	if er := me.eat("line"); er != nil {
+	if er := me.newLine(); er != nil {
 		return er
 	}
 	generics := datatypels(genericsOrder)
@@ -44,14 +44,12 @@ func (me *parser) defineEnum() *parseError {
 	isSimple := true
 
 	for {
-		token := me.token
-		if token.is == "line" {
-			if er := me.eat("line"); er != nil {
-				return er
-			}
+		if me.isNewLine() {
+			me.newLine()
 			break
 		}
-		if token.is == "eof" || token.is == "comment" {
+		token := me.token
+		if token.is == "eof" {
 			break
 		}
 		if token.is == "id" {
@@ -71,10 +69,8 @@ func (me *parser) defineEnum() *parseError {
 					goto closing
 				}
 				isSimple = false
-				if me.token.is == "line" {
-					if er := me.eat("line"); er != nil {
-						return er
-					}
+				if me.isNewLine() {
+					me.newLine()
 				}
 				for {
 					if me.token.is == ")" {
@@ -97,10 +93,8 @@ func (me *parser) defineEnum() *parseError {
 						if er := me.eat(","); er != nil {
 							return er
 						}
-					} else if me.token.is == "line" {
-						if er := me.eat("line"); er != nil {
-							return er
-						}
+					} else if me.isNewLine() {
+						me.newLine()
 					} else {
 						goto closing
 					}
@@ -110,7 +104,7 @@ func (me *parser) defineEnum() *parseError {
 					return er
 				}
 			}
-			if er := me.eat("line"); er != nil {
+			if er := me.newLine(); er != nil {
 				return er
 			}
 			un := unionInit(me.hmfile, name, typeName, unionOrderedData)

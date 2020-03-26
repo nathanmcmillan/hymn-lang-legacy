@@ -282,10 +282,8 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 		if er := me.eat("("); er != nil {
 			return nil, er
 		}
-		if me.token.is == "line" {
-			if er := me.eat("line"); er != nil {
-				return nil, er
-			}
+		if me.isNewLine() {
+			me.newLine()
 		}
 		parenthesis = true
 		if me.token.is != ")" {
@@ -336,10 +334,8 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 				fn.args = append(fn.args, fnArg)
 				if me.token.is == ")" {
 					break
-				} else if me.token.is == "line" {
-					if er := me.eat("line"); er != nil {
-						return nil, er
-					}
+				} else if me.isNewLine() {
+					me.newLine()
 				} else {
 					if er := me.eat(","); er != nil {
 						return nil, er
@@ -374,7 +370,8 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	} else {
 		fn.returns = newdatavoid()
 	}
-	if er := me.eat("line"); er != nil {
+
+	if er := me.newLine(); er != nil {
 		return nil, er
 	}
 
@@ -398,10 +395,8 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	}
 
 	for {
-		for me.token.is == "line" {
-			if er := me.eat("line"); er != nil {
-				return nil, er
-			}
+		for me.isNewLine() {
+			me.newLine()
 			if me.token.is != "line" {
 				if me.token.depth != 1 {
 					goto fnEnd

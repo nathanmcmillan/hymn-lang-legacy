@@ -31,32 +31,24 @@ def help
     echo("    build    compile a program")
     echo("")
 
+def example() result<int,parse_error>
+    return result.ok(1)
+
 def compile(f flags) result<string,parse_error>
     mutable source_out = path.abs(f.write_to)
     source_out = path.join(source_out, "src")
 
-    # todo: special `try` keyword will automatically insert match for result
-    # todo: replace if X is Y with match X: Y
+    ex = try example()
+    echo("int: " + str(ex))
 
     # stat = try fs.stat(f.path)
-
-    # stat = try fs.stat(f.path) catch(e)
+    # catch(e)
     #     return result.error(parser.io_error(e.value))
 
-    stat_result = fs.stat(f.path)
     stat fs.file_info
-    match stat_result
+    match fs.stat(f.path)
         ok(r) stat = r.value
         error(e)
-            # main does not know
-            # result<%19.file_info,%17.io_error>.error
-
-            # it should be passed along as
-            # %20.result<%19.file_info,%17.io_error>.error
-
-            # main should not care or parse it
-            # need a global registry independent of module for looking up %uid types
-
             x = parser.io_error(e.value)
             return result.error(x)
 
@@ -90,6 +82,7 @@ def main(args []string)
 
     ok = compile()
     
+    # todo: replace if X is Y with match X: Y
     # match ok: error(e)
     if ok is error(e)
         echo("error: " + e.value.str())

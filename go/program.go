@@ -42,7 +42,6 @@ var (
 		TokenUInt16:    "uint16_t",
 		TokenUInt32:    "uint32_t",
 		TokenUInt64:    "uint64_t",
-		TokenLibSize:   "size_t",
 	}
 	typeToStd = map[string]string{
 		TokenBoolean: CStdBool,

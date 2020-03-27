@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -188,33 +187,11 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 		return newdataunknown(nil, nil, typed, nil), nil
 	}
 
-	fmt.Println("DEBUG:: ", typed)
-
-	for k := range me.program.classes {
-		fmt.Println("GLOBAL CLASSES::", k)
-		if k == typed {
-			fmt.Println("MATCHING CLASSES!")
-		}
-	}
-
-	for k := range me.program.enums {
-		fmt.Println("GLOBAL ENUMS::", k)
-		if k == typed {
-			fmt.Println("MATCHING ENUM!")
-		}
-	}
-
-	fmt.Println("// was it found?")
-
 	origin := me
 	module := me
 
 	d := strings.Index(typed, ".")
 	g := strings.Index(typed, "<")
-
-	if strings.HasPrefix(typed, "result<") {
-		panic("r")
-	}
 
 	if d != -1 && (g == -1 || d < g) {
 		if strings.HasPrefix(typed, "%") {
@@ -240,7 +217,6 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 	var glist []*datatype
 	if g != -1 {
 		graw := getdatatypegenerics(typed)
-		fmt.Println("GENERICS:: ", graw)
 		base = typed[0:g]
 		gt := strings.LastIndex(typed, ">") + 1
 		remainder := typed[gt:]
@@ -248,7 +224,6 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 		for i, r := range graw {
 			var er *parseError
 			glist[i], er = getdatatype(me, r)
-			fmt.Println("TYPE:: ", glist[i].error())
 			if er != nil {
 				return nil, er
 			}
@@ -257,16 +232,6 @@ func getdatatype(me *hmfile, typed string) (*datatype, *parseError) {
 		d = strings.Index(remainder, ".")
 		if d != -1 {
 			base = typed[0:gt]
-			fmt.Println("BASE:: ", base)
-			for k := range module.enums {
-				fmt.Println("ENUMS::", module.name, "::", k)
-			}
-			// 1. need every class/enum to have module uid prefix
-			// that way there can be a program level access
-			// to every generic class/enum implementation
-			// e.g.
-			// me.program.enums["%20.result<%19.file_info,%17.io_error>"]
-			// 2. if it's not in the global enum repo THEN it doesn't exist for sure
 			if en, ok := module.enums[base]; ok {
 				un := en.getType(remainder[d+1:])
 				return newdataenum(origin, en, un, glist), nil
@@ -921,7 +886,6 @@ func newdataanypointer() *datatype {
 }
 
 func newdataunknown(origin *hmfile, module *hmfile, canonical string, generics []*datatype) *datatype {
-	fmt.Println("UNKNOWN:: ", canonical)
 	d := newdatatype(dataTypeUnknown)
 	d.origin = origin
 	d.module = module

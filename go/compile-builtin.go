@@ -73,14 +73,6 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 		cb.prepend(path.pre)
 		cb.prepend(content.pre)
 		return cb
-	case libOpen:
-		me.libReq.add(HmLibFiles)
-		param0 := me.eval(parameters[0])
-		param1 := me.eval(parameters[1])
-		cb := codeBlockOne(n, "fopen("+param0.pop()+", "+param1.pop()+")")
-		cb.prepend(param0.pre)
-		cb.prepend(param1.pre)
-		return cb
 	case libCat:
 		me.libReq.add(HmLibFiles)
 		param := me.eval(parameters[0])
@@ -191,8 +183,6 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 				code += "%s"
 				code2 += paramx.pop() + " ? hmlib_string_init(\"true\") : hmlib_string_init(\"false\")"
 				pop = false
-			case TokenLibSize:
-				code += "%zu"
 			default:
 				if param.data().enum != nil {
 					panic("echo() does not support printing enums: " + param.data().print())

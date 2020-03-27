@@ -21,7 +21,13 @@ func (me *parser) assign(left *node, malloc, mutable bool) (*node, *parseError) 
 	if er := me.eat(op); er != nil {
 		return nil, er
 	}
-	right, er := me.calc(0, left.data())
+	var right *node
+	var er *parseError
+	if me.token.is == "try" {
+		right, er = me.trying()
+	} else {
+		right, er = me.calc(0, left.data())
+	}
 	if er != nil {
 		return nil, er
 	}

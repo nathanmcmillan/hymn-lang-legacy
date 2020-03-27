@@ -31,6 +31,12 @@ func (me *hmfile) varInit(typed, name string, mutable bool) (*variable, *parseEr
 	return v, nil
 }
 
+func (me *hmfile) varInitWithData(data *datatype, name string, mutable bool) *variable {
+	v := me.declareVar(name, mutable)
+	v._vdata = data
+	return v
+}
+
 func (me *hmfile) declareVar(name string, mutable bool) *variable {
 	v := &variable{}
 	v.name = name

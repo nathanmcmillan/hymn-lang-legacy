@@ -208,10 +208,11 @@ func (me *parser) parseMatch() (*node, *parseError) {
 				if !ok {
 					return nil, err(me, ECodeEnumMatchRequired, "Enum required for matching but found: "+name)
 				}
-				tempd, er := me.hmfile.varInit(en.module.reference(en.name)+"."+name, temp, false)
+				dd, er := en.getuniondata(me.hmfile, name)
 				if er != nil {
 					return nil, er
 				}
+				tempd := me.hmfile.varInitWithData(dd, temp, false)
 				me.hmfile.scope.variables[temp] = tempd
 				tempv := nodeInit("variable")
 				tempv.idata = newidvariable(me.hmfile, temp)

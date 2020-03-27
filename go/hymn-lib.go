@@ -35,12 +35,6 @@ const (
 	libSubstring = "substring"
 )
 
-// library tokens
-const (
-	TokenLibSize = "SIZE"
-	TokenLibFile = "FILE"
-)
-
 type hmlib struct {
 	fn        []*function
 	types     map[string]string
@@ -165,73 +159,6 @@ func (me *hmlib) initPush() *parseError {
 	return nil
 }
 
-func (me *hmlib) initIO() *parseError {
-	var er *parseError
-
-	me.types[TokenLibFile] = ""
-	classDef := classInit(nil, TokenLibFile, make([]string, 0), make(map[string][]*classInterface), nil)
-	me.classes[TokenLibFile] = classDef
-
-	fn := funcInit(nil, libOpen, nil)
-	fn.returns, er = getdatatype(nil, TokenLibFile)
-	if er != nil {
-		return er
-	}
-	a, er := me.fnArgInit(TokenString, "path", false)
-	if er != nil {
-		return er
-	}
-	fn.args = append(fn.args, a)
-	m, er := me.fnArgInit(TokenString, "mode", false)
-	if er != nil {
-		return er
-	}
-	fn.args = append(fn.args, m)
-	me.functions[libOpen] = fn
-	me.types[libOpen] = ""
-
-	fnName := "read"
-	fn = funcInit(nil, fnName, classDef)
-	fn.returns, er = getdatatype(nil, TokenInt)
-	if er != nil {
-		return er
-	}
-	s, er := me.fnArgInit(classDef.name, "self", false)
-	if er != nil {
-		return er
-	}
-	fn.args = append(fn.args, s)
-	me.functions[fn.getname()] = fn
-	me.types[fn.getname()] = ""
-
-	fnName = "read_line"
-	fn = funcInit(nil, fnName, classDef)
-	fn.returns, er = getdatatype(nil, TokenString)
-	if er != nil {
-		return er
-	}
-	s, er = me.fnArgInit(classDef.name, "self", false)
-	if er != nil {
-		return er
-	}
-	fn.args = append(fn.args, s)
-	me.functions[fn.getname()] = fn
-	me.types[fn.getname()] = ""
-
-	fnName = "close"
-	fn = funcInit(nil, fnName, classDef)
-	fn.returns = newdatavoid()
-	a, er = me.fnArgInit(classDef.name, "self", false)
-	if er != nil {
-		return er
-	}
-	fn.args = append(fn.args, a)
-	me.functions[fn.getname()] = fn
-	me.types[fn.getname()] = ""
-
-	return nil
-}
-
 func (me *hmlib) libs() *parseError {
 	me.types = make(map[string]string)
 	me.classes = make(map[string]*class)
@@ -351,7 +278,6 @@ func (me *hmlib) libs() *parseError {
 		return er
 	}
 
-	me.initIO()
 	me.initPush()
 
 	for primitive := range primitives {

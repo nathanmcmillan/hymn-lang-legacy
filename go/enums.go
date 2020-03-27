@@ -107,3 +107,11 @@ func getUnionType(unions []*union, name string) *union {
 	}
 	return nil
 }
+
+func (me *enum) getuniondata(module *hmfile, union string) (*datatype, *parseError) {
+	d, er := getdatatype(module, me.module.reference(me.name)+"."+union)
+	if er != nil {
+		return nil, er
+	}
+	return d, nil
+}

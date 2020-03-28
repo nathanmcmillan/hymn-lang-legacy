@@ -1,7 +1,7 @@
 package main
 
 func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
-	n.copyData(newdataprimitive("bool"))
+	n.setData(newdataprimitive("bool"))
 	if er := me.eat(op); er != nil {
 		return nil, er
 	}

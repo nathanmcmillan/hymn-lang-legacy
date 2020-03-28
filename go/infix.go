@@ -78,6 +78,7 @@ func infixBinaryInt(me *parser, left *node, op string) (*node, *parseError) {
 
 func infixCompare(me *parser, left *node, op string) (*node, *parseError) {
 	node := nodeInit(getInfixName(op))
+	node.setData(newdataprimitive("bool"))
 	node.value = me.token.value
 	if er := me.eat(op); er != nil {
 		return nil, er
@@ -91,7 +92,6 @@ func infixCompare(me *parser, left *node, op string) (*node, *parseError) {
 	}
 	node.push(left)
 	node.push(right)
-	node._vdata = newdataprimitive("bool")
 	return node, nil
 }
 

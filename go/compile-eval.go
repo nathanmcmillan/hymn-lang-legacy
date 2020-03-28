@@ -166,6 +166,9 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 	if op == "declare" {
 		return me.compileLocalDeclare(n)
 	}
+	if op == "try" {
+		return me.compileTry(n)
+	}
 	if op == "comment" {
 		return me.compileComment(n)
 	}

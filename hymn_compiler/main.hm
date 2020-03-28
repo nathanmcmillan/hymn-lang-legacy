@@ -39,7 +39,8 @@ def compile(f flags) result<string,parse_error>
     source_out = path.join(source_out, "src")
 
     ex = try example()
-    echo("int: " + str(ex))
+
+    echo("poop: " + str(ex))
 
     # stat = try fs.stat(f.path)
     # catch(e)

@@ -4,12 +4,6 @@ import "fmt"
 
 func (me *cfile) compileTry(n *node) *codeblock {
 
-	// # HmEnumUnionResultStringParseError try_0 = example();
-	// # if try_0.type == HmResultError {
-	// #     return try_0.error;
-	// # }
-	// # hmstring ex = try_0.ok;
-
 	calc := n.has[0]
 	catch := n.has[1]
 
@@ -37,7 +31,9 @@ func (me *cfile) compileTry(n *node) *codeblock {
 		notTheSame := true
 		if notTheSame {
 			wrapper := "catch_" + me.temp()
-			code += fmc(me.depth+1) + catch.data().typeSig(me) + wrapper + ";\n"
+			code += fmc(me.depth+1) + catch.data().typeSig(me) + wrapper + " = malloc(sizeof(" + en.ucname + "));\n"
+			code += fmc(me.depth+1) + wrapper + "->type = HmResultError;\n"
+			code += fmc(me.depth+1) + wrapper + "->error = " + temp + "->error;\n"
 			code += fmc(me.depth+1) + "return " + wrapper + ";\n"
 		} else {
 			code += fmc(me.depth+1) + "return " + temp + ";\n"

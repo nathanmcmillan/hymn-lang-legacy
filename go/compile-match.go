@@ -4,6 +4,30 @@ import (
 	"strings"
 )
 
+func (me *cfile) compileIsSomeOrNone(code string, n, caseOf *node, match *codeblock) *codeblock {
+	if caseOf.is == "some" {
+		if len(caseOf.has) > 0 {
+			temphas := caseOf.has[0]
+			idata := temphas.idata.name
+			tempname := "match_" + me.temp()
+			tempv := temphas.data().getnamedvariable(tempname, false)
+			me.scope.renaming[idata] = tempname
+			me.scope.variables[tempname] = tempv
+			prepend := fmtassignspace(match.data().typeSig(me)) + tempname + ";\n" + fmc(me.depth)
+			code := "(" + tempname + " = " + match.code() + ") != NULL"
+			cb := &codeblock{}
+			cb.prepend(codeBlockOne(n, prepend))
+			cb.current = codeNode(n, code)
+			return cb
+		}
+		code += match.code() + " != NULL"
+
+	} else if caseOf.is == "none" {
+		code += match.code() + " == NULL"
+	}
+	return codeBlockOne(n, code)
+}
+
 func (me *cfile) compileIs(n *node) *codeblock {
 	code := me.walrusMatch(n)
 	using := n.has[0]
@@ -11,27 +35,7 @@ func (me *cfile) compileIs(n *node) *codeblock {
 	match := me.eval(using)
 
 	if match.data().isSomeOrNone() {
-		if caseOf.is == "some" {
-			if len(caseOf.has) > 0 {
-				temphas := caseOf.has[0]
-				idata := temphas.idata.name
-				tempname := "match_" + me.temp()
-				tempv := temphas.data().getnamedvariable(tempname, false)
-				me.scope.renaming[idata] = tempname
-				me.scope.variables[tempname] = tempv
-				prepend := fmtassignspace(match.data().typeSig(me)) + tempname + ";\n" + fmc(me.depth)
-				code := "(" + tempname + " = " + match.code() + ") != NULL"
-				cb := &codeblock{}
-				cb.prepend(codeBlockOne(n, prepend))
-				cb.current = codeNode(n, code)
-				return cb
-			}
-			code += match.code() + " != NULL"
-
-		} else if caseOf.is == "none" {
-			code += match.code() + " == NULL"
-		}
-		return codeBlockOne(n, code)
+		return me.compileIsSomeOrNone(code, n, caseOf, match)
 	}
 
 	cb := &codeblock{}
@@ -101,13 +105,13 @@ func (me *cfile) compileIs(n *node) *codeblock {
 }
 
 func (me *cfile) compileMatch(n *node) *codeblock {
-	code := ""
-	code += me.walrusMatch(n)
+	top := ""
+	top += me.walrusMatch(n)
 	using := n.has[0]
 	match := me.eval(using)
 
 	if match.data().isSomeOrNone() {
-		return me.compileMatchNull(match, n, code)
+		return me.compileMatchSomrOrNone(match, n, top)
 	}
 
 	test := match.code()
@@ -122,15 +126,18 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 	if using.is == "variable" {
 		name := me.getvar(using.idata.name).cname
 		if isEnum != nil && !isEnum.simple {
-			test = name + "->type"
+			test = name
 		}
 		tempname = name
 	}
 
-	code += "switch (" + test + ") {\n"
+	cb := &codeblock{}
+
 	ix := 1
 	size := len(n.has)
 	hasdefault := false
+
+	code := ""
 	renaming := ""
 
 	for ix < size {
@@ -148,7 +155,9 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 						tempname = "match_" + me.temp()
 						tempv := temphas.data().getnamedvariable(tempname, false)
 						me.scope.variables[tempname] = tempv
-						code = fmtassignspace(match.data().typeSig(me)) + tempname + ";\n" + fmc(me.depth) + code
+						pre := fmtassignspace(match.data().typeSig(me)) + tempname + " = " + test
+						cb.prepend(codeNodeUpgrade(hollowCode(pre)))
+						test = tempname
 					}
 					me.scope.renaming[idata] = tempname
 					renaming = idata
@@ -188,10 +197,15 @@ func (me *cfile) compileMatch(n *node) *codeblock {
 		code += fmc(me.depth) + "default: exit(1);\n"
 	}
 	code += fmc(me.depth) + "}"
-	return codeBlockOne(n, code)
+	if isEnum != nil && !isEnum.simple {
+		test += "->type"
+	}
+	top += "switch (" + test + ") {\n"
+	cb.current = codeNode(n, top+code)
+	return cb
 }
 
-func (me *cfile) compileMatchNull(match *codeblock, n *node, code string) *codeblock {
+func (me *cfile) compileMatchSomrOrNone(match *codeblock, n *node, code string) *codeblock {
 	ifNull := ""
 	ifNotNull := ""
 	ix := 1

@@ -20,6 +20,13 @@ func scopeInit(root *scope) *scope {
 	return s
 }
 
+func hollowCode(code string) *cnode {
+	c := &cnode{}
+	c.code = code
+	c.has = make([]*cnode, 0)
+	return c
+}
+
 func codeNode(node *node, code string) *cnode {
 	c := &cnode{}
 	c.is = node.is

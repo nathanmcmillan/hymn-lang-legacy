@@ -31,27 +31,14 @@ def help
     echo("    build    compile a program")
     echo("")
 
-def example() result<int,parse_error>
-    return result.ok(1)
+# TODO: fix C header spacing
 
 def compile(f flags) result<string,parse_error>
     mutable source_out = path.abs(f.write_to)
     source_out = path.join(source_out, "src")
 
-    ex = try example()
-
-    echo("poop: " + str(ex))
-
-    # stat = try fs.stat(f.path)
-    # catch(e)
-    #     return result.error(parser.io_error(e.value))
-
-    stat fs.file_info
-    match fs.stat(f.path)
-        ok(r) stat = r.value
-        error(e)
-            x = parser.io_error(e.value)
-            return result.error(x)
+    stat = try fs.stat(f.path) catch(e)
+        return result.error(parser.io_error(e.value))
 
     if stat.is_dir()
         f.path = path.join(f.path, "main.hm")

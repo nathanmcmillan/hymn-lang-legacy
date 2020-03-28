@@ -9,8 +9,7 @@ def file_info.is_dir() bool
     return self.dir
 
 def stat(path string) result<file_info,io_error>
-    echo("fs path: " + path)
-    return result.ok(file_info())
+    return result.ok(file_info(path))
     
 def remove(path string)
     echo("fs remove: " + path)

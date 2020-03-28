@@ -415,13 +415,10 @@ func (me *parser) defineFunction(name string, mapping map[string]*datatype, base
 	}
 fnEnd:
 	for _, v := range module.scope.variables {
-		if !v.used {
+		if !v.used && v.name != "self" {
+			// TODO: any unused variable is OK only if it is a PARAMETER for a CLASS function that implements an INTERFACE
 			e := fmt.Sprintf("I found the variable `%s` for function `%s` is unused.", v.name, fname)
-			h := ""
-			if v.name == "self" {
-				h += " This is a class function. Can it be a static?"
-			}
-			return nil, errh(me, ECodeUnusedVariable, e, h)
+			return nil, err(me, ECodeUnusedVariable, e)
 		}
 	}
 	if !fn.returns.isVoid() && len(fn.terminators) == 0 {

@@ -46,6 +46,9 @@ func (me *cfile) functionHead(fn *function) string {
 		if ix > 0 {
 			code.WriteString(", ")
 		}
+		if arg.used == false {
+			code.WriteString("__attribute__((unused)) ")
+		}
 		code.WriteString(arg.data().typeSigOf(me, arg.name, false))
 	}
 	code.WriteString(")")

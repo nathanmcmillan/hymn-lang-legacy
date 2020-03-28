@@ -1,0 +1,19 @@
+import hymn:result (result)
+
+def example() result<int,parse_error>
+    return result.ok(1)
+
+def compile() result<string,parse_error>
+    ex = try example() catch(e)
+        return result.error(e.value)
+    return result.ok(str(ex))
+
+def main
+
+    ok = compile()
+
+    if ok is error(e)
+        echo("error: " + e.value.str())
+        exit(1)
+
+    if ok is ok(r): echo(r.value)

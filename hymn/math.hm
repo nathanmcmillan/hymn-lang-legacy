@@ -9,6 +9,11 @@ enum operation
     multiply
     divide
 
+enum number
+    integer(num int)
+    big_integer(num int64)
+    real(num float)
+
 static pi = 3.1415
 
 def power(x int) int

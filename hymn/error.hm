@@ -3,3 +3,29 @@ interface error
     get_code() int
     get_description() string
     get_hint() string
+
+class exception implements error
+    name        string
+    description string
+    hint        string
+
+def exception.get_id() string
+    return self.name
+
+def exception.get_code() int
+    return 0
+
+def exception.get_description() string
+    return self.description
+
+def exception.get_hint() string
+    return self.hint
+
+def exception.str() string
+    return ""
+
+def new_exception(name string, reason string) exception
+    return exception (
+        name: name
+        description: reason
+    )

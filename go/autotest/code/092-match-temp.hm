@@ -1,0 +1,28 @@
+import hymn:fs
+import hymn:error (exception)
+import hymn:result (result)
+import hymn:path as file_path
+
+def compile(path string) result<string,exception>
+
+    stat fs.file_info
+    match fs.stat(path)
+        ok(r) stat = r.value
+        error(e)
+            v = e.value
+            id = "io_error: " + v.get_id()
+            reason = v.get_description()
+            x = error.new_exception(id, reason)
+            echo("returning error")
+            return result.error(x)
+
+    mutable f = path
+    if stat.is_dir()
+        f = file_path.join(f, "main.hm")
+    echo("returning ok")
+    return result.ok(f)
+
+def main
+    path = "tests/math.hm"
+    ok = compile(path)
+    if ok is ok(r): echo("ok: " + r.value)

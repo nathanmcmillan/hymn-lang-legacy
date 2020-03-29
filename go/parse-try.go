@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 func (me *parser) tryAutoCatch(n *node, fnret *datatype) (*node, *parseError) {
 	catch := nodeInit("auto-catch")
 	catch.copyData(fnret)
@@ -31,12 +33,15 @@ func (me *parser) tryCatch(n *node, fnret *datatype, encalc *enum) (*node, *pars
 	catch.copyData(fnret)
 	catch.idata = newidvariable(me.hmfile, tempd.name)
 
+	fmt.Println("CATCH:", me.token.is, me.token.depth)
 	if me.isNewLine() {
 		me.newLine()
+		fmt.Println("BEGIN:", me.token.is, me.token.depth)
 		b, er := me.block()
 		if er != nil {
 			return nil, er
 		}
+		fmt.Println("END:", me.token.is, me.token.depth)
 		catch.push(b)
 	} else {
 		e, er := me.expression()

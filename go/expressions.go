@@ -396,10 +396,13 @@ func (me *parser) extern() (*node, *parseError) {
 func (me *parser) block() (*node, *parseError) {
 	depth := me.token.depth
 	block := nodeInit("block")
+	fmt.Println("BLOCK:", depth)
 	for {
 		for me.isNewLine() {
+			fmt.Println("LINE:", depth)
 			me.newLine()
 		}
+		fmt.Println("EXPR:", me.token.is, depth)
 		if me.token.depth < depth || me.token.is == "eof" {
 			goto blockEnd
 		}
@@ -410,6 +413,7 @@ func (me *parser) block() (*node, *parseError) {
 		block.push(e)
 	}
 blockEnd:
+	fmt.Println("END:", depth)
 	return block, nil
 }
 

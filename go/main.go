@@ -6,12 +6,13 @@ package main
 //
 
 import (
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
 var (
@@ -128,16 +129,31 @@ func execBin(flags *flags, name string) (string, error) {
 	return "", nil
 }
 
-func parsePackages(dict map[string]string, value string) {
-	list := strings.Split(value, ":")
-	for _, item := range list {
-		if item == "" {
+func parsePackages(dict map[string]string, value string) error {
+	if value == "" {
+		return nil
+	}
+	var raw interface{}
+	er := json.Unmarshal([]byte(value), &raw)
+	if er != nil {
+		return er
+	}
+	table, ok := raw.(map[string]interface{})
+	if !ok {
+		return errors.New(value)
+	}
+	for k, v := range table {
+		p, ok := v.(string)
+		if !ok {
+			return errors.New(value)
+		}
+		if v == "" {
 			continue
 		}
-		name := filepath.Base(item)
-		path, _ := filepath.Abs(item)
-		dict[name] = path
+		path, _ := filepath.Abs(p)
+		dict[k] = path
 	}
+	return nil
 }
 
 func execCompile(flags *flags) (string, *parseError, error) {
@@ -182,8 +198,15 @@ func execCompile(flags *flags) (string, *parseError, error) {
 	program.directory = directory
 	program.testing = flags.testing
 
-	parsePackages(program.packages, os.Getenv("HYMN_PACKAGES"))
-	parsePackages(program.packages, flags.packages)
+	er = parsePackages(program.packages, os.Getenv("HYMN_PACKAGES"))
+	if er != nil {
+		panic(er)
+	}
+
+	er = parsePackages(program.packages, flags.packages)
+	if er != nil {
+		panic(er)
+	}
 
 	dir := filepath.Base(program.directory)
 	name := fileName(flags.path)

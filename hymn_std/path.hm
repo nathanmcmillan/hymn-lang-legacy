@@ -1,12 +1,15 @@
 def abs(path string) string
     return path
 
+# Returns the absolute representation of 'path'.
 def is_abs(path string) bool
     return path[0] == '/'
 
 def dir(path string) string
     return path
 
+# Returns the last element of 'path'. Trailing separators are removed.
+# If 'path' is empty then `.` is returned. If 'path' is only separators, then a single separator is returned.
 def base(path string) string
     return path
 

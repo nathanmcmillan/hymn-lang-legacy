@@ -7,13 +7,8 @@ if [ ! -f bin/hymn ]; then
     exit 1
 fi
 
-HYMN_PACKAGES="${HYMN_PACKAGES:-''}"
-HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/hymn"
-HYMN_PACKAGES="$HYMN_PACKAGES:$(pwd)/books"
-export HYMN_PACKAGES
-
-HYMN_LIBC="$(pwd)/libc"
-export HYMN_LIBC
+. ./hymn_packages.sh
+. ./hymn_libc.sh
 
 path="$1"
 shift

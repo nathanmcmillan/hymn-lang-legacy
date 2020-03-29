@@ -1,0 +1,7 @@
+# Returns the first index of 'sub' in 's'.
+def index_of(s string, sub string) int
+    return -1
+
+# Returns a new string with every 'sub' in 's' replaced with 'replace'.
+def replace(s string, sub string, replace string) string
+    return s

@@ -70,9 +70,33 @@ def main(args []string)
 
     ok = compile()
     
-    # todo: replace if X is Y with match X: Y
-    # match ok: error(e)
-    if ok is error(e)
+    # ---------------------------------
+
+    match ok: error(e): echo(e.value.str())
+
+    match ok: error(e)
+        echo(e.value.str())
+
+    match ok: error: pass
+
+    match ok: error
+        pass
+
+    match ok
+        error pass
+
+    match ok
+        error
+            pass
+
+    if ok is error
+        pass
+
+    if ok is error: pass
+
+    # ---------------------------------
+
+    ok is error(e)
         echo("error: " + e.value.str())
         exit(1)
 

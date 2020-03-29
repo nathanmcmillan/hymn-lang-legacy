@@ -1,0 +1,6 @@
+import hymn:path
+import hymn:test (test)
+
+def test_is_abs(t test)
+    p = "/foo"
+    t.assert_true(path.is_abs(p))

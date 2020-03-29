@@ -1,8 +1,0 @@
-
-def call() int, string
-    return 3, "foo"
-
-def main()
-    x, y = call()
-    echo(x)
-    echo(y)

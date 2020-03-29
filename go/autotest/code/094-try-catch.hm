@@ -1,25 +1,24 @@
 import hymn:error (exception)
 import hymn:result (result)
 
-# def okie() result<int,exception>
-#     return result.ok(1)
+def okie() result<int,exception>
+    return result.ok(1)
 
 def not_okie() result<int,exception>
     return result.error(exception("1", "dang it!"))
 
-# def compile() result<string,exception>
-#     ex = try okie() catch(e) return result.error(e.value)
-#     return result.ok(str(ex))
+def compile() result<string,exception>
+    ex = try okie() catch(e) return result.error(e.value)
+    return result.ok(str(ex))
 
 def compile_2() result<string,exception>
     ex = try not_okie() catch(e)
         return result.error(e.value)
-
     return result.ok(str(ex))
 
 def main
-    # ok = compile()
-    # if ok is ok(r): echo("ok:", r.value)
+    ok = compile()
+    if ok is ok(r): echo("ok:", r.value)
 
     if compile_2() is error(e)
         echo("error:", e.value.get_description())

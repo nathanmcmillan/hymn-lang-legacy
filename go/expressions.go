@@ -99,6 +99,9 @@ func (me *parser) declareOnly(module *hmfile, n *node) (*node, *parseError) {
 	v := module.declareVar(n.idata.name, true)
 	v._vdata = typed
 	module.scope.variables[n.idata.name] = v
+	if er := me.verify("line"); er != nil {
+		return nil, er
+	}
 	return decl, nil
 }
 
@@ -161,18 +164,19 @@ func (me *parser) parseIdent() (*node, *parseError) {
 			if er != nil {
 				return nil, er
 			}
-		} else {
-			return me.declareOnly(module, n)
+			return n, nil
 		}
+		return me.declareOnly(module, n)
+
 	} else if n.is != "call" {
 		return nil, err(me, ECodeExpectingExpression, "Expected assignment or call expression for '"+name+"'")
-	}
 
-	if er := me.verify("line"); er != nil {
-		return nil, er
+	} else {
+		if er := me.verify("line"); er != nil {
+			return nil, er
+		}
+		return n, nil
 	}
-
-	return n, nil
 }
 
 func (me *parser) maybeIgnore(depth int) *parseError {
@@ -396,13 +400,10 @@ func (me *parser) extern() (*node, *parseError) {
 func (me *parser) block() (*node, *parseError) {
 	depth := me.token.depth
 	block := nodeInit("block")
-	fmt.Println("BLOCK:", depth)
 	for {
 		for me.isNewLine() {
-			fmt.Println("LINE:", depth)
 			me.newLine()
 		}
-		fmt.Println("EXPR:", me.token.is, depth)
 		if me.token.depth < depth || me.token.is == "eof" {
 			goto blockEnd
 		}
@@ -413,7 +414,6 @@ func (me *parser) block() (*node, *parseError) {
 		block.push(e)
 	}
 blockEnd:
-	fmt.Println("END:", depth)
 	return block, nil
 }
 

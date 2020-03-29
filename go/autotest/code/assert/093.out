@@ -1,2 +1,2 @@
-returning ok
-ok: tests/math.hm
+ok: 1
+error: dang ol' not good man.

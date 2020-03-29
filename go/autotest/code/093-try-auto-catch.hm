@@ -4,8 +4,8 @@ import hymn:result (result)
 def okie() result<int,exception>
     return result.ok(1)
 
-def not_okie() result<int,exception>
-    return result.error(error.exception("", "dang ol' not good man."))
+def not_okie() result<string,exception>
+    return result.error(exception("", "dang ol' not good man."))
 
 def compile() result<string,exception>
     ex = try okie()
@@ -13,7 +13,7 @@ def compile() result<string,exception>
 
 def compile_2() result<string,exception>
     ex = try not_okie()
-    return result.ok(str(ex))
+    return result.ok(ex)
 
 def main
     if compile() is ok(r): echo("ok:", r.value)

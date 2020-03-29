@@ -76,11 +76,11 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			if er := me.eat(":"); er != nil {
 				return nil, er
 			}
-			block := nodeInit("block")
 			e, er := me.expression()
 			if er != nil {
 				return nil, er
 			}
+			block := nodeInit("block")
 			block.push(e)
 			n.push(block)
 		} else {

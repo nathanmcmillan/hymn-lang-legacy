@@ -1,6 +1,6 @@
 def main
     mutable i = 0
-    while
+    while true
         echo("loop!")
         if i > 4
             echo("break!")

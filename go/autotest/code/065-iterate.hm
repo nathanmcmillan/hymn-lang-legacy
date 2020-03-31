@@ -30,3 +30,6 @@ def main
     iterate n in []int(2, 3, 5, 7, 11, 13)
         echo(n)
     echo("---")
+
+    iterate n in []int(2, 3, 5, 7, 11, 13): echo(n)
+    echo("---")

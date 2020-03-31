@@ -54,31 +54,39 @@ func (me *parser) whileloop() (*node, *parseError) {
 	if er := me.eat("while"); er != nil {
 		return nil, er
 	}
-	var no *node
-	var templs []*variableNode
-	if me.isNewLine() {
-		me.newLine()
-		no = nodeInit("loop")
-	} else {
-		no = nodeInit("while")
-		b, er := me.calcBool()
-		if er != nil {
-			return nil, er
-		}
-		no.push(b)
-		templs = me.getenumstack(no)
-		if er := me.newLine(); er != nil {
-			return nil, er
-		}
-	}
-	b, er := me.block()
+
+	no := nodeInit("while")
+	b, er := me.calcBool()
 	if er != nil {
 		return nil, er
 	}
 	no.push(b)
+	templs := me.getenumstack(no)
+
+	if me.isNewLine() {
+		me.newLine()
+		b, er := me.block()
+		if er != nil {
+			return nil, er
+		}
+		no.push(b)
+	} else if me.token.is == ":" {
+		me.next()
+		expr, er := me.expression()
+		if er != nil {
+			return nil, er
+		}
+		b := nodeInit("block")
+		b.push(expr)
+		no.push(b)
+	} else {
+		return nil, err(me, ECodeUnexpectedToken, "Expected line or `:`")
+	}
+
 	if templs != nil {
 		me.enumstackclr(templs)
 	}
+
 	return no, nil
 }
 
@@ -114,10 +122,6 @@ func (me *parser) iterloop() (*node, *parseError) {
 		return nil, err(me, ECodeVariableNotIndexable, "expected array, slice, string but was \""+using.data().print()+"\"")
 	}
 
-	if er := me.newLine(); er != nil {
-		return nil, er
-	}
-
 	no := nodeInit("iterate")
 
 	d := nodeInit("variable")
@@ -143,13 +147,29 @@ func (me *parser) iterloop() (*node, *parseError) {
 	}
 	d.copyData(itermint.data())
 
-	block, er := me.block()
-	if er != nil {
-		return nil, er
-	}
-
 	no.push(d)
 	no.push(using)
-	no.push(block)
+
+	if me.isNewLine() {
+		me.newLine()
+		block, er := me.block()
+		if er != nil {
+			return nil, er
+		}
+		no.push(block)
+	} else if me.token.is == ":" {
+		me.next()
+		expr, er := me.expression()
+		if er != nil {
+			return nil, er
+		}
+		block := nodeInit("block")
+		block.push(expr)
+		no.push(block)
+
+	} else {
+		return nil, err(me, ECodeUnexpectedToken, "Expected line or `:`")
+	}
+
 	return no, nil
 }

@@ -16,9 +16,9 @@ def main()
     x = call(true)
     y = call(false)
     match x
-        none echo("oh no!")
+        none: echo("oh no!")
         some(s) 
             match s.val
-                multiply echo("x := multiply")
-                _ echo("oh no!")
+                multiply: echo("x := multiply")
+                _: echo("oh no!")
     if y is some: echo("oh no!")

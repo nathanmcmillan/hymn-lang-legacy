@@ -10,7 +10,7 @@ class bar
 def foo(w maybe<vec>) maybe<vec>
     match w
         some(s): echo("foo some " + str(s.x))
-           none: echo("foo none")
+        none: echo("foo none")
     return w
 
 def zoo(v vec) maybe<vec>

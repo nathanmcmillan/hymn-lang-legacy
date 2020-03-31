@@ -32,12 +32,14 @@ def hashmap.put(key k, value v)
     bin = self.get_bin(code)
     mutable element = self.table[bin]
     mutable previous = none<hashmap_item<k,v>>
-    while element is some(s)
-        if code == s.code
-            s.value = value
-            return
-        previous = element
-        element = s.next
+    while true: match element
+        some(s)
+            if code == s.code
+                s.value = value
+                return
+            previous = element
+            element = s.next
+        none: break
     item = hashmap_item(code, key, value, none)
     match previous
         some(s): s.next = item
@@ -62,15 +64,17 @@ def hashmap.delete(key k) maybe<v>
     bin = self.get_bin(code)
     mutable element = self.table[bin]
     mutable previous = none<hashmap_item<k,v>>
-    while element is some(s)
-        if code == s.code
-            match previous
-                some(p): p.next = s.next
-                none: self.table[bin] = s.next
-            self.size -= 1
-            return s.value
-        previous = element
-        element = s.next
+    while true: match element
+        some(s)
+            if code == s.code
+                match previous
+                    some(p): p.next = s.next
+                    none: self.table[bin] = s.next
+                self.size -= 1
+                return s.value
+            previous = element
+            element = s.next
+        none: break
     return none
 
 def hashmap.clear()

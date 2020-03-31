@@ -7,7 +7,7 @@ def compile(path string) result<string,exception>
 
     stat fs.file_info
     match fs.stat(path)
-        ok(r) stat = r.value
+        ok(r): stat = r.value
         error(e)
             v = e.value
             id = "io_error: " + v.get_id()

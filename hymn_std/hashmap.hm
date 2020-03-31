@@ -40,8 +40,8 @@ def hashmap.put(key k, value v)
         element = s.next
     item = hashmap_item(code, key, value, none)
     match previous
-        some(s) s.next = item
-        none self.table[bin] = item
+        some(s): s.next = item
+        none: self.table[bin] = item
     self.size += 1
 
 def hashmap.get(key k) maybe<v>
@@ -65,8 +65,8 @@ def hashmap.delete(key k) maybe<v>
     while element is some(s)
         if code == s.code
             match previous
-                some(p) p.next = s.next
-                none self.table[bin] = s.next
+                some(p): p.next = s.next
+                none: self.table[bin] = s.next
             self.size -= 1
             return s.value
         previous = element

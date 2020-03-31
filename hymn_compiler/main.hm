@@ -83,7 +83,7 @@ def main(args []string)
         pass
 
     match ok
-        error pass
+        error: pass
 
     match ok
         error
@@ -96,7 +96,7 @@ def main(args []string)
 
     # ---------------------------------
 
-    ok is error(e)
+    if ok is error(e)
         echo("error: " + e.value.str())
         exit(1)
 

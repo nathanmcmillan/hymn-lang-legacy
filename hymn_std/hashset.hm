@@ -36,8 +36,8 @@ def hashset.add(key i)
         element = s.next
     item = hashset_item(code, key, none)
     match previous
-        some(s) s.next = item
-        none self.table[bin] = item
+        some(s): s.next = item
+        none: self.table[bin] = item
     self.size += 1
 
 def hashset.has(key i) bool
@@ -58,8 +58,8 @@ def hashset.delete(key i) bool
     while element is some(s)
         if code == s.code
             match previous
-                some(p) p.next = s.next
-                none self.table[bin] = s.next
+                some(p): p.next = s.next
+                none: self.table[bin] = s.next
             self.size -= 1
             return true
         previous = element

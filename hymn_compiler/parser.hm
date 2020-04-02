@@ -25,14 +25,14 @@ class parser
     line     int
 
 def parse(out string, path string) maybe<parse_error>
-    echo(out)
-    echo(path)
-    echo(system("pwd"))
+    echo("parse out:", out)
+    echo("parse path:", path)
+    echo("parse pwd:", system("pwd"))
     data = cat(path)
     file_stream = stream.new(data)
     tokenize = tokenizer.new(file_stream)
     tok = tokenize.get(0)
-    echo(data)
+    echo("parse data:", data)
     echo(tok.str())
     return none
 

@@ -1,0 +1,9 @@
+import parser (parser)
+import tokens
+
+def prefix(p parser) result<node,parse_error>
+    op = p.token.type
+    pre = tokens.prefixes.get(op)
+    match pre: some(s)
+        return result.ok(s.fn(p, op))
+    return result.error("Prefix not found")

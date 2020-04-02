@@ -24,8 +24,8 @@ def new() program
         sources: new_str_map<string>()
     )
 
-def program.parse(flag flags)
+def program.parse(f flags)
     uid = str(self.module_uid)
     self.module_uid += 1
-    echo(uid)
-    parser.parse(flag.write_to, flag.path)
+    echo("parse uid:", uid)
+    parser.parse(f.write_to, f.path)

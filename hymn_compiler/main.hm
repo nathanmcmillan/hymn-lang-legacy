@@ -32,6 +32,7 @@ def help
     echo("")
 
 # TODO: fix C header spacing
+# TODO: remove walrus operator >:(
 
 def compile(f flags) result<string,parse_error>
     mutable source_out = path.abs(f.write_to)
@@ -40,8 +41,7 @@ def compile(f flags) result<string,parse_error>
     stat = try fs.stat(f.path) catch(e)
         return result.error(parser.io_error(e.value))
 
-    if stat.is_dir()
-        f.path = path.join(f.path, "main.hm")
+    if stat.is_dir(): f.path = path.join(f.path, "main.hm")
 
     directory = path.abs(path.dir(f.path))
     echo("directory:", directory)
@@ -53,7 +53,8 @@ def compile(f flags) result<string,parse_error>
 
     p = program.new()
     p.parse(f)
-    return result.ok("")
+
+    return result.ok("success!")
 
 def main(args []string)
 
@@ -67,7 +68,9 @@ def main(args []string)
         help()
         exit(1)
 
+    # What the balls, why is a new flag being auto created?
+    # Error here please
     ok = compile()
     match ok
-        ok(o): echo(r.value)
+        ok(o): echo("ok: " + o.value)
         error(e): echo("error: " + e.value.str())

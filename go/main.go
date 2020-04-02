@@ -40,6 +40,7 @@ type flags struct {
 	script          bool
 	doNotCompile    bool
 	testing         bool
+	doNotRun        bool
 }
 
 func fmc(depth int) string {
@@ -81,6 +82,7 @@ func main() {
 	flag.BoolVar(&flags.makefile, "g", false, "generate a makefile")
 	flag.BoolVar(&flags.script, "b", false, "generate a shell script for compiling")
 	flag.BoolVar(&flags.doNotCompile, "x", false, "do not compile")
+	flag.BoolVar(&flags.doNotRun, "r", false, "compile but do not run")
 	flag.BoolVar(&flags.testing, "t", false, "assert unit tests")
 	flag.Parse()
 
@@ -237,6 +239,9 @@ func execCompile(flags *flags) (string, *parseError, error) {
 		return "", nil, nil
 	}
 	program.gcc(flags, fileOut)
+	if flags.doNotRun {
+		return "", nil, nil
+	}
 	s, e := execBin(flags, name)
 	return s, nil, e
 }

@@ -50,10 +50,12 @@ def hashmap.get(key k) maybe<v>
     code = self.get_code(key)
     bin = self.get_bin(code)
     mutable element = self.table[bin]
-    while element is some(s)
-        if code == s.code
-            return s.value
-        element = s.next
+    while true: match element
+        some(s)
+            if code == s.code
+                return s.value
+            element = s.next
+        none: break
     return none
 
 def hashmap.has(key k) bool

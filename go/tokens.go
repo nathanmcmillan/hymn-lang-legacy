@@ -165,7 +165,7 @@ func (me *tokenizer) valueToken(is, value string) *token {
 	return t
 }
 
-func (me *tokenizer) forNumber() (string, string) {
+func (me *tokenizer) forNumber() (string, string, *tokenizeError) {
 	stream := me.stream
 	typed := TokenIntLiteral
 	value := &strings.Builder{}
@@ -179,7 +179,7 @@ func (me *tokenizer) forNumber() (string, string) {
 			value.WriteByte(c)
 			stream.next()
 			if !digit(stream.peek()) {
-				panic("digit must follow after dot. " + stream.fail())
+				return "", "", me.exception("Digit must follow after dot. " + stream.fail())
 			}
 			continue
 		}
@@ -190,7 +190,7 @@ func (me *tokenizer) forNumber() (string, string) {
 		}
 		break
 	}
-	return typed, value.String()
+	return typed, value.String(), nil
 }
 
 func (me *tokenizer) forWord() string {
@@ -213,18 +213,19 @@ func (me *tokenizer) forWord() string {
 	return value.String()
 }
 
-func (me *tokenizer) consumeDepth() {
+func (me *tokenizer) consumeDepth() *tokenizeError {
 	spaces := me.depth * 4
 	stream := me.stream
 	for i := 0; i < spaces && !stream.eof(); i++ {
 		c := stream.next()
 		if c != ' ' {
-			panic("Bad spacing " + stream.fail())
+			return me.exception("Bad spacing " + stream.fail())
 		}
 	}
+	return nil
 }
 
-func (me *tokenizer) forString() string {
+func (me *tokenizer) forString() (string, *tokenizeError) {
 	stream := me.stream
 	stream.next()
 	value := &strings.Builder{}
@@ -240,17 +241,20 @@ func (me *tokenizer) forString() string {
 					me.forSpace()
 					peek = stream.peek()
 					if peek != '\n' {
-						panic("Bad string " + stream.fail())
+						return "", me.exception("Bad string " + stream.fail())
 					}
 				}
 				stream.next()
-				me.consumeDepth()
+				e := me.consumeDepth()
+				if e != nil {
+					return "", e
+				}
 				continue
 			}
 		}
 		value.WriteByte(c)
 	}
-	return value.String()
+	return value.String(), nil
 }
 
 func (me *tokenizer) forLineComment() string {
@@ -276,30 +280,33 @@ func (me *tokenizer) push(t *token) {
 	}
 }
 
-func (me *tokenizer) get(pos int) *token {
+func (me *tokenizer) get(pos int) (*token, *tokenizeError) {
 	if pos < len(me.tokens) {
-		return me.tokens[pos]
+		return me.tokens[pos], nil
 	}
 	stream := me.stream
 	if stream.pos >= me.size {
-		return me.eof
+		return me.eof, nil
 	}
 	space := me.forSpace()
 	if me.updateDepth {
 		if space%2 != 0 {
-			panic("Bad spacing " + stream.fail())
+			return nil, me.exception("Bad spacing " + stream.fail())
 		}
 		me.depth = space / 4
 		me.updateDepth = false
 	}
 	if stream.pos >= me.size {
-		return me.eof
+		return me.eof, nil
 	}
-	typed, number := me.forNumber()
+	typed, number, e := me.forNumber()
+	if e != nil {
+		return nil, e
+	}
 	if number != "" {
 		token := me.valueToken(typed, number)
 		me.push(token)
-		return token
+		return token, nil
 	}
 	word := me.forWord()
 	if word != "" {
@@ -316,14 +323,14 @@ func (me *tokenizer) get(pos int) *token {
 			token = me.valueToken("id", word)
 		}
 		me.push(token)
-		return token
+		return token, nil
 	}
 	c := stream.peek()
 	if strings.IndexByte("$().[]_?,;", c) >= 0 {
 		stream.next()
 		token := me.simpleToken(string(c))
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '\'' {
 		stream.next()
@@ -338,7 +345,7 @@ func (me *tokenizer) get(pos int) *token {
 		if peek == '\'' {
 			ischar = true
 		} else if ischar {
-			panic("expecting character literal " + stream.fail())
+			return nil, me.exception("Expecting character literal " + stream.fail())
 		}
 		if ischar {
 			value += string(stream.peek())
@@ -346,11 +353,11 @@ func (me *tokenizer) get(pos int) *token {
 			stream.next()
 			token := me.valueToken(TokenCharLiteral, "'"+value+"'")
 			me.push(token)
-			return token
+			return token, nil
 		}
 		token := me.simpleToken(string(c))
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == ':' {
 		stream.next()
@@ -363,13 +370,16 @@ func (me *tokenizer) get(pos int) *token {
 			token = me.simpleToken(":")
 		}
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '"' {
-		value := me.forString()
+		value, e := me.forString()
+		if e != nil {
+			return nil, e
+		}
 		token := me.valueToken(TokenStringLiteral, value)
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '=' {
 		stream.next()
@@ -384,7 +394,7 @@ func (me *tokenizer) get(pos int) *token {
 		}
 		token := me.simpleToken(op)
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '-' {
 		stream.next()
@@ -400,7 +410,7 @@ func (me *tokenizer) get(pos int) *token {
 			token = me.simpleToken("-")
 		}
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if strings.IndexByte("+*/%&|^", c) >= 0 {
 		stream.next()
@@ -412,7 +422,7 @@ func (me *tokenizer) get(pos int) *token {
 		}
 		token := me.simpleToken(op)
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '!' {
 		stream.next()
@@ -424,7 +434,7 @@ func (me *tokenizer) get(pos int) *token {
 			token = me.simpleToken(string(c))
 		}
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '>' {
 		stream.next()
@@ -440,7 +450,7 @@ func (me *tokenizer) get(pos int) *token {
 			token = me.simpleToken(string(c))
 		}
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '<' {
 		stream.next()
@@ -460,23 +470,23 @@ func (me *tokenizer) get(pos int) *token {
 			token = me.simpleToken(string(c))
 		}
 		me.push(token)
-		return token
+		return token, nil
 	}
 	if c == '\n' {
 		stream.next()
 		token := me.tokenFor(0, "line")
 		me.push(token)
 		me.updateDepth = true
-		return token
+		return token, nil
 	}
 	if c == '#' {
 		stream.next()
 		value := me.forLineComment()
 		token := me.valueToken("comment", value)
 		me.push(token)
-		return token
+		return token, nil
 	}
-	panic("unknown token " + stream.fail())
+	return nil, me.exception("Unknown token " + stream.fail())
 }
 
 func tokenize(stream *stream, file *os.File) *tokenizer {

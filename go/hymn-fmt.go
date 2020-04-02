@@ -49,7 +49,10 @@ func execFormat(path string) {
 	newline := false
 
 	for {
-		token := tokens.get(pos)
+		token, e := tokens.get(pos)
+		if e != nil {
+			panic("Token error: " + e.reason)
+		}
 		if token.is == "eof" {
 			break
 		}

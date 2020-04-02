@@ -3,11 +3,12 @@ enum operation
     subtract(op operation)
     multiply(number int)
 
+def get() operation
+    return operation.add(operation.multiply(22))
+
 def main
-    e = operation.add(operation.multiply(22))
-    if not e is add : echo("no!")
-    if e is add(a)
-        if not a.op is multiply
-            echo("no!")
-        if a.op is multiply(m)
-            echo("multiply!", m.number)
+    e = get()
+    if e is not add: echo("no!")
+    match e: add(a)
+        if a.op is not multiply: echo("no!")
+        match a.op: multiply(m): echo("multiply!", m.number)

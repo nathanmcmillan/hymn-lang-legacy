@@ -35,15 +35,17 @@ func (me *parser) ifexpr() (*node, *parseError) {
 	n.push(b)
 	templs := me.getenumstack(n)
 	if me.token.is == ":" {
-		if er := me.eat(":"); er != nil {
+		var er *parseError
+		if er = me.eat(":"); er != nil {
 			return nil, er
 		}
 		block := nodeInit("block")
-		e, er := me.expression()
+		var expr *node
+		expr, er = me.expression()
 		if er != nil {
 			return nil, er
 		}
-		block.push(e)
+		block.push(expr)
 		n.push(block)
 	} else {
 		if er := me.newLine(); er != nil {

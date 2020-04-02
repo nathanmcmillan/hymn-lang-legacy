@@ -29,7 +29,11 @@ func (me *parser) fail() string {
 	str.WriteString("\nLine: ")
 	str.WriteString(strconv.Itoa(me.line))
 	str.WriteString("\nToken: ")
-	str.WriteString(me.tokens.get(me.pos).string())
+	t, e := me.tokens.get(me.pos)
+	if e != nil {
+		panic("Token error: " + e.reason)
+	}
+	str.WriteString(t.string())
 
 	fn := me.hmfile.scope.fn
 	if fn != nil {
@@ -107,7 +111,11 @@ func (me *hmfile) parse() *parseError {
 	parsing.hmfile = me
 	parsing.line = 1
 	parsing.tokens = tokenize(stream, tokenFile)
-	parsing.token = parsing.tokens.get(0)
+	var e *tokenizeError
+	parsing.token, e = parsing.tokens.get(0)
+	if e != nil {
+		return tokenToParseError(parsing, e)
+	}
 	parsing.file = treeFile
 
 	parsing.skipLines()
@@ -140,18 +148,30 @@ func (me *hmfile) parse() *parseError {
 
 func (me *parser) next() {
 	me.pos++
-	me.token = me.tokens.get(me.pos)
+	var e *tokenizeError
+	me.token, e = me.tokens.get(me.pos)
+	if e != nil {
+		panic("Token error: " + e.reason)
+	}
 	if me.token.is == "line" || me.token.is == "comment" {
 		me.line++
 	}
 }
 
 func (me *parser) peek() *token {
-	return me.tokens.get(me.pos + 1)
+	t, e := me.tokens.get(me.pos + 1)
+	if e != nil {
+		panic("Token error: " + e.reason)
+	}
+	return t
 }
 
 func (me *parser) doublePeek() *token {
-	return me.tokens.get(me.pos + 2)
+	t, e := me.tokens.get(me.pos + 2)
+	if e != nil {
+		panic("Token error: " + e.reason)
+	}
+	return t
 }
 
 func (me *parser) verify(want string) *parseError {
@@ -227,7 +247,11 @@ func (me *parser) save() *parsepoint {
 }
 
 func (me *parser) jump(p *parsepoint) {
+	var e *tokenizeError
 	me.pos = p.pos
-	me.token = me.tokens.get(me.pos)
+	me.token, e = me.tokens.get(me.pos)
+	if e != nil {
+		panic("Token error: " + e.reason)
+	}
 	me.line = p.line
 }

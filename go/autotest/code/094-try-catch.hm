@@ -18,8 +18,8 @@ def compile_2() result<string,exception>
 
 def main
     ok = compile()
-    if ok is ok(r): echo("ok:", r.value)
+    match ok: ok(r): echo("ok:", r.value)
 
-    if compile_2() is error(e)
+    match compile_2(): error(e)
         echo("error:", e.value.get_description())
 

@@ -28,20 +28,19 @@ def main
             echo(v.x)
         none: pass
 
-    if a.nest is some(t)
+    match a.nest: some(t)
         echo("foo " + str(t.x))
 
-    if a.nest is none
-        echo("no zoob")
-    elif a.nest is some(z)
-        echo("foob " + str(z.x))
-    elif a.nest is some(w)
-        echo("not possible " + str(w.x))
+    match a.nest
+        none
+            echo("no zoob")
+        some(z)
+            echo("foob " + str(z.x))
 
     d = doggo()
     if d is bark
         echo("woof!")
 
     g = kitty()
-    if g is meow(e)
+    match g: meow(e)
         echo("meow! " + str(e.kitty))

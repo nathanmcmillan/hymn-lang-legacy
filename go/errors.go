@@ -29,6 +29,10 @@ type parseError struct {
 	trace       string
 }
 
+func tokenToParseError(p *parser, t *tokenizeError) *parseError {
+	return err(p, ECodeUnexpectedToken, t.reason)
+}
+
 func erc(parser *parser, code int) *parseError {
 	return err(parser, code, "")
 }

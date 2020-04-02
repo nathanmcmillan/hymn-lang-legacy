@@ -46,9 +46,9 @@ func (me *node) prepend(leaf *node) {
 	me.has = append([]*node{leaf}, me.has...)
 }
 
-func (me *node) push(leaf *node) {
-	leaf.parent = me
-	me.has = append(me.has, leaf)
+func (me *node) push(child *node) {
+	child.parent = me
+	me.has = append(me.has, child)
 }
 
 func (me *node) copyDataOfNode(other *node) {

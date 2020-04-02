@@ -82,10 +82,8 @@ func (me *parser) expression() (*node, *parseError) {
 		return nil, me.enddef()
 	} else if op == "comment" {
 		return me.comment()
-	} else if op == "line" || op == "eof" {
-		return nil, nil
 	}
-	return nil, err(me, ECodeUnexpectedToken, "Unknown token '"+op+"'")
+	return nil, err(me, ECodeUnexpectedToken, "Unexpected expression token '"+op+"'")
 }
 
 func (me *parser) declareOnly(module *hmfile, n *node) (*node, *parseError) {

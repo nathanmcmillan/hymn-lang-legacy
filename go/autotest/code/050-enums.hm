@@ -70,13 +70,13 @@ def main
     if g is bee: echo("buzz!")
 
     h = bug.ant(true)
-    if h is ant(a): echo(h.data)
+    if h is ant: echo(h.data)
 
     i = bug.ant(vec())
     if i is ant: echo("snip!")
 
     j = bug.ant("buggie")
-    if j is ant(a): echo(a.data)
+    if j is ant: echo(j.data)
 
     omega = omega_add()
     match omega

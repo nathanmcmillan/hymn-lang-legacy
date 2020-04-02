@@ -20,7 +20,7 @@ func (me *parser) parseMatch() (*node, *parseError) {
 
 	_, un, ok := matchType.isEnum()
 	if ok && un != nil {
-		return nil, err(me, ECodeEnumMatchNotNeeded, "enum \""+matchType.print()+"\" does not need a match expression.")
+		return nil, err(me, ECodeEnumMatchNotNeeded, "enum `"+matchType.print()+"` does not need a match expression.")
 	}
 
 	var matchVar *variable

@@ -25,4 +25,4 @@ def compile(path string) result<string,exception>
 def main
     path = "tests/math.hm"
     ok = compile(path)
-    if ok is ok(r): echo("ok: " + r.value)
+    match ok: ok(r): echo("ok: " + r.value)

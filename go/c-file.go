@@ -17,21 +17,14 @@ type cfile struct {
 	headStdIncludeSection strings.Builder
 	headLibIncludeSection strings.Builder
 	headReqIncludeSection strings.Builder
-	// headEnumTypeDefSection   strings.Builder
-	// headEnumSection          strings.Builder
-	// headStructTypeDefSection strings.Builder
-	// headStructSection        strings.Builder
-	// headSubIncludeSection    strings.Builder
-	// headExternSection        strings.Builder
-	// headFuncSection          strings.Builder
-	headSection strings.Builder
-	headSuffix  strings.Builder
-	codeFn      []strings.Builder
-	rootScope   *scope
-	scope       *scope
-	depth       int
-	functions   map[string]*function
-	master      bool
+	headSection           strings.Builder
+	headSuffix            strings.Builder
+	codeFn                []strings.Builder
+	rootScope             *scope
+	scope                 *scope
+	depth                 int
+	functions             map[string]*function
+	master                bool
 }
 
 func (me *hmfile) cFileInit(guard string) *cfile {
@@ -112,63 +105,38 @@ func (me *cfile) head() string {
 		head.WriteString(me.headReqIncludeSection.String())
 		head.WriteString("\n")
 	}
-	// TODO: delete me
-	// head.WriteString(me.headEnumSection.String())
-	// if me.headEnumTypeDefSection.Len() != 0 {
-	// 	head.WriteString(me.headEnumTypeDefSection.String())
-	// 	head.WriteString("\n")
-	// }
-	// if me.headStructTypeDefSection.Len() != 0 {
-	// 	head.WriteString(me.headStructTypeDefSection.String())
-	// 	head.WriteString("\n")
-	// }
-	// head.WriteString(me.headStructSection.String())
-	// if me.headSubIncludeSection.Len() != 0 {
-	// 	head.WriteString(me.headSubIncludeSection.String())
-	// 	head.WriteString("\n")
-	// }
-	// if me.headExternSection.Len() != 0 {
-	// 	head.WriteString(me.headExternSection.String())
-	// 	head.WriteString("\n")
-	// }
-	head.WriteString(me.headSection.String())
-	head.WriteString("\n")
-	// head.WriteString(me.headFuncSection.String())
+	if me.headSection.Len() != 0 {
+		head.WriteString(me.headSection.String())
+		head.WriteString("\n")
+	}
 	head.WriteString(me.headSuffix.String())
 	return head.String()
 }
 
 func (me *cfile) addHeadExtern(expr string) {
-	// me.headExternSection.WriteString(expr)
 	me.headSection.WriteString(expr)
 }
 
 func (me *cfile) addHeadFunc(expr string) {
-	// me.headFuncSection.WriteString(expr)
 	me.headSection.WriteString(expr)
 }
 
 func (me *cfile) addHeadSubInclude(expr string) {
-	// me.headSubIncludeSection.WriteString(expr)
 	me.headSection.WriteString(expr)
 }
 
 func (me *cfile) addHeadEnum(expr string) {
-	// me.headEnumSection.WriteString(expr)
 	me.headSection.WriteString(expr)
 }
 
 func (me *cfile) addHeadStruct(expr string) {
-	// me.headStructSection.WriteString(expr)
 	me.headSection.WriteString(expr)
 }
 
 func (me *cfile) addHeadEnumTypeDef(expr string) {
-	// me.headEnumTypeDefSection.WriteString(expr)
 	me.headSection.WriteString(expr)
 }
 
 func (me *cfile) addHeadStructTypeDef(expr string) {
-	// me.headStructTypeDefSection.WriteString(expr)
 	me.headSection.WriteString(expr)
 }

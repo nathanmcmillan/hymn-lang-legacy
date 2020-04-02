@@ -10,22 +10,22 @@ def main
 
     m.put(0, "kiwi")
     match m.get(0)
-        some(out) echo(out)
-        none echo("bad")
+        some(out): echo(out)
+        none: echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 
     m.put(0, "lemon")
     match m.get(0)
-        some(out) echo(out)
-        none echo("bad")
+        some(out): echo(out)
+        none: echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 
     m.put(4, "coconut")
     match m.get(4)
-        some(out) echo(out)
-        none echo("bad")
+        some(out): echo(out)
+        none: echo("bad")
     echo("size: " + str(m.size))
     echo("---")
 

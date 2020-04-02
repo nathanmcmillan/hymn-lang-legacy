@@ -41,43 +41,43 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 		}
 		if is == "some" {
 			right = nodeInit("some")
-			if me.token.is == "(" {
-				if negate {
-					return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
-				}
-				if er := me.eat("("); er != nil {
-					return nil, er
-				}
-				temp := me.token.value
-				if er := me.eat("id"); er != nil {
-					return nil, er
-				}
-				if er := me.eat(")"); er != nil {
-					return nil, er
-				}
-				tempd := data.getmember().getnamedvariable(temp, false)
-				tempv := nodeInit("variable")
-				tempv.idata = newidvariable(me.hmfile, tempd.name)
-				tempv.copyData(tempd.data())
-				tempv.push(left)
-				varnode := &variableNode{tempv, tempd}
-				me.hmfile.enumIsStack = append(me.hmfile.enumIsStack, varnode)
+			// if me.token.is == "(" {
+			// 	if negate {
+			// 		return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
+			// 	}
+			// 	if er := me.eat("("); er != nil {
+			// 		return nil, er
+			// 	}
+			// 	temp := me.token.value
+			// 	if er := me.eat("id"); er != nil {
+			// 		return nil, er
+			// 	}
+			// 	if er := me.eat(")"); er != nil {
+			// 		return nil, er
+			// 	}
+			// 	tempd := data.getmember().getnamedvariable(temp, false)
+			// 	tempv := nodeInit("variable")
+			// 	tempv.idata = newidvariable(me.hmfile, tempd.name)
+			// 	tempv.copyData(tempd.data())
+			// 	tempv.push(left)
+			// 	varnode := &variableNode{tempv, tempd}
+			// 	me.hmfile.enumIsStack = append(me.hmfile.enumIsStack, varnode)
 
-				// TODO :: cleanup the above enumIsStack
-				tempvv := nodeInit("variable")
-				tempvv.idata = newidvariable(me.hmfile, tempd.name)
-				tempvv.copyData(tempd.data())
-				right.push(tempvv)
-				//
-			}
+			// 	// TODO :: cleanup the above enumIsStack
+			// 	tempvv := nodeInit("variable")
+			// 	tempvv.idata = newidvariable(me.hmfile, tempd.name)
+			// 	tempvv.copyData(tempd.data())
+			// 	right.push(tempvv)
+			// 	//
+			// }
 		} else if is == "none" {
 			right = nodeInit("none")
-			if me.token.is == "(" {
-				if negate {
-					return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
-				}
-				return nil, err(me, ECodeNoneTypeValueProhibited, "none type can't have a value here.")
-			}
+			// if me.token.is == "(" {
+			// 	if negate {
+			// 		return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
+			// 	}
+			// 	return nil, err(me, ECodeNoneTypeValueProhibited, "none type can't have a value here.")
+			// }
 		}
 	} else {
 		baseEnum, _, ok := data.isEnum()
@@ -97,35 +97,35 @@ func (me *parser) parseIs(left *node, op string, n *node) (*node, *parseError) {
 					right = nodeInit("match-enum")
 				}
 				right.setData(newenum)
-				if me.token.is == "(" {
-					if negate {
-						return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
-					}
-					if er := me.eat("("); er != nil {
-						return nil, er
-					}
-					temp := me.token.value
-					if er := me.eat("id"); er != nil {
-						return nil, er
-					}
-					if er := me.eat(")"); er != nil {
-						return nil, er
-					}
-					tempd := right.data().getnamedvariable(temp, false)
-					tempv := nodeInit("variable")
-					tempv.idata = newidvariable(me.hmfile, tempd.name)
-					tempv.copyData(tempd.data())
-					tempv.push(left)
-					varnode := &variableNode{tempv, tempd}
-					me.hmfile.enumIsStack = append(me.hmfile.enumIsStack, varnode)
+				// if me.token.is == "(" {
+				// 	if negate {
+				// 		return nil, err(me, ECodeNegationProhibited, "Negation not allowed when declaring a variable here.")
+				// 	}
+				// 	if er := me.eat("("); er != nil {
+				// 		return nil, er
+				// 	}
+				// 	temp := me.token.value
+				// 	if er := me.eat("id"); er != nil {
+				// 		return nil, er
+				// 	}
+				// 	if er := me.eat(")"); er != nil {
+				// 		return nil, er
+				// 	}
+				// 	tempd := right.data().getnamedvariable(temp, false)
+				// 	tempv := nodeInit("variable")
+				// 	tempv.idata = newidvariable(me.hmfile, tempd.name)
+				// 	tempv.copyData(tempd.data())
+				// 	tempv.push(left)
+				// 	varnode := &variableNode{tempv, tempd}
+				// 	me.hmfile.enumIsStack = append(me.hmfile.enumIsStack, varnode)
 
-					// TODO :: cleanup the above enumIsStack
-					tempvv := nodeInit("variable")
-					tempvv.idata = newidvariable(me.hmfile, tempd.name)
-					tempvv.copyData(tempd.data())
-					right.push(tempvv)
-					//
-				}
+				// 	// TODO :: cleanup the above enumIsStack
+				// 	tempvv := nodeInit("variable")
+				// 	tempvv.idata = newidvariable(me.hmfile, tempd.name)
+				// 	tempvv.copyData(tempd.data())
+				// 	right.push(tempvv)
+				// 	//
+				// }
 			} else {
 				var er *parseError
 				right, er = me.calc(getInfixPrecedence(op), nil)

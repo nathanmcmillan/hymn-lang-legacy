@@ -27,7 +27,7 @@ def foo.do_special(one v, in_two v) v
         some(s) 
             echo(s, self.weight)
             return s
-        none pass
+        none: pass
     return in_two
 
 def main

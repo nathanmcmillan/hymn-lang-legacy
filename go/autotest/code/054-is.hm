@@ -39,7 +39,7 @@ def main
         echo("some")
     
     match b := fun(2)
-        none echo("no")
+        none: echo("no")
         some(s) 
             echo("yes")
             do_things(s)

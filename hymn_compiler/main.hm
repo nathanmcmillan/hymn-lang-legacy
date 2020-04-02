@@ -57,8 +57,7 @@ def compile(f flags) result<string,parse_error>
 
 def main(args []string)
 
-    iterate i, a in args
-        printf("args %d: %s\n", i, a)
+    iterate i, a in args: printf("args %d: %s\n", i, a)
     
     flag = flags.new()
     flag.path = "tests/math.hm"
@@ -69,36 +68,6 @@ def main(args []string)
         exit(1)
 
     ok = compile()
-    
-    # ---------------------------------
-
-    match ok: error(e): echo(e.value.str())
-
-    match ok: error(e)
-        echo(e.value.str())
-
-    match ok: error: pass
-
-    match ok: error
-        pass
-
     match ok
-        error: pass
-
-    match ok
-        error
-            pass
-
-    if ok is error
-        pass
-
-    if ok is error: pass
-
-    # ---------------------------------
-
-    if ok is error(e)
-        echo("error: " + e.value.str())
-        exit(1)
-
-    if ok is ok(r)
-        echo(r.value)
+        ok(o): echo(r.value)
+        error(e): echo("error: " + e.value.str())

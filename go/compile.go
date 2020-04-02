@@ -134,7 +134,7 @@ func (me *hmfile) generateC() string {
 		}
 	}
 
-	cfile.headSuffix.WriteString("\n#endif\n")
+	cfile.headSuffix.WriteString("#endif\n")
 	write(filepath.Join(me.destination, filename+".h"), cfile.head())
 
 	return fileOut

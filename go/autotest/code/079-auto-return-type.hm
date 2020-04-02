@@ -28,15 +28,15 @@ def exec_boink() zoink<string,int,float>
 def main()
     e = exec_compile()
     match e
-        one(o) echo(o.value)
-        two echo("oh no!")
+        one(o): echo(o.value)
+        two: echo("oh no!")
 
     x = exec_parse()
     match x
-        one echo("oh no!")
-        two(z) echo(z.value)
+        one: echo("oh no!")
+        two(z): echo(z.value)
 
     z = exec_boink()
     match z
-        foo(f) echo(f.aaa, f.bbb)
-        bar echo("oh no!")
+        foo(f): echo(f.aaa, f.bbb)
+        bar: echo("oh no!")

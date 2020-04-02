@@ -1,14 +1,14 @@
 def main
     c = '3'
     match c
-        '0' | '1' | '2' | '3' echo("matched char!")
+        '0' | '1' | '2' | '3': echo("matched char!")
         '4' |
         '5' |
         '6' |
-        '7'  echo("matched bigger char!")
-        _  pass
+        '7':  echo("matched bigger char!")
+        _: pass
     n = 12
     match n
-        0 | 1 | 2 | 12 echo("matched number!")
-        _  pass
+        0 | 1 | 2 | 12: echo("matched number!")
+        _:  pass
     echo("bye!")

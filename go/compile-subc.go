@@ -59,6 +59,6 @@ func (me *cfile) subC(destination, rootname, hmlibs, filter string, name string)
 		cfile.headSuffix.WriteString("\n")
 	}
 
-	cfile.headSuffix.WriteString("\n#endif\n")
+	cfile.headSuffix.WriteString("#endif\n")
 	write(filepath.Join(destination, name+".h"), cfile.head())
 }

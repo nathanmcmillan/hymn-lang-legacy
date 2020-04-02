@@ -3,25 +3,53 @@ Hymn is a programming language designed to make writing simple imperitive progra
 It compiles to efficient, readable C code.
 
 ```
-class vec<g>
+class vec
     x int
-    y float
-    z g
+    y int
 
-enum either<a,b>
-    first(value a)
-    second(value b, additional string)
+enum result<a,b>
+    ok(value a)
+    error(value b)
 
-def main()   
-    v = vec(12, 23.34, "hello world")
-    echo("x =", v.x, "y =", v.y, "z =", v.z)
-    e = either<int,float>.first(66)
+def main   
+    v = vec(2, 3)
+    e = result<vec,string>.ok(v)
     match e
-        first(f)  => echo("first =", f.value)
-        second(s) => echo("second =", s.value, s.additional)
+        ok(o): echo("vec =", o.value.x, o.value.y)
+        error(e): echo("error =", e.value)
 ```
 
-Learn more at https://hymn-lang.org
+## Why
+
+Hymn aims to make it as easy and safe as possible to compile binary programs.
+
+1. Why not Python?
+   - Slow
+   - No types 
+2. Why not Golang?
+   - No generics
+   - No enum types
+   - Error handling
+3. Why not Rust?
+   - Difficult to understand
+   - High entry barrier
+   - Overkill for less critical software
+4. Why not C?
+   - Easy to make mistakes
+   - No generics
+   - No Namespaces
+5. Why not C++?
+   - Bloated
+   - Slow compile times
+   - Legacy cruft
+   - Hard to read
+
+## Links 
+[Homepage](https://hymn-lang.org)
+[Read the book](https://hymn-lang.org/site/book/index.html)
+[Learn by example](https://hymn-lang.org/site/learn-by-example/index.html)
+
+## Development
 
 ### Features
 * Generics
@@ -34,9 +62,9 @@ Learn more at https://hymn-lang.org
 * Function pointers
 * Slices and arrays
 * Class functions with generics
-* Automatic or manual default parameters using '_'
-* $HYMN_LIBC environment variable and -d flag locates the standard hymn c library
-* Package management using $HYMN_PACKAGES environment variable
+* Automatic or manual default parameters using `_`
+* `$HYMN_LIBC` environment variable and -d flag locates the standard hymn c library
+* Package management using `$HYMN_PACKAGES` environment variable
 * Multiline string declaration using '\'
 * Interfaces
 

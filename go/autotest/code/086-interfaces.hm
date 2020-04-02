@@ -1,4 +1,3 @@
-
 interface get_and_set
     get() int
     set(int)

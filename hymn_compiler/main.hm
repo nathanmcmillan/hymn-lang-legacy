@@ -60,17 +60,15 @@ def main(args []string)
 
     iterate i, a in args: printf("args %d: %s\n", i, a)
     
-    flag = flags.new()
-    flag.path = "tests/math.hm"
-    flag.write_to = "out/math"
+    f = flags.new()
+    f.path = "tests/math.hm"
+    f.write_to = "out/math"
 
-    if flag.help or flag.path == ""
+    if f.help or f.path == ""
         help()
         exit(1)
 
-    # What the balls, why is a new flag being auto created?
-    # Error here please
-    ok = compile()
+    ok = compile(f)
     match ok
         ok(o): echo("ok: " + o.value)
         error(e): echo("error: " + e.value.str())

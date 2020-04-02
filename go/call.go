@@ -51,11 +51,9 @@ func (me *parser) pushFunctionParams(n *node, params []*node, fn *function) *par
 			}
 			d := arg.defaultNode
 			if d == nil {
-				var er *parseError
-				d, er = me.defaultValue(arg.data(), fn.getname())
-				if er != nil {
-					return er
-				}
+				e := fmt.Sprintf("I did not find any parameter for index `%d` of `%s` function call", ix, fn.getname())
+				return err(
+					me, ECodeUnexpectedToken, e)
 			}
 			n.push(d)
 		} else {
@@ -104,7 +102,15 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 				if er := me.eat("_"); er != nil {
 					return nil, nil, er
 				}
-				params[aix] = nil
+				if arg.defaultNode == nil {
+					d, er := me.defaultValue(arg.data(), fn.getname())
+					if er != nil {
+						return nil, nil, er
+					}
+					params[aix] = d
+				} else {
+					params[aix] = nil
+				}
 			} else {
 				param, er := me.calc(0, nil)
 				if er != nil {
@@ -148,21 +154,27 @@ func (me *parser) functionParams(name string, pix int, params []*node, fn *funct
 					return nil, nil, err(me, ECodeFunctionTooManyParameters, "function \""+name+"\" argument count exceeds parameter count")
 				}
 			}
+			if arg == nil {
+				arg = fn.args[pix]
+			}
 			if me.token.is == "_" {
 				if er := me.eat("_"); er != nil {
 					return nil, nil, er
 				}
-				params[pix] = nil
+				if arg.defaultNode == nil {
+					d, er := me.defaultValue(arg.data(), fn.getname())
+					if er != nil {
+						return nil, nil, er
+					}
+					params[pix] = d
+				} else {
+					params[pix] = nil
+				}
 			} else {
 				param, er := me.calc(0, nil)
 				if er != nil {
 					return nil, nil, er
 				}
-
-				if arg == nil {
-					arg = fn.args[pix]
-				}
-
 				var update map[string]*datatype
 				if len(fn.generics) > 0 {
 					update = me.hintGeneric(param.data(), arg.data(), fn.generics)

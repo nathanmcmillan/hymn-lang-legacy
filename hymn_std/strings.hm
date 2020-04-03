@@ -11,7 +11,12 @@ def replace(s string, sub string, replace string) string
     return s
 
 def starts_with(s string, prefix string) bool
-    return s == prefix
+    if len(prefix) > len(s)
+        return false
+    iterate index, p in prefix
+        if p != s[index]
+            return false
+    return true
 
 def ends_with(s string, suffix string) bool
     return s == suffix

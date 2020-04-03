@@ -52,6 +52,8 @@ func (me *parser) expression() (*node, *parseError) {
 		return me.parseIdent()
 	} else if op == "match" {
 		return me.parseMatch()
+	} else if op == "try" {
+		return me.trying()
 	} else if op == "if" {
 		return me.ifexpr()
 	} else if op == "break" {

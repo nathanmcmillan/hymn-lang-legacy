@@ -56,8 +56,7 @@ func (me *parser) fail() string {
 
 func (me *parser) skipLines() {
 	for me.token.is != "eof" {
-		token := me.token
-		if token.is != "line" {
+		if me.token.is != "line" {
 			break
 		}
 		me.next()

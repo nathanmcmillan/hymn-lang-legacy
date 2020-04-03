@@ -4,12 +4,12 @@ cd "$(dirname "$0")"
 if [ -f bin/hymn ]; then
   rm bin/hymn
 fi
-cd go
+cd src
 go build -o hymn
 cd ..
-if [ -f go/hymn ]; then
+if [ -f src/hymn ]; then
   if [ ! -d bin ]; then
     mkdir -p bin
   fi
-  mv go/hymn bin/hymn
+  mv src/hymn bin/hymn
 fi

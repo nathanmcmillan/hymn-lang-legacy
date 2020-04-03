@@ -240,6 +240,9 @@ func execCompile(flags *flags) (string, *parseError, error) {
 	}
 	program.gcc(flags, fileOut)
 	if flags.doNotRun {
+		if debug {
+			fmt.Println("=== success ===")
+		}
 		return "", nil, nil
 	}
 	s, e := execBin(flags, name)

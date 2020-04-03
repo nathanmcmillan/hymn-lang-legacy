@@ -59,8 +59,10 @@ def main(args []string)
 
     iterate i, a in args: printf("args %d: %s\n", i, a)
     
+    echo("pwd:", system("pwd"))
+
     f = flags.new()
-    f.path = "tests/math.hm"
+    f.path = "hymn_std/math.hm"
     f.write_to = "out/math"
 
     if f.help or f.path == ""

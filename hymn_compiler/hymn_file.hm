@@ -2,3 +2,9 @@ class hymn_file
     out  string
     path string
     libs string
+
+def new(out string, path string) hymn_file
+    return hymn_file(
+        out: out
+        path: path
+    )

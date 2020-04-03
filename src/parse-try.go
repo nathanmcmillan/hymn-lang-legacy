@@ -66,10 +66,15 @@ func (me *parser) trying() (*node, *parseError) {
 	}
 
 	fn := me.hmfile.scope.fn
-	enfunc, _, ok := fn.returns.isEnum()
-	if !ok || len(enfunc.types) < 2 {
-		er := err(me, ECodeEnumParameter, "`try` requires the current function to return an enum with at least two types")
-		return nil, er
+	maybefunc := fn.returns.isSomeOrNone()
+	var enfunc *enum
+	if !maybefunc {
+		var ok bool
+		enfunc, _, ok = fn.returns.isEnum()
+		if !ok || len(enfunc.types) < 2 {
+			er := err(me, ECodeEnumParameter, "`try` requires the current function to return the maybe type, or an enum with at least two types")
+			return nil, er
+		}
 	}
 
 	n := nodeInit("try")
@@ -78,20 +83,36 @@ func (me *parser) trying() (*node, *parseError) {
 		return nil, er
 	}
 
-	encalc, _, ok := calc.data().isEnum()
-	if !ok || len(encalc.types) < 2 {
-		er := err(me, ECodeEnumParameter, "`try` requires the following expression to return an enum with at least two types")
-		return nil, er
-	}
-
-	if encalc.types[0].types.size() == 1 {
-		n.copyData(encalc.types[0].types.get(0))
+	maybecalc := calc.data().isSomeOrNone()
+	var encalc *enum
+	if maybecalc {
+		if maybefunc {
+			if !fn.returns.equals(calc.data()) {
+				er := err(me, ECodeEnumParameter, "`try` calculated type and function returning type do not match")
+				return nil, er
+			}
+		}
 	} else {
-		data, er := encalc.getuniondata(me.hmfile, encalc.types[0].name)
-		if er != nil {
+		var ok bool
+		encalc, _, ok = calc.data().isEnum()
+		if !ok || len(encalc.types) < 2 {
+			er := err(me, ECodeEnumParameter, "`try` requires the following expression to return the maybe type, or an enum with at least two types")
 			return nil, er
 		}
-		n.setData(data)
+	}
+
+	if maybecalc {
+		n.copyData(calc.data())
+	} else {
+		if encalc.types[0].types.size() == 1 {
+			n.copyData(encalc.types[0].types.get(0))
+		} else {
+			data, er := encalc.getuniondata(me.hmfile, encalc.types[0].name)
+			if er != nil {
+				return nil, er
+			}
+			n.setData(data)
+		}
 	}
 
 	n.push(calc)

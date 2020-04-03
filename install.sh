@@ -1,27 +1,24 @@
 #!/bin/bash -e
 cd "$(dirname "$0")"
 
-# read -p "Where would you like to install Hymn? " answer
+# read -p "Where do you want to install Hymn? " answer
 
-path="$HOME/hymn"
+base="$HOME/.hymn"
 
-if [ -e "$path" ]; then
-    echo "hymn is already installed at $path"
-    exit
+if [ -e "$base" ]; then
+    echo "Hymn is already installed at $base"
+    # read -p "Hymn is already installed here. Do you want to overwrite it? " answer
+    exit 1
 fi
-
-mkdir -p "$path"
-cd "$path"
-git clone -b stable https://github.com/gameinbucket/hymn-lang.git .
 
 ./make.sh
 
-echo "todo export PATH"
-export PATH="$PATH:$HOME/hymn/bin"
+mkdir -p "$base"
+cp -r bin "$base"
+cp -r hymn_std "$base"
+cp -r libc "$base"
 
-echo "hymn installed successfully"
+echo 'Success!'
+echo 'Please add '$base' to your $PATH variable'
 
-# read -p "Would you like to install dependencies now? " answer
-# if [ $answer = "yes" ]; then
-#     apt-get install gcc
-# fi
+# echo 'Please install a C compiler such as GCC or Clang'

@@ -1,0 +1,5 @@
+def lines(content string) []string
+    mutable lines = []string
+    if content != ""
+        lines = push(lines, "foo")
+    return lines

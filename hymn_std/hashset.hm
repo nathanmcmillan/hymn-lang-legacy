@@ -28,26 +28,30 @@ def hashset.add(key i)
     bin = self.get_bin(code)
     mutable element = self.table[bin]
     mutable previous = none<hashset_item<i>>
-    while element is some(s)
-        if code == s.code
-            s.key = key
-            return
-        previous = element
-        element = s.next
+    while true: match element
+        some(s)
+            if code == s.code
+                s.key = key
+                return
+            previous = element
+            element = s.next
+        none: break
     item = hashset_item(code, key, none)
     match previous
-        some(s) s.next = item
-        none self.table[bin] = item
+        some(s): s.next = item
+        none: self.table[bin] = item
     self.size += 1
 
 def hashset.has(key i) bool
     code = self.get_code(key)
     bin = self.get_bin(code)
     mutable element = self.table[bin]
-    while element is some(s)
-        if code == s.code
-            return true
-        element = s.next
+    while true: match element
+        some(s)
+            if code == s.code
+                return true
+            element = s.next
+        none: break
     return false
 
 def hashset.delete(key i) bool
@@ -55,15 +59,17 @@ def hashset.delete(key i) bool
     bin = self.get_bin(code)
     mutable element = self.table[bin]
     mutable previous = none<hashset_item<i>>
-    while element is some(s)
-        if code == s.code
-            match previous
-                some(p) p.next = s.next
-                none self.table[bin] = s.next
-            self.size -= 1
-            return true
-        previous = element
-        element = s.next
+    while true: match element
+        some(s)
+            if code == s.code
+                match previous
+                    some(p): p.next = s.next
+                    none: self.table[bin] = s.next
+                self.size -= 1
+                return true
+            previous = element
+            element = s.next
+        none: break
     return false
     
 def hashset.clear()

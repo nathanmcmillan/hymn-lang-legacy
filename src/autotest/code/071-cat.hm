@@ -1,0 +1,7 @@
+def main
+    content = cat("src/code/071-cat/071-cat.c")
+    iterate i, c in content
+        echo(str(i) + ": " + str(c))
+        if i == 19
+            break
+    echo("done!")

@@ -8,7 +8,7 @@ import hymn_file (hymn_file)
 import hymn:io
 
 def io_error(e io.io_error) parse_error
-    return parse_error (
+    return parse_error(
         id: e.get_id()
         code: e.get_code()
         description: e.get_description()
@@ -16,25 +16,31 @@ def io_error(e io.io_error) parse_error
     )
 
 class parser
-    file     hymn_file
+    module   hymn_file
     tokenize tokenizer
     tok      token
-    out      string
-    path     string
     pos      int
     line     int
 
-def parse(out string, path string) maybe<parse_error>
-    echo(out)
-    echo(path)
-    echo(system("pwd"))
-    data = cat(path)
+def new(module hymn_file) parser
+    data = cat(module.path)
     file_stream = stream.new(data)
     tokenize = tokenizer.new(file_stream)
     tok = tokenize.get(0)
-    echo(data)
-    echo(tok.str())
-    return none
+    return parser(
+        module: module
+        tokenize: tokenize
+        tok: tok
+        pos: 0
+        line: 1
+    )
+
+def parser.error(code int, reason string) parse_error
+    return parse_error(
+        line: self.line
+        code: code
+        description: reason
+    )
 
 def parser.next()
     self.pos += 1
@@ -43,23 +49,57 @@ def parser.next()
         self.line += 1
     self.tok = tok
 
-def parser.verify(expected string) bool
+def parser.verify(expected string) maybe<parse_error>
     if self.tok.type != expected
-        return false
-    return true
+        return self.error(0, "Excepted " + expected + " but was " + self.tok.type)
+    return none
 
-def parser.eat(expected string) bool
-    if not self.verify(expected)
-        return false
+def parser.eat(expected string) maybe<parse_error>
+    try self.verify(expected)
     self.next()
-    return true
 
-def parser.error(code int, reason string) parse_error
-    return parse_error (
-        line: self.line
-        code: code
-        description: reason
-    )
+def parser.statement() maybe<parse_error>
+    return none
+
+def parser.is_new_line() bool
+    t = self.tok.type
+    return t == "line" or (t == "comment" and t.peek().type == "line")
+
+def parser.verify_new_line() maybe<parse_error>
+    if self.is_new_line()
+        return none
+    return self.verify("line")
+
+def parser.new_line() maybe<parse_error>
+    t = self.tok.type
+    if t == "line"
+        self.next()
+        return none
+    else if t == "comment" and self.peek().type == "line"
+        self.next()
+        self.next()
+        return none
+    return self.verify("line")
 
 def parser.unexpected_token() parse_error
     return self.error(parse_code.unexpected_token, "")
+
+def parser.skip_lines()
+    while self.tok.type != "eof"
+        if self.tok.type != "line"
+            break
+        self.next()
+
+def parser.parse() maybe<parse_error>
+    out = self.module.out
+    path = self.module.path
+    echo("parse out:", out)
+    echo("parse path:", path)
+    echo("token:", self.tok.str())
+    self.skip_lines()
+    while self.tok.type != "eof"
+        try self.statement()
+        if self.is_new_line()
+            self.new_line()
+    
+    return none

@@ -1,0 +1,53 @@
+class foo<k,v>
+    size     k
+    name     v
+    list     []k
+    im_list  [3]v
+    mutate   (v) v
+    total    int
+    weight   char
+
+def transform(one string) string
+    return "transform_" + one
+
+def foo.set(one k, two v)
+    self.list[0] = one
+    self.im_list[1] = two
+
+def foo.get_size() k
+    return self.size
+
+def foo.get_total() int
+    return self.total
+
+def foo.do_special(one v, in_two v) v
+    mutable x = none<v>
+    x = one
+    match x
+        some(s) 
+            echo(s, self.weight)
+            return s
+        none: pass
+    return in_two
+
+def main
+    g = foo(
+        size:22.33
+        name:"zoob"
+        mutate:transform)
+
+    echo(g.name)
+    echo(g.get_size())
+    echo(g.get_total())
+    g.list = push(g.list, 44.66)
+    g.set(77.88, "number one")
+    echo(g.list[0])
+    echo(g.im_list[1])
+    echo(g.mutate("hotdog"))
+    g.weight = 'x'
+    echo(g.do_special("cheeseburger", "chicken"))
+    echo("---")
+
+    f = foo(22.33, "zoob", _, _, transform, _, _)
+    echo(f.mutate("bacon"))
+    echo("---")

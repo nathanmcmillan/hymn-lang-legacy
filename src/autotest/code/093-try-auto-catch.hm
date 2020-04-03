@@ -1,0 +1,20 @@
+import hymn:error (exception)
+import hymn:result (result)
+
+def okie() result<int,exception>
+    return result.ok(1)
+
+def not_okie() result<string,exception>
+    return result.error(exception("", "dang ol' not good man."))
+
+def compile() result<string,exception>
+    ex = try okie()
+    return result.ok(str(ex))
+
+def compile_2() result<string,exception>
+    ex = try not_okie()
+    return result.ok(ex)
+
+def main
+    match compile(): ok(r): echo("ok:", r.value)
+    match compile_2(): error(e): echo("error:", e.value.get_description())

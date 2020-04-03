@@ -40,8 +40,7 @@ def compile(f flags) result<string,parse_error>
     stat = try fs.stat(f.path) catch(e)
         return result.error(parser.io_error(e.value))
 
-    if stat.is_dir()
-        f.path = path.join(f.path, "main.hm")
+    if stat.is_dir(): f.path = path.join(f.path, "main.hm")
 
     directory = path.abs(path.dir(f.path))
     echo("directory:", directory)
@@ -53,52 +52,24 @@ def compile(f flags) result<string,parse_error>
 
     p = program.new()
     p.parse(f)
-    return result.ok("")
+
+    return result.ok("success!")
 
 def main(args []string)
 
-    iterate i, a in args
-        printf("args %d: %s\n", i, a)
+    iterate i, a in args: printf("args %d: %s\n", i, a)
     
-    flag = flags.new()
-    flag.path = "tests/math.hm"
-    flag.write_to = "out/math"
+    echo("pwd:", system("pwd"))
 
-    if flag.help or flag.path == ""
+    f = flags.new()
+    f.path = "hymn_std/math.hm"
+    f.write_to = "out/math"
+
+    if f.help or f.path == ""
         help()
         exit(1)
 
-    ok = compile()
-    
-    # ---------------------------------
-
-    match ok: error(e): echo(e.value.str())
-
-    match ok: error(e)
-        echo(e.value.str())
-
-    match ok: error: pass
-
-    match ok: error
-        pass
-
+    ok = compile(f)
     match ok
-        error pass
-
-    match ok
-        error
-            pass
-
-    if ok is error
-        pass
-
-    if ok is error: pass
-
-    # ---------------------------------
-
-    ok is error(e)
-        echo("error: " + e.value.str())
-        exit(1)
-
-    if ok is ok(r)
-        echo(r.value)
+        ok(o): echo("ok: " + o.value)
+        error(e): echo("error: " + e.value.str())

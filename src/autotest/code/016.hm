@@ -1,0 +1,10 @@
+def main
+    mutable i = 0
+    while true
+        echo("loop!")
+        if i > 4
+            echo("break!")
+            break
+        i += 1
+    echo("bye!")
+    

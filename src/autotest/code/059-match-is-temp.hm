@@ -1,0 +1,46 @@
+class vec
+    x    float
+    nest maybe<vec>
+
+enum dog
+    bark
+    woof
+
+enum kitten
+    meow(kitty int)
+    hiss(cat float)
+
+def doggo() dog
+    return dog.bark
+
+def kitty() kitten
+    return kitten.meow(288)
+
+def main
+    a = vec()
+    a.x = 3.1
+    a.nest = vec()
+    echo(a.x)
+    
+    match a.nest
+        some(v) 
+            v.x = 5.1
+            echo(v.x)
+        none: pass
+
+    match a.nest: some(t)
+        echo("foo " + str(t.x))
+
+    match a.nest
+        none
+            echo("no zoob")
+        some(z)
+            echo("foob " + str(z.x))
+
+    d = doggo()
+    if d is bark
+        echo("woof!")
+
+    g = kitty()
+    match g: meow(e)
+        echo("meow! " + str(e.kitty))

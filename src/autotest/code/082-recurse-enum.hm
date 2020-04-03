@@ -1,0 +1,14 @@
+enum operation
+    add(op operation)
+    subtract(op operation)
+    multiply(number int)
+
+def get() operation
+    return operation.add(operation.multiply(22))
+
+def main
+    e = get()
+    if e is not add: echo("no!")
+    match e: add(a)
+        if a.op is not multiply: echo("no!")
+        match a.op: multiply(m): echo("multiply!", m.number)

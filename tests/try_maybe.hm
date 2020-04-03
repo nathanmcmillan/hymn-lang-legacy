@@ -1,0 +1,13 @@
+def verify(expect string, was string) maybe<string>
+    if expect != was
+        return "not expected!"
+    return none
+
+def eat(expected string) maybe<string>
+    try verify(expected, "hello")
+    try verify(expected, "world")
+    return none
+
+def main
+    e = eat("hello")
+    match e: some(s): echo(s)

@@ -32,7 +32,6 @@ def help
     echo("")
 
 # TODO: fix C header spacing
-# TODO: remove walrus operator >:(
 
 def compile(f flags) result<string,parse_error>
     mutable source_out = path.abs(f.write_to)

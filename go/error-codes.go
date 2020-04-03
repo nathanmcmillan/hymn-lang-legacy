@@ -108,4 +108,5 @@ const (
 	ECodeClassAndInterfaceMissingGenerics = 103
 	ECodeUnusedVariable                   = 104
 	ECodeSystemError                      = 105
+	ECodeWalrusOperator                   = 106
 )

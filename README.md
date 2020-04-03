@@ -57,7 +57,6 @@ Hymn aims to make it as easy and safe as possible to compile binary programs.
 * Enums with Unions
 * Classes
 * Match statements
-* Walrus operator
 * Defining stack or heap variables
 * Function pointers
 * Slices and arrays

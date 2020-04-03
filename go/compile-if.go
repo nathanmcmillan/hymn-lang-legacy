@@ -1,7 +1,7 @@
 package main
 
 func (me *cfile) compileIf(n *node) *codeblock {
-	code := me.walrusIf(n)
+	code := ""
 	ifval := me.eval(n.has[0])
 	code += "if (" + ifval.pop() + ") {\n"
 

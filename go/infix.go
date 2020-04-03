@@ -131,9 +131,5 @@ func infixTernary(me *parser, condition *node, op string) (*node, *parseError) {
 }
 
 func infixWalrus(me *parser, left *node, op string) (*node, *parseError) {
-	node, er := me.assign(left, true, false)
-	if er != nil {
-		return nil, er
-	}
-	return node, nil
+	return nil, err(me, ECodeWalrusOperator, "I do not support the walrus operator.")
 }

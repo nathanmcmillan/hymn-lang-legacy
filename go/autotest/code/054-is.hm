@@ -23,7 +23,7 @@ def get_me() foo
 
 def main
     mutable e = foo.hello(2)
-    if e is hello : if 0 == 0 : echo("#1 hello!")
+    if e is hello: if 0 == 0 : echo("#1 hello!")
 
     while e is hello
         e = foo.world("e")
@@ -38,7 +38,7 @@ def main
     if a is some
         echo("some")
     
-    match b := fun(2)
+    match fun(2)
         none: echo("no")
         some(s) 
             echo("yes")
@@ -49,7 +49,7 @@ def main
                 world(w) 
                     echo("#2 world " + w.value)
 
-    match c := get_me()
+    match get_me()
         hello(h) 
             echo("#3 hello " + str(h.value))
         world(w) 

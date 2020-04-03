@@ -29,7 +29,7 @@ func (me *cfile) compileIsSomeOrNone(code string, n, caseOf *node, match *codebl
 }
 
 func (me *cfile) compileIs(n *node) *codeblock {
-	code := me.walrusMatch(n)
+	code := ""
 	using := n.has[0]
 	caseOf := n.has[1]
 	match := me.eval(using)
@@ -106,7 +106,6 @@ func (me *cfile) compileIs(n *node) *codeblock {
 
 func (me *cfile) compileMatch(n *node) *codeblock {
 	top := ""
-	top += me.walrusMatch(n)
 	using := n.has[0]
 	match := me.eval(using)
 

@@ -30,7 +30,11 @@ def main
 
 ## Why Hymn?
 
-Hymn aims to make it as easy and safe as possible to compile binary programs.
+- Maybe<> type and strict match statements guarentee no null pointers
+- Safe union types. Unions are used through enum types and always require matching
+- Predictable runtime, there is no garbage collection
+- Compiles to C. Fully usable with existing or future C projects
+- Small binary size
 
 1. Why not Python?
    - Interpreted languages are too slow for many use-cases.

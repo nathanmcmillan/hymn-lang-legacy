@@ -4,5 +4,5 @@ class file
     content string
 
 enum open
-    ok file
-    error os_error
+    ok(f file)
+    error(e os_error)

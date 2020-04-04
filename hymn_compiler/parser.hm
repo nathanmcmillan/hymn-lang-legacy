@@ -42,6 +42,9 @@ def parser.error(code int, reason string) parse_error
         description: reason
     )
 
+def parser.peek() token
+    return self.tokenize.get(self.pos + 1)
+
 def parser.next()
     self.pos += 1
     tok = self.tokenize.get(self.pos)
@@ -57,13 +60,14 @@ def parser.verify(expected string) maybe<parse_error>
 def parser.eat(expected string) maybe<parse_error>
     try self.verify(expected)
     self.next()
+    return none
 
 def parser.statement() maybe<parse_error>
     return none
 
 def parser.is_new_line() bool
     t = self.tok.type
-    return t == "line" or (t == "comment" and t.peek().type == "line")
+    return t == "line" or (t == "comment" and self.peek().type == "line")
 
 def parser.verify_new_line() maybe<parse_error>
     if self.is_new_line()
@@ -75,7 +79,7 @@ def parser.new_line() maybe<parse_error>
     if t == "line"
         self.next()
         return none
-    else if t == "comment" and self.peek().type == "line"
+    elif t == "comment" and self.peek().type == "line"
         self.next()
         self.next()
         return none

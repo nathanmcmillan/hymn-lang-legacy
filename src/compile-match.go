@@ -88,11 +88,11 @@ func (me *cfile) compileIs(n *node) *codeblock {
 	} else {
 		compare := me.eval(caseOf)
 		if compare.data() == nil {
-			panic("expected enum but was " + caseOf.string(me.hmfile, 0))
+			panic(me.fail(n) + "expected enum but was " + caseOf.string(me.hmfile, 0))
 		}
 		compareEnum, _, ok := compare.data().isEnum()
 		if !ok {
-			panic("expected enum but was " + caseOf.string(me.hmfile, 0))
+			panic(me.fail(n) + "expected enum but was " + caseOf.string(me.hmfile, 0))
 		}
 		code += compare.code()
 		if !compareEnum.simple {

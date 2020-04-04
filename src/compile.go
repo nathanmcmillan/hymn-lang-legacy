@@ -55,7 +55,7 @@ func (me *hmfile) generateC() string {
 			}
 			fname = def.enum.pathLocal
 		} else {
-			panic("Missing definition")
+			panic(cfile.fail(nil) + "Missing definition")
 		}
 		filterOrder = append(filterOrder, name)
 		filters[name] = fname
@@ -222,7 +222,7 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 			}
 			head = head.has[0]
 		} else {
-			panic("missing member variable")
+			panic(me.fail(n) + "Missing member variable")
 		}
 	}
 	return codeBlockOne(n, code)
@@ -253,7 +253,7 @@ func (me *cfile) compileVariable(n *node, hint *datatype) *codeblock {
 			if st, ok := module.staticScope[name]; ok {
 				me.defineStatic(st)
 			} else {
-				panic("Could not find static variable \"" + name + "\"")
+				panic(me.fail(n) + "Could not find static variable \"" + name + "\"")
 			}
 			v = me.getvar(name)
 		}
@@ -365,14 +365,13 @@ func (me *cfile) compileAssign(n *node) *codeblock {
 	}
 	declare := me.compileDeclare(left)
 
-	// FIXME: THIS IS MESSED UP!!!
-	panic("FIX ME")
+	cb := &codeblock{}
 
 	value := me.eval(right)
-	pre := value.precode()
+	cb.pre = value.pre
+
 	post := value.pop()
 
-	code += pre
 	if n.is != ":=" {
 		code += me.maybeFmc(code, me.depth)
 	}
@@ -381,7 +380,10 @@ func (me *cfile) compileAssign(n *node) *codeblock {
 	if paren {
 		code += ")"
 	}
-	return codeBlockOne(n, code)
+
+	cb.current = codeNode(n, code)
+
+	return cb
 }
 
 func (me *cfile) assignmentUpdate(n *node) string {

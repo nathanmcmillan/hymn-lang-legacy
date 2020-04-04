@@ -33,11 +33,11 @@ func (me *cfile) compileFor(op string, n *node) *codeblock {
 	code := ""
 	vset := n.has[0]
 	if vset.is != "=" {
-		panic("for loop must start with assign")
+		panic(me.fail(n) + "for loop must start with assign")
 	}
 	vobj := vset.has[0]
 	if vobj.is != "variable" {
-		panic("for loop must assign a regular variable")
+		panic(me.fail(n) + "for loop must assign a regular variable")
 	}
 	vexist := me.getvar(vobj.idata.name)
 	if vexist == nil {
@@ -81,7 +81,7 @@ func (me *cfile) compileIterate(op string, n *node) *codeblock {
 		}
 		ix = 2
 	} else {
-		panic("")
+		panic(me.fail(n) + "Unexpected node size for iterator")
 	}
 	array := n.has[ix]
 	arrayname := ""

@@ -140,3 +140,23 @@ func (me *cfile) addHeadEnumTypeDef(expr string) {
 func (me *cfile) addHeadStructTypeDef(expr string) {
 	me.headSection.WriteString(expr)
 }
+
+func (me *cfile) fail(n *node) string {
+	var str strings.Builder
+	str.WriteString("\nModule: ")
+	str.WriteString(me.hmfile.name)
+
+	fn := me.scope.fn
+	if fn != nil {
+		str.WriteString("\nCurrent Function: ")
+		str.WriteString(fn.module.reference(fn.getname()))
+	}
+
+	if n != nil {
+		str.WriteString("\nNode: ")
+		str.WriteString(n.string(me.hmfile, 0))
+	}
+
+	str.WriteString("\nError: ")
+	return str.String()
+}

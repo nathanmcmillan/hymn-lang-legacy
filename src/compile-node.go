@@ -71,6 +71,9 @@ func (me *codeblock) precode() string {
 }
 
 func (me *codeblock) pop() string {
+	if me.current == nil {
+		return ""
+	}
 	return me.current.code
 }
 

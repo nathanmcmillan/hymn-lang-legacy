@@ -31,7 +31,7 @@ func (me *cfile) subC(destination, rootname, hmlibs, filter string, name string)
 				cfile.defineEnum(def.enum)
 			}
 		} else {
-			panic("Missing definition")
+			panic(cfile.fail(nil) + "Missing definition")
 		}
 	}
 

@@ -1,0 +1,3 @@
+class os_error
+    code int
+    reason string

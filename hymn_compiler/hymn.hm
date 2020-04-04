@@ -12,6 +12,7 @@ import hymn:os
 import hymn:fs
 import hymn:result (result)
 import hymn:path
+import hymn:strings
 
 static debug = true
 static debug_tokens = true
@@ -59,11 +60,15 @@ def main(args []string)
 
     iterate i, a in args: printf("args %d: %s\n", i, a)
     
-    echo("pwd:", system("pwd"))
+    pwd = strings.cut_end(system("pwd"), 1)
+    home = strings.cut_end(system("echo \"$HOME\""), 1)
+
+    echo("pwd:", pwd)
+    echo("home:", home)
 
     f = flags.new()
-    f.path = "hymn_std/math.hm"
-    f.write_to = "out/math"
+    f.path = home + "/Documents/prorgamming/hymn-lang/hymn_std/math.hm"
+    f.write_to = home + "/Documents/prorgamming/hymn-lang/out/math"
 
     if f.help or f.path == ""
         help()

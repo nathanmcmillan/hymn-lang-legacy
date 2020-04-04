@@ -221,6 +221,11 @@ func (me *cfile) compileMemberVariable(n *node) *codeblock {
 				code = head.idata.name + head.data().memoryGet() + code
 			}
 			head = head.has[0]
+		} else if head.is == "call" {
+			data := head.data()
+			c := me.compileCall(head)
+			code = c.code() + data.memoryGet() + code
+			break
 		} else {
 			panic(me.fail(n) + "Missing member variable")
 		}

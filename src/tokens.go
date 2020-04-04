@@ -231,9 +231,6 @@ func (me *tokenizer) forString() (string, *tokenizeError) {
 	value := &strings.Builder{}
 	for !stream.eof() {
 		c := stream.next()
-		if c == '"' {
-			break
-		}
 		if c == '\\' {
 			peek := stream.peek()
 			if peek == '\n' || peek == ' ' {
@@ -250,7 +247,14 @@ func (me *tokenizer) forString() (string, *tokenizeError) {
 					return "", e
 				}
 				continue
+			} else {
+				value.WriteByte(c)
+				value.WriteByte(peek)
+				stream.next()
+				continue
 			}
+		} else if c == '"' {
+			break
 		}
 		value.WriteByte(c)
 	}

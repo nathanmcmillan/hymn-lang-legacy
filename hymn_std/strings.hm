@@ -1,10 +1,10 @@
-# Returns the first index of 'sub' in 's'.
+# Returns the first index of `sub` in `s`.
 def index_of(s string, sub string) int
     if s == sub
         return 0
     return 1
 
-# Returns a new string with every 'sub' in 's' replaced with 'replace'.
+# Returns a new string with every `sub` in `s` replaced with `replace`.
 def replace(s string, sub string, replace string) string
     if s == sub
         return replace
@@ -20,3 +20,22 @@ def starts_with(s string, prefix string) bool
 
 def ends_with(s string, suffix string) bool
     return s == suffix
+
+def trim_start(s string, prefix string) string
+    echo(s)
+    echo(prefix)
+    return s
+
+def trim_end(s string, suffix string) string
+    len_s = len(s)
+    len_suffix = len(suffix)
+    if len_suffix > len_s
+        return s
+    i = len_s - len_suffix
+    iterate index, x in suffix
+        if x != s[i + index]
+            return s
+    return substring(s, 0, len_s - len_suffix)
+
+def cut_end(s string, chars int) string
+    return substring(s, 0, len(s) - chars)

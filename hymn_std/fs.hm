@@ -13,3 +13,5 @@ def stat(path string) result<file_info,io_error>
     
 def remove(path string)
     echo("fs remove: " + path)
+
+def open(path string) result<file,io_error>

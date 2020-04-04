@@ -1,0 +1,31 @@
+class vec
+    x int
+
+def vec.compute(mul int) int
+    return self.x * mul
+
+class token
+    type  string
+    value vec
+
+def token.val() vec
+    return self.value
+
+class parse
+    current token
+
+def parse.peek() token
+    return self.current
+
+def parse.check()
+    if self.peek().type == "line"
+        echo("You found me!")
+    if self.peek().val().compute(2) == 12
+        echo("I'm twelve!")
+    if self.peek().val().x * 2 == 12
+        echo("I'm also twelve!")
+    echo("Bye!")
+
+def main
+    p = parse(token("line", vec(6)))
+    p.check()

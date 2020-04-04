@@ -7,3 +7,4 @@ src/autotest/out/
 compiler
 
 *.o
+error.json

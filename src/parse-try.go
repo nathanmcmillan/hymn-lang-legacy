@@ -7,7 +7,7 @@ func (me *parser) tryAutoCatch(n *node, fnret *datatype) (*node, *parseError) {
 	return n, nil
 }
 
-func (me *parser) tryCatch(n *node, fnret *datatype, encalc *enum) (*node, *parseError) {
+func (me *parser) tryCatch(n *node, fnret *datatype, calcdata *datatype) (*node, *parseError) {
 
 	if er := me.eat("("); er != nil {
 		return nil, er
@@ -18,17 +18,30 @@ func (me *parser) tryCatch(n *node, fnret *datatype, encalc *enum) (*node, *pars
 	}
 	if er := me.eat(")"); er != nil {
 		return nil, er
+	}
 
+	maybecalc := calcdata.isSomeOrNone()
+	var data *datatype
+	if maybecalc {
+		data = calcdata.member.copy()
+	} else {
+		var er *parseError
+		encalc, _, _ := calcdata.isEnum()
+		data, er = encalc.getuniondata(me.hmfile, encalc.types[len(encalc.types)-1].name)
+		if er != nil {
+			return nil, er
+		}
 	}
-	data, er := encalc.getuniondata(me.hmfile, encalc.types[len(encalc.types)-1].name)
-	if er != nil {
-		return nil, er
-	}
+
 	tempd := me.hmfile.varInitWithData(data, temp, false)
 	me.hmfile.scope.variables[temp] = tempd
 
 	catch := nodeInit("catch")
-	catch.copyData(fnret)
+	if maybecalc {
+		catch.copyData(fnret.member)
+	} else {
+		catch.copyData(fnret)
+	}
 	catch.idata = newidvariable(me.hmfile, tempd.name)
 
 	if me.isNewLine() {
@@ -130,5 +143,5 @@ func (me *parser) trying() (*node, *parseError) {
 		return me.tryAutoCatch(n, fn.returns)
 	}
 
-	return me.tryCatch(n, fn.returns, encalc)
+	return me.tryCatch(n, fn.returns, calc.data())
 }

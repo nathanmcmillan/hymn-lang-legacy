@@ -5,7 +5,8 @@ def verify(expect string, was string) maybe<string>
 
 def eat(expected string) maybe<string>
     try verify(expected, "hello")
-    try verify(expected, "world")
+    try verify(expected, "world") catch(e)
+        return "zoink! " + e
     return none
 
 def main

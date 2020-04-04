@@ -5,24 +5,27 @@ import (
 )
 
 func cleanCode(code string) (string, bool) {
-	if code != "" {
-		for {
-			size := len(code)
-			ch := code[size-1]
-			if ch == '\n' || ch == '\t' || ch == ' ' {
-				code = code[0 : size-1]
-			} else {
-				break
-			}
-		}
-		return code, true
+	if code == "" {
+		return "", false
 	}
-	return code, false
+	for {
+		size := len(code)
+		ch := code[size-1]
+		if ch == '\n' || ch == '\t' || ch == ' ' {
+			code = code[0 : size-1]
+		} else {
+			break
+		}
+	}
+	return code, true
 }
 
 func (me *cfile) happyOut(e *codeblock) string {
 	block := ""
 	for _, c := range e.flatten() {
+		if c == nil {
+			continue
+		}
 		code, ok := cleanCode(c.code)
 		if ok {
 			block += fmc(me.depth) + code + me.maybeColon(code) + me.maybeNewLine(code)

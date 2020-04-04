@@ -364,6 +364,10 @@ func (me *cfile) compileAssign(n *node) *codeblock {
 		code += "("
 	}
 	declare := me.compileDeclare(left)
+
+	// FIXME: THIS IS MESSED UP!!!
+	panic("FIX ME")
+
 	value := me.eval(right)
 	pre := value.precode()
 	post := value.pop()

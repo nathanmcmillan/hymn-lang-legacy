@@ -183,12 +183,27 @@ func execCompile(flags *flags) (string, *parseError, error) {
 		panic(fer.Error())
 	}
 
+	exe, err := os.Executable()
+	if err == nil {
+		exe = filepath.Dir(exe)
+	} else {
+		real, err := filepath.EvalSymlinks(exe)
+		if err != nil {
+			panic(err)
+		}
+		exe = filepath.Dir(real)
+	}
+
 	libc := os.Getenv("HYMN_LIBC")
 	if flags.libc != "" {
 		libc = flags.libc
 	}
 	if libc == "" {
-		libc = "libc"
+		if _, err := os.Stat("libc"); err == nil {
+			libc = "libc"
+		} else {
+			libc = filepath.Join(exe, "..", "libc")
+		}
 	}
 	if !filepath.IsAbs(libc) {
 		libc, _ = filepath.Abs(libc)
@@ -199,6 +214,8 @@ func execCompile(flags *flags) (string, *parseError, error) {
 	program.libc = libc
 	program.directory = directory
 	program.testing = flags.testing
+
+	program.packages["hymn"] = filepath.Join(exe, "..", "hymn_std")
 
 	er = parsePackages(program.packages, os.Getenv("HYMN_PACKAGES"))
 	if er != nil {

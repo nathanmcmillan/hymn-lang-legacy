@@ -1,0 +1,12 @@
+def lines(content string) []string
+    mutable lines = []string
+    mutable line = ""
+    iterate c in content
+        if c == '\n'
+            lines = push(lines, line)
+            line = ""
+        else
+            line += str(c)
+    if line != ""
+        lines = push(lines, line)
+    return lines

@@ -1,6 +1,10 @@
-# hymn-lang
-Hymn is a programming language designed to make writing simple imperitive programs easy.
-It compiles to efficient, readable C code.
+# Hymn Programming Language
+
+Hymn is a programming language designed to simplify writing complex software.
+
+It focuses on simplicity and visually pleasing syntax without sacrificing critical features such as static typing.
+
+Hymn compiles to readable C code, and can easily be included in existing projects.
 
 ```
 class vec
@@ -9,49 +13,46 @@ class vec
 
 enum result<a,b>
     ok(value a)
-    error(value b)
+    error(message b)
 
 def main   
     v = vec(2, 3)
-    e = result<vec,string>.ok(v)
-    match e
+    r = result<vec,string>.ok(v)
+    match r
         ok(o): echo("vec =", o.value.x, o.value.y)
-        error(e): echo("error =", e.value)
+        error(e): echo("error =", e.message)
 ```
 
-## Why
+## Links 
+- [Homepage](https://hymn-lang.org)
+- [Read the book](https://hymn-lang.org/book/index.html)
+- [Learn by example](https://hymn-lang.org/learn-by-example/index.html)
+
+## Why Hymn?
 
 Hymn aims to make it as easy and safe as possible to compile binary programs.
 
 1. Why not Python?
-   - Slow
-   - No types 
+   - Interpreted languages are too slow for many use-cases.
+   - Dynamic types can make large programs difficult to reason with.
 2. Why not Golang?
-   - No generics
-   - No enum types
-   - Error handling
+   - Lack of generics can make some programs otherwise tedious to code. 
+   - Lack of tagged union types reduces expressiveness.
 3. Why not Rust?
-   - Difficult to understand
-   - High entry barrier
-   - Overkill for less critical software
+   - Often difficult to understand, with a high entry barrier to learning
+   - Often too much for less critical software
 4. Why not C?
-   - Easy to make mistakes
-   - No generics
-   - No Namespaces
+   - Lack of conveniences such as generics and name-spaces 
+   - Often too easy to make critical mistakes
 5. Why not C++?
-   - Bloated
-   - Slow compile times
-   - Legacy cruft
-   - Hard to read
+   - Slow compile times compared to C
+   - Considered bloated with many legacy problems
 
-## Links 
-[Homepage](https://hymn-lang.org)
-[Read the book](https://hymn-lang.org/site/book/index.html)
-[Learn by example](https://hymn-lang.org/site/learn-by-example/index.html)
+Visit the [website](https://hymn-lang.org) to learn more!
 
 ## Development
 
-### Features
+### Completed
 * Generics
 * Goto and Labels
 * Enums with Unions
@@ -67,7 +68,7 @@ Hymn aims to make it as easy and safe as possible to compile binary programs.
 * Multiline string declaration using '\'
 * Interfaces
 
-### Timeline
+### Not Started
 * References to primitives
 * Multiple return values
 * Bootstrapping compiler from golang to hymn
@@ -92,5 +93,4 @@ The standard libraries will need to include the following
 * Variable scoping
 
 ### Testing
-* Need negative tests
 * Need matching C code

@@ -1,7 +1,22 @@
 # Returns the first index of 'sub' in 's'.
 def index_of(s string, sub string) int
-    return -1
+    if s == sub
+        return 0
+    return 1
 
 # Returns a new string with every 'sub' in 's' replaced with 'replace'.
 def replace(s string, sub string, replace string) string
+    if s == sub
+        return replace
     return s
+
+def starts_with(s string, prefix string) bool
+    if len(prefix) > len(s)
+        return false
+    iterate index, p in prefix
+        if p != s[index]
+            return false
+    return true
+
+def ends_with(s string, suffix string) bool
+    return s == suffix

@@ -35,7 +35,7 @@ func (me *parser) fail() string {
 	}
 	str.WriteString(t.string())
 
-	fn := me.hmfile.scope.fn
+	fn := me.hmfile.getFuncScope().fn
 	if fn != nil {
 		str.WriteString("\nCurrent Function: ")
 		str.WriteString(fn.module.reference(fn.getname()))

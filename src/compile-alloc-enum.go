@@ -34,8 +34,8 @@ func (me *cfile) compileAllocEnum(n *node) *codeblock {
 	if local {
 		code := ""
 		if !useStack {
-			me.stdReq.add(CStdLib)
-			code += "malloc(sizeof(" + unionName + "))"
+			me.libReqAdd(HmLibMem)
+			code += "hmlib_malloc(sizeof(" + unionName + "))"
 		}
 		code += ";\n" + fmc(me.depth) + assign.cname + memberRef + "type = " + enumTypeName(baseEnumName, un.name)
 		xvar := un.types.size() > 1

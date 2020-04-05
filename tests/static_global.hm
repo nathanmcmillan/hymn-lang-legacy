@@ -1,0 +1,13 @@
+enum state
+    text
+    code_block
+    block_quote
+    nothing
+
+mutable stack = [:]state(state.text)
+
+def stack_pop()
+    pop(stack)
+
+def main()
+    stack_pop()

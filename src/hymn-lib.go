@@ -30,6 +30,7 @@ const (
 	libLength    = "len"
 	libCapacity  = "cap"
 	libPush      = "push"
+	libPop       = "pop"
 	libExit      = "exit"
 	libChdir     = "chdir"
 	libSubstring = "substring"
@@ -159,6 +160,20 @@ func (me *hmlib) initPush() *parseError {
 	return nil
 }
 
+func (me *hmlib) initPop() *parseError {
+	var er *parseError
+	fn := funcInit(nil, libPop, nil)
+	fn.returns = newdataany()
+	a, er := me.fnArgInit("?", "a", false)
+	if er != nil {
+		return er
+	}
+	fn.args = append(fn.args, a)
+	me.functions[libPop] = fn
+	me.types[libPop] = ""
+	return nil
+}
+
 func (me *hmlib) libs() *parseError {
 	me.types = make(map[string]string)
 	me.classes = make(map[string]*class)
@@ -279,6 +294,7 @@ func (me *hmlib) libs() *parseError {
 	}
 
 	me.initPush()
+	me.initPop()
 
 	for primitive := range primitives {
 		me.types[primitive] = ""

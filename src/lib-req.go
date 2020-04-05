@@ -6,6 +6,16 @@ const (
 	HmLibSlice  = "hmlib_slice"
 	HmLibString = "hmlib_string"
 	HmLibSystem = "hmlib_system"
+	HmLibMem    = "hmlib_mem"
+)
+
+// Dependencies
+var (
+	HmLibDependencies = map[string][]string{
+		HmLibString: []string{HmLibMem},
+		HmLibFiles:  []string{HmLibMem},
+		HmLibSlice:  []string{HmLibMem},
+	}
 )
 
 // C Standard Library

@@ -28,6 +28,8 @@ func (me *cfile) compileDeclare(n *node) string {
 		newVar := data.getnamedvariable(name, mutable)
 		me.scope.variables[name] = newVar
 		if global {
+			me.getRoot().variables[name] = newVar
+
 			newVar.cname = idata.getcname()
 			// code += fmtassignspace(data.noMallocTypeSig())
 			// code += fmtassignspace(data.typeSig())

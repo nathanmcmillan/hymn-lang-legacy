@@ -58,7 +58,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 				}
 				head = member
 
-			} else if data.isUnknown() && module.scope.fn.hasInterface(data) {
+			} else if data.isUnknown() && module.getFuncScope().fn.hasInterface(data) {
 				if er := me.eat("."); er != nil {
 					return nil, er
 				}
@@ -66,7 +66,7 @@ func (me *parser) eatvar(from *hmfile) (*node, *parseError) {
 				if er := me.eat("id"); er != nil {
 					return nil, er
 				}
-				_, sig, ok := module.scope.fn.searchInterface(data, dotName)
+				_, sig, ok := module.getFuncScope().fn.searchInterface(data, dotName)
 				if !ok {
 					return nil, err(me, ECodeInterfaceNotFound, "Generic '"+data.print()+" does not have an interface function called '"+dotName+"'")
 				}

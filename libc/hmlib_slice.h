@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hmlib_mem.h"
+
 struct __attribute__((__packed__)) hmlib_slice_head {
     size_t length;
     size_t capacity;
@@ -31,5 +33,8 @@ hmlib_slice hmlib_slice_expand(const hmlib_slice a, const hmlib_slice b);
 hmlib_slice hmlib_slice_push(const hmlib_slice a, void *const b);
 hmlib_slice hmlib_slice_push_int(const hmlib_slice a, const int b);
 hmlib_slice hmlib_slice_push_float(const hmlib_slice a, const float b);
+void *hmlib_slice_pop(const hmlib_slice a);
+int hmlib_slice_pop_int(const hmlib_slice a);
+float hmlib_slice_pop_float(const hmlib_slice a);
 
 #endif

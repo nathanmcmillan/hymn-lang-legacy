@@ -1,0 +1,31 @@
+import mem
+
+class slice<x>
+    len   int
+    cap   int
+    array []x
+
+def new<x>() slice<x>
+    return slice<x>()
+
+def slice.resize(len int)
+    size = mem.sizeof(
+    mem.realloc(self, )
+    echo(len)
+
+def slice.expand(b slice<x>)
+    echo(b)
+
+def slice.push(value x)
+    len = self.len + 1
+    if len > self.cap
+        self.cap = len
+    self.len = len
+    self.array[len - 1] = x
+
+def slice.pop() x
+    len = self.len
+    if len == 0
+        nothing x
+        return nothing
+    return self.array[len - 1]

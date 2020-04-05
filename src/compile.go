@@ -67,6 +67,7 @@ func (me *hmfile) generateC() string {
 	}
 
 	if me.needStatic {
+		cfile.pushScope()
 		for _, s := range me.statics {
 			code.WriteString(cfile.declareStatic(s))
 		}
@@ -80,6 +81,7 @@ func (me *hmfile) generateC() string {
 		}
 		cfile.depth--
 		code.WriteString("}\n")
+		cfile.popScope()
 	}
 
 	if len(me.top) > 0 {
@@ -277,7 +279,7 @@ func (me *cfile) compileRawString(n *node) *codeblock {
 }
 
 func (me *cfile) compileString(n *node) *codeblock {
-	me.libReq.add(HmLibString)
+	me.libReqAdd(HmLibString)
 	code := "hmlib_string_init(\"" + n.value + "\")"
 	return codeBlockOne(n, code)
 }
@@ -301,7 +303,7 @@ func (me *cfile) compileEqual(op string, n *node) *codeblock {
 	b := me.eval(n.has[1])
 	code := ""
 	if a.data().isString() && b.data().isString() {
-		me.libReq.add(HmLibString)
+		me.libReqAdd(HmLibString)
 		code = "hmlib_string_equal(" + a.code() + ", " + b.code() + ")"
 		if op == "not-equal" {
 			code = "!" + code

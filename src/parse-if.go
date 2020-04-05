@@ -33,6 +33,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		return nil, er
 	}
 	n.push(b)
+	me.hmfile.pushScope()
 	templs := me.getenumstack(n)
 	if me.token.is == ":" {
 		var er *parseError
@@ -57,6 +58,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 		}
 		n.push(b)
 	}
+	me.hmfile.popScope()
 	if (me.peek().is == "elif" || me.peek().is == "else") && me.peek().depth == depth && me.token.is == "line" {
 		if er := me.eat("line"); er != nil {
 			return nil, er
@@ -73,6 +75,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			return nil, er
 		}
 		elif.push(b)
+		me.hmfile.pushScope()
 		templs := me.getenumstack(elif)
 		if me.token.is == ":" {
 			if er := me.eat(":"); er != nil {
@@ -95,6 +98,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			}
 			elif.push(b)
 		}
+		me.hmfile.popScope()
 		me.enumstackclr(templs)
 		n.push(elif)
 		if (me.peek().is == "elif" || me.peek().is == "else") && me.peek().depth == depth && me.token.is == "line" {
@@ -108,6 +112,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			return nil, er
 		}
 		el := nodeInit("else")
+		me.hmfile.pushScope()
 		if me.token.is == ":" {
 			if er := me.eat(":"); er != nil {
 				return nil, er
@@ -129,6 +134,7 @@ func (me *parser) ifexpr() (*node, *parseError) {
 			}
 			el.push(b)
 		}
+		me.hmfile.popScope()
 		n.push(el)
 		if me.isNewLine() {
 			me.newLine()

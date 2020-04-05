@@ -6,8 +6,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#include "hmlib_mem.h"
 
 typedef char *hmlib_string;
 typedef struct hmlib_string_head hmlib_string_head;

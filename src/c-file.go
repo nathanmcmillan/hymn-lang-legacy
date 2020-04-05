@@ -20,7 +20,6 @@ type cfile struct {
 	headSection           strings.Builder
 	headSuffix            strings.Builder
 	codeFn                []strings.Builder
-	rootScope             *scope
 	scope                 *scope
 	depth                 int
 	functions             map[string]*function
@@ -31,8 +30,7 @@ func (me *hmfile) cFileInit(guard string) *cfile {
 	c := &cfile{}
 	c.guard = guard
 	c.hmfile = me
-	c.rootScope = scopeInit(nil)
-	c.scope = c.rootScope
+	c.scope = scopeInit(nil)
 	c.codeFn = make([]strings.Builder, 0)
 	c.stdReq = newOrderSet()
 	c.libReq = newOrderSet()
@@ -43,9 +41,28 @@ func (me *hmfile) cFileInit(guard string) *cfile {
 	return c
 }
 
+func (me *cfile) getFuncScope() *scope {
+	scope := me.scope
+	for {
+		if scope.fn != nil || scope.root == nil {
+			return scope
+		}
+		scope = scope.root
+	}
+}
+
+func (me *cfile) getRoot() *scope {
+	scope := me.scope
+	for {
+		if scope.root == nil {
+			return scope
+		}
+		scope = scope.root
+	}
+}
+
 func (me *cfile) pushScope() {
-	sc := scopeInit(me.scope)
-	me.scope = sc
+	me.scope = scopeInit(me.scope)
 }
 
 func (me *cfile) popScope() {
@@ -53,12 +70,9 @@ func (me *cfile) popScope() {
 }
 
 func (me *cfile) getvar(name string) *variable {
-	// TODO fix scoping rules
-
 	if alias, ok := me.scope.renaming[name]; ok {
 		name = alias
 	}
-
 	scope := me.scope
 	for {
 		if v, ok := scope.variables[name]; ok {
@@ -146,7 +160,7 @@ func (me *cfile) fail(n *node) string {
 	str.WriteString("\nModule: ")
 	str.WriteString(me.hmfile.name)
 
-	fn := me.scope.fn
+	fn := me.getFuncScope().fn
 	if fn != nil {
 		str.WriteString("\nCurrent Function: ")
 		str.WriteString(fn.module.reference(fn.getname()))
@@ -159,4 +173,13 @@ func (me *cfile) fail(n *node) string {
 
 	str.WriteString("\nError: ")
 	return str.String()
+}
+
+func (me *cfile) libReqAdd(req string) {
+	if de, ok := HmLibDependencies[req]; ok {
+		for _, k := range de {
+			me.libReqAdd(k)
+		}
+	}
+	me.libReq.add(req)
 }

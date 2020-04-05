@@ -2,7 +2,7 @@
 
 hmlib_string_head *hmlib_string_head_init(const size_t length, const size_t capacity) {
     size_t memory = sizeof(hmlib_string_head) + length + 1;
-    hmlib_string_head *head = (hmlib_string_head *)malloc(memory);
+    hmlib_string_head *head = (hmlib_string_head *)hmlib_malloc(memory);
     memset(head, 0, memory);
     head->length = length;
     head->capacity = capacity;
@@ -131,7 +131,7 @@ bool hmlib_string_equal(const hmlib_string a, const hmlib_string b) {
 }
 
 hmlib_string hmlib_char_to_string(const char ch) {
-    char *str = malloc(2);
+    char *str = hmlib_malloc(2);
     str[0] = ch;
     str[1] = '\0';
     hmlib_string s = hmlib_string_init_with_length(str, 1);
@@ -141,7 +141,7 @@ hmlib_string hmlib_char_to_string(const char ch) {
 
 hmlib_string hmlib_int_to_string(const int number) {
     int len = snprintf(NULL, 0, "%d", number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%d", number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -150,7 +150,7 @@ hmlib_string hmlib_int_to_string(const int number) {
 
 hmlib_string hmlib_int8_to_string(const int8_t number) {
     int len = snprintf(NULL, 0, "%" PRId8, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId8, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -159,7 +159,7 @@ hmlib_string hmlib_int8_to_string(const int8_t number) {
 
 hmlib_string hmlib_int16_to_string(const int16_t number) {
     int len = snprintf(NULL, 0, "%" PRId16, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId16, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -168,7 +168,7 @@ hmlib_string hmlib_int16_to_string(const int16_t number) {
 
 hmlib_string hmlib_int32_to_string(const int32_t number) {
     int len = snprintf(NULL, 0, "%" PRId32, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId32, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -177,7 +177,7 @@ hmlib_string hmlib_int32_to_string(const int32_t number) {
 
 hmlib_string hmlib_int64_to_string(const int64_t number) {
     int len = snprintf(NULL, 0, "%" PRId64, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId64, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -186,7 +186,7 @@ hmlib_string hmlib_int64_to_string(const int64_t number) {
 
 hmlib_string hmlib_uint_to_string(const unsigned int number) {
     int len = snprintf(NULL, 0, "%u", number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%u", number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -195,7 +195,7 @@ hmlib_string hmlib_uint_to_string(const unsigned int number) {
 
 hmlib_string hmlib_uint8_to_string(const uint8_t number) {
     int len = snprintf(NULL, 0, "%" PRId8, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId8, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -204,7 +204,7 @@ hmlib_string hmlib_uint8_to_string(const uint8_t number) {
 
 hmlib_string hmlib_uint16_to_string(const uint16_t number) {
     int len = snprintf(NULL, 0, "%" PRId16, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId16, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -213,7 +213,7 @@ hmlib_string hmlib_uint16_to_string(const uint16_t number) {
 
 hmlib_string hmlib_uint32_to_string(const uint32_t number) {
     int len = snprintf(NULL, 0, "%" PRId32, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId32, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -222,7 +222,7 @@ hmlib_string hmlib_uint32_to_string(const uint32_t number) {
 
 hmlib_string hmlib_uint64_to_string(const uint64_t number) {
     int len = snprintf(NULL, 0, "%" PRId64, number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%" PRId64, number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -231,7 +231,7 @@ hmlib_string hmlib_uint64_to_string(const uint64_t number) {
 
 hmlib_string hmlib_float_to_string(const float number) {
     int len = snprintf(NULL, 0, "%f", number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%f", number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -244,7 +244,7 @@ hmlib_string hmlib_float32_to_string(const float number) {
 
 hmlib_string hmlib_float64_to_string(const double number) {
     int len = snprintf(NULL, 0, "%f", number);
-    char *str = malloc(len + 1);
+    char *str = hmlib_malloc(len + 1);
     snprintf(str, len + 1, "%f", number);
     hmlib_string s = hmlib_string_init_with_length(str, len);
     free(str);
@@ -308,7 +308,7 @@ hmlib_string hmlib_format(const hmlib_string f, ...) {
     va_start(ap, f);
     int len = vsnprintf(NULL, 0, f, ap);
     va_end(ap);
-    char *str = malloc((len + 1) * sizeof(char));
+    char *str = hmlib_malloc((len + 1) * sizeof(char));
     va_start(ap, f);
     len = vsnprintf(str, len + 1, f, ap);
     va_end(ap);

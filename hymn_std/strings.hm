@@ -37,5 +37,8 @@ def trim_end(s string, suffix string) string
             return s
     return substring(s, 0, len_s - len_suffix)
 
-def cut_end(s string, chars int) string
-    return substring(s, 0, len(s) - chars)
+def cut_start(s string, num int) string
+    return substring(s, num, len(s))
+
+def cut_end(s string, num int) string
+    return substring(s, 0, len(s) - num)

@@ -33,6 +33,8 @@ func (me *parser) tryCatch(n *node, fnret *datatype, calcdata *datatype) (*node,
 		}
 	}
 
+	me.hmfile.pushScope()
+
 	tempd := me.hmfile.varInitWithData(data, temp, false)
 	me.hmfile.scope.variables[temp] = tempd
 
@@ -66,9 +68,7 @@ func (me *parser) tryCatch(n *node, fnret *datatype, calcdata *datatype) (*node,
 
 	n.push(catch)
 
-	if temp != "" {
-		delete(me.hmfile.scope.variables, temp)
-	}
+	me.hmfile.popScope()
 
 	return n, nil
 }
@@ -78,7 +78,7 @@ func (me *parser) trying() (*node, *parseError) {
 		return nil, er
 	}
 
-	fn := me.hmfile.scope.fn
+	fn := me.hmfile.getFuncScope().fn
 	maybefunc := fn.returns.isSomeOrNone()
 	var enfunc *enum
 	if !maybefunc {

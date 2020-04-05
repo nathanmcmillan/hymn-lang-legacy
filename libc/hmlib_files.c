@@ -22,7 +22,7 @@ hmlib_string hmlib_cat(const char *path) {
         printf("Could not open file: %s", path);
         exit(1);
     }
-    char *content = malloc((size + 1) * sizeof(char));
+    char *content = hmlib_malloc((size + 1) * sizeof(char));
     for (size_t i = 0; i < size; i++) {
         content[i] = fgetc(fp);
     }

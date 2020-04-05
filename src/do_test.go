@@ -38,6 +38,7 @@ func TestCompile(t *testing.T) {
 	debug = false
 	flags := &flags{}
 	flags.cc = "gcc"
+	flags.script = true
 	pwd, _ := os.Getwd()
 	fmt.Println("$PWD", pwd)
 	folder := "autotest"

@@ -31,8 +31,8 @@ func (me *cfile) compileAllocArray(n *node) *codeblock {
 	}
 
 	memberType := n.data().getmember().typeSig(me)
-	me.stdReq.add(CStdLib)
-	code := "malloc("
+	me.libReqAdd(HmLibMem)
+	code := "hmlib_malloc("
 	if parenthesis {
 		code += "("
 	}
@@ -83,9 +83,11 @@ func (me *cfile) compileAllocSlice(n *node) *codeblock {
 			size = strconv.Itoa(len(items.has))
 		}
 	}
+
+	cb := &codeblock{}
 	code := ""
 
-	me.libReq.add(HmLibSlice)
+	me.libReqAdd(HmLibSlice)
 	if capacity != "" {
 		code = "hmlib_slice_init(sizeof(" + n.data().getmember().typeSig(me) + "), " + size + ", " + capacity + ")"
 	} else {
@@ -94,20 +96,24 @@ func (me *cfile) compileAllocSlice(n *node) *codeblock {
 
 	if items != nil {
 		name := n.attributes["assign"]
-		code += ";"
+		fullname := me.getvar(name).cname
 		for i, item := range items.has {
-			code += "\n" + fmc(me.depth)
-			code += name + "[" + strconv.Itoa(i) + "] = "
-			code += me.eval(item).code() + ";"
+			evil := me.eval(item)
+			code += ";\n" + fmc(me.depth)
+			code += fullname + "[" + strconv.Itoa(i) + "] = "
+			code += evil.pop()
+			cb.prepend(evil.pre)
 		}
 	}
-	return codeBlockOne(n, code)
+
+	cb.current = codeNode(n, code)
+	return cb
 }
 
 func (me *cfile) compileArrayToSlice(n *node) *codeblock {
 	array := n.has[0]
 	data := array.data()
-	me.libReq.add(HmLibSlice)
+	me.libReqAdd(HmLibSlice)
 	code := "hmlib_array_to_slice(" + array.idata.name + ", sizeof(" + data.getmember().typeSig(me) + "), " + data.arraySize() + ")"
 	return codeBlockOne(n, code)
 }

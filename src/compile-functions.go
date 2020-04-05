@@ -109,7 +109,7 @@ func (me *cfile) compileMain(fn *function) {
 	expressions := fn.expressions
 	var block strings.Builder
 	me.pushScope()
-	me.scope.fn = fn
+	me.getFuncScope().fn = fn
 	me.depth = 1
 	for _, arg := range args {
 		me.scope.variables[arg.name] = arg.variable
@@ -144,8 +144,8 @@ func (me *cfile) compileMain(fn *function) {
 
 	head := "int main("
 	if len(args) > 0 {
-		me.libReq.add(HmLibSlice)
-		me.libReq.add(HmLibString)
+		me.libReqAdd(HmLibSlice)
+		me.libReqAdd(HmLibString)
 		head += "int argc, char** argv"
 	}
 	head += ")"

@@ -3,6 +3,7 @@ package main
 func (me *cfile) compileIf(n *node) *codeblock {
 	code := ""
 	ifval := me.eval(n.has[0])
+	me.pushScope()
 	code += "if (" + ifval.pop() + ") {\n"
 
 	cblock := &codeblock{}
@@ -21,8 +22,10 @@ func (me *cfile) compileIf(n *node) *codeblock {
 	thenCode := thenEval.code()
 	code += me.maybeFmc(thenCode, me.depth+1) + thenCode + me.maybeColon(thenCode)
 	code += me.maybeNewLine(code) + fmc(me.depth) + "}"
+	me.popScope()
 	ix++
 	for ix < hsize && n.has[ix].is == "elif" {
+		me.pushScope()
 		elif := n.has[ix]
 		elifval := me.eval(elif.has[0])
 		cblock.prepend(elifval.pre)
@@ -39,14 +42,17 @@ func (me *cfile) compileIf(n *node) *codeblock {
 		thenBlock := me.eval(elif.has[ixo]).code()
 		code += me.maybeFmc(thenBlock, me.depth+1) + thenBlock + me.maybeColon(thenBlock)
 		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
+		me.popScope()
 		ix++
 	}
 	if ix < hsize && n.has[ix].is == "else" {
+		me.pushScope()
 		el := n.has[ix].has[0]
 		code += " else {\n"
 		c := me.eval(el).code()
 		code += me.maybeFmc(c, me.depth+1) + c + me.maybeColon(c)
 		code += me.maybeNewLine(code) + fmc(me.depth) + "}"
+		me.popScope()
 	}
 
 	cblock.current = codeNode(n, code)

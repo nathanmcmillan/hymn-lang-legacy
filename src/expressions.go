@@ -266,7 +266,7 @@ func (me *parser) parseReturn() (*node, *parseError) {
 		return nil, er
 	}
 	n := nodeInit("return")
-	fn := me.hmfile.scope.fn
+	fn := me.hmfile.getFuncScope().fn
 	if me.token.is != "line" {
 		calc, er := me.calc(0, fn.returns)
 		if er != nil {

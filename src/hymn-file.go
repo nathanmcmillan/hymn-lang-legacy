@@ -15,7 +15,6 @@ type hmfile struct {
 	program         *program
 	hmlib           *hmlib
 	name            string
-	rootScope       *scope
 	scope           *scope
 	statics         []*node
 	staticScope     map[string]*variableNode
@@ -54,8 +53,7 @@ func (program *program) hymnFileInit(uid string, name string, pack []string, pat
 	hm.destination = filepath.Join(program.outsourcedir, filepath.Join(pack...))
 	hm.program = program
 	hm.hmlib = program.hmlib
-	hm.rootScope = scopeInit(nil)
-	hm.scope = hm.rootScope
+	hm.scope = scopeInit(nil)
 	hm.staticScope = make(map[string]*variableNode)
 	hm.namespace = make(map[string]string)
 	hm.types = make(map[string]string)
@@ -78,9 +76,18 @@ func (program *program) hymnFileInit(uid string, name string, pack []string, pat
 	return hm
 }
 
+func (me *hmfile) getFuncScope() *scope {
+	scope := me.scope
+	for {
+		if scope.fn != nil || scope.root == nil {
+			return scope
+		}
+		scope = scope.root
+	}
+}
+
 func (me *hmfile) pushScope() {
-	sc := scopeInit(me.scope)
-	me.scope = sc
+	me.scope = scopeInit(me.scope)
 }
 
 func (me *hmfile) popScope() {
@@ -98,12 +105,6 @@ func (me *hmfile) getvar(name string) *variable {
 	scope := me.scope
 	for {
 		if v, ok := scope.variables[name]; ok {
-			// fn := me.scope.fn
-			// if fn != nil {
-			// 	if id := fn.getParameter(name); id != nil {
-			// 		id.used = true
-			// 	}
-			// }
 			v.used = true
 			return v
 		}
@@ -152,8 +153,8 @@ func (me *hmfile) getEnum(name string) (*enum, bool) {
 }
 
 func (me *hmfile) alias(typed string) string {
-	if me.scope.fn != nil && me.scope.fn.aliasing != nil {
-		if alias, ok := me.scope.fn.aliasing[typed]; ok {
+	if me.getFuncScope().fn != nil && me.getFuncScope().fn.aliasing != nil {
+		if alias, ok := me.getFuncScope().fn.aliasing[typed]; ok {
 			return alias
 		}
 	}

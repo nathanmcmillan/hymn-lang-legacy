@@ -1,6 +1,9 @@
 import result (result)
 import io (io_error)
 
+class file
+    name string
+
 class file_info
     name string
     dir  bool
@@ -15,3 +18,5 @@ def remove(path string)
     echo("fs remove: " + path)
 
 def open(path string) result<file,io_error>
+    echo(path)
+    return result.ok(file(path))

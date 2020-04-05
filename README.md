@@ -30,7 +30,7 @@ def main
 
 ## Why Hymn?
 
-- Maybe<> type and strict match statements guarentee no null pointers
+- Maybe<> type and strict match statements prevent null pointer exceptions
 - Safe union types. Unions are used through enum types and always require matching
 - Predictable runtime, there is no garbage collection
 - Compiles to C. Fully usable with existing or future C projects

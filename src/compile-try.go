@@ -42,12 +42,14 @@ func (me *cfile) compileTry(n *node) *codeblock {
 
 	code += ") {\n"
 
+	me.pushScope()
 	if catch.is == "auto-catch" {
 		if maybecalc || enCalc.name == enCatch.name {
 			code += fmc(me.depth+1) + "return " + temp + ";\n"
 		} else {
 			wrapper := "catch_" + me.temp()
-			code += fmc(me.depth+1) + catch.data().typeSig(me) + wrapper + " = malloc(sizeof(" + enCatch.ucname + "));\n"
+			me.libReqAdd(HmLibMem)
+			code += fmc(me.depth+1) + catch.data().typeSig(me) + wrapper + " = hmlib_malloc(sizeof(" + enCatch.ucname + "));\n"
 			code += fmc(me.depth+1) + wrapper + "->type = " + enCatchLast + ";\n"
 			code += fmc(me.depth+1) + wrapper + "->" + enCatchLastType.name + " = " + temp + "->" + enCalcLastType.name + ";\n"
 			code += fmc(me.depth+1) + "return " + wrapper + ";\n"
@@ -59,6 +61,7 @@ func (me *cfile) compileTry(n *node) *codeblock {
 		code += me.eval(catch.has[0]).code()
 		delete(me.scope.renaming, id)
 	}
+	me.popScope()
 
 	code += fmc(me.depth) + "}"
 

@@ -1,0 +1,28 @@
+***
+#include <stdlib.h>
+***
+
+def malloc(size size_t)
+    ***
+    void *{% mem} = malloc({% size});
+    if ({% mem}) {
+        return {% mem};
+    }
+    fprintf(stderr, "malloc failed.\n");
+    exit(1);
+    ***
+
+def realloc(mem *, size size_t)
+    ***
+    {% mem} = realloc({% mem}, {% size});
+    if ({% mem}) {
+        return {% mem};
+    }
+    fprintf(stderr, "realloc failed.\n");
+    exit(1);
+    ***
+
+def sizeof(mem ?) size_t
+    ***
+    return sizeof(mem)
+    ***

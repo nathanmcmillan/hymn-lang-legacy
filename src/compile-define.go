@@ -109,7 +109,7 @@ func (me *cfile) dependencyGraph(data *datatype) {
 			me.dependencyReq.add(data.enum.pathGlobal)
 		}
 	case dataTypeString:
-		me.libReq.add(HmLibString)
+		me.libReqAdd(HmLibString)
 	case dataTypeUnknown:
 		return
 	case dataTypePrimitive:

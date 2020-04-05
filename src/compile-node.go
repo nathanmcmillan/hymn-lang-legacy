@@ -81,6 +81,9 @@ func (me *codeblock) code() string {
 	ls := me.flatten()
 	code := ""
 	for _, n := range ls {
+		if n == nil {
+			continue
+		}
 		code += n.code
 	}
 	return code

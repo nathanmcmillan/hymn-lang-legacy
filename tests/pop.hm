@@ -1,0 +1,9 @@
+class vec
+    x int
+    y int
+    z int
+
+def main()
+    stack = [:]vec(vec(1, 2, 3))
+    v = pop(stack)
+    echo(v.x, v.y, v.z)

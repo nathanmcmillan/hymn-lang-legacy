@@ -12,6 +12,7 @@ def main
     echo(float 2)
     echo(float32 2)
     echo(float64 2)
+    echo(size_t 3)
 
     a = (int 2.3) * 11
     b = int8 4.3 * int8 2.3
@@ -25,7 +26,8 @@ def main
     j = uint64 2.3
     k = float 2
     l = float32 2
-    m = float64 2
+    m = float64 3
+    n = size_t 4
 
     if a == 0 : echo("no!")
     if b == int8 0 : echo("no!")
@@ -40,6 +42,7 @@ def main
     if k == float 0 : echo("no!")
     if l == float32 0 : echo("no!")
     if m == float64 0 : echo("no!")
+    if n == size_t 0 : echo("no!")
 
     echo(str(int 2))
     echo(str(int8 2))
@@ -55,7 +58,8 @@ def main
 
     echo(str(float 2))
     echo(str(float32 2))
-    echo(str(float64 2))
+    echo(str(float64 3))
+    echo(str(size_t 4))
 
     echo(integer("2"))
     echo(i8("2"))
@@ -70,4 +74,5 @@ def main
 
     echo(floating("2"))
     echo(f32("2"))
-    echo(f64("2"))
+    echo(f64("6"))
+    echo(sizet("7"))

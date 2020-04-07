@@ -1,16 +1,21 @@
-***
+inline head
+#include <stdio.h>
 #include <stdlib.h>
-***
+end
+
+inline
+#include <stdlib.h>
+end
 
 def malloc(size size_t)
-    ***
+    inline
     void *{% mem} = malloc({% size});
     if ({% mem}) {
         return {% mem};
     }
     fprintf(stderr, "malloc failed.\n");
     exit(1);
-    ***
+    end
 
 def realloc(mem *, size size_t)
     ***

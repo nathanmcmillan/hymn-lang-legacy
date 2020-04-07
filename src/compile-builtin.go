@@ -169,8 +169,6 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			cb.prepend(paramx.pre)
 			pop := true
 			switch param.data().getRaw() {
-			case TokenSizeT:
-				panic("TODO")
 			case TokenChar:
 				code += "%c"
 			case "[]char":
@@ -189,6 +187,8 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 				code += "%\" PRId32 \""
 			case TokenInt64:
 				code += "%\" PRId64 \""
+			case TokenSizeT:
+				code += "%zu"
 			case TokenUInt:
 				code += "%u"
 			case TokenUInt8:
@@ -235,8 +235,6 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			fallthrough
 		case TokenString:
 			panic(me.fail(n) + "redundant string cast")
-		case TokenSizeT:
-			panic("TODO")
 		case TokenChar:
 			return codeBlockMerge(n, "hmlib_char_to_string("+param.pop()+")", param.pre)
 		case TokenInt:
@@ -249,6 +247,8 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "hmlib_int32_to_string("+param.pop()+")", param.pre)
 		case TokenInt64:
 			return codeBlockMerge(n, "hmlib_int64_to_string("+param.pop()+")", param.pre)
+		case TokenSizeT:
+			return codeBlockMerge(n, "hmlib_size_t_to_string("+param.pop()+")", param.pre)
 		case TokenUInt:
 			return codeBlockMerge(n, "hmlib_uint_to_string("+param.pop()+")", param.pre)
 		case TokenUInt8:
@@ -304,6 +304,13 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			return codeBlockMerge(n, "hmlib_string_to_int64("+param.pop()+")", param.pre)
 		}
 		panic(me.fail(n) + "argument for conversion to int64 was " + param.string(0))
+	case libToSizeT:
+		me.libReqAdd(HmLibString)
+		param := me.eval(parameters[0])
+		if param.getType() == TokenString {
+			return codeBlockMerge(n, "hmlib_string_to_size_t("+param.pop()+")", param.pre)
+		}
+		panic(me.fail(n) + "argument for conversion to size_t was " + param.string(0))
 	case libToUInt:
 		me.libReqAdd(HmLibString)
 		param := me.eval(parameters[0])

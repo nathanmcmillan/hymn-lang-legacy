@@ -16,6 +16,7 @@ const (
 	libToInt16   = "i16"
 	libToInt32   = "i32"
 	libToInt64   = "i64"
+	libToSizeT   = "sizet"
 	libToUInt    = "uinteger"
 	libToUInt8   = "u8"
 	libToUInt16  = "u16"
@@ -242,6 +243,10 @@ func (me *hmlib) libs() *parseError {
 	}
 
 	if er = me.newLibSimple(libToInt64, TokenInt64); er != nil {
+		return er
+	}
+
+	if er = me.newLibSimple(libToSizeT, TokenSizeT); er != nil {
 		return er
 	}
 

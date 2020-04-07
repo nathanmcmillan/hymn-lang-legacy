@@ -18,6 +18,7 @@ const (
 	TokenInt16          = "int16"
 	TokenInt32          = "int32"
 	TokenInt64          = "int64"
+	TokenSizeT          = "size_t"
 	TokenUInt           = "uint"
 	TokenUInt8          = "uint8"
 	TokenUInt16         = "uint16"
@@ -30,7 +31,6 @@ const (
 	TokenRawString      = "string-raw"
 	TokenChar           = "char"
 	TokenBoolean        = "bool"
-	TokenSizeT          = "size_t"
 )
 
 var keywords = map[string]bool{
@@ -88,6 +88,7 @@ var keywords = map[string]bool{
 	TokenInt16:   true,
 	TokenInt32:   true,
 	TokenInt64:   true,
+	TokenSizeT:   true,
 	TokenUInt:    true,
 	TokenUInt8:   true,
 	TokenUInt16:  true,
@@ -98,7 +99,6 @@ var keywords = map[string]bool{
 	TokenFloat64: true,
 	TokenChar:    true,
 	TokenBoolean: true,
-	TokenSizeT:   true,
 }
 
 type token struct {

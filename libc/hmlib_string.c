@@ -184,6 +184,15 @@ hmlib_string hmlib_int64_to_string(const int64_t number) {
     return s;
 }
 
+hmlib_string hmlib_size_t_to_string(const int64_t number) {
+    int len = snprintf(NULL, 0, "%zu", number);
+    char *str = hmlib_malloc(len + 1);
+    snprintf(str, len + 1, "%zu", number);
+    hmlib_string s = hmlib_string_init_with_length(str, len);
+    free(str);
+    return s;
+}
+
 hmlib_string hmlib_uint_to_string(const unsigned int number) {
     int len = snprintf(NULL, 0, "%u", number);
     char *str = hmlib_malloc(len + 1);
@@ -269,6 +278,10 @@ int32_t hmlib_string_to_int32(const hmlib_string str) {
 
 int64_t hmlib_string_to_int64(const hmlib_string str) {
     return (int64_t)strtoll(str, NULL, 10);
+}
+
+size_t hmlib_string_to_size_t(const hmlib_string str) {
+    return (size_t)strtoll(str, NULL, 10);
 }
 
 unsigned int hmlib_string_to_uint(const hmlib_string str) {

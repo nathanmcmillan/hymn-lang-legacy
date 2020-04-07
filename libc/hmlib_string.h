@@ -45,6 +45,7 @@ hmlib_string hmlib_int8_to_string(const int8_t number);
 hmlib_string hmlib_int16_to_string(const int16_t number);
 hmlib_string hmlib_int32_to_string(const int32_t number);
 hmlib_string hmlib_int64_to_string(const int64_t number);
+hmlib_string hmlib_size_t_to_string(const int64_t number);
 
 hmlib_string hmlib_uint_to_string(const unsigned int number);
 hmlib_string hmlib_uint8_to_string(const uint8_t number);
@@ -61,6 +62,7 @@ int8_t hmlib_string_to_int8(const hmlib_string str);
 int16_t hmlib_string_to_int16(const hmlib_string str);
 int32_t hmlib_string_to_int32(const hmlib_string str);
 int64_t hmlib_string_to_int64(const hmlib_string str);
+size_t hmlib_string_to_size_t(const hmlib_string str);
 
 unsigned int hmlib_string_to_uint(const hmlib_string str);
 uint8_t hmlib_string_to_uint8(const hmlib_string str);

@@ -1,0 +1,6 @@
+def do() size_t
+    return size_t 4
+
+def main()
+    x = do()
+    echo(x)

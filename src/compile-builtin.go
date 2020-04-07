@@ -169,6 +169,8 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			cb.prepend(paramx.pre)
 			pop := true
 			switch param.data().getRaw() {
+			case TokenSizeT:
+				panic("TODO")
 			case TokenChar:
 				code += "%c"
 			case "[]char":
@@ -233,6 +235,8 @@ func (me *cfile) compileBuiltin(n *node, name string, parameters []*node) *codeb
 			fallthrough
 		case TokenString:
 			panic(me.fail(n) + "redundant string cast")
+		case TokenSizeT:
+			panic("TODO")
 		case TokenChar:
 			return codeBlockMerge(n, "hmlib_char_to_string("+param.pop()+")", param.pre)
 		case TokenInt:

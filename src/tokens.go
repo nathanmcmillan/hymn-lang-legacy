@@ -30,6 +30,7 @@ const (
 	TokenRawString      = "string-raw"
 	TokenChar           = "char"
 	TokenBoolean        = "bool"
+	TokenSizeT          = "size_t"
 )
 
 var keywords = map[string]bool{
@@ -96,6 +97,8 @@ var keywords = map[string]bool{
 	TokenFloat32: true,
 	TokenFloat64: true,
 	TokenChar:    true,
+	TokenBoolean: true,
+	TokenSizeT:   true,
 }
 
 type token struct {

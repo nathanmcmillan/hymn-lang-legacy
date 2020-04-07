@@ -27,6 +27,7 @@ var (
 		TokenChar:    true,
 		TokenBoolean: true,
 		TokenString:  true,
+		TokenSizeT:   true,
 	}
 	typeToCName = map[string]string{
 		TokenFloat32:   "float",
@@ -53,6 +54,7 @@ var (
 		TokenUInt16:  CStdIntTypes,
 		TokenUInt32:  CStdIntTypes,
 		TokenUInt64:  CStdIntTypes,
+		TokenSizeT:   CStdIntTypes,
 	}
 	literals = map[string]string{
 		TokenIntLiteral:     TokenInt,
@@ -75,6 +77,7 @@ var (
 		TokenFloat:   true,
 		TokenFloat32: true,
 		TokenFloat64: true,
+		TokenSizeT:   true,
 	}
 	integerTypes = map[string]bool{
 		TokenInt:    true,
@@ -87,6 +90,7 @@ var (
 		TokenUInt16: true,
 		TokenUInt32: true,
 		TokenUInt64: true,
+		TokenSizeT:  true,
 	}
 )
 

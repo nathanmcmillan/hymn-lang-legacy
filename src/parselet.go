@@ -46,6 +46,7 @@ func init() {
 		"+":                 prefixRule{8, "+sign", prefixSign},
 		"-":                 prefixRule{8, "-sign", prefixSign},
 		"!":                 prefixRule{8, "not", prefixNot},
+		TokenSizeT:          prefixRule{8, "cast", prefixCast},
 		TokenInt:            prefixRule{8, "cast", prefixCast},
 		TokenInt8:           prefixRule{8, "cast", prefixCast},
 		TokenInt16:          prefixRule{8, "cast", prefixCast},

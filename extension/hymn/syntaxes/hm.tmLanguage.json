@@ -40,7 +40,7 @@
 					}
 				},
 				{
-					"match": "\\b(char|int|float)\\b",
+					"match": "\\b(size_t|char|int|float)\\b",
 					"captures": {
 						"1": {
 							"name": "storage.type.numeric.c.hymn"
@@ -136,7 +136,7 @@
 			}
 		},
 		{
-			"match": "\\b(char|byte|int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float|float32|float64)\\b",
+			"match": "\\b(size_t|char|byte|int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float|float32|float64)\\b",
 			"captures": {
 				"1": {
 					"name": "storage.type.numeric.hymn"

@@ -288,6 +288,10 @@ func (me *cfile) compileChar(n *node) *codeblock {
 	return codeBlockOne(n, n.value)
 }
 
+func (me *cfile) compileSizeT(n *node) *codeblock {
+	return codeBlockOne(n, n.value)
+}
+
 func (me *cfile) compileNone(n *node) *codeblock {
 	code := "NULL"
 	return codeBlockOne(n, code)

@@ -19,6 +19,6 @@ cp -r hymn_std "$base"
 cp -r libc "$base"
 
 echo 'Success!'
-echo 'Please add '$base' to your $PATH variable'
+echo 'Please add '$base'/bin to your $PATH variable'
 
 # echo 'Please install a C compiler such as GCC or Clang'

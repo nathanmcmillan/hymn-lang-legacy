@@ -181,6 +181,9 @@ func (me *cfile) hintEval(n *node, hint *datatype) *codeblock {
 	if op == TokenChar {
 		return me.compileChar(n)
 	}
+	if op == TokenSizeT {
+		return me.compileSizeT(n)
+	}
 	if checkIsPrimitive(op) {
 		return codeBlockOne(n, n.value)
 	}

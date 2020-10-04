@@ -1,0 +1,240 @@
+#
+#           The Hymn Scribe
+# Copyright 2020 Nathan Michael McMillan
+#
+
+import hymn:read
+import hymn:strings
+import hymn:pointer (ptr)
+
+enum state
+    text
+    code_block
+    blockquote
+    list
+    numbered_list
+    nothing
+
+# TODO: array syntax should be [...]blah(x, y, z)
+# TODO: slice syntax should be []blah(x, y, z)
+# TODO: generate hmlib_slice_push_X for non pointer types
+# TODO: import hymn.pointer.ptr as point
+
+static mutable stack = [:]ptr<state>(ptr(state.text))
+
+static mutable chunk = ""
+
+def stack_peek() state
+    size = len(stack)
+    if size == 0
+        return state.nothing
+    else
+        return stack[size - 1].v
+
+def stack_pop()
+    size = len(stack) - 1
+    temp = [size:]ptr<state>
+    for i = 0; i < size; i += 1
+        temp[i] = stack[i] 
+    stack = temp
+
+def stack_push(new state)
+    stack = push(stack, ptr(new))
+
+def peek_char(p string, index int, num int) char
+    size = len(p)
+    position = index + num
+    if position >= size
+        return '\0'
+    return p[position]
+
+def parse_section(section string) string
+    mutable html = ""
+    size = len(section)
+    for i = 0; i < size; i += 1
+        c = section[i]
+        match c
+            '*'
+                if peek_char(section, i, 1) == '*'
+                    if peek_char(section, i, 2) == '*'
+                        html += "<i><em>"
+                    else
+                        html += "<em>"
+                else
+                    html += "<i>"
+            '`'
+                html += "<pre><code>"
+                i += 1
+                mutable code = ""
+                while i < size
+                    sc = section[i]
+                    if sc == '`'
+                        break
+                    code += str(sc)
+                    i += 1
+                html += code + "</pre></code>"
+            _
+                html += str(c)
+
+    http = "http://"
+    link = strings.index_of(html, http)
+    if link != -1
+        html = substring(html, 0, link) + "<a>" + substring(html, link + len(http), len(html)) + "</a>"
+
+    return html
+
+def end_chunk() string
+    if chunk == ""
+        return ""
+    mutable value = parse_section(chunk)
+    chunk = ""
+    if stack_peek() is blockquote
+        stack_pop()
+        value += "</blockquote>"
+    return "\n<p>" + value + "</p>"
+
+enum tag
+    html
+    header
+    blockquote
+    code
+    bold
+    italic
+    emphasize
+
+def tag_start(t tag) string
+    match t
+        html: return "<html>"
+        header: return "<h1>"
+        bold: return "<em>"
+        _: return "" 
+
+class item
+    type  tag
+    items []item
+
+class data
+    content string
+    pos     int
+    items   []item
+
+def header(d data)
+    echo(d.content)
+
+def parse(content string) string
+    mutable html = ""
+
+    # mutable start = true
+    # d = data(content)
+    # size = len(content)
+    # for i = 0; i < size; i += 1
+    #     c = content[i]
+    #     if c == '\r'
+    #         if peek_char(content, i, 1) == '\n'
+    #             i += 1
+    #         start = true
+    #         continue
+    #     if c == '\n'
+    #         start = true
+    #         continue
+    #     if start:
+    #         if c == '#'
+    #             i = header(d)
+    #         elif c == '>'
+    #         elif c == '-'
+
+    iterate line in read.lines(content)
+        if strings.starts_with(line, "# ")
+            sub = strings.cut_start(line, 2)
+            html += "\n<h1>" + parse_section(sub) + "</h1>"
+            continue
+
+        elif strings.starts_with(line, "## ")
+            sub = strings.cut_start(line, 3)
+            html += "\n<h2>" + parse_section(sub) + "</h2>"
+            continue
+
+        elif strings.starts_with(line, "### ")
+            sub = strings.cut_start(line, 4)
+            html += "\n<h3>" + parse_section(sub) + "</h3>"
+            continue
+
+        elif strings.starts_with(line, "#### ")
+            sub = strings.cut_start(line, 5)
+            html += "\n<h4>" + parse_section(sub) + "</h4>"
+            continue
+
+        elif strings.starts_with(line, "##### ")
+            sub = strings.cut_start(line, 6)
+            html += "\n<h5>" + parse_section(sub) + "</h5>"
+            continue
+
+        elif strings.starts_with(line, "###### ")
+            sub = strings.cut_start(line, 7)
+            html += "\n<h6>" + parse_section(sub) + "</h6>"
+            continue
+
+        elif strings.starts_with(line, "- ") or strings.starts_with(line, "* ")
+            if stack_peek() is not list
+                html += end_chunk()
+                html += "\n<ul>"
+                stack_push(state.list)
+            sub = strings.cut_start(line, 2)
+            html += "\n    <li>" + sub + "</li>"
+            continue
+
+        elif strings.starts_with(line, "***") or strings.starts_with(line, "---") or strings.starts_with(line, "___")
+            html += end_chunk()
+            html += "\n<hr>"
+            continue
+
+        elif strings.starts_with(line, "> ")
+            if stack_peek() is not blockquote
+                stack_push(state.blockquote)
+                html += "\n<blockquote>"
+            else
+                chunk += line
+            continue
+
+        elif strings.starts_with(line, "```")
+            if stack_peek() is code_block
+                stack_pop()
+                html += "\n<pre><code>" + end_chunk() + "</code></pre>"
+            else
+                html += end_chunk()
+                stack_push(state.code_block)
+            continue
+
+        if line == ""
+            if stack_peek() is list
+                stack_pop()
+                html += "\n<ul>" + + "\n</ul>"
+            html += end_chunk()
+            continue
+
+        chunk += parse_section(line)
+
+    return html
+
+def help
+    echo("Hymn Scribe")
+    echo("")
+    echo("Usage:")
+    echo("")
+    echo("    hymnscribe PATH_TO_MARKDOWN PATH_TO_HTML_OUTPUT")
+    echo("")
+
+def main(args []string)
+    if len(args) != 3
+        help()
+        exit(1)
+    content = cat(args[1])
+    mutable html = parse(content)
+
+    well_formed = false
+    if well_formed
+        doc_type = "<!DOCTYPE html>"
+        html_head = cat("template/head.html")
+        html = doc_type + "<html>" + html_head + "<body>" + html + "\n<body></html>"
+
+    echo(html)
